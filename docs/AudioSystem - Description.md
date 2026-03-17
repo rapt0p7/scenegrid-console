@@ -6,12 +6,13 @@ Conceptually, it is a hybrid of:
 * A DAW mixer
 * A game audio engine
 * A console with recall scenes
-
 ---
+![image](./architecture.svg)
 
 **Facade and Configuration Management (Engine API)**
 Interaction between the client application and the audio engine occurs through a single facade (`AudioEngine` / `AudioRouter`). The system operates on a **Data-Driven** principle: all routing, macro, and bus settings are initialized via a centralized manifest registry (**`SoundRegistry`**), decoupling playback logic from hardcoded values.
 
+---
 ### 1. Signal Flow Architecture
 
 **Core Principle**
@@ -43,6 +44,8 @@ The sole exit point to the audio device. It contains:
 * Master fader
 * Brickwall limiter
 * A dedicated **`silentTail`** (zero volume) that ensures continuous operation of DSP processors (sidechain detectors and analyzers) without leaking their audio into the mix.
+
+![image](./audio-flow.svg)
 
 ---
 
