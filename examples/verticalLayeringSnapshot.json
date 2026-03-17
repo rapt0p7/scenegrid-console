@@ -1,0 +1,49 @@
+{
+    "idle": {
+        "buses": {
+            "music_base": {
+                "gain": 1,
+                "sends": {},
+                "filter": null,
+                "sidechain": { "enabled": true }
+            },
+            "music_strings": {
+                "gain": 0,
+                "sends": {},
+                "filter": null,
+                "sidechain": { "enabled": true },
+                "rtpc": {
+                    "gain": {
+                        "gameParam": "game_intensity",
+                        "curve": [
+                            { "x": 0.5, "y": 0 },
+                            { "x": 0.6, "y": 1 }
+                        ],
+                        "smoothingMs": 50
+                    }
+                }
+            },
+            "music_perc": {
+                "gain": 1,
+                "sends": {},
+                "filter": null,
+                "sidechain": { "enabled": true },
+                "rtpc": {
+                    "gain": {
+                        "gameParam": "game_intensity",
+                        "curve": [
+                            { "x": 0.5, "y": 1 },
+                            { "x": 0.6, "y": 0 }
+                        ]
+                    }
+                }
+            },
+            "sfx": {
+                "gain": 1,
+                "sends": {},
+                "filter": null,
+                "sidechain": { "enabled": false }
+            }
+        }
+    }
+}

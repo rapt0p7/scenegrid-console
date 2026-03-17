@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "jsx": "react",
+        "moduleResolution": "node",
+        "strict": true,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "declaration": true,
+        "sourceMap": true,
+        "outDir": "./public",
+        "baseUrl": ".",
+        "paths": {
+            "@webaudio-core/*": ["./src/webaudio-core/*"],
+            "@webaudio-core": ["./src/webaudio-core/index.ts"]
+        },
+        "lib": ["ESNext", "DOM", "WebWorker"],
+        "types": ["./src/audio-worklet-global-scope"]
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx", "examples/**/*.ts", "examples/**/*.tsx"],
+    "exclude": ["node_modules", "dist", "public"]
+}

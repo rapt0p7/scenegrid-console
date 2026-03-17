@@ -1,0 +1,140 @@
+{
+    "$schema": "https://github.com/lppedd/idea-conventional-commit/raw/master/src/main/resources/defaults/conventionalcommit.schema.json",
+    "types": {
+        "feat": {
+            "description": "A new feature",
+            "scopes": {
+                "core": { "description": "WebAudio core engine changes" },
+                "facade": { "description": "AudioEngine, AudioRouter and public API" },
+                "bus-system": { "description": "AudioBus and Signal routing changes" },
+                "mixer": { "description": "Mixer layers, snapshots, and states" },
+                "rtpc": { "description": "RTPC Manager and macro modulations" },
+                "smart-loop": { "description": "Interactive music, segments, and audio grid" },
+                "plugins": { "description": "Insert filters, sidechain, and limiters" },
+                "worklets": { "description": "AudioWorklet processors (meters, lookahead)" },
+                "loader": { "description": "AudioBuffer loader and sound controller" },
+                "scheduling": { "description": "Playback scheduling and voice culling" },
+                "automation": { "description": "Automation engine and value fading" }
+            }
+        },
+        "fix": {
+            "description": "A bug fix",
+            "scopes": {
+                "core": { "description": "WebAudio core engine fixes" },
+                "facade": { "description": "AudioEngine/Router fixes" },
+                "bus-system": { "description": "AudioBus routing fixes" },
+                "mixer": { "description": "Mixer states and snapshot fixes" },
+                "rtpc": { "description": "RTPC binding and math fixes" },
+                "smart-loop": { "description": "Music transitions and loop fixes" },
+                "plugins": { "description": "DSP Plugins and filter fixes" },
+                "worklets": { "description": "AudioWorklet memory/audio thread fixes" },
+                "loader": { "description": "Loading and decoding fixes" },
+                "scheduling": { "description": "Voice stealing and timing fixes" },
+                "automation": { "description": "Automation glitches and clicks fixes" }
+            }
+        },
+        "docs": {
+            "description": "Documentation only changes",
+            "scopes": {
+                "api": { "description": "Public API documentation" },
+                "architecture": { "description": "System design and flow diagrams" },
+                "readme": { "description": "README files" },
+                "examples": { "description": "Usage examples and sound manifests" }
+            }
+        },
+        "style": {
+            "description": "Changes that do not affect the meaning of the code",
+            "scopes": {
+                "formatting": { "description": "Code formatting changes (Prettier)" },
+                "lint": { "description": "ESLint rule fixes (Boundaries, etc.)" }
+            }
+        },
+        "refactor": {
+            "description": "A code change that neither fixes a bug nor adds a feature",
+            "scopes": {
+                "core-nodes": { "description": "Refactoring AudioNode chains" },
+                "core-context": { "description": "Refactoring AudioContext management" },
+                "managers": { "description": "Refactoring Manager classes orchestration" },
+                "bus-system": { "description": "Refactoring Bus logic" },
+                "interfaces": { "description": "Refactoring types and interfaces" },
+                "config": { "description": "Refactoring data schemas and manifests" },
+                "helpers": { "description": "Refactoring pure functions and math" }
+            }
+        },
+        "perf": {
+            "description": "A code change that improves performance",
+            "scopes": {
+                "worklets": { "description": "AudioWorklet CPU optimizations" },
+                "scheduling": { "description": "Voice culling and pool optimizations" },
+                "memory": { "description": "Garbage collection and object pooling" },
+                "automation": { "description": "Automation smoothing performance" }
+            }
+        },
+        "test": {
+            "description": "Adding missing tests or correcting existing tests",
+            "scopes": {
+                "unit": { "description": "Unit tests for pure classes/helpers" },
+                "integration": { "description": "Integration tests for Managers/Buses" },
+                "worklets": { "description": "Testing audio thread processors" },
+                "mocks": { "description": "Web Audio API mocks updates" }
+            }
+        },
+        "build": {
+            "description": "Changes that affect the build system or external dependencies",
+            "scopes": {
+                "deps": { "description": "Dependencies updates" },
+                "bundler": { "description": "Vite/Rollup/Webpack config" },
+                "typescript": { "description": "TSConfig changes" },
+                "worklets": { "description": "Worklet compilation pipeline" }
+            }
+        },
+        "ci": {
+            "description": "Changes to our CI configuration files and scripts",
+            "scopes": {
+                "github": { "description": "GitHub Actions workflows" },
+                "linting": { "description": "Dependency-cruiser and ESLint CI steps" },
+                "publish": { "description": "NPM/Registry publishing scripts" }
+            }
+        },
+        "chore": {
+            "description": "Other changes that don't modify src or test files",
+            "scopes": {
+                "config": { "description": "Editor/Workspace configurations" },
+                "tools": { "description": "Development scripts and tools" }
+            }
+        },
+        "revert": {
+            "description": "Reverts a previous commit"
+        }
+    },
+    "commonScopes": {
+        "core": { "description": "WebAudio core engine (Domain layer)" },
+        "facade": { "description": "AudioEngine and public routing APIs" },
+        "bus-system": { "description": "Audio buses, channels, and sends" },
+        "mixer": { "description": "Mixer layer, snapshots, and states" },
+        "rtpc": { "description": "Real-Time Parameter Control (Macros)" },
+        "smart-loop": { "description": "Interactive music, sequencing, grids" },
+        "plugins": { "description": "High-level DSP (Filters, Duckers, Limiters)" },
+        "worklets": { "description": "Low-level AudioWorklet Processors" },
+        "loader": { "description": "Audio buffer loading and decoding" },
+        "scheduling": { "description": "Playback scheduling and voice limits" },
+        "automation": { "description": "Parameter fading and sample-accurate curves" },
+        "context": { "description": "AudioContext and unlock management" },
+        "nodes": { "description": "AudioNode chains and connections" },
+        "interfaces": { "description": "TypeScript interfaces and types" },
+        "config": { "description": "Sound registries and static configs" },
+        "helpers": { "description": "Math, constants, and pure functions" },
+        "debug": { "description": "AudioDebugger and visualizers" },
+        "test": { "description": "Test suites and mocks" },
+        "build": { "description": "Build tools and compilers" }
+    },
+    "footerTypes": [
+        { "name": "BREAKING-CHANGE", "description": "The commit introduces breaking API changes" },
+        { "name": "BREAKING CHANGE", "description": "The commit introduces breaking API changes" },
+        { "name": "Closes", "description": "The commit closes issues or pull requests" },
+        { "name": "Fixes", "description": "The commit fixes issues" },
+        { "name": "Resolves", "description": "The commit resolves issues" },
+        { "name": "Implements", "description": "The commit implements features" },
+        { "name": "Refs", "description": "The commit references another commit by its hash ID" }
+    ]
+}

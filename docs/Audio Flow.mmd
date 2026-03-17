@@ -1,0 +1,79 @@
+---
+config:
+  layout: elk
+  theme: mc
+---
+flowchart LR
+    %% Styles
+    classDef voice fill:#2d3436,stroke:#74b9ff,stroke-width:2px,color:#fff
+    classDef bus fill:#2d3436,stroke:#a29bfe,stroke-width:2px,color:#fff
+    classDef master fill:#2d3436,stroke:#ff7675,stroke-width:2px,color:#fff
+    classDef sidechain fill:#2d3436,stroke:#fdcb6e,stroke-width:2px,color:#fff
+    classDef debug fill:#2d3436,stroke:#00b894,stroke-width:2px,stroke-dasharray: 5 5,color:#fff
+
+    subgraph VoiceStage ["1. Sound Instance (NodeChain)"]
+        Src["AudioBufferSource"]:::voice
+        NC_In["inputNode (instanceGain)"]:::voice
+        NC_Filt["Filters (Biquad Array)"]:::voice
+        NC_Pan["pannerNode (Stereo/3D)"]:::voice
+        NC_Out["outputNode (Gain)"]:::voice
+
+        Src --> NC_In --> NC_Filt --> NC_Pan --> NC_Out
+    end
+
+    subgraph BusStage ["2. Audio Bus (e.g. SFX, Music)"]
+        Bus_In["inputGainNode"]:::bus
+        Bus_Pre["preFilterGain"]:::bus
+        Bus_Filt["filterNode (Biquad/Convolver)"]:::bus
+        Bus_Post["postFilterGain"]:::bus
+        Bus_Send["sendGains Map"]:::bus
+
+        Bus_In -->|"Direct (if no Ducking)"| Bus_Pre
+        Bus_Pre --> Bus_Filt --> Bus_Post
+        Bus_Post -->|"Aux Routing"| Bus_Send
+    end
+
+    subgraph SidechainStage ["3. Sidechain Ducker (Lookahead)"]
+        SC_Delay["DelayNode (Lookahead)"]:::sidechain
+        SC_Gain["duckingGain"]:::sidechain
+        SC_Merge["mergeGain (Trigger Sum)"]:::sidechain
+        SC_Proc["ducker-processor (Worklet)"]:::sidechain
+
+        Bus_In -.->|"Insert (if Ducked)"| SC_Delay
+        SC_Delay --> SC_Gain
+        SC_Gain -.->|"Return"| Bus_Pre
+
+        SC_Merge --> SC_Proc -- "Modulates AudioParam" --> SC_Gain
+    end
+
+    subgraph MasterStage ["4. Master Output Stage"]
+        ABS_Master["masterBus (Gain)"]:::master
+        ABS_Router["routerMasterGain"]:::master
+        Limiter["TinyLimiterNode (Worklet)"]:::master
+        ABS_Post["postLimiterGain"]:::master
+
+        MO_In["MasterOutput.input"]:::master
+        MO_Gain["MasterOutput.masterGain"]:::master
+        MO_Silent["MasterOutput.silentTail"]:::master
+        Dest(((AudioContext<br>Destination))):::master
+
+        ABS_Master --> ABS_Router --> Limiter --> ABS_Post
+        ABS_Post --> MO_In --> MO_Gain --> Dest
+        MO_Silent --> Dest
+    end
+
+    subgraph DebugStage ["Debug / Visualizers"]
+        Analyzer["AudioMotionAnalyzer / RMS Meters"]:::debug
+    end
+
+    %% Main audio connections between blocks
+    NC_Out ===|"routeInstance()"| Bus_In
+    Bus_Send ===|"applySend()"| Bus_In
+    Bus_Post ===|"Main Mix"| ABS_Master
+
+    %% Sidechain conecctions
+    NC_In -.->|"addSource() Trigger"| SC_Merge
+
+    %% Debug connections
+    Bus_Post -.->|"Tap"| Analyzer
+    ABS_Post -.->|"Tap"| Analyzer

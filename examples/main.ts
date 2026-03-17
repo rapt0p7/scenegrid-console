@@ -1,0 +1,51 @@
+import { AudioEngine } from '../src';
+import { PRIORITY } from '../src/Managers/MixerLayer';
+
+import Buses from './audio-config/Buses';
+import Snapshots from './audio-config/Snapshots';
+import SoundMap from './audio-config/SoundMap';
+import soundManifest from './soundManifest';
+
+// @ts-expect-error
+globalThis.setImmediate = setTimeout;
+
+async function bootstrap() {
+    const audio = new AudioEngine({
+        manifest: soundManifest,
+        buses: Buses,
+        snapshots: Snapshots,
+        soundMap: SoundMap,
+        globalVoiceLimit: 32
+    });
+
+    await audio.init();
+
+    // @ts-ignore
+    globalThis.AudioEngine = audio;
+
+    globalThis.addEventListener(
+        'pointerup',
+        async () => {
+            await audio.unlock();
+
+            audio.showDebugUI({ wrapperSelector: '#wrapper' });
+
+            audio.createSidechain('musicMain');
+            audio.createSidechain('musicExplore');
+            audio.createSidechain('musicCombat');
+            audio.createSidechain('musicLounge');
+
+            await audio.mixer.push('idle', 'base:idle', PRIORITY.BASE);
+
+            audio.play('backgroundMain', { isLoop: true });
+            audio.play('backgroundMain2', { isLoop: true });
+            audio.play('backgroundMain3', { isLoop: true });
+
+            // @ts-expect-error
+            await import('../src/debug.js');
+        },
+        { once: true }
+    );
+}
+
+bootstrap().catch(console.error);

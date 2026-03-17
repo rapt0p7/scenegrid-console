@@ -1,0 +1,71 @@
+{
+    "extends": ["@commitlint/config-conventional"],
+    "rules": {
+        "type-enum": [
+            2,
+            "always",
+            ["feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert"]
+        ],
+        "scope-enum": [
+            2,
+            "always",
+            [
+                "core",
+                "core-nodes",
+                "core-context",
+                "facade",
+                "bus-system",
+                "mixer",
+                "rtpc",
+                "smart-loop",
+                "plugins",
+                "worklets",
+                "loader",
+                "scheduling",
+                "automation",
+                "context",
+                "nodes",
+                "interfaces",
+                "managers",
+                "helpers",
+                "config",
+
+                "api",
+                "architecture",
+                "readme",
+                "examples",
+
+                "formatting",
+                "lint",
+                "linting",
+
+                "memory",
+                "debug",
+
+                "test",
+                "unit",
+                "integration",
+                "mocks",
+
+                "build",
+                "deps",
+                "bundler",
+                "typescript",
+
+                "github",
+                "publish",
+                "tools"
+            ]
+        ],
+        "scope-case": [2, "always", "kebab-case"],
+        "subject-case": [2, "always", "lower-case"],
+        "subject-empty": [2, "never"],
+        "subject-full-stop": [2, "never", "."],
+        "subject-max-length": [2, "always", 72],
+        "body-leading-blank": [2, "always"],
+        "body-max-line-length": [2, "always", 100],
+        "footer-leading-blank": [2, "always"],
+        "footer-max-line-length": [2, "always", 100]
+    },
+    "helpUrl": "https://github.com/conventional-changelog/commitlint/#what-is-commitlint"
+}
