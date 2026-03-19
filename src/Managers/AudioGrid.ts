@@ -1,4 +1,6 @@
-export default class AudioGrid {
+import type { IAudioGrid } from '../interfaces/IAudioGrid';
+
+export default class AudioGrid implements IAudioGrid {
     readonly #bpm: number;
     readonly #beatsPerBar: number;
     readonly #startTime: number;

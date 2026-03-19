@@ -2,28 +2,13 @@
 
 import * as workerTimers from 'worker-timers';
 
+import { LoopState } from '../interfaces/ISmartLoopManager';
+
 import AudioGrid from './AudioGrid';
 
 import type { IAudioRouter } from '../interfaces/IAudioRouter';
+import type { ITransitionToParameters } from '../interfaces/ISmartLoopManager';
 import type { SoundController, ISoundInstance, AutomationEngine } from '@webaudio-core';
-
-export enum LoopState {
-    IDLE = 'IDLE',
-    LOOPING = 'LOOPING',
-    TRANSITIONING = 'TRANSITIONING'
-}
-
-export type QuantizeType = 'Immediate' | 'NextBeat' | 'NextBar';
-export type TransitionBlendMode = 'overlap' | 'crossfade';
-
-export interface TransitionOptions {
-    quantize?: QuantizeType;
-    quantizeInterval?: number;
-    crossfadeDuration?: number;
-    grid?: AudioGrid;
-    blendMode?: TransitionBlendMode;
-    interruptable?: boolean;
-}
 
 interface ActiveRegion {
     instance: ISoundInstance;
@@ -98,10 +83,14 @@ export default class SmartLoopManager {
         for (const active of track.activeRegions) {
             try {
                 active.unsubscribe();
-            } catch {}
+            } catch {
+                /* empty */
+            }
             try {
                 active.instance.cancelScheduled();
-            } catch {}
+            } catch {
+                /* empty */
+            }
         }
 
         track.activeRegions.clear();
@@ -114,17 +103,13 @@ export default class SmartLoopManager {
         }
     }
 
+    // eslint-disable-next-line complexity
     transitionTo({
         soundId,
         targetRegion,
         transitionRegionName,
         options = { interruptable: true, quantize: 'Immediate' }
-    }: {
-        soundId: string;
-        targetRegion: string;
-        transitionRegionName: string;
-        options?: TransitionOptions;
-    }): void {
+    }: ITransitionToParameters): void {
         const track = this.getTrackContext(soundId);
         if (track.state === LoopState.IDLE) return;
         if (track.state === LoopState.TRANSITIONING && !options.interruptable) return;
@@ -177,12 +162,16 @@ export default class SmartLoopManager {
         for (const active of track.activeRegions) {
             try {
                 active.unsubscribe();
-            } catch {}
+            } catch {
+                /* empty */
+            }
 
             if (active.scheduledStartTime >= targetTime) {
                 try {
                     active.instance.cancelScheduled();
-                } catch {}
+                } catch {
+                    /* empty */
+                }
                 continue;
             }
 
@@ -247,7 +236,12 @@ export default class SmartLoopManager {
 
                 const regionStartTime = track.nextScheduleTime;
 
-                const instance = this.scheduleRegion(soundId, nextRegionName, regionStartTime, track);
+                const instance = this.scheduleRegion({
+                    soundId,
+                    regionName: nextRegionName,
+                    targetTime: regionStartTime,
+                    track
+                });
 
                 if (instance && instance.instanceGain) {
                     const gainParameter = instance.instanceGain.gain;
@@ -284,12 +278,17 @@ export default class SmartLoopManager {
         return this.tracks.get(soundId)!;
     }
 
-    private scheduleRegion(
-        soundId: string,
-        regionName: string,
-        targetTime: number,
-        track: TrackContext
-    ): ISoundInstance | null {
+    private scheduleRegion({
+        soundId,
+        regionName,
+        targetTime,
+        track
+    }: {
+        soundId: string;
+        regionName: string;
+        targetTime: number;
+        track: TrackContext;
+    }): ISoundInstance | null {
         const config = this.router.getSoundConfig(soundId);
         if (!config || !('smartLoop' in config)) return null;
 
@@ -316,6 +315,7 @@ export default class SmartLoopManager {
 
         if (!result) {
             console.warn(`[SmartLoopManager] Failed to schedule region ${regionName} for ${soundId} (voice dropped).`);
+            // eslint-disable-next-line no-param-reassign
             track.nextScheduleTime = targetTime + durationSec;
 
             return null;
@@ -324,14 +324,19 @@ export default class SmartLoopManager {
         this.router.applyConfigToInstance(result.instance, config);
 
         if (!track.referenceContext && result.instance.outputNode && result.instance.outputNode.context) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
+            // eslint-disable-next-line no-param-reassign
             track.referenceContext = result.instance.outputNode.context;
+            // eslint-disable-next-line no-param-reassign
             targetTime = track.referenceContext!.currentTime + delaySec;
 
             if (track.gridStartTime === null) {
+                // eslint-disable-next-line no-param-reassign
                 track.gridStartTime = targetTime;
             }
         }
+        // eslint-disable-next-line no-param-reassign
         track.nextScheduleTime = targetTime + durationSec;
 
         const activeRegion: ActiveRegion = {
@@ -344,7 +349,9 @@ export default class SmartLoopManager {
             track.activeRegions.delete(activeRegion);
             try {
                 activeRegion.unsubscribe();
-            } catch {}
+            } catch {
+                /* empty */
+            }
         });
 
         track.activeRegions.add(activeRegion);

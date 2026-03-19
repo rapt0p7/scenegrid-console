@@ -36,6 +36,7 @@ import type { DebuggerOptions } from './Debug/AudioDebugger';
 import type { BusId } from './interfaces/IAudioBusSystem';
 import type { IAudioEngineConfig } from './interfaces/IAudioEngineConfig';
 import type { IPluginFactory } from './interfaces/IAudioPlugins';
+import type { ITransitionToParameters } from './interfaces/ISmartLoopManager';
 import type { IDuckingConfig, IPlayOptions } from './interfaces/ISoundConfig';
 
 export class AudioEngine {
@@ -64,7 +65,7 @@ export class AudioEngine {
     public readonly music = {
         playLoop: (soundId: string, region: string) => this.#smartLoopManager.playLoop(soundId, region),
         stopLoop: (soundId: string) => this.#smartLoopManager.stopLoop(soundId),
-        transitionTo: (options: any) => this.#smartLoopManager.transitionTo(options)
+        transitionTo: (options: ITransitionToParameters) => this.#smartLoopManager.transitionTo(options)
     };
     public readonly spatial = {
         setListenerPosition: (x: number, y: number, z: number) => {

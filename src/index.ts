@@ -8,6 +8,6 @@ export type { ISoundMap } from './interfaces/ISoundMap';
 export type { AnySoundConfig } from './interfaces/ISoundConfig';
 export type { ISnapshots } from './interfaces/ISnapshots';
 export type { IRTPCManager } from './interfaces/IRTPCManager';
-export type { QuantizeType } from './Managers/SmartLoopManager';
+export type { QuantizeType } from './interfaces/ISmartLoopManager';
 
-export { LoopState } from './Managers/SmartLoopManager';
+export { LoopState } from './interfaces/ISmartLoopManager';
