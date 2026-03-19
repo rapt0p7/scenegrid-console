@@ -11,6 +11,13 @@ Conceptually, the system bridges the gap between:
 
 ---
 
+## 📚 Documentation & Architecture Diagrams
+For a deep dive into the system's topology, including **C4 Container Diagrams** and the complete **Audio Signal Flow**, please refer to the detailed documentation:
+* 🇬🇧 [Audio System Architecture - English](./docs/AudioSystem%20-%20Description.md)
+* 🇷🇺 [Архитектура Аудио Системы - Русский](./docs/AudioSystem%20-%20Description.RU.md)
+
+---
+
 ## 1. System Architecture & Signal Flow
 
 The system enforces a strict hierarchical flow to ensure phase coherence, predictable routing, and DSP stability. No bypass routes are permitted.
@@ -162,6 +169,13 @@ bootstrap().catch(console.error);
 * **The Unlock Pattern:** The `.unlock()` method must be called within a user-initiated event (e.g., `pointerup`) to comply with browser autoplay policies.
 * **Mixer Layers:** Use `audio.mixer.push()` to apply the initial gain and filter settings defined in your Snapshots.
 * **Sidechain Creation:** Sidechains for target buses should be explicitly initialized after the engine is unlocked to correctly insert `DelayNodes` into the signal path.
+
+---
+
+## 🎛️ Audio Debugger & Visualizer
+The engine includes a built-in UI for real-time monitoring of Bus levels, RMS envelopes, and Spectrum Analysis, ensuring your mix stays out of the red.
+
+![Audio Debugger UI](./docs/AudioDebugger.png)
 
 ---
 
