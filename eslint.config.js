@@ -339,7 +339,8 @@ export default tseslint.config(
             '**/*.spec.{js,ts,jsx,tsx}'
         ],
         rules: {
-            'unicorn/no-useless-undefined': 'off'
+            'unicorn/no-useless-undefined': 'off',
+            '@typescript-eslint/naming-convention': 'off'
         }
     },
     {
