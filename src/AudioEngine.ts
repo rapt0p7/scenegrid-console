@@ -71,11 +71,35 @@ export class AudioEngine {
             this.#contextManager.setListenerPosition(x, y, z);
         },
 
-        setListenerOrientation: (fx: number, fy: number, fz: number, ux: number, uy: number, uz: number) => {
+        setListenerOrientation: ({
+            fx,
+            fy,
+            fz,
+            ux,
+            uy,
+            uz
+        }: {
+            fx: number;
+            fy: number;
+            fz: number;
+            ux: number;
+            uy: number;
+            uz: number;
+        }) => {
             this.#contextManager.setListenerOrientation(fx, fy, fz, ux, uy, uz);
         },
 
-        setSoundPosition: (playbackId: number | number[], x: number, y: number, z: number) => {
+        setSoundPosition: ({
+            playbackId,
+            x,
+            y,
+            z
+        }: {
+            playbackId: number | number[];
+            x: number;
+            y: number;
+            z: number;
+        }) => {
             const ids = Array.isArray(playbackId) ? playbackId : [playbackId];
 
             for (const id of ids) {
@@ -111,14 +135,12 @@ export class AudioEngine {
 
         const instanceFactory = (soundId: string) => {
             const { buffer, options } = soundRegistry.get(soundId);
-            const soundConfig = this.config.soundMap[soundId];
-
-            const spatialConfig = soundConfig?.spatial;
+            const soundConfig = this.config.soundMap[soundId] as any;
 
             const instanceOptions = {
                 ...options,
-                spatial: spatialConfig,
-                hasPanner: spatialConfig?.hasPanner ?? options.hasPanner
+                spatial: soundConfig?.spatial,
+                hasPanner: soundConfig?.hasPanner
             };
 
             return new SoundInstance(soundId, this.#contextManager, nodeFactory, buffer, automation, instanceOptions);
@@ -223,6 +245,7 @@ export class AudioEngine {
         debuggerInstance.init(options);
     }
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public get _debug() {
         return {
             config: this.config,
