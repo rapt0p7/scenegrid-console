@@ -192,12 +192,12 @@ describe('AudioEngine', () => {
 
         engine = new AudioEngine({
             manifest: {
-                test_sound: { url: 'audio/test.mp3', hasPanner: true }
+                test_sound: { url: 'audio/test.mp3' }
             },
-            buses: { master: { volume: 1 }, sfx: { gain: 1 } },
+            buses: { master: { gain: 1 }, sfx: { gain: 1 } },
             snapshots: {},
             soundMap: {
-                test_sound: { busId: 'sfx', voice: { maxInstances: 5 } },
+                test_sound: { busId: 'sfx', voice: { priority: 5 }, spatial: true },
                 sound_no_voice: { busId: 'master' }
             },
             globalVoiceLimit: 32
@@ -282,7 +282,7 @@ describe('AudioEngine', () => {
             const poolOptions = (globalThis as any).__mockSoundPoolConfig;
 
             const cfgWithVoice = poolOptions.voiceConfigResolver('test_sound');
-            expect(cfgWithVoice).toEqual({ maxInstances: 5 });
+            expect(cfgWithVoice).toEqual({ priority: 5 });
 
             const cfgWithoutVoice = poolOptions.voiceConfigResolver('sound_no_voice');
             expect(cfgWithoutVoice).toBeUndefined();
@@ -355,7 +355,14 @@ describe('AudioEngine', () => {
             });
 
             it('should delegate setListenerOrientation to AudioContextManager', () => {
-                engine.spatial.setListenerOrientation(0, 0, -1, 0, 1, 0);
+                engine.spatial.setListenerOrientation({
+                    fx: 0,
+                    fy: 0,
+                    fz: -1,
+                    ux: 0,
+                    uy: 1,
+                    uz: 0
+                });
                 expect(setListenerOriSpy).toHaveBeenCalledTimes(1);
                 expect(setListenerOriSpy).toHaveBeenCalledWith(0, 0, -1, 0, 1, 0);
             });
@@ -363,13 +370,23 @@ describe('AudioEngine', () => {
 
         describe('Sound Position (PannerNode)', () => {
             it('should delegate setSoundPosition to SoundController for a single ID', () => {
-                engine.spatial.setSoundPosition(101, 50, 15, -30);
+                engine.spatial.setSoundPosition({
+                    playbackId: 101,
+                    x: 50,
+                    y: 15,
+                    z: -30
+                });
                 expect(setSoundPosSpy).toHaveBeenCalledTimes(1);
                 expect(setSoundPosSpy).toHaveBeenCalledWith(101, 50, 15, -30);
             });
 
             it('should delegate setSoundPosition to SoundController for multiple IDs', () => {
-                engine.spatial.setSoundPosition([201, 202], 10, 20, 30);
+                engine.spatial.setSoundPosition({
+                    playbackId: [201, 202],
+                    x: 10,
+                    y: 20,
+                    z: 30
+                });
                 expect(setSoundPosSpy).toHaveBeenCalledTimes(2);
                 expect(setSoundPosSpy).toHaveBeenNthCalledWith(1, 201, 10, 20, 30);
                 expect(setSoundPosSpy).toHaveBeenNthCalledWith(2, 202, 10, 20, 30);
@@ -406,10 +423,10 @@ describe('AudioEngine', () => {
                     bullet_flyby: { url: 'audio/bullet.mp3' },
                     ui_click: { url: 'audio/click.mp3' }
                 },
-                buses: { master: { volume: 1 } },
+                buses: { master: { gain: 1 } },
                 snapshots: {},
                 soundMap: {
-                    bullet_flyby: { busId: 'master', spatial: { hasPanner: true } },
+                    bullet_flyby: { busId: 'master', spatial: true },
                     ui_click: { busId: 'master' }
                 }
             });
@@ -432,7 +449,7 @@ describe('AudioEngine', () => {
             expect(bulletCall).toBeDefined();
             expect(bulletCall![5]).toEqual(
                 expect.objectContaining({
-                    spatial: { hasPanner: true }
+                    spatial: true
                 })
             );
 
