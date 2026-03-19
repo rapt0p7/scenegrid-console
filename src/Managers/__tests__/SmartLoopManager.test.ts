@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as workerTimers from 'worker-timers';
 
+import { LoopState } from '../../interfaces/ISmartLoopManager';
 import AudioGrid from '../AudioGrid';
-import SmartLoopManager, { LoopState } from '../SmartLoopManager';
+import SmartLoopManager from '../SmartLoopManager';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),
@@ -68,7 +69,9 @@ describe('SmartLoopManager (Interactive Music)', () => {
         manager.destroy();
     });
 
+    // eslint-disable-next-line unicorn/consistent-function-scoping
     function triggerTick() {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         const tickCallback = vi.mocked(workerTimers.setInterval).mock.calls[0][0] as Function;
         tickCallback();
     }
@@ -203,6 +206,7 @@ describe('SmartLoopManager (Interactive Music)', () => {
         });
 
         expect(beatSpy).toHaveBeenCalled();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         expect(manager.tracks.get('battle_music').nextScheduleTime).toBe(5);
     });
@@ -243,8 +247,16 @@ describe('SmartLoopManager (Interactive Music)', () => {
     it('should use targetTime as delay if referenceContext is not yet established', () => {
         mockInstance.outputNode = null;
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        manager.scheduleRegion('battle_music', 'intro', 2, manager.getTrackContext('battle_music'));
+        manager.scheduleRegion({
+            soundId: 'battle_music',
+            regionName: 'intro',
+            targetTime: 2,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            track: manager.getTrackContext('battle_music')
+        });
 
         expect(mockController.play).toHaveBeenCalledWith(
             'battle_music',
@@ -262,15 +274,18 @@ describe('SmartLoopManager (Interactive Music)', () => {
 
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to schedule region'));
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         expect(manager.tracks.get('battle_music').nextScheduleTime).toBe(1);
         warnSpy.mockRestore();
     });
 
     it('should cleanup active regions and unsubscribe on "ended" event', () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type,unicorn/consistent-function-scoping
         let endedCallback: Function = () => {};
         const unsubscribeSpy = vi.fn();
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         mockInstance.on.mockImplementation((event: string, callback: Function) => {
             if (event === 'ended') endedCallback = callback;
             return unsubscribeSpy;

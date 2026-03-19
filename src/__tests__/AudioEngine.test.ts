@@ -251,7 +251,7 @@ describe('AudioEngine', () => {
         it('should delegate music loops and transitions to SmartLoopManager', () => {
             expect(() => engine.music.playLoop('bgm', 'verse1')).not.toThrow();
             expect(() => engine.music.stopLoop('bgm')).not.toThrow();
-            expect(() => engine.music.transitionTo({ targetRegion: 'chorus' })).not.toThrow();
+            expect(() => engine.music.transitionTo({ soundId: 'bgm', targetRegion: 'chorus' })).not.toThrow();
         });
 
         it('should call resume on unlock()', async () => {
