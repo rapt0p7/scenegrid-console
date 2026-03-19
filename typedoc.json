@@ -1,0 +1,15 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": ["src/index.ts"],
+    "out": "docs/api",
+    "name": "SceneGrid Console API",
+    "readme": "none",
+    "excludePrivate": true,
+    "excludeProtected": true,
+    "excludeInternal": true,
+    "cleanOutputDir": true,
+    "validation": {
+        "notExported": true,
+        "invalidLink": true
+    }
+}
