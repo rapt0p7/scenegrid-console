@@ -90,9 +90,11 @@ The project is evolving from a core mixing engine to a fully autonomous audio mi
 * **Polyphony & Voice Rules:** Implementing `maxVoices` and `cooldown` per event to prevent mix clutter and "machine-gun" effects.
 * **Vite V8 Migration:** Upgrading the build pipeline to the **Rolldown-powered** engine for faster AudioWorklet compilation and improved DX.
 
-### 🟡 Phase 2: Internal Modulation & Living Sound
+### 🟡 Phase 2: Adaptive Music & Living Sound
 * **Internal Modulators:** Native LFOs and Randomizers for Pitch/Gain to eliminate "sterile" digital playback without external RTPC calls.
-* **Vertical Music API:** High-level abstractions for `SmartLoopManager` to handle game states (e.g., *Exploration* → *Combat*) via semantic transitions.
+* **Unified Music Manager (The Conductor):** A high-level facade to coordinate **Horizontal** transitions (via `SmartLoopManager`) and **Vertical** intensity changes (via `MixerStateManager`).
+    * *Example:* `music.setIntensity(0.8)` smoothly ramps RTPC parameters and mixer layers, while `music.transitionTo('Combat')` triggers a quantized region change.
+* **Semantic Music States:** Moving away from manual snapshot pushing to state-based logic (e.g., *Exploration* → *Combat*) where the engine resolves both the loop region and the mix layer automatically.
 
 ### 🟢 Phase 3: Spatial Context & Environments
 * **Dattorro Reverb Integration:** Implementing high-quality plate reverb as a native FX Bus plugin.
