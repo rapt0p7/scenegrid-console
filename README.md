@@ -1,5 +1,13 @@
 # Snapshot-Driven Virtual Mixing Console (SceneGrid Console)
 
+[![npm version](https://img.shields.io/npm/v/scenegrid-console.svg?style=flat-square&color=cb3837)](https://www.npmjs.com/package/scenegrid-console)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tested with Vitest](https://img.shields.io/badge/tested_with-Vitest-729B1B.svg?style=flat-square&logo=vitest)](https://vitest.dev/)
+[![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg?style=flat-square)](https://github.com/rapt0p7/scenegrid-console)
+[![Code Style: Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://prettier.io/)
+[![License: PolyForm](https://img.shields.io/badge/License-PolyForm%20Noncommercial-purple.svg?style=flat-square)](./LICENSE.md)
+[![Web Audio API](https://img.shields.io/badge/Web_Audio-API-ffb244.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+
 > **Project Status:** Independent research project started ~mid 2025.
 
 The **SceneGrid Console** is a high-performance, virtual digital mixing console built on the Web Audio API. It features a fixed signal path architecture, sample-accurate automation, and support for complex, multi-layered mix states.
