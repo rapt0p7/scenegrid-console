@@ -4,7 +4,8 @@ import mitt from 'mitt';
 
 import type MixerCoordinator from './MixerCoordinator';
 import type MixerLayerStack from './MixerLayer';
-import type { MixerSnapshot, MixerEvents } from '../interfaces/IMixerStateManager';
+import type { MixerEvents } from '../interfaces/IMixerStateManager';
+import type { ISnapshots } from '../interfaces/ISnapshots';
 import type { Emitter } from 'mitt';
 
 export default class MixerSnapshotManager {
@@ -12,7 +13,7 @@ export default class MixerSnapshotManager {
 
     constructor(
         private readonly layerStack: MixerLayerStack,
-        private readonly snapshots: Record<string, MixerSnapshot>,
+        private readonly snapshots: ISnapshots,
         private readonly coordinator: MixerCoordinator
     ) {}
 

@@ -1,6 +1,7 @@
-import type { MixerSnapshot } from 'src/interfaces/IMixerStateManager';
+import type { ISnapshots } from 'src';
 
-const Snapshots: Record<string, MixerSnapshot> = {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const Snapshots: ISnapshots = {
     idle: {
         buses: {
             musicMain: { gain: 1, sends: {}, filter: null, sidechain: { enabled: true } },
@@ -8,7 +9,9 @@ const Snapshots: Record<string, MixerSnapshot> = {
             musicCombat: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
             musicLounge: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
             sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             FX_REVERB: {
                 gain: 1,
                 sends: {},
@@ -25,7 +28,9 @@ const Snapshots: Record<string, MixerSnapshot> = {
             musicCombat: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
             musicLounge: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
             sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             FX_REVERB: {
                 gain: 1,
                 sends: {},
@@ -42,7 +47,9 @@ const Snapshots: Record<string, MixerSnapshot> = {
             musicCombat: { gain: 1, sends: {}, filter: null, sidechain: { enabled: true } },
             musicLounge: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
             sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             FX_REVERB: {
                 gain: 1,
                 sends: {},
@@ -59,7 +66,9 @@ const Snapshots: Record<string, MixerSnapshot> = {
             musicCombat: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
             musicLounge: { gain: 1, sends: {}, filter: null, sidechain: { enabled: true } },
             sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             FX_REVERB: {
                 gain: 1,
                 sends: {},
@@ -81,7 +90,9 @@ const Snapshots: Record<string, MixerSnapshot> = {
             musicCombat: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
             musicLounge: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
             sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             FX_REVERB: {
                 gain: 1,
                 sends: {},

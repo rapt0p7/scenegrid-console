@@ -1,9 +1,9 @@
 // noinspection D
 
 import type { IAudioEngineConfig } from '../interfaces/IAudioEngineConfig';
-import type { IBuses, IBus } from '../interfaces/IBuses';
-import type { MixerSnapshot } from '../interfaces/IMixerStateManager';
+import type { IBuses } from '../interfaces/IBuses';
 import type { IRTPCConfig } from '../interfaces/IRTPCManager';
+import type { ISnapshots } from '../interfaces/ISnapshots';
 import type {
     IContainerSoundConfig,
     ILayeredSoundConfig,
@@ -34,7 +34,7 @@ export default class ConsistencyChecker {
 
     private readonly soundMap: ISoundMap;
     private readonly buses: IBuses;
-    private readonly snapshots: Record<string, MixerSnapshot>;
+    private readonly snapshots: ISnapshots;
     private readonly manifest: ISpriteSoundManifest;
 
     private readonly errors: string[] = [];
@@ -49,7 +49,7 @@ export default class ConsistencyChecker {
         soundMapConfig: ISoundMap;
         soundManifest: ISpriteSoundManifest;
         busSystemConfig: IBuses;
-        snapshotsConfig: Record<string, MixerSnapshot>;
+        snapshotsConfig: ISnapshots;
     }) {
         this.soundMap = soundMapConfig;
         this.manifest = soundManifest;
@@ -66,6 +66,7 @@ export default class ConsistencyChecker {
         this.report();
     }
 
+    // eslint-disable-next-line max-params
     private assertType(
         path: string,
         value: any,
@@ -356,6 +357,7 @@ export default class ConsistencyChecker {
 
         if (spatial.position && this.assertArray(`soundMap.${soundId}.spatial.position`, spatial.position, false)) {
             if (spatial.position.length === 3) {
+                // eslint-disable-next-line unicorn/no-array-for-each
                 spatial.position.forEach((value: any, index: number) => {
                     this.assertType(`soundMap.${soundId}.spatial.position[${index}]`, value, 'number', false);
                 });
@@ -377,6 +379,7 @@ export default class ConsistencyChecker {
         return !!cfg?.smartLoop?.regions;
     }
 
+    // eslint-disable-next-line complexity
     private checkOrphanManifestSounds(): void {
         const referenced = new Set<string>();
 
@@ -416,7 +419,7 @@ export default class ConsistencyChecker {
     private report(): void {
         if (this.errors.length > 0) {
             console.groupCollapsed('%c[AudioSystem] ConsistencyChecker: ERRORS', 'color:red;font-weight:bold');
-            for (const e of this.errors) console.error(e);
+            for (const error of this.errors) console.error(error);
             console.groupEnd();
         }
 

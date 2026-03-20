@@ -1,5 +1,3 @@
-import type { IBuses } from './IBuses';
+import type { MixerSnapshot } from './IMixerStateManager';
 
-export interface ISnapshots {
-    [key: string]: IBuses;
-}
+export type ISnapshots = Record<string, MixerSnapshot>;
