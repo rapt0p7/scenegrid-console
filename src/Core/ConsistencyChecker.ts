@@ -141,6 +141,13 @@ export default class ConsistencyChecker {
                 }
             }
 
+            if (busCfg.sidechain) {
+                this.assertType(`buses.${busId}.sidechain`, busCfg.sidechain, 'object');
+                if (busCfg.sidechain.enabled !== undefined) {
+                    this.assertType(`buses.${busId}.sidechain.enabled`, busCfg.sidechain.enabled, 'boolean');
+                }
+            }
+
             this.checkRTPC(`buses.${busId}`, busCfg.rtpc);
         }
     }
@@ -247,7 +254,14 @@ export default class ConsistencyChecker {
                     this.errors.push(`Sound "${soundId}" has non-string ducking target`);
                     continue;
                 }
-                if (!validBuses.includes(target)) {
+                if (validBuses.includes(target)) {
+                    const targetBusCfg = this.buses[target] as any;
+                    if (!targetBusCfg.sidechain || targetBusCfg.sidechain.enabled !== true) {
+                        this.errors.push(
+                            `Sound "${soundId}" targets bus "${target}" for ducking, but sidechain is not enabled on "${target}" bus.`
+                        );
+                    }
+                } else {
                     this.errors.push(`Sound "${soundId}" has invalid ducking target "${target}"`);
                 }
             }
