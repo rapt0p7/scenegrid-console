@@ -115,8 +115,7 @@ The system follows a **Data-Driven** initialization pattern. This separates audi
 The following example demonstrates how to configure the engine, initialize the registry, and unlock the `AudioContext` following a required user gesture.
 
 ```typescript
-import { AudioEngine } from './src';
-import { PRIORITY } from './src/Managers/MixerLayer';
+import { AudioEngine, PRIORITY } from 'scenegrid-console';
 
 // Configuration manifests
 import Buses from './audio-config/Buses';
