@@ -194,7 +194,10 @@ describe('AudioEngine', () => {
             manifest: {
                 test_sound: { url: 'audio/test.mp3' }
             },
-            buses: { master: { gain: 1 }, sfx: { gain: 1 } },
+            buses: {
+                master: { gain: 1 },
+                sfx: { gain: 1, sidechain: { enabled: true } }
+            },
             snapshots: {},
             soundMap: {
                 test_sound: { busId: 'sfx', voice: { priority: 5 }, spatial: true },
@@ -258,16 +261,6 @@ describe('AudioEngine', () => {
             await expect(engine.unlock()).resolves.not.toThrow();
         });
 
-        it('should delegate createSidechain to BusSystem', () => {
-            const debugObject = engine._debug;
-            const scSpy = vi
-                .spyOn(debugObject.busSystem, 'createSidechain')
-                .mockImplementation((busId: string) => null);
-
-            engine.createSidechain('master', { intensity: 0.8 });
-            expect(scSpy).toHaveBeenCalledWith('master', { intensity: 0.8 });
-        });
-
         it('should initialize AudioDebugger on showDebugUI', () => {
             engine.showDebugUI({ isUseAnalyzer: true });
             expect(AudioDebugger).toHaveBeenCalledTimes(1);
@@ -312,8 +305,11 @@ describe('AudioEngine', () => {
             expect(cullingOptions.busVolumeResolver('ghost')).toBe(1);
         });
 
-        it('should successfully call PluginFactory sidechain methods', () => {
-            expect(() => engine.createSidechain('master')).not.toThrow();
+        it('should successfully initialize sidechains from config without errors', () => {
+            const debugObject = engine._debug;
+            const sfxSidechain = debugObject.busSystem.getSidechain('sfx');
+            expect(sfxSidechain).toBeDefined();
+            expect(sfxSidechain?.activeEnvelope).toBe(0);
         });
     });
 

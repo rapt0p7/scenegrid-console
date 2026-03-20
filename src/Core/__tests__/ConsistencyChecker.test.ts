@@ -77,6 +77,47 @@ describe('ConsistencyChecker', () => {
         });
     });
 
+    describe('Sidechain Validations', () => {
+        it('should validate sidechain property on bus config', () => {
+            const config: any = {
+                buses: {
+                    master: { gain: 1, sidechain: { enabled: true } }, // OK
+                    bad1: { gain: 1, sidechain: 'not an object' }, // Fail
+                    bad2: { gain: 1, sidechain: { enabled: 'yes' } } // Fail
+                },
+                soundMap: {}
+            };
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "buses.bad1.sidechain"'));
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "buses.bad2.sidechain.enabled": expected boolean')
+            );
+        });
+
+        it('should fail if sound targets a bus for ducking that has no sidechain enabled', () => {
+            const config: any = {
+                buses: {
+                    master: { gain: 1 },
+                    sfx: { gain: 1, sidechain: { enabled: false } },
+                    music: { gain: 1, sidechain: { enabled: true } }
+                },
+                soundMap: {
+                    sound1: { busId: 'sfx', ducking: { target: 'master' } },
+                    sound2: { busId: 'sfx', ducking: { target: 'sfx' } },
+                    sound3: { busId: 'sfx', ducking: { target: 'music' } }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('targets bus "master" for ducking, but sidechain is not enabled')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('targets bus "sfx" for ducking, but sidechain is not enabled')
+            );
+        });
+    });
+
     describe('SoundMap, Ducking & Spatial Validations', () => {
         it('should fail if sound references unknown bus or lacks busId', () => {
             const config: any = {
@@ -89,7 +130,7 @@ describe('ConsistencyChecker', () => {
             expect(ConsistencyChecker.validate(config)).toBe(false);
         });
 
-        it('should validate ducking targets', () => {
+        it('should validate ducking targets (unknown bus)', () => {
             const config: any = {
                 buses: { master: {} },
                 soundMap: { s1: { busId: 'master', ducking: { target: ['unknown_bus'] } } }

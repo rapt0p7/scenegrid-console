@@ -59,7 +59,11 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
                 load: vi.fn().mockResolvedValue(undefined),
                 dispose: vi.fn()
             }),
-            createSidechain: vi.fn(),
+            createSidechain: vi.fn().mockReturnValue({
+                insertLookahead: vi.fn(),
+                start: vi.fn().mockResolvedValue(undefined),
+                activeEnvelope: 0.5
+            }),
             getFiltersPlugin: vi.fn().mockReturnValue({
                 inputNode: { connect: vi.fn() },
                 outputNode: { connect: vi.fn() },
@@ -80,6 +84,26 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
         expect(busSystem.getBus('music')).toBeDefined();
         expect(busSystem.getBus('sfx')).toBeDefined();
         expect(mockContext.createGain).toHaveBeenCalled();
+    });
+
+    it('should auto-initialize sidechains if defined in bus config', async () => {
+        const configWithSidechain = {
+            ...mockBusConfig,
+            sfx: { gain: 0.8, sidechain: { enabled: true } }
+        };
+
+        const busSystem = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: configWithSidechain,
+            pluginFactory: mockPluginFactory
+        });
+
+        await flushPromises();
+
+        expect(mockPluginFactory.createSidechain).toHaveBeenCalled();
+        expect(busSystem.getSidechain('sfx')).toBeDefined();
     });
 
     it('should successfully load CUSTOM limiter from PluginFactory', async () => {
@@ -277,7 +301,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
 describe('AudioBusSystem (Getters & Gain Calculations)', () => {
     let system: AudioBusSystem;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         vi.clearAllMocks();
         const mockContext = createMockContext();
 
@@ -285,21 +309,30 @@ describe('AudioBusSystem (Getters & Gain Calculations)', () => {
             createLimiter: vi
                 .fn()
                 .mockReturnValue({ load: vi.fn(), inputNode: { connect: vi.fn() }, outputNode: { connect: vi.fn() } }),
-            createSidechain: vi.fn().mockReturnValue({ insertLookahead: vi.fn(), start: vi.fn(), activeEnvelope: 0.5 })
+            createSidechain: vi.fn().mockReturnValue({
+                insertLookahead: vi.fn(),
+                start: vi.fn().mockResolvedValue(undefined),
+                activeEnvelope: 0.5
+            })
         };
 
         system = new AudioBusSystem({
             context: mockContext,
             automation: { set: vi.fn(), ramp: vi.fn() } as any,
             masterOutput: { input: {} } as any,
-            busConfig: { sfx: { gain: 1 } },
+            busConfig: {
+                sfx: { gain: 1 },
+                ducked: { gain: 1, sidechain: { enabled: true } }
+            },
             pluginFactory: mockPluginFactory as any
         });
+
+        await flushPromises();
     });
 
     it('should return buses map and master node', () => {
         const buses = system.getAllBuses();
-        expect(buses.size).toBe(1);
+        expect(buses.size).toBe(2);
         expect(system.getMasterNode()).toBeDefined();
     });
 
@@ -307,17 +340,14 @@ describe('AudioBusSystem (Getters & Gain Calculations)', () => {
         expect(system.getCurrentRealGain('sfx')).toBe(1);
         expect(system.getCurrentRealGain('ghost' as any)).toBe(0);
 
-        system.createSidechain('sfx');
-
-        expect(system.getCurrentRealGain('sfx')).toBe(0.5);
+        expect(system.getCurrentRealGain('ducked')).toBe(0.5);
     });
 
     it('should compute offline gain transition', () => {
         const normalTransition = system.computeOfflineGainTransition('sfx', 0.8);
         expect(normalTransition).toEqual({ from: 1, to: 0.8 });
 
-        system.createSidechain('sfx');
-        const scTransition = system.computeOfflineGainTransition('sfx', 0.8);
+        const scTransition = system.computeOfflineGainTransition('ducked', 0.8);
         expect(scTransition).toEqual({ from: 0.5, to: 0.4 });
 
         expect(system.computeOfflineGainTransition('ghost' as any, 1)).toEqual({ from: 0, to: 1 });
