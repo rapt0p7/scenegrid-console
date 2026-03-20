@@ -81,6 +81,25 @@ A virtual patchbay connecting game data (speed, health, distance) to audio param
 
 ---
 
+## 🚀 Roadmap: Towards a Complete Audio Middleware
+
+The project is evolving from a core mixing engine to a fully autonomous audio middleware.
+
+### 🔴 Phase 1: Event Logic & Voice Lifecycle (Q2 2026)
+* **Event-level State Machine:** Moving from "play(sound)" to "trigger(event)". Defining autonomous behaviors like `onPlay`, `onStop` (tails), and conditional logic.
+* **Polyphony & Voice Rules:** Implementing `maxVoices` and `cooldown` per event to prevent mix clutter and "machine-gun" effects.
+* **Vite V8 Migration:** Upgrading the build pipeline to the **Rolldown-powered** engine for faster AudioWorklet compilation and improved DX.
+
+### 🟡 Phase 2: Internal Modulation & Living Sound
+* **Internal Modulators:** Native LFOs and Randomizers for Pitch/Gain to eliminate "sterile" digital playback without external RTPC calls.
+* **Vertical Music API:** High-level abstractions for `SmartLoopManager` to handle game states (e.g., *Exploration* → *Combat*) via semantic transitions.
+
+### 🟢 Phase 3: Spatial Context & Environments
+* **Dattorro Reverb Integration:** Implementing high-quality plate reverb as a native FX Bus plugin.
+* **Environment System:** Logic-based Reverb Zones and Acoustic States (e.g., "Underwater", "Caves") using the existing Sends/Snapshot architecture.
+
+---
+
 ## 5. Repository Structure
 
 Based on the internal dependency graph:
