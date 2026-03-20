@@ -2,6 +2,7 @@ import { safeDisconnect } from '@webaudio-core';
 
 import AudioBus from './AudioBus';
 
+import type { IAudioBusSystem, BusId } from '../interfaces/IAudioBusSystem';
 import type { ILimiterNode, IPluginFactory, ISidechain } from '../interfaces/IAudioPlugins';
 import type { IBuses } from '../interfaces/IBuses';
 import type { IDuckingConfig } from '../interfaces/ISoundConfig';
@@ -13,7 +14,6 @@ import type {
     AutomationEngine,
     MasterOutput
 } from '@webaudio-core';
-import { IAudioBusSystem, BusId } from '../interfaces/IAudioBusSystem';
 
 export default class AudioBusSystem implements IAudioBusSystem {
     private readonly context: AudioCtx;
@@ -67,7 +67,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
             this.routerMasterGain.connect(this.postLimiterGain);
         }
 
-        this.initBuses();
+        void this.initBuses();
     }
 
     public getAllBuses(): ReadonlyMap<BusId, AudioBus> {
@@ -76,19 +76,6 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
     public getMasterNode(): GainNodeLike {
         return this.postLimiterGain;
-    }
-
-    createSidechain(busId: BusId, options: IDuckingConfig = {}): ISidechain | null {
-        const bus = this.getBus(busId);
-        if (!bus) return null;
-
-        const ducker = this.pluginFactory.createSidechain(bus.inputGainNode, options);
-
-        ducker.insertLookahead(bus.preFilterGain);
-        this.sidechains.set(busId, ducker);
-        ducker.start();
-
-        return ducker;
     }
 
     getCurrentRealGain(busId: BusId): number {
@@ -148,6 +135,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
         }
     }
 
+    // eslint-disable-next-line max-params
     public applySend(sourceBusId: BusId, targetBusId: BusId, gain: number | null, durationMs: number = 0): void {
         const sourceBus = this.getBus(sourceBusId);
         const targetBus = this.getBus(targetBusId);
@@ -164,6 +152,17 @@ export default class AudioBusSystem implements IAudioBusSystem {
         if (targetInputNode || gain === null) {
             sourceBus.updateSend(targetBusId, targetInputNode as AudioNodeLike, gain, durationMs);
         }
+    }
+
+    private async createSidechain(busId: BusId, options: IDuckingConfig = {}): Promise<undefined | null> {
+        const bus = this.getBus(busId);
+        if (!bus) return null;
+
+        const ducker = this.pluginFactory.createSidechain(bus.inputGainNode, options);
+
+        ducker.insertLookahead(bus.preFilterGain);
+        this.sidechains.set(busId, ducker);
+        await ducker.start();
     }
 
     private async initLimiter(): Promise<void> {
@@ -198,13 +197,15 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 dispose: () => {
                     try {
                         fallbackNode.disconnect();
-                    } catch {}
+                    } catch {
+                        /* empty */
+                    }
                 }
             };
         }
     }
 
-    private initBuses(): void {
+    private async initBuses(): Promise<void> {
         for (const [busId, busConfig] of Object.entries(this.busConfig!)) {
             const bus = new AudioBus({
                 id: busId as BusId,
@@ -222,6 +223,9 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 for (const [targetBusId, sendGain] of Object.entries(busConfig.sends)) {
                     this.applySend(busId as BusId, targetBusId as BusId, sendGain, 0);
                 }
+            }
+            if (busConfig.sidechain?.enabled) {
+                await this.createSidechain(busId);
             }
         }
     }

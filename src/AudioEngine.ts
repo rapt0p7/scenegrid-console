@@ -37,7 +37,7 @@ import type { BusId } from './interfaces/IAudioBusSystem';
 import type { IAudioEngineConfig } from './interfaces/IAudioEngineConfig';
 import type { IPluginFactory } from './interfaces/IAudioPlugins';
 import type { ITransitionToParameters } from './interfaces/ISmartLoopManager';
-import type { IDuckingConfig, IPlayOptions } from './interfaces/ISoundConfig';
+import type { IPlayOptions } from './interfaces/ISoundConfig';
 
 export class AudioEngine {
     #contextManager!: AudioContextManager;
@@ -231,10 +231,6 @@ export class AudioEngine {
 
     public stop(playbackIdOrSoundId: number | number[] | string): void {
         this.#router.stop(playbackIdOrSoundId);
-    }
-
-    public createSidechain(busId: BusId, options?: IDuckingConfig): void {
-        this.#busSystem.createSidechain(busId, options);
     }
 
     public showDebugUI(options?: DebuggerOptions): void {

@@ -6,6 +6,9 @@ export interface IBus {
     filter?: IFilter;
     sends?: Record<string, number>;
     rtpc?: Partial<Record<RTPCTargetProperty, IRTPCConfig>>;
+    sidechain?: {
+        enabled: boolean;
+    };
 }
 
 export interface IBuses {
