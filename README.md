@@ -141,12 +141,6 @@ async function bootstrap() {
         // Required to resume the AudioContext on modern browsers
         await audio.unlock();
 
-        // Optional: Initialize sidechain processors for specific buses
-        audio.createSidechain('musicMain');
-        audio.createSidechain('musicExplore');
-        audio.createSidechain('musicCombat');
-        audio.createSidechain('musicLounge');
-
         // 4. Set Initial Mix State (Snapshots)
         // Push the base state onto the mixer stack
         await audio.mixer.push('idle', 'base:idle', PRIORITY.BASE);
@@ -167,7 +161,6 @@ bootstrap().catch(console.error);
 * **Voice Culling:** Defining `globalVoiceLimit` allows the `PlaybackScheduler` to manage the Audio Thread load and maintain FPS stability from the start.
 * **The Unlock Pattern:** The `.unlock()` method must be called within a user-initiated event (e.g., `pointerup`) to comply with browser autoplay policies.
 * **Mixer Layers:** Use `audio.mixer.push()` to apply the initial gain and filter settings defined in your Snapshots.
-* **Sidechain Creation:** Sidechains for target buses should be explicitly initialized after the engine is unlocked to correctly insert `DelayNodes` into the signal path.
 
 ---
 

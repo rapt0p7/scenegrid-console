@@ -26,11 +26,6 @@ async function bootstrap() {
 
             audio.showDebugUI({ wrapperSelector: '#wrapper' });
 
-            audio.createSidechain('musicMain');
-            audio.createSidechain('musicExplore');
-            audio.createSidechain('musicCombat');
-            audio.createSidechain('musicLounge');
-
             await audio.mixer.push('idle', 'base:idle', PRIORITY.BASE);
 
             audio.play('backgroundMain', { isLoop: true });
