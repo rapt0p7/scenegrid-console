@@ -1,6 +1,8 @@
 export { AudioEngine } from './AudioEngine';
-
+export { PRIORITY } from './Managers/MixerLayer';
 export { default as AudioDebugger } from './Debug/AudioDebugger';
+
+export { LoopState } from './interfaces/ISmartLoopManager';
 
 export type { IAudioEngineConfig } from './interfaces/IAudioEngineConfig';
 export type { IBuses, IBus } from './interfaces/IBuses';
@@ -9,5 +11,3 @@ export type { AnySoundConfig } from './interfaces/ISoundConfig';
 export type { ISnapshots } from './interfaces/ISnapshots';
 export type { IRTPCManager } from './interfaces/IRTPCManager';
 export type { QuantizeType } from './interfaces/ISmartLoopManager';
-
-export { LoopState } from './interfaces/ISmartLoopManager';

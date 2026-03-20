@@ -1,13 +1,9 @@
-import { AudioEngine } from '../src';
-import { PRIORITY } from '../src/Managers/MixerLayer';
+import { AudioEngine, PRIORITY } from '../src';
 
 import Buses from './audio-config/Buses';
 import Snapshots from './audio-config/Snapshots';
 import SoundMap from './audio-config/SoundMap';
 import soundManifest from './soundManifest';
-
-// @ts-expect-error
-globalThis.setImmediate = setTimeout;
 
 async function bootstrap() {
     const audio = new AudioEngine({
@@ -19,7 +15,7 @@ async function bootstrap() {
     });
 
     await audio.init();
-
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     globalThis.AudioEngine = audio;
 
@@ -41,6 +37,7 @@ async function bootstrap() {
             audio.play('backgroundMain2', { isLoop: true });
             audio.play('backgroundMain3', { isLoop: true });
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             await import('../src/debug.js');
         },
@@ -48,4 +45,8 @@ async function bootstrap() {
     );
 }
 
-bootstrap().catch(console.error);
+try {
+    await bootstrap();
+} catch (error) {
+    console.error(error);
+}
