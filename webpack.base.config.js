@@ -114,7 +114,7 @@ export default {
                 loader: 'esbuild-loader',
                 options: {
                     loader: 'tsx',
-                    target: 'es2018',
+                    target: 'es2022',
                     tsconfigRaw: tsconfig
                 }
             }

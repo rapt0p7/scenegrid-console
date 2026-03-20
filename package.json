@@ -12,9 +12,25 @@
         "url": "https://github.com/rapt0p7"
     },
     "type": "module",
-    "main": "index.js",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE.md"
+    ],
     "scripts": {
-        "build": "cross-env NODE_ENV=production webpack --config ./webpack.production.config.js --mode=production",
+        "build": "npm run build:lib && npm run build:demo",
+        "build:demo": "cross-env NODE_ENV=production webpack --config ./webpack.production.config.js --mode=production",
+        "build:lib": "npm run build:lib:js && npm run build:lib:types",
+        "build:lib:js": "cross-env NODE_ENV=production webpack --config ./webpack.library.config.js",
+        "build:lib:types": "tsc --project tsconfig.build.json",
         "changelog": "git cliff -o CHANGELOG.md",
         "changelog:latest": "git cliff --latest -o CHANGELOG.md",
         "changelog:preview": "git cliff --latest",
