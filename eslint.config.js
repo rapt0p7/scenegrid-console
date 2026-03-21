@@ -15,6 +15,7 @@ import deMorgan from 'eslint-plugin-de-morgan';
 import noSecrets from 'eslint-plugin-no-secrets';
 import pluginSecurity from 'eslint-plugin-security';
 import json from '@eslint/json';
+import vitest from '@vitest/eslint-plugin';
 import * as jsoncParser from 'jsonc-eslint-parser';
 
 export default tseslint.config(
@@ -41,8 +42,7 @@ export default tseslint.config(
             },
             globals: {
                 ...globals.browser,
-                ...globals.node,
-                ...globals.jest
+                ...globals.node
             }
         },
         plugins: {
@@ -338,7 +338,11 @@ export default tseslint.config(
             '**/*.test.{js,ts,jsx,tsx}',
             '**/*.spec.{js,ts,jsx,tsx}'
         ],
+        plugins: {
+            vitest
+        },
         rules: {
+            ...vitest.configs.recommended.rules,
             'unicorn/no-useless-undefined': 'off',
             '@typescript-eslint/naming-convention': 'off'
         }
