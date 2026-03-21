@@ -9,10 +9,10 @@ import type { IAudioRouter } from './interfaces/IAudioRouter';
 import type { IRTPCManager } from './interfaces/IRTPCManager';
 import type {
     AnySoundConfig,
+    IBaseSoundConfig,
     IContainerSoundConfig,
     ILayeredSoundConfig,
-    IPlayOptions,
-    ISoundConfig
+    IPlayOptions
 } from './interfaces/ISoundConfig';
 import type { ISoundMap } from './interfaces/ISoundMap';
 import type ContainerManager from './Managers/ContainerManager';
@@ -72,14 +72,8 @@ export default class AudioRouter implements IAudioRouter {
         const config = this.getSoundConfig(name);
 
         if (!config) {
-            const result = this.soundController.play(name, {
-                when: (options.seek ?? 0) / 1000,
-                offset: (options.seek ?? 0) / 1000,
-                loop: options.isLoop,
-                rate: options.rate
-            });
-
-            return result ? result.playbackId : null;
+            console.warn(`[AudioRouter] Sound "${name}" ignored: not found in config.`);
+            return null;
         }
 
         if ('isContainer' in config && config.isContainer) {
@@ -163,7 +157,7 @@ export default class AudioRouter implements IAudioRouter {
         return playbackIds.length > 0 ? playbackIds : null;
     }
 
-    private applyVariation(config: ISoundConfig | IContainerSoundConfig, options: IPlayOptions): IPlayOptions {
+    private applyVariation(config: IBaseSoundConfig, options: IPlayOptions): IPlayOptions {
         if (!config.variation) return { ...options };
 
         const v = config.variation;

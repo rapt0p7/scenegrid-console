@@ -1,5 +1,12 @@
 import type { IRTPCConfig, RTPCTargetProperty } from './IRTPCManager';
 
+export interface IBaseSoundConfig {
+    busId?: string;
+    variation?: IVariationConfig;
+    ducking?: IDuckingConfig;
+    rtpc?: Partial<Record<RTPCTargetProperty, IRTPCConfig>>;
+}
+
 export interface ISpatialConfig {
     distanceModel?: DistanceModelType;
     refDistance?: number;
@@ -26,14 +33,10 @@ export interface IVoiceConfig {
 
 export type ContainerMode = 'random' | 'random_no_repeat' | 'sequence';
 
-export interface ISoundConfig {
-    busId: string;
+export interface ISoundConfig extends IBaseSoundConfig {
     isLoop?: boolean;
     voice?: IVoiceConfig;
     src?: string;
-    variation?: IVariationConfig;
-    ducking?: IDuckingConfig;
-    rtpc?: Partial<Record<RTPCTargetProperty, IRTPCConfig>>;
     spatial?: ISpatialConfig | boolean;
 }
 
@@ -47,14 +50,10 @@ export interface ISmartLoopSoundConfig {
     };
 }
 
-export interface IContainerSoundConfig {
+export interface IContainerSoundConfig extends IBaseSoundConfig {
     isContainer: true;
     mode: ContainerMode;
     sources: string[];
-    busId?: string;
-    variation?: IVariationConfig;
-    ducking?: IDuckingConfig;
-    rtpc?: Partial<Record<RTPCTargetProperty, IRTPCConfig>>;
 }
 
 export interface ILayerConfig {
@@ -65,8 +64,8 @@ export interface ILayerConfig {
 }
 
 export interface ILayeredSoundConfig {
+    isLayered: true;
     busId: string;
-    isLayered: boolean;
     ducking?: IDuckingConfig;
     layers: ILayerConfig[];
 }
@@ -76,10 +75,6 @@ export interface IPlayOptions {
     rate?: number;
     volume?: number;
     seek?: number;
-    on?: {
-        event: string;
-        callback: Function;
-    };
 }
 
 export type AnySoundConfig = ISoundConfig | ISmartLoopSoundConfig | IContainerSoundConfig | ILayeredSoundConfig;
