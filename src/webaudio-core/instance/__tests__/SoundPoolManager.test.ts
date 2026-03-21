@@ -6,7 +6,7 @@ import type { ISoundInstance } from '@webaudio-core';
 import type { IVoiceConfig } from '@webaudio-core';
 
 function createMockInstance(id: string): ISoundInstance {
-    const listeners: Record<string, Function[]> = {};
+    const listeners: Record<string, Array<(...arguments_: any[]) => any>> = {};
     return {
         id,
         state: 'idle',
@@ -18,7 +18,7 @@ function createMockInstance(id: string): ISoundInstance {
         stop: vi.fn().mockImplementation(function (this: any) {
             this.state = 'stopped';
             if (listeners['ended']) {
-                listeners['ended'].forEach(cb => cb(this));
+                for (const callback of listeners['ended']) callback(this);
             }
         }),
         pause: vi.fn(),
@@ -30,7 +30,7 @@ function createMockInstance(id: string): ISoundInstance {
         setRate: vi.fn(),
         setLoop: vi.fn(),
         dispose: vi.fn(),
-        on: vi.fn().mockImplementation((event: string, handler: Function) => {
+        on: vi.fn().mockImplementation((event: string, handler: (...arguments_: any[]) => any) => {
             if (!listeners[event]) listeners[event] = [];
             listeners[event].push(handler);
             return () => {
@@ -133,7 +133,7 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
 describe('SoundPoolManager (Policy: "expand")', () => {
     let mockFactory: ReturnType<typeof vi.fn>;
     let manager: SoundPoolManager;
-    let eventHandlers: Record<string, Function>;
+    let eventHandlers: Record<string, (...arguments_: any[]) => any>;
 
     beforeEach(() => {
         vi.clearAllMocks();

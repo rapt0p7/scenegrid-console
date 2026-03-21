@@ -10,7 +10,7 @@ describe('InstanceRTPCBinder', () => {
     let mockRtpcManager: any;
     let mockEmitter: any;
 
-    let instanceEventHandlers: Record<string, Function> = {};
+    let instanceEventHandlers: Record<string, (...arguments_: any[]) => any> = {};
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -28,7 +28,7 @@ describe('InstanceRTPCBinder', () => {
 
         mockInstance = {
             automate: vi.fn(),
-            on: vi.fn().mockImplementation((event: string, handler: Function) => {
+            on: vi.fn().mockImplementation((event: string, handler: (...arguments_: any[]) => any) => {
                 instanceEventHandlers[event] = handler;
                 return () => delete instanceEventHandlers[event];
             }),

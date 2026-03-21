@@ -15,8 +15,10 @@ vi.mock('../../helpers/visualizers', () => ({
     createMeters: vi.fn().mockResolvedValue(undefined)
 }));
 
+// eslint-disable-next-line import/order
 import AudioMotionAnalyzer from 'audiomotion-analyzer';
 
+// eslint-disable-next-line import/order
 import { createFrequencyCurveWithRMS, createMeters } from '../../helpers/visualizers';
 
 describe('AudioDebugger', () => {
@@ -35,8 +37,7 @@ describe('AudioDebugger', () => {
         mockContext = {};
         mockMasterNode = { connect: vi.fn() };
 
-        const mockBuses = new Map();
-        mockBuses.set('sfx_bus', { postFilterGain: { connect: vi.fn() } });
+        const mockBuses = new Map([['sfx_bus', { postFilterGain: { connect: vi.fn() } }]]);
 
         mockBusSystem = {
             getAllBuses: vi.fn().mockReturnValue(mockBuses)
@@ -77,7 +78,8 @@ describe('AudioDebugger', () => {
         const columns = wrapperElement.querySelectorAll('.bus-column');
         expect(columns.length).toBe(2);
 
-        const titles = Array.from(wrapperElement.querySelectorAll('.bus-title')).map(el => el.textContent);
+        // eslint-disable-next-line unicorn/prefer-spread
+        const titles = Array.from(wrapperElement.querySelectorAll('.bus-title')).map(element => element.textContent);
         expect(titles).toContain('Master');
         expect(titles).toContain('sfx_bus');
 

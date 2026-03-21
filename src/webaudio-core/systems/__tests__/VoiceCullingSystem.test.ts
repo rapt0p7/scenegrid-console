@@ -62,8 +62,9 @@ describe('VoiceCullingSystem (Background Optimizer)', () => {
         cullingSystem.stop();
     });
 
-    function triggerTick() {
-        const tickCallback = vi.mocked(workerTimers.setInterval).mock.calls[0][0] as Function;
+    // eslint-disable-next-line unicorn/consistent-function-scoping
+    function triggerTick(): void {
+        const tickCallback = vi.mocked(workerTimers.setInterval).mock.calls[0][0] as (...arguments_: any[]) => any;
         tickCallback();
     }
 

@@ -295,13 +295,14 @@ describe('AudioEngine', () => {
             expect(cullingOptions.busIdResolver('test_sound')).toBe('sfx');
             expect(cullingOptions.busIdResolver('unknown')).toBeUndefined();
 
-            const debugObject = engine._debug;
-            const sfxBus = debugObject.busSystem.getBus('sfx' as any);
-            if (sfxBus) {
-                sfxBus.logicalTargetGain = 0.8;
-                sfxBus.inputGainNode.gain.value = 0.5;
-                expect(cullingOptions.busVolumeResolver('sfx')).toBe(0.8);
-            }
+            const sfxBus = engine._debug.busSystem.getBus('sfx' as any);
+
+            expect(sfxBus).toBeDefined();
+
+            sfxBus!.logicalTargetGain = 0.8;
+            sfxBus!.inputGainNode.gain.value = 0.5;
+
+            expect(cullingOptions.busVolumeResolver('sfx')).toBe(0.8);
             expect(cullingOptions.busVolumeResolver('ghost')).toBe(1);
         });
 

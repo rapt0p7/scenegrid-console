@@ -15,7 +15,7 @@ describe('SoundRegistry', () => {
     it('should throw an error if retrieving an unregistered sound', () => {
         const registry = new SoundRegistry();
 
-        expect(() => registry.get('unknown')).toThrowError('Sound "unknown" not registered');
+        expect(() => registry.get('unknown')).toThrow('Sound "unknown" not registered');
     });
 
     it('should expose the internal map via the registry getter', () => {
