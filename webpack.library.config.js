@@ -26,7 +26,7 @@ export default {
         clean: true
     },
 
-    externals: ['audiomotion-analyzer', 'mitt', 'standardized-audio-context', 'tweakpane', 'worker-timers'],
+    externals: ['mitt', 'standardized-audio-context', 'tweakpane', 'worker-timers'],
 
     resolve: {
         extensions: ['.ts', '.js'],

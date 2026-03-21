@@ -1,7 +1,5 @@
 // noinspection D
 
-import AudioMotionAnalyzer from 'audiomotion-analyzer';
-
 import { createFrequencyCurveWithRMS, createMeters } from '../helpers/visualizers';
 
 import type { IAudioBusSystem } from '../interfaces/IAudioBusSystem';
@@ -38,6 +36,7 @@ export default class AudioDebugger {
 
         const activeBuses = this.busSystem.getAllBuses();
         for (const [busId, bus] of activeBuses.entries()) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             busesToAnalyze.push({ name: busId, node: bus.postFilterGain });
         }
@@ -80,34 +79,11 @@ export default class AudioDebugger {
             for (const item of uiColumns) {
                 if (!item) continue;
 
-                if (isUseAnalyzer) {
-                    // @ts-ignore
-                    new AudioMotionAnalyzer(item.specContainer, {
-                        audioCtx: this.context as any,
-                        source: item.node as any,
-                        // @ts-ignore
-                        canvas: item.canvas,
-                        connectSpeakers: false,
-                        mode: 0,
-                        fftSize: 8192,
-                        frequencyScale: 'log',
-                        minDecibels: -90,
-                        maxDecibels: -20,
-                        smoothing: 0.4,
-                        showPeaks: true,
-                        peakHoldTime: 450,
-                        peakFadeTime: 600,
-                        gradient: 'classic',
-                        mirror: 0,
-                        maxFPS: 60
-                    });
-                } else {
-                    await createFrequencyCurveWithRMS(
-                        item.specContainer as any,
-                        item.node as any,
-                        window.screen.availWidth / uiColumns.length - 4
-                    );
-                }
+                await createFrequencyCurveWithRMS(
+                    item.specContainer as any,
+                    item.node as any,
+                    window.screen.availWidth / uiColumns.length - 4
+                );
 
                 await createMeters(
                     item.meterContainer as any,

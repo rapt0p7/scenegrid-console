@@ -66,7 +66,6 @@
     },
     "dependencies": {
         "@tweakpane/plugin-essentials": "0.2.1",
-        "audiomotion-analyzer": "4.5.2",
         "globalthis": "1.0.4",
         "mitt": "3.0.1",
         "standardized-audio-context": "25.3.77",
