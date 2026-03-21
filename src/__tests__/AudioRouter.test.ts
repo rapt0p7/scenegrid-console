@@ -111,11 +111,11 @@ describe('AudioRouter', () => {
         expect(mockController.play).toHaveBeenCalledWith('var2.wav', expect.any(Object));
     });
 
-    it('should fallback to plain soundController.play if config is not found', () => {
+    it('should reject to plain soundController.play if config is not found', () => {
         const result = router.play('unknown_sound', { rate: 1.5 });
 
-        expect(result).toBe(1);
-        expect(mockController.play).toHaveBeenCalledWith('unknown_sound', expect.objectContaining({ rate: 1.5 }));
+        expect(result).toBe(null);
+        expect(mockController.play).not.toHaveBeenCalled();
         expect(mockBusSystem.routeInstance).not.toHaveBeenCalled();
     });
 
