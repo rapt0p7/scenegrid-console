@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AudioRouter from '../AudioRouter';
 
@@ -52,6 +52,8 @@ describe('AudioRouter', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.spyOn(console, 'log').mockImplementation(() => {});
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         mockInstance = { instanceGain: {} };
 
@@ -76,6 +78,10 @@ describe('AudioRouter', () => {
             containerManager: mockContainerManager,
             soundMap: testSoundMap
         });
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     it('should play a simple sound and apply config', () => {
