@@ -1,22 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+// eslint-disable-next-line import/order
 import AudioDebugger from '../AudioDebugger';
-
-vi.mock('audiomotion-analyzer', () => {
-    return {
-        default: vi.fn().mockImplementation(function () {
-            return {};
-        })
-    };
-});
 
 vi.mock('../../helpers/visualizers', () => ({
     createFrequencyCurveWithRMS: vi.fn().mockResolvedValue(undefined),
     createMeters: vi.fn().mockResolvedValue(undefined)
 }));
-
-// eslint-disable-next-line import/order
-import AudioMotionAnalyzer from 'audiomotion-analyzer';
 
 // eslint-disable-next-line import/order
 import { createFrequencyCurveWithRMS, createMeters } from '../../helpers/visualizers';
@@ -87,18 +77,6 @@ describe('AudioDebugger', () => {
         expect(wrapperElement.querySelectorAll('.meter-box').length).toBe(2);
     });
 
-    it('should initialize AudioMotionAnalyzer if isUseAnalyzer is true', async () => {
-        const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
-
-        debuggerInstance.init({ wrapperSelector: '#wrapper', isUseAnalyzer: true });
-
-        await new Promise(r => setTimeout(r, 0));
-
-        expect(AudioMotionAnalyzer).toHaveBeenCalledTimes(2);
-        expect(createMeters).toHaveBeenCalledTimes(2);
-        expect(createFrequencyCurveWithRMS).not.toHaveBeenCalled();
-    });
-
     it('should initialize custom visualizers if isUseAnalyzer is false', async () => {
         const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
 
@@ -108,8 +86,6 @@ describe('AudioDebugger', () => {
 
         expect(createFrequencyCurveWithRMS).toHaveBeenCalledTimes(2);
         expect(createMeters).toHaveBeenCalledTimes(2);
-
-        expect(AudioMotionAnalyzer).not.toHaveBeenCalled();
     });
 
     it('should gracefully handle buses with missing postFilterGain nodes', async () => {
