@@ -36,4 +36,15 @@ The following music stems are part of the **Contemplative Fantasy Music Pack** b
 - `asami_main_loop_intro.mp3`
   Source: [YannZ on Itch.io](https://yannz41.itch.io/contemplative-fantasy-music-pack)
 ---
+
 *Note: These assets are included in the `/examples` directory only for technical demonstration of the SceneGrid Console engine.*
+
+---
+## UI Icons
+The audio-specific icons used in the UI of this project are provided by the **Fontaudio** toolkit.
+
+- **Fontaudio** by [@fefanto](https://github.com/fefanto) - https://github.com/fefanto/fontaudio
+- **License**: https://github.com/fefanto/fontaudio/blob/master/README.md#license
+  *(Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)*
+
+*Note: All brand logos included in the Fontaudio set are trademarks of their respective owners. The use of these trademarks does not indicate endorsement of the trademark holder by this project, nor vice versa. They are used solely to represent the company, product, or service to which they refer.*
