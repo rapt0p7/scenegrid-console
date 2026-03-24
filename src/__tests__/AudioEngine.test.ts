@@ -261,12 +261,9 @@ describe('AudioEngine', () => {
             await expect(engine.unlock()).resolves.not.toThrow();
         });
 
-        it('should initialize AudioDebugger on showDebugUI', () => {
-            engine.showDebugUI({ isUseAnalyzer: true });
+        it('should initialize AudioDebugger on showDebugUI', async () => {
+            await engine.showDebugUI();
             expect(AudioDebugger).toHaveBeenCalledTimes(1);
-
-            const mockDebuggerInstance = (AudioDebugger as any).mock.results[0].value;
-            expect(mockDebuggerInstance.init).toHaveBeenCalledWith({ isUseAnalyzer: true });
         });
     });
 

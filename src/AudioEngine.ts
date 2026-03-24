@@ -19,7 +19,6 @@ import ConsistencyChecker from './Core/ConsistencyChecker';
 import FiltersPlugin from './Core/FiltersPlugin';
 import SidechainDucker from './Core/SidechainDucker';
 import TinyLimiterNode from './Core/TinyLimiterNode';
-import AudioDebugger from './Debug/AudioDebugger';
 import deepFreeze from './helpers/deepFreeze';
 import ContainerManager from './Managers/ContainerManager';
 import DuckingManager from './Managers/DuckingManager';
@@ -233,7 +232,8 @@ export class AudioEngine {
         this.#router.stop(playbackIdOrSoundId);
     }
 
-    public showDebugUI(options?: DebuggerOptions): void {
+    public async showDebugUI(options?: DebuggerOptions): Promise<void> {
+        const { default: AudioDebugger } = await import('./Debug/AudioDebugger');
         const debuggerInstance = new AudioDebugger(
             this.#contextManager.context,
             this.#busSystem,

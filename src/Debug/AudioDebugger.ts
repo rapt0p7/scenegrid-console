@@ -7,7 +7,6 @@ import type { AudioCtx, GainNodeLike } from '@webaudio-core';
 
 export interface DebuggerOptions {
     wrapperSelector?: string;
-    isUseAnalyzer?: boolean;
 }
 
 export default class AudioDebugger {
@@ -22,7 +21,7 @@ export default class AudioDebugger {
     }
 
     public init(options: DebuggerOptions = {}): void {
-        const { wrapperSelector = '#wrapper', isUseAnalyzer = false } = options;
+        const { wrapperSelector = '#wrapper' } = options;
 
         const wrapper = document.querySelector(wrapperSelector);
         if (!wrapper) {
@@ -61,16 +60,10 @@ export default class AudioDebugger {
                 col.append(title, specBox, meterBox);
                 wrapper.append(col);
 
-                let canvas = null;
-                if (isUseAnalyzer) {
-                    canvas = document.createElement('canvas');
-                }
-
                 return {
                     node: bus.node,
                     specContainer: specBox,
-                    meterContainer: meterBox,
-                    canvas
+                    meterContainer: meterBox
                 };
             })
             .filter(Boolean);

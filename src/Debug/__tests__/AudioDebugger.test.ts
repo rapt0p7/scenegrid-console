@@ -63,7 +63,7 @@ describe('AudioDebugger', () => {
     it('should create DOM structure for Master and all active buses', () => {
         const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
 
-        debuggerInstance.init({ wrapperSelector: '#wrapper', isUseAnalyzer: false });
+        debuggerInstance.init({ wrapperSelector: '#wrapper' });
 
         const columns = wrapperElement.querySelectorAll('.bus-column');
         expect(columns.length).toBe(2);
@@ -77,10 +77,10 @@ describe('AudioDebugger', () => {
         expect(wrapperElement.querySelectorAll('.meter-box').length).toBe(2);
     });
 
-    it('should initialize custom visualizers if isUseAnalyzer is false', async () => {
+    it('should initialize custom visualizers', async () => {
         const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
 
-        debuggerInstance.init({ wrapperSelector: '#wrapper', isUseAnalyzer: false });
+        debuggerInstance.init({ wrapperSelector: '#wrapper' });
 
         await new Promise(r => setTimeout(r, 0));
 
@@ -93,7 +93,7 @@ describe('AudioDebugger', () => {
 
         const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
 
-        debuggerInstance.init({ wrapperSelector: '#wrapper', isUseAnalyzer: false });
+        debuggerInstance.init({ wrapperSelector: '#wrapper' });
 
         await new Promise(r => setTimeout(r, 0));
 
