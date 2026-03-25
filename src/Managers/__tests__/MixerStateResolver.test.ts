@@ -63,12 +63,12 @@ describe('MixerStateResolver', () => {
         const resolver = new MixerStateResolver();
 
         describe('Gain Resolution', () => {
-            it('should prioritize patch gain over base gain', () => {
+            it('should modulate patch gain with base gain', () => {
                 const base = { buses: { master: { gain: 0.8 } } };
                 const patch = { buses: { master: { gain: 0.2 } } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].gain).toBe(0.2);
+                expect(result.buses['master'].gain).toBeCloseTo(0.16, 5);
             });
 
             it('should fallback to base gain if patch gain is undefined', () => {
@@ -151,12 +151,15 @@ describe('MixerStateResolver', () => {
                 expect(result.buses['master'].sends).toEqual({ reverb: 0.5 });
             });
 
-            it('should add or update sends from patch', () => {
+            it('should add or update sends from patch using modulation', () => {
                 const base = { buses: { master: { sends: { reverb: 0.5, delay: 0.2 } } } };
                 const patch = { buses: { master: { sends: { reverb: 0.8, chorus: 0.1 } } } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].sends).toEqual({ reverb: 0.8, delay: 0.2, chorus: 0.1 });
+
+                expect(result.buses['master'].sends?.reverb).toBeCloseTo(0.4, 5);
+                expect(result.buses['master'].sends?.delay).toBeCloseTo(0.2, 5);
+                expect(result.buses['master'].sends?.chorus).toBeCloseTo(0.1, 5);
             });
 
             it('should delete a send if the patch value is strictly null', () => {

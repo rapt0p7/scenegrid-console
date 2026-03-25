@@ -1,18 +1,23 @@
+import clamp from '../helpers/clamp';
+
 import type { IFilter } from '../interfaces/IFilter';
 import type { MixerSnapshot, MixerState } from '../interfaces/IMixerStateManager';
 import type { IRTPCConfig, RTPCTargetProperty } from '../interfaces/IRTPCManager';
 
 export interface MixerResolverOptions {
     defaultBusGain?: number;
+    maxGainLimit?: number;
 }
 
 const DEFAULT_BUS_GAIN = 1;
-
+const MAX_GAIN = 4;
 export default class MixerStateResolver {
     private readonly defaultBusGain: number;
+    private readonly maxGainLimit: number;
 
     constructor(options: MixerResolverOptions = {}) {
         this.defaultBusGain = options.defaultBusGain ?? DEFAULT_BUS_GAIN;
+        this.maxGainLimit = options.maxGainLimit ?? MAX_GAIN;
     }
 
     resolve(base: MixerState, patch: MixerSnapshot): MixerState {
@@ -35,8 +40,12 @@ export default class MixerStateResolver {
     }
 
     private resolveBus(base?: Partial<ResolvedBusState>, patch?: Partial<ResolvedBusState>): ResolvedBusState {
+        const baseGain = base?.gain ?? this.defaultBusGain;
+        const patchGain = patch?.gain ?? 1;
+        const resolvedGain = clamp(baseGain * patchGain, 0, this.maxGainLimit);
+
         return {
-            gain: patch?.gain ?? base?.gain ?? this.defaultBusGain,
+            gain: resolvedGain,
             filter: this.resolveFilter(base?.filter, patch?.filter),
             sidechain: this.resolveSidechain(base?.sidechain, patch?.sidechain),
             sends: this.resolveSends(base?.sends, patch?.sends),
@@ -52,11 +61,15 @@ export default class MixerStateResolver {
 
         if (!patch) return result;
 
-        for (const [key, value] of Object.entries(patch)) {
-            if (value === null) {
+        for (const [key, patchValue] of Object.entries(patch)) {
+            if (patchValue === null) {
                 delete result[key];
             } else {
-                result[key] = value;
+                const baseValue = base?.[key];
+                result[key] =
+                    baseValue !== undefined && baseValue !== null
+                        ? clamp(baseValue * patchValue, 0, this.maxGainLimit)
+                        : clamp(patchValue, 0, this.maxGainLimit);
             }
         }
 
@@ -80,7 +93,6 @@ export default class MixerStateResolver {
         patch?: Partial<Record<RTPCTargetProperty, IRTPCConfig | null>> | null
     ): Partial<Record<RTPCTargetProperty, IRTPCConfig>> {
         if (patch === null) return {};
-
         if (!patch) return base ? { ...base } : {};
 
         const result: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = { ...base };
@@ -102,9 +114,7 @@ export default class MixerStateResolver {
 interface ResolvedBusState {
     gain: number;
     filter: IFilter | null;
-    sidechain: {
-        enabled: boolean;
-    };
+    sidechain: { enabled: boolean };
     sends: Record<string, number | null>;
     rtpc: Partial<Record<RTPCTargetProperty, IRTPCConfig>>;
 }
