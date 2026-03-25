@@ -91,22 +91,23 @@ A virtual patchbay connecting game data (speed, health, distance) to audio param
 
 ## 🚀 Roadmap: Towards a Complete Audio Middleware
 
-The project is evolving from a core mixing engine to a fully autonomous audio middleware.
+*Note: Core stability, Parameter Resolution Pipeline, and basic polyphony rules are part of the v1.0 (Soft Launch) milestone. The following roadmap outlines the evolution of the engine in post-launch updates.*
 
-### 🔴 Phase 1: Event Logic & Voice Lifecycle (Q2 2026)
-* **Event-level State Machine:** Moving from "play(sound)" to "trigger(event)". Defining autonomous behaviors like `onPlay`, `onStop` (tails), and conditional logic.
-* **Polyphony & Voice Rules:** Implementing `maxVoices` and `cooldown` per event to prevent mix clutter and "machine-gun" effects.
-* **Vite V8 Migration:** Upgrading the build pipeline to the **Rolldown-powered** engine for faster AudioWorklet compilation and improved DX.
+### 🔴 Phase 1: Advanced Mechanics & DX (v1.1)
+* **Event-level State Machine:** Moving from basic "play(sound)" to "trigger(event)". Defining autonomous behaviors like `onPlay`, `onStop` (tails), and conditional logic.
+* **Modular Insert API:** Expanding the `FiltersPlugin` into a generalized `InsertPlugin` interface. This will allow programmers to inject custom DSP graphs (e.g., procedural synths or oscillators) into a voice's `NodeChain` without breaking routing invariants.
+* **Voice Culling Hysteresis:** Adding a time buffer to the virtualization logic to prevent "voice flutter" (rapid fade-in/fade-out) when active voices hover around the hardware polyphony limit.
+* **Vite V8 Migration:** Upgrading the build pipeline to the **Rolldown-powered** engine for faster AudioWorklet compilation and improved Developer Experience.
 
-### 🟡 Phase 2: Adaptive Music & Living Sound
-* **Internal Modulators:** Native LFOs and Randomizers for Pitch/Gain to eliminate "sterile" digital playback without external RTPC calls.
+### 🟡 Phase 2: Adaptive Music & Living Sound (v1.2)
+* **Internal Modulators:** Native LFOs and Envelopes for continuous parameter modulation (Pitch/Gain/Filter) to eliminate "sterile" digital playback without relying on external Game Engine Tickers.
 * **Unified Music Manager (The Conductor):** A high-level facade to coordinate **Horizontal** transitions (via `SmartLoopManager`) and **Vertical** intensity changes (via `MixerStateManager`).
     * *Example:* `music.setIntensity(0.8)` smoothly ramps RTPC parameters and mixer layers, while `music.transitionTo('Combat')` triggers a quantized region change.
 * **Semantic Music States:** Moving away from manual snapshot pushing to state-based logic (e.g., *Exploration* → *Combat*) where the engine resolves both the loop region and the mix layer automatically.
 
-### 🟢 Phase 3: Spatial Context & Environments
-* **Dattorro Reverb Integration:** Implementing high-quality plate reverb as a native FX Bus plugin.
-* **Environment System:** Logic-based Reverb Zones and Acoustic States (e.g., "Underwater", "Caves") using the existing Sends/Snapshot architecture.
+### 🟢 Phase 3: Spatial Context & Environments (v2.0)
+* **Dattorro Reverb Integration:** Implementing high-quality algorithmic plate reverb natively as an FX Bus plugin.
+* **Environment System:** Logic-based Reverb Zones and Acoustic States (e.g., "Underwater", "Caves") utilizing the existing Aux Sends and Snapshot architecture.
 
 ---
 
