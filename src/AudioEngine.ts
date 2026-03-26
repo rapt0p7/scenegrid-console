@@ -35,6 +35,7 @@ import type { DebuggerOptions } from './Debug/AudioDebugger';
 import type { BusId } from './interfaces/IAudioBusSystem';
 import type { IAudioEngineConfig } from './interfaces/IAudioEngineConfig';
 import type { IPluginFactory } from './interfaces/IAudioPlugins';
+import type { IRTPCManifest } from './interfaces/IRTPCManifest';
 import type { ITransitionToParameters } from './interfaces/ISmartLoopManager';
 import type { IPlayOptions } from './interfaces/ISoundConfig';
 
@@ -132,6 +133,8 @@ export class AudioEngine {
         const bufferLoader = new AudioBufferLoader(this.#contextManager);
         this.#masterOutput = new MasterOutput(this.#contextManager, automation);
         this.#rtpcManager = new RTPCManager();
+
+        if (this.config.rtpcManifest) this.initRTPC(this.config.rtpcManifest);
 
         const soundRegistry = new SoundRegistry();
         await this.loadSounds(this.config.manifest, bufferLoader, soundRegistry);
@@ -255,6 +258,16 @@ export class AudioEngine {
             router: this.#router,
             contextManager: this.#contextManager
         };
+    }
+
+    private initRTPC(rtpcManifest: IRTPCManifest): void {
+        for (const [parameterName, config] of Object.entries(rtpcManifest)) {
+            if (config.defaultValue !== undefined) {
+                this.#rtpcManager.setValue(parameterName, config.defaultValue);
+            }
+
+            this.#rtpcManager.configureParam(parameterName, config.attackMs ?? 0, config.releaseMs ?? 0);
+        }
     }
 
     private async loadSounds(manifest: Record<string, any>, loader: AudioBufferLoader, registry: SoundRegistry) {
