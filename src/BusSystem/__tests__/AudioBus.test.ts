@@ -70,9 +70,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         await replacePromise;
 
         expect(mockPluginFactory.getFiltersPlugin().createNode).toHaveBeenCalled();
-
         expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.postFilterGain.gain, 1, 10, 'linear');
-
         expect(bus.getConfig().filter).toBeDefined();
     });
 
@@ -111,9 +109,11 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
 
-        bus.updateSend('reverb_bus', mockTargetNode, 0.5, 0);
+        bus.updateSend({ targetBusId: 'reverb_bus', targetNode: mockTargetNode, targetGain: 0.5, durationMs: 0 });
+        await Promise.resolve();
 
-        bus.updateSend('reverb_bus', mockTargetNode, null, 100);
+        bus.updateSend({ targetBusId: 'reverb_bus', targetNode: mockTargetNode, targetGain: null, durationMs: 100 });
+        await Promise.resolve();
 
         expect(mockAutomation.ramp).toHaveBeenCalledWith(expect.any(Object), 0, 100, 'linear');
 
@@ -123,7 +123,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         expect(sendGainsMap.has('reverb_bus')).toBe(false);
     });
 
-    it('should bind RTPC for filterFrequency and pan', () => {
+    it('should bind RTPC for filterFrequency and pan and calculate additive math correctly', async () => {
         const bus = new AudioBus({
             id: 'sfx_bus',
             config: { gain: 1 },
@@ -136,34 +136,43 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         (bus as any).filterNode = { frequency: { value: 1000 } };
         (bus as any).pannerNode = { pan: { value: 0 } };
 
+        mockAutomation.ramp.mockClear();
+
+        (bus as any).targetParams.filterFrequency.logical = 1000;
+        (bus as any).targetParams.pan.logical = 0;
+
+        mockRtpcManager.getValue.mockReturnValue(100);
+
         bus.bindRTPC(
             {
                 filterFrequency: {
                     gameParam: 'speed',
                     curve: [
-                        { x: 0, y: 500 },
-                        { x: 100, y: 5000 }
+                        { x: 0, y: 0 },
+                        { x: 100, y: 500 }
                     ]
                 },
                 pan: {
                     gameParam: 'position',
                     curve: [
                         { x: -1, y: -1 },
-                        { x: 1, y: 1 }
+                        { x: 100, y: 0.5 }
                     ]
                 }
             },
             mockRtpcManager
         );
 
+        await Promise.resolve();
+
         expect(mockRtpcManager.events.on).toHaveBeenCalledTimes(2);
 
-        expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 500, 50, 'exponential');
+        expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 1500, 50, 'exponential');
 
-        expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).pannerNode.pan, 0, 50, 'linear');
+        expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).pannerNode.pan, 0.5, 50, 'linear');
     });
 
-    it('should bind RTPC to sendLevel and automate send gain when gameParam changes', () => {
+    it('should bind RTPC to sendLevel and automate send gain when gameParam changes', async () => {
         const bus = new AudioBus({
             id: 'sfx_bus',
             config: { gain: 1 },
@@ -175,9 +184,11 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
 
-        bus.updateSend('reverb_bus', mockTargetNode, 0, 0);
+        bus.updateSend({ targetBusId: 'reverb_bus', targetNode: mockTargetNode, targetGain: 1, durationMs: 0 });
+        await Promise.resolve();
 
         mockAutomation.ramp.mockClear();
+        mockRtpcManager.getValue.mockReturnValue(100);
 
         bus.bindRTPC(
             {
@@ -194,13 +205,15 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockRtpcManager
         );
 
+        await Promise.resolve();
+
         const sendGainsMap = (bus as any).sendGains as Map<string, any>;
         const reverbSendGainNode = sendGainsMap.get('reverb_bus');
 
-        expect(mockAutomation.ramp).toHaveBeenCalledWith(reverbSendGainNode.gain, 0, 200, 'linear');
+        expect(mockAutomation.ramp).toHaveBeenCalledWith(reverbSendGainNode.gain, 0.8, 200, 'linear');
     });
 
-    it('should warn and ignore RTPC sendLevel if sendTargetBus is missing or send is uninitialized', () => {
+    it('should safely ignore missing sendTargetBus and safely cache RTPC modifiers for uninitialized sends', async () => {
         const bus = new AudioBus({
             id: 'sfx_bus',
             config: { gain: 1 },
@@ -210,42 +223,37 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             pluginFactory: mockPluginFactory as any
         });
 
-        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        mockRtpcManager.getValue.mockReturnValue(100);
 
-        bus.bindRTPC(
-            {
-                sendLevel: {
-                    gameParam: 'depth',
-                    curve: [
-                        { x: 0, y: 0 },
-                        { x: 1, y: 1 }
-                    ]
-                }
-            },
-            mockRtpcManager
-        );
-
-        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("requires a 'sendTargetBus' property"));
+        expect(() => {
+            bus.bindRTPC(
+                {
+                    sendLevel: {
+                        gameParam: 'depth',
+                        curve: [{ x: 100, y: 0.5 }]
+                    }
+                },
+                mockRtpcManager
+            );
+        }).not.toThrow();
 
         bus.bindRTPC(
             {
                 sendLevel: {
                     sendTargetBus: 'ghost_bus',
                     gameParam: 'depth',
-                    curve: [
-                        { x: 0, y: 0 },
-                        { x: 1, y: 1 }
-                    ]
+                    curve: [{ x: 100, y: 0.5 }]
                 }
             },
             mockRtpcManager
         );
 
-        expect(consoleSpy).toHaveBeenCalledWith(
-            expect.stringContaining('Cannot bind RTPC to sendLevel for "ghost_bus"')
-        );
+        await Promise.resolve();
 
-        consoleSpy.mockRestore();
+        const ghostBusState = (bus as any).targetParams.sends.get('ghost_bus');
+        expect(ghostBusState).toBeDefined();
+        expect(ghostBusState.logical).toBe(0);
+        expect(ghostBusState.rtpc).toBe(0.5);
     });
 
     describe('update() logic', () => {
@@ -355,7 +363,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             expect(mockAutomation.ramp).not.toHaveBeenCalled();
         });
 
-        it('should ramp frequency and Q if they are provided in config', () => {
+        it('should ramp frequency and Q if they are provided in config', async () => {
             (bus as any).filterNode = {
                 type: 'lowpass',
                 frequency: { value: 0 },
@@ -364,7 +372,8 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
             bus.updateFilterParams({ type: 'lowpass', frequency: 800, Q: 2 });
 
-            expect(mockAutomation.ramp).toHaveBeenCalledTimes(2);
+            await Promise.resolve();
+
             expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 800, 30, 'exponential');
             expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.Q, 2, 30, 'linear');
         });

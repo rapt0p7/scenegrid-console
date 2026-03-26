@@ -292,7 +292,12 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
         const sourceBus = system.getBus('sfx');
         const updateSendSpy = vi.spyOn(sourceBus as any, 'updateSend');
         system.applySend('sfx', 'ghost_bus' as any, null, 100);
-        expect(updateSendSpy).toHaveBeenCalledWith('ghost_bus', null, null, 100);
+        expect(updateSendSpy).toHaveBeenCalledWith({
+            targetBusId: 'ghost_bus',
+            targetNode: null,
+            targetGain: null,
+            durationMs: 100
+        });
 
         warnSpy.mockRestore();
     });
