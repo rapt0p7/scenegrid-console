@@ -159,15 +159,32 @@ export default class AudioBusSystem implements IAudioBusSystem {
         }
     }
 
-    private async createSidechain(busId: BusId, options: IDuckingConfig = {}): Promise<undefined | null> {
+    private async createSidechain(busId: BusId, options: IDuckingConfig = {}): Promise<void> {
         const bus = this.getBus(busId);
-        if (!bus) return null;
+        if (!bus) {
+            console.warn(`[AudioBusSystem] Cannot create sidechain: Bus '${busId}' not found.`);
+            return;
+        }
+
+        if (this.sidechains.has(busId)) {
+            console.warn(`[AudioBusSystem] Sidechain for bus '${busId}' already exists. Disposing old instance.`);
+            const oldDucker = this.sidechains.get(busId);
+            oldDucker?.dispose();
+            this.sidechains.delete(busId);
+        }
 
         const ducker = this.pluginFactory.createSidechain(bus.inputGainNode, options);
 
-        ducker.insertLookahead(bus.preFilterGain);
-        this.sidechains.set(busId, ducker);
-        await ducker.start();
+        try {
+            await ducker.start();
+
+            ducker.insertLookahead(bus.preFilterGain);
+
+            this.sidechains.set(busId, ducker);
+        } catch (error) {
+            console.error(`[AudioBusSystem] Failed to start sidechain for bus '${busId}'`, error);
+            ducker.dispose();
+        }
     }
 
     private async initLimiter(): Promise<void> {
