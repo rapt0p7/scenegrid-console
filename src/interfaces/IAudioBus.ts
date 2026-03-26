@@ -7,8 +7,15 @@ export interface IAudioBus {
     logicalTargetGain: number;
     update(id: string, config?: IBus): Promise<void>;
     getConfig(): IBus;
-    updateSend(targetBusId: string, targetNode: AudioNodeLike, targetGain: number | null, durationMs?: number): void;
+    updateSend(sendParameters: {
+        targetBusId: string;
+        targetNode: AudioNodeLike;
+        targetGain: number | null;
+        durationMs?: number;
+    }): void;
     bindRTPC(configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | undefined, rtpcManager: IRTPCManager): void;
     safeReplaceFilter(newFilterConfigOrNode: BiquadFilterNodeLike | IFilter | null, durationMs?: number): Promise<void>;
     updateFilterParams(config: IFilter | null): void;
+    setLogicalGain(gain: number, durationMs: number): void;
+    setRtpcGainModifier(modifier: number, durationMs: number): void;
 }

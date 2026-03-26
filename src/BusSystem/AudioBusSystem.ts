@@ -150,7 +150,12 @@ export default class AudioBusSystem implements IAudioBusSystem {
         const targetInputNode = targetBus ? targetBus.inputGainNode : null;
 
         if (targetInputNode || gain === null) {
-            sourceBus.updateSend(targetBusId, targetInputNode as AudioNodeLike, gain, durationMs);
+            sourceBus.updateSend({
+                targetBusId: targetBusId,
+                targetNode: targetInputNode as AudioNodeLike,
+                targetGain: gain,
+                durationMs
+            });
         }
     }
 

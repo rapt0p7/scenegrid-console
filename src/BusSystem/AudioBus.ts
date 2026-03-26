@@ -1,7 +1,9 @@
+/* eslint-disable unicorn/prefer-structured-clone */
 // noinspection D
 
 import { safeDisconnect } from '@webaudio-core';
 
+import clamp from '../helpers/clamp';
 import { evaluateRTPCCurve } from '../helpers/rtpcMath';
 import { type IBus } from '../interfaces/IBuses';
 
@@ -36,6 +38,17 @@ export default class AudioBus implements IAudioBus {
     private rtpcUnsubscribers: Array<() => void> = [];
     private readonly pluginFactory: IPluginFactory;
     private filterReplacePromise: Promise<void> | null = null;
+
+    private isUpdateScheduled = false;
+    private targetParams = {
+        gain: { logical: 1, rtpc: 1, durationMs: 0 },
+        filterFrequency: { logical: 20_000, rtpc: 0, durationMs: 0 },
+        pan: { logical: 0, rtpc: 0, durationMs: 0 },
+        sends: new Map<
+            string,
+            { logical: number | null; rtpc: number; durationMs: number; targetNode?: AudioNodeLike }
+        >()
+    };
     constructor({
         id,
         config = {},
@@ -74,17 +87,29 @@ export default class AudioBus implements IAudioBus {
 
         this.inputGainNode.connect(this.preFilterGain);
         this.preFilterGain.connect(this.postFilterGain);
+        this.postFilterGain.connect(this.routerMasterGain!);
 
-        const master = this.routerMasterGain!;
-        this.postFilterGain.connect(master);
-
+        this.targetParams.gain.logical = this.defaultGain;
         this.filterNode = null;
 
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         this.update(id, config);
     }
 
     getConfig(): IBus {
         return this.config;
+    }
+
+    public setLogicalGain(gain: number, durationMs: number = 0): void {
+        this.targetParams.gain.logical = gain;
+        this.targetParams.gain.durationMs = Math.max(this.targetParams.gain.durationMs, durationMs);
+        this.scheduleUpdate();
+    }
+
+    public setRtpcGainModifier(modifier: number, durationMs: number = 0): void {
+        this.targetParams.gain.rtpc = modifier;
+        this.targetParams.gain.durationMs = Math.max(this.targetParams.gain.durationMs, durationMs);
+        this.scheduleUpdate();
     }
 
     async update(id: string, config: IBus = {}): Promise<void> {
@@ -112,117 +137,7 @@ export default class AudioBus implements IAudioBus {
         }
 
         if (config.gain !== undefined) {
-            this.automation!.ramp(this.inputGainNode.gain, config.gain, 40, 'linear');
-        }
-    }
-
-    public updateSend(
-        targetBusId: string,
-        targetNode: AudioNodeLike,
-        targetGain: number | null,
-        durationMs: number = 0
-    ): void {
-        let sendGainNode = this.sendGains.get(targetBusId);
-
-        if (targetGain === null) {
-            if (sendGainNode) {
-                this.automation!.ramp(sendGainNode.gain, 0, durationMs, 'linear');
-
-                setTimeout(() => {
-                    safeDisconnect(this.postFilterGain, sendGainNode);
-                    safeDisconnect(sendGainNode, targetNode);
-                    this.sendGains.delete(targetBusId);
-                }, durationMs + 50);
-            }
-            return;
-        }
-
-        if (!sendGainNode) {
-            sendGainNode = this.context.createGain();
-            sendGainNode.gain.value = 0;
-            this.automation!.set(sendGainNode.gain, 0);
-
-            this.postFilterGain.connect(sendGainNode);
-            sendGainNode.connect(targetNode);
-
-            this.sendGains.set(targetBusId, sendGainNode);
-        }
-
-        this.automation!.ramp(sendGainNode.gain, targetGain, durationMs, 'linear');
-    }
-
-    public bindRTPC(
-        configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | undefined,
-        rtpcManager: IRTPCManager
-    ): void {
-        for (const unsub of this.rtpcUnsubscribers) unsub();
-        this.rtpcUnsubscribers = [];
-
-        if (!configs) return;
-
-        for (const [targetName, config] of Object.entries(configs)) {
-            if (!config) continue;
-
-            const handler = (gameValue: number) => {
-                const mappedValue = evaluateRTPCCurve(gameValue, config.curve);
-                const target = targetName as RTPCTargetProperty;
-                const smoothing = config.smoothingMs ?? 50;
-
-                switch (target) {
-                    case 'gain': {
-                        this.logicalTargetGain = mappedValue;
-                        this.automation!.ramp(this.inputGainNode.gain, mappedValue, smoothing, 'exponential');
-                        break;
-                    }
-
-                    case 'filterFrequency': {
-                        if (this.filterNode && 'frequency' in this.filterNode) {
-                            this.automation!.ramp(this.filterNode.frequency, mappedValue, smoothing, 'exponential');
-                        }
-                        break;
-                    }
-
-                    case 'pan': {
-                        if (this.pannerNode) {
-                            this.automation!.ramp(this.pannerNode.pan, mappedValue, smoothing, 'linear');
-                        }
-                        break;
-                    }
-
-                    case 'pitch': {
-                        break;
-                    }
-
-                    case 'sendLevel': {
-                        const targetBusId = config.sendTargetBus;
-                        if (!targetBusId) {
-                            console.warn(`[AudioBus] RTPC sendLevel requires a 'sendTargetBus' property in config.`);
-                            break;
-                        }
-
-                        const sendGainNode = this.sendGains.get(targetBusId);
-
-                        if (sendGainNode) {
-                            this.automation!.ramp(sendGainNode.gain, mappedValue, smoothing, 'linear');
-                        } else {
-                            console.warn(
-                                `[AudioBus] Cannot bind RTPC to sendLevel for "${targetBusId}". Send does not exist. Initialize it in the config first with { sends: { ${targetBusId}: 0 } }.`
-                            );
-                        }
-                        break;
-                    }
-
-                    default: {
-                        const exhaustiveCheck: never = target;
-                        console.warn(`[AudioBus] Unhandled RTPC target: ${exhaustiveCheck}`);
-                    }
-                }
-            };
-
-            rtpcManager.events.on(config.gameParam, handler);
-            this.rtpcUnsubscribers.push(() => rtpcManager.events.off(config.gameParam, handler));
-
-            handler(rtpcManager.getValue(config.gameParam));
+            this.setLogicalGain(config.gain, 40);
         }
     }
 
@@ -301,11 +216,177 @@ export default class AudioBus implements IAudioBus {
         const biquadNode = this.filterNode as BiquadFilterNodeLike;
 
         if (config.frequency !== undefined && biquadNode.frequency) {
-            this.automation!.ramp(biquadNode.frequency, config.frequency, 30, 'exponential');
+            this.targetParams.filterFrequency.logical = config.frequency;
+            this.targetParams.filterFrequency.durationMs = 30;
+            this.scheduleUpdate();
         }
 
         if (config.Q !== undefined && biquadNode.Q) {
             this.automation!.ramp(biquadNode.Q, config.Q, 30, 'linear');
+        }
+    }
+
+    public updateSend({
+        targetBusId,
+        targetNode,
+        targetGain,
+        durationMs = 0
+    }: {
+        targetBusId: string;
+        targetNode: AudioNodeLike;
+        targetGain: number | null;
+        durationMs: number;
+    }): void {
+        let state = this.targetParams.sends.get(targetBusId);
+        if (!state) {
+            state = { logical: targetGain, rtpc: 1, durationMs: 0, targetNode };
+            this.targetParams.sends.set(targetBusId, state);
+        }
+
+        state.logical = targetGain;
+        state.targetNode = targetNode;
+        state.durationMs = Math.max(state.durationMs, durationMs);
+        this.scheduleUpdate();
+    }
+
+    public bindRTPC(
+        configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | undefined,
+        rtpcManager: IRTPCManager
+    ): void {
+        for (const unsub of this.rtpcUnsubscribers) unsub();
+        this.rtpcUnsubscribers = [];
+
+        if (!configs) return;
+
+        for (const [targetName, config] of Object.entries(configs)) {
+            if (!config) continue;
+
+            const handler = (gameValue: number) => {
+                const mappedValue = evaluateRTPCCurve(gameValue, config.curve);
+                const target = targetName as RTPCTargetProperty;
+                const smoothing = config.smoothingMs ?? 50;
+
+                switch (target) {
+                    case 'gain': {
+                        this.setRtpcGainModifier(mappedValue, smoothing);
+                        break;
+                    }
+
+                    case 'filterFrequency': {
+                        this.targetParams.filterFrequency.rtpc = mappedValue;
+                        this.targetParams.filterFrequency.durationMs = Math.max(
+                            this.targetParams.filterFrequency.durationMs,
+                            smoothing
+                        );
+                        this.scheduleUpdate();
+                        break;
+                    }
+
+                    case 'pan': {
+                        this.targetParams.pan.rtpc = mappedValue;
+                        this.targetParams.pan.durationMs = Math.max(this.targetParams.pan.durationMs, smoothing);
+                        this.scheduleUpdate();
+                        break;
+                    }
+
+                    case 'pitch': {
+                        break;
+                    }
+
+                    case 'sendLevel': {
+                        const targetBusId = config.sendTargetBus;
+                        if (!targetBusId) break;
+
+                        let state = this.targetParams.sends.get(targetBusId);
+                        if (!state) {
+                            state = { logical: 0, rtpc: 1, durationMs: 0 };
+                            this.targetParams.sends.set(targetBusId, state);
+                        }
+                        state.rtpc = mappedValue;
+                        state.durationMs = Math.max(state.durationMs, smoothing);
+                        this.scheduleUpdate();
+                        break;
+                    }
+
+                    default: {
+                        const exhaustiveCheck: never = target;
+                        console.warn(`[AudioBus] Unhandled RTPC target: ${exhaustiveCheck}`);
+                    }
+                }
+            };
+
+            rtpcManager.events.on(config.gameParam, handler);
+            this.rtpcUnsubscribers.push(() => rtpcManager.events.off(config.gameParam, handler));
+
+            handler(rtpcManager.getValue(config.gameParam));
+        }
+    }
+
+    private scheduleUpdate(): void {
+        if (this.isUpdateScheduled) return;
+        this.isUpdateScheduled = true;
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        Promise.resolve().then(() => this.recalculateAndApply());
+    }
+
+    private recalculateAndApply(): void {
+        this.isUpdateScheduled = false;
+
+        const finalGain = clamp(this.targetParams.gain.logical * this.targetParams.gain.rtpc, 0, 4); // Limit +12dB
+        this.logicalTargetGain = finalGain;
+        this.automation!.ramp(this.inputGainNode.gain, finalGain, this.targetParams.gain.durationMs, 'linear');
+        this.targetParams.gain.durationMs = 0;
+
+        if (this.filterNode && 'frequency' in this.filterNode) {
+            const finalFreq = clamp(
+                this.targetParams.filterFrequency.logical + this.targetParams.filterFrequency.rtpc,
+                20,
+                20_000
+            );
+            this.automation!.ramp(
+                (this.filterNode as BiquadFilterNodeLike).frequency,
+                finalFreq,
+                this.targetParams.filterFrequency.durationMs,
+                'exponential'
+            );
+            this.targetParams.filterFrequency.durationMs = 0;
+        }
+
+        if (this.pannerNode) {
+            const finalPan = clamp(this.targetParams.pan.logical + this.targetParams.pan.rtpc, -1, 1);
+            this.automation!.ramp(this.pannerNode.pan, finalPan, this.targetParams.pan.durationMs, 'linear');
+            this.targetParams.pan.durationMs = 0;
+        }
+
+        for (const [targetBusId, state] of this.targetParams.sends.entries()) {
+            const isRemoving = state.logical === null;
+            let sendGainNode = this.sendGains.get(targetBusId);
+
+            if (isRemoving) {
+                if (sendGainNode) {
+                    this.automation!.ramp(sendGainNode.gain, 0, state.durationMs, 'linear');
+                    setTimeout(() => {
+                        safeDisconnect(this.postFilterGain, sendGainNode);
+                        if (state.targetNode) safeDisconnect(sendGainNode, state.targetNode);
+                        this.sendGains.delete(targetBusId);
+                    }, state.durationMs + 50);
+                }
+                this.targetParams.sends.delete(targetBusId);
+            } else {
+                const finalSendGain = clamp(state.logical! * state.rtpc, 0, 4);
+                if (!sendGainNode && state.targetNode) {
+                    sendGainNode = this.context.createGain();
+                    sendGainNode.gain.value = 0;
+                    this.automation!.set(sendGainNode.gain, 0);
+                    this.postFilterGain.connect(sendGainNode);
+                    sendGainNode.connect(state.targetNode);
+                    this.sendGains.set(targetBusId, sendGainNode);
+                }
+                if (sendGainNode) {
+                    this.automation!.ramp(sendGainNode.gain, finalSendGain, state.durationMs, 'linear');
+                }
+            }
+            state.durationMs = 0;
         }
     }
 
