@@ -11,4 +11,5 @@ export interface ISoundOptions {
     fadeIn?: number;
     fadeOut?: number;
     spatial?: PannerConfig | boolean;
+    cooldownMs?: number;
 }

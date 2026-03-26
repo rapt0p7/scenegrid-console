@@ -112,6 +112,17 @@ describe('SoundController', () => {
             expect(fakeInstance.setRate).toHaveBeenCalledWith(1);
             expect(mockScheduler.schedulePlay).toHaveBeenCalledWith(fakeInstance, 0, 0, undefined);
         });
+
+        it('should skip playback if cooldown is set and did not pass', () => {
+            controller.register('sound_limit', fakeBuffer, { url: 'path/to/sound.wav', cooldownMs: 30 });
+
+            const result = controller.play('sound_limit', {});
+            const result2 = controller.play('sound_limit', {});
+
+            expect(result).toEqual({ playbackId: expect.any(Number), instance: fakeInstance });
+            expect(result2).toBeNull();
+            expect(mockScheduler.schedulePlay).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe('Stop', () => {
@@ -128,8 +139,8 @@ describe('SoundController', () => {
 
     describe('Logical Voices & State Management', () => {
         beforeEach(() => {
-            (controller as any).registry.set('test_sound', {});
-            (controller as any).registry.set('other_sound', {});
+            (controller as any).registry.set('test_sound', { options: {} });
+            (controller as any).registry.set('other_sound', { options: {} });
 
             vi.mocked(mockPool.acquire).mockReturnValue(fakeInstance);
         });

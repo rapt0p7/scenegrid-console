@@ -18,15 +18,21 @@ export interface IControllerPlayOptions {
     onRevive?: (instance: ISoundInstance) => void;
 }
 
+const DEFAULT_COOLDOWN_MS = 15;
+
 export class SoundController {
     public readonly activeVoices = new Map<number, ILogicalVoice>();
+
+    private readonly lastPlayTimes = new Map<string, number>();
     private nextPlaybackId = 1;
+
     constructor(
         private readonly pool: SoundPoolManager,
         private readonly scheduler: PlaybackScheduler,
         private readonly registry = new Map<string, SoundDefinition>()
     ) {}
 
+    // eslint-disable-next-line unicorn/no-object-as-default-parameter
     register(soundId: string, buffer: AudioBuffer, options: ISoundOptions = { url: '' }): void {
         if (this.registry.has(soundId)) {
             throw new Error(`Sound "${soundId}" already registered`);
@@ -38,6 +44,7 @@ export class SoundController {
     unregister(soundId: string): void {
         this.registry.delete(soundId);
         this.pool.dispose(soundId);
+        this.lastPlayTimes.delete(soundId);
     }
 
     play(
@@ -45,6 +52,18 @@ export class SoundController {
         { when = 0, offset = 0, duration, loop = false, rate = 1, onRevive }: IControllerPlayOptions
     ): { playbackId: number; instance: ISoundInstance } | null {
         if (!this.registry.has(soundId)) return null;
+
+        const now = performance.now();
+        const lastPlay = this.lastPlayTimes.get(soundId) || 0;
+        const definition = this.registry.get(soundId)!;
+
+        const cooldownMs = definition.options.cooldownMs ?? DEFAULT_COOLDOWN_MS;
+
+        if (now - lastPlay < cooldownMs) {
+            return null;
+        }
+
+        this.lastPlayTimes.set(soundId, now);
 
         const instance = this.pool.acquire(soundId);
 
@@ -73,6 +92,7 @@ export class SoundController {
         return { playbackId, instance };
     }
 
+    // eslint-disable-next-line max-params
     public setPosition(playbackId: number, x: number, y: number, z: number): void {
         const voice = this.activeVoices.get(playbackId);
         if (!voice) return;
@@ -102,7 +122,9 @@ export class SoundController {
         this.pool.dispose(soundId);
         if (soundId) {
             for (const [id, voice] of this.activeVoices.entries()) {
-                if (voice.soundId === soundId) this.activeVoices.delete(id);
+                if (voice.soundId === soundId) {
+                    this.activeVoices.delete(id);
+                }
             }
         } else {
             this.activeVoices.clear();
