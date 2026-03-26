@@ -121,7 +121,7 @@ export function initAudioDebugPanel() {
         const btnSnap = fSnap.addButton({ title: 'Activate Snapshot' });
         applyIcon(btnSnap, 'fad-next', 'Activate Snapshot');
         btnSnap.on('click', () => {
-            audio.mixer.push(PARAMS.activeSnapshot, 'debug_override_layer', 999);
+            audio.mixer.setState(PARAMS.activeSnapshot);
         });
 
         const btnClear = fSnap.addButton({ title: 'Clear Debug Override' });
