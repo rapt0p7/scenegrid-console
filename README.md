@@ -60,10 +60,11 @@ Each Audio Bus implements a standardized processing chain:
 ## 3. Advanced Audio Features
 
 ### Lookahead Sidechain Ducking
-Powered by `AudioWorklet`, the system supports predictive ducking.
+Powered by `AudioWorklet`, the system supports predictive ducking with cascade protection.
 1.  **Trigger Summing:** Multiple sources sum into a `mergeGain` node.
-2.  **Envelope Analysis:** The `ducker-processor` calculates the RMS envelope.
-3.  **Predictive Attenuation:** A `DelayNode` is inserted into the target bus, allowing the gain to drop *before* the trigger peak for a pop-free, professional attack.
+2.  **Hard Clipping Protection:** A `WaveShaperNode` safely clamps overlapping triggers to a [-1.0, 1.0] range, preventing math breakdown during heavy cascade events (e.g., multiple simultaneous explosions).
+3.  **Envelope Analysis:** The `ducker-processor` calculates the RMS envelope from the normalized signal.
+4.  **Predictive Attenuation:** A `DelayNode` is inserted into the target bus, allowing the gain to drop *before* the trigger peak for a pop-free, professional attack.
 
 ### SmartLoopManager (Interactive Music)
 A professional-grade sequencing engine for horizontal music transitions:
@@ -78,14 +79,16 @@ Parallel routing allows for shared effects (e.g., a single Reverb bus for all SF
 
 ## 4. Total Recall & RTPC
 
-### Snapshots & Layers
-The system supports **Total Recall**. A snapshot captures every gain level, filter setting, and routing state.
-* **Multi-Layer Logic:** Mix states can be layered (e.g., a "Combat Layer" atop a "Music Layer"), with the `MixerStateResolver` calculating the final automated values.
+### VCA-Style Snapshots & Layers
+The system supports **Total Recall** using a VCA (Voltage-Controlled Amplifier) multiplication model.
+* **Data-Driven Mixer:** The base configuration (`IBuses`) acts as the master fader. Snapshots act as modulators (`Final Gain = Base * Snapshot * RTPC`).
+* **Multi-Layer Logic:** Mix states can be safely layered (e.g., a "Combat Layer" atop an "Explore Layer"). The `MixerStateManager` calculates the final values, automatically handling "cold starts" with zero-latency protection to prevent audio bursts.
 
 ### RTPC (Real-Time Parameter Control)
-A virtual patchbay connecting game data (speed, health, distance) to audio parameters.
-* **Custom Curves:** Uses Piecewise Linear Curves for complex mapping (e.g., logarithmic distance attenuation).
-* **Macro Modulation:** Patch RTPCs to VCA levels, Filter Cutoffs, Panning, or Send Levels.
+A virtual patchbay connecting game data (speed, health, distance) to audio parameters, featuring an independent ~33Hz Control Rate loop to protect the main thread.
+* **Global Manifest & Slew Rates:** Designers define FPS-independent inertia (`attackMs` / `releaseMs`) in a global registry, ensuring parameters transition smoothly over time (e.g., health drops instantly but regenerates slowly).
+* **Curve Presets:** Built-in mathematical evaluators for `linear`, `exponential`, `logarithmic`, and `s-curve` mappings, alongside support for custom Piecewise Linear coordinate arrays.
+* **Macro Modulation:** Patch RTPCs to VCA levels, Filter Cutoffs, Panning, or Send Levels with automatic DSP de-zippering (smoothing).
 
 ---
 
@@ -133,6 +136,7 @@ To ensure absolute mix predictability, the following are strictly prohibited:
 1.  **Direct Source-to-Master connection** (must go through a Bus).
 2.  **Manual Parameter Control** outside of the Automation/RTPC system.
 3.  **Feedback Loops** within the Sends system.
+4.  **Main Thread Protection:** High-frequency game ticks must pass through the `RTPCManager`'s microtask batching and Control Rate loop; direct synchronous spamming of Web Audio AudioParams is prevented by design.
 
 ---
 
@@ -145,21 +149,23 @@ The system follows a **Data-Driven** initialization pattern. This separates audi
 The following example demonstrates how to configure the engine, initialize the registry, and unlock the `AudioContext` following a required user gesture.
 
 ```typescript
-import { AudioEngine, PRIORITY } from 'scenegrid-console';
+import { AudioEngine } from 'scenegrid-console';
 
 // Configuration manifests
 import Buses from './audio-config/Buses';
 import Snapshots from './audio-config/Snapshots';
 import SoundMap from './audio-config/SoundMap';
 import soundManifest from './soundManifest';
+import RTPCManifest from './rtpcManifest';
 
 async function bootstrap() {
     // 1. Instantiate the Engine with a centralized configuration
     const audio = new AudioEngine({
-        manifest: soundManifest,    // Registry of all audio assets
+        manifest: soundManifest,   // Registry of all audio assets
         buses: Buses,              // Fixed bus architecture
         snapshots: Snapshots,      // Preset mixer states
         soundMap: SoundMap,        // Logical mapping of sounds to buses
+        rtpcManifest: RTPCManifest,// Global Slew Rates and default values for game parameters
         globalVoiceLimit: 32       // Polyphony limit for optimization
     });
 
@@ -173,7 +179,7 @@ async function bootstrap() {
 
         // 4. Set Initial Mix State (Snapshots)
         // Push the base state onto the mixer stack
-        await audio.mixer.push('idle', 'base:idle', PRIORITY.BASE);
+        await audio.mixer.setState('idle');
 
         // 5. Start Playback
         audio.play('backgroundMain', { isLoop: true });

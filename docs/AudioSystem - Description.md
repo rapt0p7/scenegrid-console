@@ -58,39 +58,34 @@ Each bus features a standard processing path:
 3.  **Insert Filter (`filter`)**: A universal filter (equivalent to an insert EQ). Implemented via an isolated **plugin architecture (`FiltersPlugin`)** supporting "Safe Swaps" without artifacts and smooth graph reconfiguration.
 4.  **Post-Gain (`postFilterGain`)**: The final stabilization stage; serves as the **Tap Point** for the Sends system and metric collection for visualizers.
 
-
 ---
 
 ### 3. Sidechain and Dynamic Processing
 
-The system supports **lookahead bus ducking** powered by `AudioWorklet`.
+The system supports **lookahead bus ducking** powered by `AudioWorklet`, featuring built-in cascade protection.
 
 **Operational Features**
-* Analysis is performed by a specialized **`ducker-processor`**, which calculates the envelope of the summed trigger signal.
-* When sidechaining is active, a **`DelayNode`** (Lookahead) is dynamically inserted into the bus path between `inputGainNode` and `preFilterGain`.
-
-**How Suppression Works**
-1.  Trigger signals are summed in the **`mergeGain`** node.
-2.  An envelope is calculated to modulate the `gain` of the **`duckingGain`** node.
-3.  Due to the lookahead delay, suppression occurs **before the peak**, resulting in a clean attack without digital pops.
-4.  The target bus gain is adjusted accordingly.
+* **Trigger Summing**: Multiple trigger signals are summed in the **`mergeGain`** node.
+* **Hard Clipping Protection**: To prevent math breakdowns during heavy cascade events (e.g., simultaneous explosions), a **`WaveShaperNode`** safely clamps overlapping triggers to a strict $[-1.0, 1.0]$ range before analysis.
+* **Envelope Analysis**: A specialized **`ducker-processor`** calculates the RMS envelope of the clamped signal.
+* **Predictive Attenuation**: When sidechaining is active, a **`DelayNode`** (Lookahead) is dynamically inserted into the bus path. Suppression occurs **before the peak**, resulting in a clean attack without digital pops.
 
 ---
 
 ### 4. Snapshots and Automation (Total Recall)
 
-The system supports a **complete recall of the mixer state**.
+The system supports a **complete recall of the mixer state** using a VCA (Voltage-Controlled Amplifier) multiplication model.
 
-**Snapshots**
-A snapshot is a comprehensive state capture:
-* Gain levels of all buses
-* Insert filter settings
-* Dynamics parameters (sidechain statuses)
-* Send levels to parallel buses
-* Macro assignments (RTPC bindings)
+**VCA-Style Snapshots**
+Instead of simple value overrides, the mixer uses mathematically scaled snapshots:
+* The base configuration (`IBuses`) acts as the master fader.
+* Snapshots act as modulators.
+* $FinalGain = BaseGain \times SnapshotGain \times RTPCGain$
+
+This ensures predictable scaling when multiple mix states overlap.
 
 **State Transitioning**
-Transitions are seamless: all changes are ramped with sample-accurate precision to exclude clicks or level jumps, while accounting for the current sidechain state.
+Transitions are seamless: all changes are ramped with sample-accurate precision to exclude clicks or level jumps. The system implements **Zero-Latency Cold Start Protection**, forcing instant application (`durationMs: 0`) of the initial snapshot to prevent audio bursts upon engine initialization.
 
 **Safe Filter Swapping**
 When changing filter types, the system performs a brief fade-out, rebuilds the graph, and then fades in, preventing digital artifacts.
@@ -105,8 +100,8 @@ The mixer supports **state layers**, analogous to theater console scenes or DAW 
 They allow independent management of: music, SFX, UI sounds, and various game contexts.
 
 **Mix Finalization**
-1.  Active layers are superimposed.
-2.  The system calculates final parameters.
+1.  Active layers are safely superimposed using the VCA multiplication model.
+2.  The `MixerStateManager` calculates the final parameters.
 3.  Values are committed to the automation engine.
 
 ---
@@ -151,25 +146,28 @@ Within the strict isolation of the graph, the Sends system maintains the core in
 
 ### 8. Real-Time Parameter Control (RTPCManager)
 
-The RTPC mechanism acts as a **virtual patchbay** for control signals (Control Voltage / Macros). it links "dry" game data (speed, distance, health) to the physical parameters of the audio path in real-time without disrupting snapshots.
+The RTPC mechanism acts as a **virtual patchbay** for control signals (Control Voltage / Macros). It links "dry" game data (speed, distance, health) to the physical parameters of the audio path in real-time, utilizing advanced performance throttling and mathematical presets.
 
-**1. The Macro Control Hub**
-Instead of the game engine directly manipulating Web Audio API faders, it sends values to the manager. The manager acts as a reactive broker (using `mitt`), broadcasting changes only when there are real deltas.
+**1. The Macro Control Hub & Throttling**
+Instead of the game engine directly manipulating Web Audio API faders at frame rate, it sends values to the `RTPCManager`. The manager operates an independent **Control Rate Loop (~33Hz)** and utilizes microtask batching (`flush`) to protect the main thread and Audio Context from event spam.
 
-**2. Custom Transfer Curves**
-The system uses **Piecewise Linear Curves** instead of basic min/max scaling.
-* **`RTPCPoint[]`**: Sound designers define curve shapes via coordinate arrays $(x, y)$, allowing for S-curves, exponents, etc.
-* **DSP Mapping**: The `evaluateRTPCCurve` function finds the relevant segment and interpolates the physical value (e.g., `playbackRate`).
+**2. Global Manifest & Slew Rates (Inertia)**
+Designers define FPS-independent inertia (`attackMs` / `releaseMs`) and default values in a global `RTPCManifest`. This ensures parameters transition smoothly over time (e.g., health drops instantly but regenerates slowly) without requiring manual smoothing on every sound.
 
-**3. Instance Control (Micro-Modulation)**
+**3. Mathematical Presets & Custom Curves**
+The system uses an advanced `MathCurveDefinition` evaluator for mapping values:
+* **Presets**: Built-in support for `linear`, `exponential`, `logarithmic`, and `s-curve` mappings.
+* **Piecewise Linear Curves**: Support for custom coordinate arrays $(x, y)$ for complex shape definitions.
+
+**4. Instance Control (Micro-Modulation)**
 Independent parameter control for a specific sound instance without affecting the entire bus.
 * **Target Parameters**: Pitch, local gain, pan, and filter frequency.
-* **Sample-Accurate Smoothing**: Smooth gliding via internal automation methods.
+* **Sample-Accurate Smoothing**: DSP-level de-zippering to prevent audio clicks during parameter updates.
 
-**4. Bus-Level Control (VCA)**
+**5. Bus-Level Control (VCA)**
 RTPC can be patched to 4 key elements:
-1.  **VCA Level (`gain`)**: Dynamic bus volume (e.g., ducking music during combat).
-2.  **Filter Cutoff (`filterFrequency`)**: Insert filter frequency (e.g., LPF "concussion" effect).
+1.  **VCA Level (`gain`)**: Dynamic bus volume.
+2.  **Filter Cutoff (`filterFrequency`)**: Insert filter frequency.
 3.  **Panning (`pan`)**: Group-wide stereo positioning.
 4.  **Aux Send Level (`sendLevel`)**: Dynamic control of parallel FX levels.
 
@@ -190,12 +188,6 @@ The following are **strictly prohibited**:
 * Direct source connection to the Master.
 * Bypassing automation.
 * Manual parameter management outside the system.
+* **Synchronous Parameter Spam**: High-frequency game ticks must pass through the `RTPCManager`'s batching system; direct, unthrottled manipulation of AudioParams is prevented by design.
 
-This ensures mix predictability, prevents automation conflicts, and maintains DSP stability.
-
----
-
-**Summary**
-The system is a **highly structured virtual digital console featuring lookahead sidechaining, sample-accurate automation, recall scenes, and multi-layered mix management**, optimized for stability, predictability, and the absence of digital artifacts.
-
----
+This ensures mix predictability, prevents automation conflicts, protects CPU resources, and maintains DSP stability.
