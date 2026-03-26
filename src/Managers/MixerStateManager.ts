@@ -15,6 +15,7 @@ export default class MixerStateManager {
     private current: MixerState = { buses: {} };
     private history: MixerState = { buses: {} };
     private fsm: MixerFSMState = MixerFSMState.IDLE;
+    private isInitialized = false;
 
     private activeTransition: {
         id: number;
@@ -43,6 +44,8 @@ export default class MixerStateManager {
             interruptible?: boolean;
         } = {}
     ): Promise<void> {
+        const effectiveDuration = this.isInitialized ? durationMs : 0;
+
         if (this.fsm === MixerFSMState.TRANSITION) {
             if (!this.activeTransition?.interruptible) {
                 return;
@@ -60,10 +63,11 @@ export default class MixerStateManager {
         const to = next;
 
         try {
-            await this.runTransition(id, from, to, durationMs);
+            await this.runTransition(id, from, to, effectiveDuration);
             if (this.activeTransition?.id === id) {
                 this.history = structuredClone(from);
                 this.current = to;
+                this.isInitialized = true;
             }
         } finally {
             if (this.activeTransition?.id === id) {
@@ -78,6 +82,7 @@ export default class MixerStateManager {
         this.fsm = MixerFSMState.IDLE;
     }
 
+    // eslint-disable-next-line max-params,complexity
     private async runTransition(id: number, from: MixerState, to: MixerState, durationMs: number): Promise<void> {
         const tasks: Array<Promise<any>> = [];
 
@@ -92,9 +97,10 @@ export default class MixerStateManager {
 
             if (this.activeTransition?.id !== id) return;
 
-            if (next.gain !== undefined && next.gain !== previous.gain) {
-                bus.logicalTargetGain = next.gain;
-                this.automation.ramp(bus.inputGainNode.gain, next.gain, durationMs);
+            const previousGain = this.isInitialized ? previous.gain : undefined;
+
+            if (next.gain !== undefined && next.gain !== previousGain) {
+                bus.setLogicalGain(next.gain, durationMs);
             }
 
             if (JSON.stringify(previous.filter) !== JSON.stringify(next.filter)) {
