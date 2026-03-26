@@ -58,7 +58,8 @@
                 "bus-system": { "description": "Refactoring Bus logic" },
                 "interfaces": { "description": "Refactoring types and interfaces" },
                 "config": { "description": "Refactoring data schemas and manifests" },
-                "helpers": { "description": "Refactoring pure functions and math" }
+                "helpers": { "description": "Refactoring pure functions and math" },
+                "debug": { "description": "Refactoring debuggers and visualizers" }
             }
         },
         "perf": {
