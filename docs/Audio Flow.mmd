@@ -37,13 +37,14 @@ flowchart LR
         SC_Delay["DelayNode (Lookahead)"]:::sidechain
         SC_Gain["duckingGain"]:::sidechain
         SC_Merge["mergeGain (Trigger Sum)"]:::sidechain
+        SC_Clipper["clipper (WaveShaper [-1, 1])"]:::sidechain
         SC_Proc["ducker-processor (Worklet)"]:::sidechain
 
         Bus_In -.->|"Insert (if Ducked)"| SC_Delay
         SC_Delay --> SC_Gain
         SC_Gain -.->|"Return"| Bus_Pre
 
-        SC_Merge --> SC_Proc -- "Modulates AudioParam" --> SC_Gain
+        SC_Merge --> SC_Clipper --> SC_Proc -- "Modulates AudioParam" --> SC_Gain
     end
 
     subgraph MasterStage ["4. Master Output Stage"]
