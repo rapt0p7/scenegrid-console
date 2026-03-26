@@ -318,28 +318,50 @@ export default class ConsistencyChecker {
         }
     }
 
+    // eslint-disable-next-line complexity
     private checkRTPC(contextPath: string, rtpcMap: any): void {
         if (!rtpcMap) return;
         if (!this.assertType(`${contextPath}.rtpc`, rtpcMap, 'object')) return;
 
         const validBuses = Object.keys(this.buses || {});
+        const validCurveTypes = new Set(['linear', 'logarithmic', 'exponential', 's-curve']);
 
         for (const [targetName, config] of Object.entries(rtpcMap)) {
             if (!config) continue;
-            const rConfig = config as IRTPCConfig;
+            const rConfig = config as any;
             const configPath = `${contextPath}.rtpc.${targetName}`;
 
             if (!this.assertType(`${configPath}.gameParam`, rConfig.gameParam, 'string', false)) continue;
 
-            if (this.assertArray(`${configPath}.curve`, rConfig.curve, false)) {
-                if (rConfig.curve.length < 2) {
-                    this.errors.push(`${configPath} has invalid curve (needs >= 2 points).`);
+            if (rConfig.attackMs !== undefined) this.assertType(`${configPath}.attackMs`, rConfig.attackMs, 'number');
+            if (rConfig.releaseMs !== undefined)
+                this.assertType(`${configPath}.releaseMs`, rConfig.releaseMs, 'number');
+
+            const curve = rConfig.curve;
+            if (curve === undefined || curve === null) {
+                this.errors.push(`Missing required field at "${configPath}.curve"`);
+            } else if (Array.isArray(curve)) {
+                if (curve.length < 2) {
+                    this.errors.push(`${configPath}.curve has invalid curve (needs >= 2 points).`);
                 } else {
-                    for (const [index, point] of rConfig.curve.entries()) {
-                        this.assertType(`${configPath}.curve[${index}].x`, point.x, 'number', false);
-                        this.assertType(`${configPath}.curve[${index}].y`, point.y, 'number', false);
+                    for (const [index, point] of curve.entries()) {
+                        this.assertType(`${configPath}.curve[${index}].x`, point?.x, 'number', false);
+                        this.assertType(`${configPath}.curve[${index}].y`, point?.y, 'number', false);
                     }
                 }
+            } else if (typeof curve === 'object') {
+                if (
+                    this.assertType(`${configPath}.curve.type`, curve.type, 'string', false) &&
+                    !validCurveTypes.has(curve.type)
+                ) {
+                    this.errors.push(`${configPath}.curve has invalid type "${curve.type}"`);
+                }
+                this.assertType(`${configPath}.curve.minX`, curve.minX, 'number', false);
+                this.assertType(`${configPath}.curve.maxX`, curve.maxX, 'number', false);
+                this.assertType(`${configPath}.curve.minY`, curve.minY, 'number', false);
+                this.assertType(`${configPath}.curve.maxY`, curve.maxY, 'number', false);
+            } else {
+                this.errors.push(`Type Error at "${configPath}.curve": expected array or object`);
             }
 
             if (targetName === 'sendLevel') {

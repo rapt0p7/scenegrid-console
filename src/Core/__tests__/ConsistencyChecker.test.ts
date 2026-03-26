@@ -370,4 +370,112 @@ describe('ConsistencyChecker', () => {
             );
         });
     });
+
+    describe('RTPC Config Validation (Curves & Presets)', () => {
+        it('should pass validation for a valid preset curve and new slew rates', () => {
+            const config: any = {
+                buses: { main: { gain: 1 } },
+                soundMap: {
+                    sound1: {
+                        busId: 'main',
+                        rtpc: {
+                            gain: {
+                                gameParam: 'speed',
+                                attackMs: 100,
+                                releaseMs: 500,
+                                curve: {
+                                    type: 's-curve',
+                                    minX: 0,
+                                    maxX: 100,
+                                    minY: 0,
+                                    maxY: 1
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            const checker = new ConsistencyChecker({
+                soundMapConfig: config.soundMap,
+                soundManifest: {},
+                busSystemConfig: config.buses,
+                snapshotsConfig: {}
+            });
+
+            (checker as any).run();
+            expect((checker as any).errors).toHaveLength(0);
+        });
+
+        it('should generate errors for missing preset fields', () => {
+            const config: any = {
+                buses: { main: { gain: 1 } },
+                soundMap: {
+                    sound1: {
+                        busId: 'main',
+                        rtpc: {
+                            gain: {
+                                gameParam: 'speed',
+                                curve: {
+                                    type: 's-curve',
+                                    minX: 0
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            const checker = new ConsistencyChecker({
+                soundMapConfig: config.soundMap,
+                soundManifest: {},
+                busSystemConfig: config.buses,
+                snapshotsConfig: {}
+            });
+
+            (checker as any).run();
+            const errors = (checker as any).errors;
+            expect(errors.length).toBeGreaterThan(0);
+            expect(
+                errors.some((error: string) =>
+                    error.includes('Missing required field at "soundMap.sound1.rtpc.gain.curve.maxX"')
+                )
+            ).toBe(true);
+        });
+
+        it('should generate an error for an unknown preset type', () => {
+            const config: any = {
+                buses: { main: { gain: 1 } },
+                soundMap: {
+                    sound1: {
+                        busId: 'main',
+                        rtpc: {
+                            gain: {
+                                gameParam: 'speed',
+                                curve: {
+                                    type: 'magic-curve',
+                                    minX: 0,
+                                    maxX: 10,
+                                    minY: 0,
+                                    maxY: 1
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            const checker = new ConsistencyChecker({
+                soundMapConfig: config.soundMap,
+                soundManifest: {},
+                busSystemConfig: config.buses,
+                snapshotsConfig: {}
+            });
+
+            (checker as any).run();
+            expect((checker as any).errors.some((error: string) => error.includes('invalid type "magic-curve"'))).toBe(
+                true
+            );
+        });
+    });
 });
