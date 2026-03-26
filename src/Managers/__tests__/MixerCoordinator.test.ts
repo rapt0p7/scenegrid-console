@@ -28,7 +28,7 @@ describe('MixerCoordinator', () => {
     });
 
     it('should recompute state using baseState and apply it', async () => {
-        const nextState: MixerState = { buses: { master: { gain: 0.5, sidechain: { enabled: false } } } };
+        const nextState: MixerState = { buses: { master: { gain: 0.5 } } };
         mockLayerStack.computeState.mockReturnValue(nextState);
 
         await coordinator.recompute();
@@ -48,7 +48,7 @@ describe('MixerCoordinator', () => {
     });
 
     it('should delegate getState to stateManager', () => {
-        const currentState: MixerState = { buses: { music: { gain: 0.8, sidechain: { enabled: false } } } };
+        const currentState: MixerState = { buses: { music: { gain: 0.8 } } };
         mockStateManager.getState.mockReturnValue(currentState);
 
         const result = coordinator.getState();
@@ -58,8 +58,8 @@ describe('MixerCoordinator', () => {
     });
 
     it('should set a new base state and trigger recompute immediately', async () => {
-        const newBaseState: MixerState = { buses: { sfx: { gain: 1, sidechain: { enabled: false } } } };
-        const computedState: MixerState = { buses: { sfx: { gain: 0.5, sidechain: { enabled: false } } } };
+        const newBaseState: MixerState = { buses: { sfx: { gain: 1 } } };
+        const computedState: MixerState = { buses: { sfx: { gain: 0.5 } } };
 
         mockLayerStack.computeState.mockReturnValue(computedState);
 

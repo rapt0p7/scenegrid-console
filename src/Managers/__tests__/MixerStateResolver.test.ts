@@ -116,32 +116,6 @@ describe('MixerStateResolver', () => {
             });
         });
 
-        describe('Sidechain Resolution', () => {
-            it('should default to false if not specified anywhere', () => {
-                const result = resolver.resolve(
-                    { buses: { master: {} } } as unknown as MixerState,
-                    { buses: { master: {} } } as unknown as MixerSnapshot
-                );
-                expect(result.buses['master'].sidechain).toEqual({ enabled: false });
-            });
-
-            it('should override base with patch sidechain enabled status', () => {
-                const base = { buses: { master: { sidechain: { enabled: true } } } };
-                const patch = { buses: { master: { sidechain: { enabled: false } } } };
-
-                const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].sidechain).toEqual({ enabled: false });
-            });
-
-            it('should fallback to base sidechain if patch sidechain is undefined', () => {
-                const base = { buses: { master: { sidechain: { enabled: true } } } };
-                const patch = { buses: { master: {} } };
-
-                const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].sidechain).toEqual({ enabled: true });
-            });
-        });
-
         describe('Sends Resolution', () => {
             it('should return a copy of base if patch sends are undefined', () => {
                 const base = { buses: { master: { sends: { reverb: 0.5 } } } };

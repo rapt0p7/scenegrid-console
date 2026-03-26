@@ -77,7 +77,7 @@ describe('MixerLayerStack', () => {
     });
 
     it('should compute state in correct priority order (lowest to highest)', () => {
-        const baseState: MixerState = { buses: { master: { gain: 1, sidechain: { enabled: false } } } };
+        const baseState: MixerState = { buses: { master: { gain: 1 } } };
 
         layerStack.addLayer({ id: 'modal', priority: 200, snapshot: { id: 'modal_snap' } as any });
         layerStack.addLayer({ id: 'base', priority: 0, snapshot: { id: 'base_snap' } as any });
