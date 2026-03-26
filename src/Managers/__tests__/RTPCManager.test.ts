@@ -19,11 +19,13 @@ describe('RTPCManager', () => {
         expect(manager.getValue('UNKNOWN_PARAM', 42)).toBe(42);
     });
 
-    it('should emit an event when value is changed', () => {
+    it('should emit an event when value is changed', async () => {
         const spy = vi.fn();
         manager.events.on('MUSIC_VOLUME', spy);
 
         manager.setValue('MUSIC_VOLUME', 0.5);
+
+        await Promise.resolve();
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy).toHaveBeenCalledWith(0.5);
@@ -40,7 +42,7 @@ describe('RTPCManager', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    it('should set multiple values and emit events for each', () => {
+    it('should set multiple values and emit events for each', async () => {
         const spyMusic = vi.fn();
         const spySFX = vi.fn();
         manager.events.on('MUSIC_VOLUME', spyMusic);
@@ -51,17 +53,20 @@ describe('RTPCManager', () => {
             SFX_VOLUME: 0.9
         });
 
+        await Promise.resolve();
+
         expect(manager.getValue('MUSIC_VOLUME')).toBe(0.7);
         expect(manager.getValue('SFX_VOLUME')).toBe(0.9);
         expect(spyMusic).toHaveBeenCalledWith(0.7);
         expect(spySFX).toHaveBeenCalledWith(0.9);
     });
 
-    it('should clear all values and events on reset', () => {
+    it('should clear all values and events on reset', async () => {
         const spy = vi.fn();
         manager.events.on('MUSIC_VOLUME', spy);
 
         manager.setValue('MUSIC_VOLUME', 1);
+        await Promise.resolve();
         expect(spy).toHaveBeenCalledTimes(1);
 
         manager.reset();
