@@ -23,7 +23,7 @@ import deepFreeze from './helpers/deepFreeze';
 import ContainerManager from './Managers/ContainerManager';
 import DuckingManager from './Managers/DuckingManager';
 import MixerCoordinator from './Managers/MixerCoordinator';
-import MixerLayerStack from './Managers/MixerLayer';
+import MixerLayerStack, { PRIORITY } from './Managers/MixerLayer';
 import MixerSnapshotManager from './Managers/MixerSnapshotManager';
 import MixerStateManager from './Managers/MixerStateManager';
 import MixerStateResolver from './Managers/MixerStateResolver';
@@ -56,9 +56,12 @@ export class AudioEngine {
     };
 
     public readonly mixer = {
-        push: (snapshotName: string, layerId: string, priority: number) =>
-            this.#snapshotManager.activateSnapshot(snapshotName, layerId, priority),
-        pop: (layerId: string) => this.#snapshotManager.clearLayer(layerId)
+        setState: (snapshotName: string) =>
+            this.#snapshotManager.activateSnapshot(snapshotName, 'scene_main', PRIORITY.BASE),
+        addModifier: (snapshotName: string, id: string, priority = PRIORITY.OVERLAY) =>
+            this.#snapshotManager.activateSnapshot(snapshotName, id, priority),
+
+        removeModifier: (id: string) => this.#snapshotManager.clearLayer(id)
     };
 
     public readonly music = {
