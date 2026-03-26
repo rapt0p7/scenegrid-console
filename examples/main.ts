@@ -1,4 +1,4 @@
-import { AudioEngine, PRIORITY } from '../src';
+import { AudioEngine } from '../src';
 
 import Buses from './audio-config/Buses';
 import Snapshots from './audio-config/Snapshots';
@@ -24,9 +24,9 @@ async function bootstrap() {
         async () => {
             await audio.unlock();
 
-            audio.showDebugUI({ wrapperSelector: '#wrapper' });
+            void audio.showDebugUI({ wrapperSelector: '#wrapper' });
 
-            await audio.mixer.push('idle', 'base:idle', PRIORITY.BASE);
+            await audio.mixer.setState('idle');
 
             audio.play('backgroundMain', { isLoop: true });
             audio.play('backgroundMain2', { isLoop: true });

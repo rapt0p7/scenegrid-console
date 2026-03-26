@@ -2,31 +2,31 @@ import type { IBuses } from 'src';
 
 export default {
     musicMain: {
-        gain: 0,
+        gain: 1,
         sidechain: {
             enabled: true
         }
     },
     musicExplore: {
-        gain: 0,
+        gain: 1,
         sidechain: {
             enabled: true
         }
     },
     musicCombat: {
-        gain: 0,
+        gain: 1,
         sidechain: {
             enabled: true
         }
     },
     musicLounge: {
-        gain: 0,
+        gain: 1,
         sidechain: {
             enabled: true
         }
     },
     sfx: {
-        gain: 0
+        gain: 1
     },
     // eslint-disable-next-line @typescript-eslint/naming-convention
     FX_REVERB: {
@@ -35,7 +35,7 @@ export default {
     },
     // eslint-disable-next-line @typescript-eslint/naming-convention
     SFX_COINS: {
-        gain: 0,
+        gain: 1,
         sends: {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             FX_REVERB: 0.5

@@ -4,77 +4,41 @@ import type { ISnapshots } from 'src';
 const Snapshots: ISnapshots = {
     idle: {
         buses: {
-            musicMain: { gain: 1, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicExplore: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicCombat: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicLounge: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
+            musicMain: { gain: 1 },
+            musicExplore: { gain: 0 },
+            musicCombat: { gain: 0 },
+            musicLounge: { gain: 0 },
+            sfx: { gain: 1 },
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            FX_REVERB: {
-                gain: 1,
-                sends: {},
-                filter: { type: 'reverb', reverbTime: 2.5, reverbDecay: 3 },
-                sidechain: { enabled: false }
-            }
+            SFX_COINS: { gain: 1 }
         }
     },
 
     explore: {
         buses: {
-            musicMain: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicExplore: { gain: 1, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicCombat: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicLounge: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            FX_REVERB: {
-                gain: 1,
-                sends: {},
-                filter: { type: 'reverb', reverbTime: 2.5, reverbDecay: 3 },
-                sidechain: { enabled: false }
-            }
+            musicMain: { gain: 0 },
+            musicExplore: { gain: 1 },
+            musicCombat: { gain: 0 },
+            musicLounge: { gain: 0 },
+            sfx: { gain: 1 }
         }
     },
 
     combat: {
         buses: {
-            musicMain: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicExplore: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicCombat: { gain: 1, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicLounge: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            FX_REVERB: {
-                gain: 1,
-                sends: {},
-                filter: { type: 'reverb', reverbTime: 2.5, reverbDecay: 3 },
-                sidechain: { enabled: false }
-            }
+            musicMain: { gain: 0 },
+            musicExplore: { gain: 0 },
+            musicCombat: { gain: 1 },
+            musicLounge: { gain: 0 }
         }
     },
 
     lounge: {
         buses: {
-            musicMain: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicExplore: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicCombat: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicLounge: { gain: 1, sends: {}, filter: null, sidechain: { enabled: true } },
-            sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            FX_REVERB: {
-                gain: 1,
-                sends: {},
-                filter: { type: 'reverb', reverbTime: 2.5, reverbDecay: 3 },
-                sidechain: { enabled: false }
-            }
+            musicMain: { gain: 0 },
+            musicExplore: { gain: 0 },
+            musicCombat: { gain: 0 },
+            musicLounge: { gain: 1 }
         }
     },
 
@@ -82,23 +46,11 @@ const Snapshots: ISnapshots = {
         buses: {
             musicMain: {
                 gain: 1,
-                sends: {},
-                filter: { type: 'lowpass', frequency: 500 },
-                sidechain: { enabled: true }
+                filter: { type: 'lowpass', frequency: 500 }
             },
-            musicExplore: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicCombat: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            musicLounge: { gain: 0, sends: {}, filter: null, sidechain: { enabled: true } },
-            sfx: { gain: 1, sends: {}, filter: null, sidechain: { enabled: false } },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            SFX_COINS: { gain: 1, sends: { FX_REVERB: 0.5 }, filter: null, sidechain: { enabled: false } },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            FX_REVERB: {
-                gain: 1,
-                sends: {},
-                filter: { type: 'reverb', reverbTime: 2.5, reverbDecay: 3 },
-                sidechain: { enabled: false }
-            }
+            musicExplore: { gain: 0 },
+            musicCombat: { gain: 0 },
+            musicLounge: { gain: 0 }
         }
     }
 };
