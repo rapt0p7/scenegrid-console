@@ -120,4 +120,28 @@ describe('InstanceRTPCBinder', () => {
 
         expect(mockInstance.automate).not.toHaveBeenCalled();
     });
+
+    it('should support preset curve configurations (MathCurvePresetDef)', () => {
+        const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
+            gain: {
+                gameParam: 'car_speed',
+                curve: {
+                    type: 'exponential',
+                    minX: 0,
+                    maxX: 100,
+                    minY: 0,
+                    maxY: 1
+                },
+                smoothingMs: 150
+            }
+        };
+
+        mockRtpcManager.getValue.mockReturnValue(50);
+
+        InstanceRTPCBinder.bind(mockInstance as ISoundInstance, configs, mockRtpcManager as IRTPCManager);
+
+        expect(mockEmitter.on).toHaveBeenCalledWith('car_speed', expect.any(Function));
+
+        expect(mockInstance.automate).toHaveBeenCalledWith('gain', 0.25, 150);
+    });
 });

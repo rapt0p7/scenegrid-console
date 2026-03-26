@@ -256,6 +256,44 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         expect(ghostBusState.rtpc).toBe(0.5);
     });
 
+    it('should bind RTPC using preset curves and calculate math correctly', async () => {
+        const bus = new AudioBus({
+            id: 'sfx_bus',
+            config: { gain: 1 },
+            context: mockContext as any,
+            automation: mockAutomation as any,
+            routerMasterGain: mockMasterGain as any,
+            pluginFactory: mockPluginFactory as any
+        });
+
+        (bus as any).filterNode = { frequency: { value: 1000 } };
+        mockAutomation.ramp.mockClear();
+
+        (bus as any).targetParams.filterFrequency.logical = 1000;
+
+        mockRtpcManager.getValue.mockReturnValue(50);
+
+        bus.bindRTPC(
+            {
+                filterFrequency: {
+                    gameParam: 'speed',
+                    curve: {
+                        type: 's-curve',
+                        minX: 0,
+                        maxX: 100,
+                        minY: 0,
+                        maxY: 2000
+                    }
+                }
+            },
+            mockRtpcManager
+        );
+
+        await Promise.resolve();
+
+        expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 2000, 50, 'exponential');
+    });
+
     describe('update() logic', () => {
         it('should safely replace filter if filter node exists but type changed', async () => {
             const bus = new AudioBus({
