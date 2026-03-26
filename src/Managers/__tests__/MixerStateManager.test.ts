@@ -18,7 +18,9 @@ describe('MixerStateManager', () => {
         mockBus = {
             inputGainNode: { gain: {} },
             safeReplaceFilter: vi.fn().mockResolvedValue(true),
-            bindRTPC: vi.fn()
+            bindRTPC: vi.fn(),
+            setLogicalGain: vi.fn(),
+            setRtpcGainModifier: vi.fn()
         };
 
         mockBusSystem = {
@@ -35,12 +37,11 @@ describe('MixerStateManager', () => {
         manager = new MixerStateManager(mockBusSystem, mockAutomation, mockRtpcManager);
     });
 
-    it('should ramp gain and apply new RTPC configs when transitioning states', async () => {
+    it('should pass logical gain to bus and apply new RTPC configs when transitioning states', async () => {
         const nextState: MixerState = {
             buses: {
                 music_bus: {
                     gain: 0.5,
-                    sidechain: { enabled: false },
                     rtpc: {
                         gain: {
                             gameParam: 'intensity',
@@ -58,11 +59,9 @@ describe('MixerStateManager', () => {
 
         expect(mockBusSystem.getBus).toHaveBeenCalledWith('music_bus');
 
-        expect(mockAutomation.ramp).toHaveBeenCalledWith(mockBus.inputGainNode.gain, 0.5, 1000);
+        expect(mockBus.setLogicalGain).toHaveBeenCalledWith(0.5, 0);
 
         expect(mockBus.bindRTPC).toHaveBeenCalledWith(nextState.buses.music_bus.rtpc, mockRtpcManager);
-
-        expect(mockBus.logicalTargetGain).toBe(0.5);
     });
 
     it('should replace filter if filter config changes', async () => {
@@ -70,7 +69,6 @@ describe('MixerStateManager', () => {
             buses: {
                 sfx_bus: {
                     gain: 1,
-                    sidechain: { enabled: false },
                     filter: { type: 'lowpass', frequency: 1000, Q: 1 }
                 }
             }
@@ -78,7 +76,7 @@ describe('MixerStateManager', () => {
 
         await manager.applyState(nextState, { durationMs: 500 });
 
-        expect(mockBus.safeReplaceFilter).toHaveBeenCalledWith(nextState.buses.sfx_bus.filter, 125);
+        expect(mockBus.safeReplaceFilter).toHaveBeenCalledWith(nextState.buses.sfx_bus.filter, 0);
     });
 
     it('should trigger applies Sends if they exist in state', async () => {
@@ -86,7 +84,6 @@ describe('MixerStateManager', () => {
             buses: {
                 sfx_bus: {
                     gain: 1,
-                    sidechain: { enabled: false },
                     sends: { reverb_bus: 0.8 }
                 }
             }
@@ -94,7 +91,7 @@ describe('MixerStateManager', () => {
 
         await manager.applyState(nextState, { durationMs: 500 });
 
-        expect(mockBusSystem.applySend).toHaveBeenCalledWith('sfx_bus', 'reverb_bus', 0.8, 500);
+        expect(mockBusSystem.applySend).toHaveBeenCalledWith('sfx_bus', 'reverb_bus', 0.8, 0);
     });
 
     it('should return a deep clone of current state via getState()', () => {
@@ -108,8 +105,10 @@ describe('MixerStateManager', () => {
 
     describe('Transition Handling & FSM', () => {
         it('should interrupt active transition if a new one is started and interruptible is true', async () => {
-            const state1: MixerState = { buses: { music: { gain: 0.1, sidechain: { enabled: false } } } };
-            const state2: MixerState = { buses: { music: { gain: 0.9, sidechain: { enabled: false } } } };
+            await manager.applyState({ buses: {} }, { durationMs: 0 });
+
+            const state1: MixerState = { buses: { music: { gain: 0.1 } } };
+            const state2: MixerState = { buses: { music: { gain: 0.9 } } };
 
             const p1 = manager.applyState(state1, { durationMs: 1000, interruptible: true });
 
@@ -118,12 +117,12 @@ describe('MixerStateManager', () => {
             await Promise.all([p1, p2]);
 
             expect(manager.getState().buses.music.gain).toBe(0.9);
-            expect(mockAutomation.ramp).toHaveBeenCalledWith(expect.anything(), 0.9, 100);
+            expect(mockBus.setLogicalGain).toHaveBeenCalledWith(0.9, 100);
         });
 
         it('should NOT interrupt if active transition is marked as NOT interruptible', async () => {
-            const state1: MixerState = { buses: { music: { gain: 0.1, sidechain: { enabled: false } } } };
-            const state2: MixerState = { buses: { music: { gain: 0.9, sidechain: { enabled: false } } } };
+            const state1: MixerState = { buses: { music: { gain: 0.1 } } };
+            const state2: MixerState = { buses: { music: { gain: 0.9 } } };
 
             const p1 = manager.applyState(state1, { durationMs: 1000, interruptible: false });
 
@@ -132,14 +131,14 @@ describe('MixerStateManager', () => {
             await Promise.all([p1, p2]);
 
             expect(manager.getState().buses.music.gain).toBe(0.1);
-            expect(mockAutomation.ramp).not.toHaveBeenCalledWith(expect.anything(), 0.9, 100);
+            expect(mockBus.setLogicalGain).not.toHaveBeenCalledWith(0.9, 100);
         });
 
         it('should exit runTransition early if transition was canceled mid-loop', async () => {
             const nextState: MixerState = {
                 buses: {
-                    bus1: { gain: 0.5, sidechain: { enabled: false } },
-                    bus2: { gain: 0.5, sidechain: { enabled: false } }
+                    bus1: { gain: 0.5 },
+                    bus2: { gain: 0.5 }
                 }
             };
 
@@ -152,7 +151,7 @@ describe('MixerStateManager', () => {
 
             await manager.applyState(nextState);
 
-            expect(mockAutomation.ramp).toHaveBeenCalledTimes(1);
+            expect(mockBus.setLogicalGain).toHaveBeenCalledTimes(1);
             expect(mockBusSystem.getBus).toHaveBeenCalledWith('bus2');
         });
     });
