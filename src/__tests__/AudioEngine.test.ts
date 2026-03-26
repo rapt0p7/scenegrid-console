@@ -246,9 +246,9 @@ describe('AudioEngine', () => {
             expect(value).toBe(0.5);
         });
 
-        it('should delegate mixer.push and mixer.pop to SnapshotManager', () => {
-            expect(() => engine.mixer.push('pauseMenu', 'layer1', 10)).not.toThrow();
-            expect(() => engine.mixer.pop('layer1')).not.toThrow();
+        it('should delegate mixer.addModifier and mixer.pop to SnapshotManager', () => {
+            expect(() => engine.mixer.addModifier('pauseMenu', 'layer1', 10)).not.toThrow();
+            expect(() => engine.mixer.removeModifier('layer1')).not.toThrow();
         });
 
         it('should delegate music loops and transitions to SmartLoopManager', () => {
