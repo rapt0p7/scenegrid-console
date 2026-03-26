@@ -47,6 +47,11 @@ const createMockDelay = () => ({
     delayTime: createMockAudioParameter()
 });
 
+const createMockWaveShaper = () => ({
+    ...createMockNode(),
+    curve: null
+});
+
 describe('SidechainDucker', () => {
     let mockContext: any;
     let mockTargetGain: any;
@@ -62,6 +67,7 @@ describe('SidechainDucker', () => {
         mockContext = {
             createGain: vi.fn().mockImplementation(createMockGain),
             createDelay: vi.fn().mockImplementation(createMockDelay),
+            createWaveShaper: vi.fn().mockImplementation(createMockWaveShaper),
             currentTime: 100,
             audioWorklet: {
                 addModule: vi.fn().mockResolvedValue(undefined)
@@ -92,7 +98,7 @@ describe('SidechainDucker', () => {
             ).toThrow();
         });
 
-        it('should initialize successfully with default parameters', () => {
+        it('should initialize successfully with default parameters and create clipper', () => {
             const ducker = new SidechainDucker({
                 ctx: mockContext,
                 targetGainNode: mockTargetGain,
@@ -103,6 +109,7 @@ describe('SidechainDucker', () => {
             expect(ducker).toBeDefined();
             expect(mockContext.createGain).toHaveBeenCalledTimes(2);
             expect(mockContext.createDelay).toHaveBeenCalledTimes(1);
+            expect(mockContext.createWaveShaper).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -118,12 +125,13 @@ describe('SidechainDucker', () => {
             });
         });
 
-        it('should connect nodes correctly to insert lookahead delay', () => {
+        it('should connect nodes correctly to insert lookahead delay and store nextNode', () => {
             const nextNode = createMockNode();
             ducker.insertLookahead(nextNode as any);
 
             expect(safeDisconnect).toHaveBeenCalledWith(mockTargetGain, nextNode);
             expect(mockTargetGain.connect).toHaveBeenCalled();
+            expect((ducker as any).nextNode).toBe(nextNode);
         });
 
         it('should catch errors and warn if connection fails', () => {
@@ -221,29 +229,41 @@ describe('SidechainDucker', () => {
             });
         });
 
-        it('should clean up all resources on dispose', () => {
+        it('should clean up resources and properly RESTORE the graph on dispose', () => {
             const source = createMockNode();
+            const nextNode = createMockNode();
+
+            ducker.insertLookahead(nextNode as any);
             ducker.addSource(source as any, 0.5);
+
+            vi.mocked(safeDisconnect).mockClear();
+            mockTargetGain.connect.mockClear();
 
             ducker.dispose();
 
-            expect(safeDisconnect).toHaveBeenCalled();
+            expect(safeDisconnect).toHaveBeenCalledWith((ducker as any).clipper);
+
+            expect(mockTargetGain.connect).toHaveBeenCalledWith(nextNode);
+            expect((ducker as any).nextNode).toBeNull();
             expect((ducker as any).sources.size).toBe(0);
         });
 
-        it('should start successfully, create AudioWorkletNode, and handle incoming messages', async () => {
+        it('should start successfully, create AudioWorkletNode, and route through clipper', async () => {
             await ducker.start();
 
             expect(mockContext.audioWorklet.addModule).toHaveBeenCalledWith('mock-processor-url');
             expect(AudioWorkletNode).toHaveBeenCalledTimes(1);
 
             const processorInstance = (ducker as any).processor;
+            const clipperInstance = (ducker as any).clipper;
+            const mergeGainInstance = (ducker as any).mergeGain;
 
             expect(processorInstance).toBeDefined();
-            expect(processorInstance.port).toBeDefined();
+
+            expect(mergeGainInstance.connect).toHaveBeenCalledWith(clipperInstance);
+            expect(clipperInstance.connect).toHaveBeenCalledWith(processorInstance);
 
             processorInstance.port.onmessage({ data: { envelope: 0.85 } });
-
             expect(ducker.activeEnvelope).toBe(0.85);
 
             mockContext.audioWorklet.addModule.mockClear();
@@ -259,13 +279,19 @@ describe('SidechainDucker', () => {
             expect(console.error).toHaveBeenCalledWith('AudioWorklet initialization failed', expect.any(Error));
         });
 
-        it('should stop and disconnect processor if running', async () => {
+        it('should stop and disconnect processor AND clipper if running', async () => {
             await ducker.start();
+
+            const processorInstance = (ducker as any).processor;
+            const clipperInstance = (ducker as any).clipper;
+            const mergeGainInstance = (ducker as any).mergeGain;
 
             vi.mocked(safeDisconnect).mockClear();
             ducker.stop();
 
-            expect(safeDisconnect).toHaveBeenCalledTimes(2);
+            expect(safeDisconnect).toHaveBeenCalledWith(mergeGainInstance, clipperInstance);
+            expect(safeDisconnect).toHaveBeenCalledWith(clipperInstance, processorInstance);
+
             expect((ducker as any).processor).toBeNull();
             expect((ducker as any).duckingGain.gain.setTargetAtTime).toHaveBeenCalledWith(1, 100, 0.05);
         });

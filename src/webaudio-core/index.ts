@@ -7,7 +7,8 @@ export type {
     ConvolverNodeNodeLike,
     AudioWorkletNodeLike,
     DelayNodeLike,
-    StereoPannerNodeLike
+    StereoPannerNodeLike,
+    WaveShaperNodeLike
 } from './types/IAudioContext';
 export type { ISoundInstance, InstanceParameterTarget } from './types/ISoundInstance';
 export type { ISoundOptions } from './types/ISoundOptions';

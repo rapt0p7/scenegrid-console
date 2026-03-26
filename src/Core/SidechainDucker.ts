@@ -2,6 +2,7 @@ import { AudioWorkletNode } from 'standardized-audio-context';
 
 import { safeDisconnect } from '@webaudio-core';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import processorUrl from './ducker-processor.processor.ts';
 
@@ -13,7 +14,8 @@ import type {
     DelayNodeLike,
     GainNodeLike,
     AutomationEngine,
-    MasterOutput
+    MasterOutput,
+    WaveShaperNodeLike
 } from '@webaudio-core';
 
 export default class SidechainDucker implements ISidechain {
@@ -27,6 +29,8 @@ export default class SidechainDucker implements ISidechain {
     private readonly delay: DelayNodeLike;
     private readonly duckingGain: GainNodeLike;
     private readonly mergeGain: GainNodeLike;
+    private readonly clipper: WaveShaperNodeLike;
+    private nextNode: AudioNodeLike | null = null;
 
     private sources: Set<AudioNodeLike>;
     private sourceGainMap: Map<AudioNodeLike, GainNodeLike>;
@@ -68,6 +72,9 @@ export default class SidechainDucker implements ISidechain {
         this.mergeGain = this.ctx.createGain();
         this.mergeGain.gain.value = 1;
 
+        this.clipper = this.ctx.createWaveShaper();
+        this.clipper.curve = new Float32Array([-1, 1]);
+
         this.sources = new Set();
         this.sourceGainMap = new Map();
         this.intensityMap = new Map();
@@ -77,6 +84,7 @@ export default class SidechainDucker implements ISidechain {
 
     public insertLookahead(nextNode: AudioNodeLike): void {
         try {
+            this.nextNode = nextNode;
             safeDisconnect(this.target, nextNode);
             this.target.connect(this.delay);
             this.delay.connect(this.duckingGain);
@@ -135,9 +143,22 @@ export default class SidechainDucker implements ISidechain {
         this.sourceGainMap.clear();
         this.intensityMap.clear();
 
+        safeDisconnect(this.target, this.delay);
+        safeDisconnect(this.duckingGain, this.nextNode!);
+
+        if (this.nextNode) {
+            try {
+                this.target.connect(this.nextNode);
+            } catch (error) {
+                console.warn('[SidechainDucker] Failed to restore graph connection during dispose', error);
+            }
+        }
+        this.nextNode = null;
+
         safeDisconnect(this.duckingGain);
         safeDisconnect(this.delay);
         safeDisconnect(this.mergeGain);
+        safeDisconnect(this.clipper);
     }
 
     public async start(): Promise<void> {
@@ -151,13 +172,16 @@ export default class SidechainDucker implements ISidechain {
                     processorOptions: { attack: this.attack, release: this.release }
                 }) as unknown as AudioWorkletNodeLike;
 
-                this.mergeGain.connect(this.processor!);
+                this.mergeGain.connect(this.clipper);
+                this.clipper.connect(this.processor!);
+
                 this.duckingGain.gain.value = 0;
                 this.processor!.connect(this.duckingGain.gain as unknown as AudioNodeLike);
 
-                this.processor.port.onmessage = e => {
-                    if (e.data.envelope !== undefined) {
-                        this.activeEnvelope = e.data.envelope;
+                // eslint-disable-next-line unicorn/prefer-add-event-listener
+                this.processor.port.onmessage = event => {
+                    if (event.data.envelope !== undefined) {
+                        this.activeEnvelope = event.data.envelope;
                     }
                 };
             }
@@ -169,7 +193,8 @@ export default class SidechainDucker implements ISidechain {
     public stop(): void {
         this.running = false;
         if (this.processor) {
-            safeDisconnect(this.mergeGain, this.processor);
+            safeDisconnect(this.mergeGain, this.clipper);
+            safeDisconnect(this.clipper, this.processor!);
             safeDisconnect(this.processor, this.duckingGain.gain as unknown as AudioNodeLike);
             this.processor = null;
         }
