@@ -1,17 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import {
-    SoundController,
-    VoiceCullingSystem,
-    SoundPoolManager,
-    AudioBufferLoader,
-    SoundInstance
-} from '@webaudio-core';
+import { SoundController, SoundPoolManager, SoundInstance } from '@webaudio-core';
 
 import { AudioEngine } from '../AudioEngine';
 import AudioRouter from '../AudioRouter';
 import ConsistencyChecker from '../Core/ConsistencyChecker';
+import FiltersPlugin from '../Core/FiltersPlugin';
 import AudioDebugger from '../Debug/AudioDebugger';
+import MixerCoordinator from '../Managers/MixerCoordinator';
+import { PRIORITY } from '../Managers/MixerLayer';
+import RTPCManager from '../Managers/RTPCManager';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),
@@ -230,6 +228,44 @@ describe('AudioEngine', () => {
             await badEngine.init();
             expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('initialized with errors'));
         });
+
+        it('should exit early if strict validation fails and isStrictValidation is true', async () => {
+            const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            (ConsistencyChecker.validate as any).mockReturnValueOnce(false);
+
+            const badEngine = new AudioEngine({ manifest: {}, buses: {}, snapshots: {}, soundMap: {} });
+
+            await badEngine.init({ isStrictValidation: true });
+
+            expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('strict mode with errors'));
+
+            errorSpy.mockRestore();
+        });
+
+        it('should initialize RTPC manifest if provided in config', async () => {
+            const configSpy = vi.spyOn(RTPCManager.prototype, 'configureParam');
+            const setSpy = vi.spyOn(RTPCManager.prototype, 'setValue');
+
+            const rtpcEngine = new AudioEngine({
+                manifest: {},
+                buses: { master: { gain: 1 } },
+                snapshots: {},
+                soundMap: {},
+                rtpcManifest: {
+                    health: { attackMs: 100, releaseMs: 200, defaultValue: 100 },
+                    speed: { attackMs: 50 }
+                }
+            });
+            await rtpcEngine.init();
+
+            expect(setSpy).toHaveBeenCalledWith('health', 100);
+
+            expect(configSpy).toHaveBeenCalledWith('health', 100, 200);
+            expect(configSpy).toHaveBeenCalledWith('speed', 50, 0);
+
+            configSpy.mockRestore();
+            setSpy.mockRestore();
+        });
     });
 
     describe('Facade API (params, mixer, music, misc)', () => {
@@ -264,6 +300,18 @@ describe('AudioEngine', () => {
         it('should initialize AudioDebugger on showDebugUI', async () => {
             await engine.showDebugUI();
             expect(AudioDebugger).toHaveBeenCalledTimes(1);
+        });
+
+        it('should delegate mixer.setState to SnapshotManager with scene_main and BASE priority', async () => {
+            const debugObject = engine._debug;
+            const activateSpy = vi
+                .spyOn(debugObject.snapshotManager, 'activateSnapshot')
+                .mockImplementation(async () => {});
+
+            await engine.mixer.setState('main_menu');
+
+            expect(activateSpy).toHaveBeenCalledWith('main_menu', 'scene_main', PRIORITY.BASE);
+            activateSpy.mockRestore();
         });
     });
 
@@ -308,6 +356,54 @@ describe('AudioEngine', () => {
             const sfxSidechain = debugObject.busSystem.getSidechain('sfx');
             expect(sfxSidechain).toBeDefined();
             expect(sfxSidechain?.activeEnvelope).toBe(0);
+        });
+
+        it('should provide FiltersPlugin via pluginFactory when a bus needs a filter', async () => {
+            vi.useFakeTimers();
+
+            const createNodeSpy = vi.spyOn(FiltersPlugin, 'createNode').mockReturnValue({
+                type: 'lowpass',
+                frequency: { value: 1000 },
+                Q: { value: 1 },
+                connect: vi.fn(),
+                disconnect: vi.fn()
+            } as any);
+
+            const filterEngine = new AudioEngine({
+                manifest: {},
+                soundMap: {},
+                snapshots: {},
+                buses: {
+                    master: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } }
+                }
+            });
+
+            const initPromise = filterEngine.init();
+
+            await vi.advanceTimersByTimeAsync(50);
+            await initPromise;
+
+            expect(createNodeSpy).toHaveBeenCalled();
+
+            createNodeSpy.mockRestore();
+            vi.useRealTimers();
+        });
+
+        it('should pass recompute callback to MixerLayerStack which calls coordinator.recompute', async () => {
+            const recomputeSpy = vi.spyOn(MixerCoordinator.prototype, 'recompute').mockResolvedValue(undefined);
+
+            const layerEngine = new AudioEngine({
+                manifest: {},
+                soundMap: {},
+                buses: { master: { gain: 1 } },
+                snapshots: { snap1: { buses: { master: { gain: 0.5 } } } }
+            });
+            await layerEngine.init();
+
+            await layerEngine.mixer.addModifier('snap1', 'layer1');
+
+            expect(recomputeSpy).toHaveBeenCalledWith({ durationMs: 500 });
+            recomputeSpy.mockRestore();
         });
     });
 

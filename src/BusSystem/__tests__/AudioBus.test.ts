@@ -478,4 +478,41 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             expect(bus.getConfig().filter).toEqual({ type: 'reverb' });
         });
     });
+
+    it('should bind RTPC to gain and automate inputGainNode when gameParam changes', async () => {
+        const bus = new AudioBus({
+            id: 'sfx_bus',
+            config: { gain: 1 },
+            context: mockContext as any,
+            automation: mockAutomation as any,
+            routerMasterGain: mockMasterGain as any,
+            pluginFactory: mockPluginFactory as any
+        });
+
+        mockAutomation.ramp.mockClear();
+
+        mockRtpcManager.getValue.mockReturnValue(100);
+
+        bus.bindRTPC(
+            {
+                gain: {
+                    gameParam: 'master_volume_slider',
+                    curve: [
+                        { x: 0, y: 0 },
+                        { x: 100, y: 0.5 }
+                    ],
+                    smoothingMs: 120
+                }
+            },
+            mockRtpcManager
+        );
+
+        await Promise.resolve();
+
+        expect(mockRtpcManager.events.on).toHaveBeenCalledWith('master_volume_slider', expect.any(Function));
+
+        expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputGainNode.gain, 0.5, 120, 'linear');
+
+        expect((bus as any).targetParams.gain.rtpc).toBe(0.5);
+    });
 });

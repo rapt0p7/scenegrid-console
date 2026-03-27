@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AudioRouter from '../AudioRouter';
+import { InstanceRTPCBinder } from '../Managers/InstanceRTPCBinder';
+
+vi.mock('../Managers/InstanceRTPCBinder', () => ({
+    InstanceRTPCBinder: {
+        bind: vi.fn()
+    }
+}));
 
 vi.mock('../config/SoundMap', () => ({
     default: {
@@ -249,6 +256,56 @@ describe('AudioRouter', () => {
             const result = router.play('layer_sound');
 
             expect(result).toBeNull();
+        });
+    });
+
+    describe('applyConfigToInstance (Ducking & RTPC)', () => {
+        it('should trigger ducking and bind RTPC if present in config', () => {
+            const complexConfig: any = {
+                busId: 'sfx',
+                ducking: { target: 'music', intensity: 0.8 },
+                rtpc: { gain: { gameParam: 'speed', curve: [] } }
+            };
+
+            router.applyConfigToInstance(mockInstance, complexConfig);
+
+            expect(mockDuckingManager.triggerDucking).toHaveBeenCalledWith(mockInstance, 'music', 0.8);
+            expect(InstanceRTPCBinder.bind).toHaveBeenCalledWith(mockInstance, complexConfig.rtpc, mockRtpcManager);
+        });
+
+        it('should use default ducking intensity (1) if not provided', () => {
+            const defaultDuckingConfig: any = {
+                busId: 'sfx',
+                ducking: { target: 'ambient' }
+            };
+
+            router.applyConfigToInstance(mockInstance, defaultDuckingConfig);
+
+            expect(mockDuckingManager.triggerDucking).toHaveBeenCalledWith(mockInstance, 'ambient', 1);
+        });
+    });
+
+    describe('applyVariation (Volume & Offset)', () => {
+        it('should apply volumeVar and randomOffset variations correctly', () => {
+            testSoundMap['var_sound'] = {
+                busId: 'sfx',
+                variation: { volumeVar: 0.2, randomOffset: 500 }
+            };
+
+            const mathRandomSpy = vi.spyOn(Math, 'random').mockReturnValue(1);
+
+            router.play('var_sound', { volume: 0.5 });
+
+            expect(mathRandomSpy).toHaveBeenCalled();
+            expect(mockController.play).toHaveBeenCalledWith(
+                'var_sound',
+                expect.objectContaining({
+                    when: 500 / 1000,
+                    offset: 500 / 1000
+                })
+            );
+
+            mathRandomSpy.mockRestore();
         });
     });
 });

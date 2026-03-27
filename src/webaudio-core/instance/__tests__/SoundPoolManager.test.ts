@@ -209,3 +209,83 @@ describe('SoundPoolManager (Policy: "expand")', () => {
         expect(v2.resetForReuse).toHaveBeenCalledTimes(1);
     });
 });
+
+describe('SoundPoolManager (Policy: "steal_oldest")', () => {
+    let mockFactory: any;
+    let manager: SoundPoolManager;
+
+    beforeEach(() => {
+        let idCounter = 0;
+        mockFactory = vi.fn((soundId: string) => {
+            const inst = createMockInstance(soundId);
+            (inst as any).instanceId = ++idCounter;
+            return inst;
+        });
+
+        manager = new SoundPoolManager(mockFactory, {
+            maxPolyphony: 2,
+            globalVoiceLimit: 10,
+            policy: 'steal_oldest'
+        });
+    });
+
+    it('should STEAL the oldest busy instance when maxPolyphony is reached for a specific sound', () => {
+        const inst1 = manager.acquire('laser') as any;
+        const inst2 = manager.acquire('laser') as any;
+
+        expect(mockFactory).toHaveBeenCalledTimes(2);
+
+        const inst3 = manager.acquire('laser') as any;
+
+        expect(mockFactory).toHaveBeenCalledTimes(2);
+
+        expect(inst3.instanceId).toBe(inst1.instanceId);
+        expect(inst3.resetForReuse).toHaveBeenCalledTimes(1);
+
+        expect(manager.getActiveVoices().size).toBe(2);
+    });
+});
+
+describe('SoundPoolManager (Dispose)', () => {
+    let mockFactory: any;
+    let manager: SoundPoolManager;
+
+    beforeEach(() => {
+        mockFactory = vi.fn((soundId: string) => createMockInstance(soundId));
+        manager = new SoundPoolManager(mockFactory, {
+            maxPolyphony: 10,
+            globalVoiceLimit: 20
+        });
+    });
+
+    it('should dispose ONLY instances of the specified soundId', () => {
+        const sfx1 = manager.acquire('sfx_a')!;
+        const sfx2 = manager.acquire('sfx_a')!;
+        const bgm = manager.acquire('bgm_b')!;
+
+        expect(manager.getActiveVoices().size).toBe(3);
+
+        manager.dispose('sfx_a');
+
+        expect(sfx1.dispose).toHaveBeenCalledTimes(1);
+        expect(sfx2.dispose).toHaveBeenCalledTimes(1);
+
+        expect(bgm.dispose).not.toHaveBeenCalled();
+
+        expect(manager.getActiveVoices().size).toBe(1);
+        expect(manager.getActiveVoices().has(bgm)).toBe(true);
+    });
+
+    it('should dispose ALL instances across all soundIds if no argument is provided', () => {
+        const sfx = manager.acquire('sfx_a')!;
+        const bgm = manager.acquire('bgm_b')!;
+
+        manager.release(sfx);
+
+        manager.dispose();
+
+        expect(sfx.dispose).toHaveBeenCalledTimes(1);
+        expect(bgm.dispose).toHaveBeenCalledTimes(1);
+        expect(manager.getActiveVoices().size).toBe(0);
+    });
+});

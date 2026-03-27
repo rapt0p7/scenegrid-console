@@ -358,3 +358,89 @@ describe('AudioBusSystem (Getters & Gain Calculations)', () => {
         expect(system.computeOfflineGainTransition('ghost' as any, 1)).toEqual({ from: 0, to: 1 });
     });
 });
+
+describe('AudioBusSystem (createSidechain Edge Cases)', () => {
+    let mockContext: any;
+    let mockAutomation: any;
+    let mockMasterOutput: any;
+    let mockPluginFactory: any;
+    let system: AudioBusSystem;
+
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        mockContext = createMockContext();
+        mockAutomation = { ramp: vi.fn(), set: vi.fn() };
+        mockMasterOutput = { input: {} };
+
+        mockPluginFactory = {
+            createLimiter: vi.fn().mockReturnValue({
+                load: vi.fn().mockResolvedValue(undefined),
+                inputNode: { connect: vi.fn() },
+                outputNode: { connect: vi.fn() },
+                dispose: vi.fn()
+            }),
+            createSidechain: vi.fn().mockReturnValue({
+                insertLookahead: vi.fn(),
+                start: vi.fn().mockResolvedValue(undefined),
+                activeEnvelope: 0.5,
+                dispose: vi.fn()
+            })
+        };
+
+        system = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: { sfx: { gain: 1, sidechain: { enabled: true } } },
+            pluginFactory: mockPluginFactory
+        });
+
+        await flushPromises();
+    });
+
+    it('should warn and early return if requested bus is not found', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        await (system as any).createSidechain('invalid_bus');
+
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Bus 'invalid_bus' not found"));
+        warnSpy.mockRestore();
+    });
+
+    it('should dispose old sidechain if one already exists for the bus', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const oldDucker = system.getSidechain('sfx');
+        expect(oldDucker).toBeDefined();
+
+        await (system as any).createSidechain('sfx');
+
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('already exists. Disposing old instance'));
+        expect(oldDucker?.dispose).toHaveBeenCalledTimes(1);
+
+        warnSpy.mockRestore();
+    });
+
+    it('should catch errors if ducker.start() fails and safely dispose the created instance', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        const failingDucker = {
+            insertLookahead: vi.fn(),
+            start: vi.fn().mockRejectedValue(new Error('Worklet failed to load')),
+            dispose: vi.fn()
+        };
+        mockPluginFactory.createSidechain.mockReturnValueOnce(failingDucker);
+
+        (system as any).sidechains.delete('sfx');
+
+        await (system as any).createSidechain('sfx');
+
+        expect(errorSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Failed to start sidechain for bus 'sfx'"),
+            expect.any(Error)
+        );
+        expect(failingDucker.dispose).toHaveBeenCalledTimes(1);
+
+        errorSpy.mockRestore();
+    });
+});

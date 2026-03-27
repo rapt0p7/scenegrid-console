@@ -76,6 +76,7 @@
             "description": "Adding missing tests or correcting existing tests",
             "scopes": {
                 "unit": { "description": "Unit tests for pure classes/helpers" },
+                "core": { "description": "Unit tests for core components" },
                 "integration": { "description": "Integration tests for Managers/Buses" },
                 "worklets": { "description": "Testing audio thread processors" },
                 "mocks": { "description": "Web Audio API mocks updates" }

@@ -20,7 +20,8 @@ describe('SoundController', () => {
         fakeInstance = {
             setLoop: vi.fn(),
             setRate: vi.fn(),
-            stop: vi.fn()
+            stop: vi.fn(),
+            setPosition: vi.fn()
         };
 
         mockPool = {
@@ -192,6 +193,38 @@ describe('SoundController', () => {
             controller.stopAll();
 
             expect(controller.activeVoices.size).toBe(0);
+        });
+
+        describe('setPosition', () => {
+            it('should do nothing if playbackId is not found', () => {
+                expect(() => controller.setPosition(9999, 10, 20, 30)).not.toThrow();
+            });
+
+            it('should update logical position and physical instance position', () => {
+                const result = controller.play('test_sound', {});
+                const id = result!.playbackId;
+
+                controller.setPosition(id, 10, 20, 30);
+
+                const voice = controller.getLogicalVoice(id);
+                expect(voice?.position).toEqual({ x: 10, y: 20, z: 30 });
+                expect(fakeInstance.setPosition).toHaveBeenCalledWith(10, 20, 30);
+            });
+
+            it('should update logical position even if physicalInstance is null (virtualized voice)', () => {
+                const result = controller.play('test_sound', {});
+                const id = result!.playbackId;
+
+                const voice = controller.getLogicalVoice(id)!;
+                voice.physicalInstance = null as any;
+
+                fakeInstance.setPosition.mockClear();
+
+                controller.setPosition(id, 5, 15, 25);
+
+                expect(voice.position).toEqual({ x: 5, y: 15, z: 25 });
+                expect(fakeInstance.setPosition).not.toHaveBeenCalled();
+            });
         });
     });
 });
