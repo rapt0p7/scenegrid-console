@@ -39,6 +39,10 @@ import type { IRTPCManifest } from './interfaces/IRTPCManifest';
 import type { ITransitionToParameters } from './interfaces/ISmartLoopManager';
 import type { IPlayOptions } from './interfaces/ISoundConfig';
 
+export interface InitParameters {
+    isStrictValidation?: boolean;
+}
+
 export class AudioEngine {
     #contextManager!: AudioContextManager;
     #router!: AudioRouter;
@@ -117,11 +121,15 @@ export class AudioEngine {
         this.config = deepFreeze<IAudioEngineConfig>({ ...config });
     }
 
-    public async init(): Promise<void> {
+    public async init(parameters?: InitParameters): Promise<void> {
         if (this.#isInitialized) return;
 
         const isConfigValid = ConsistencyChecker.validate(this.config);
         if (!isConfigValid) {
+            if (parameters?.isStrictValidation) {
+                console.error('[AudioEngine] Engine initialized in strict mode with errors, exiting.');
+                return;
+            }
             console.warn('[AudioEngine] Engine initialized with errors. Some features may not work correctly.');
         }
 
