@@ -2,6 +2,7 @@
 
 import { Pane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
+import { AudioProfiler } from './Debug/AudioProfiler.ts';
 
 const audio = window.AudioEngine;
 if (!audio) {
@@ -73,6 +74,37 @@ export function initAudioDebugPanel() {
     const pane = new Pane({ title: 'AUDIO SYSTEM DEBUG', expanded: true });
     pane.registerPlugin(EssentialsPlugin);
     applyIcon(pane, 'fad-speaker', 'AUDIO SYSTEM DEBUG');
+
+    // --- 0. PERFORMANCE & MATH PROFILER ---
+    const profiler = new AudioProfiler(audio);
+    const fProfile = pane.addFolder({ title: 'PERFORMANCE PROFILER', expanded: true });
+    applyIcon(fProfile, 'fad-tachometer-alt', 'PERFORMANCE PROFILER');
+
+    // Voice Metrics
+    fProfile.addBinding(profiler.metrics.voices, 'totalTracked', { readonly: true, label: 'Total Voices' });
+    fProfile.addBinding(profiler.metrics.voices, 'hardwareActive', { readonly: true, label: 'Hardware (Playing)' });
+    fProfile.addBinding(profiler.metrics.voices, 'virtualCulled', { readonly: true, label: 'Virtual (Culled)' });
+    fProfile.addBlade({ view: 'separator' });
+
+    // Mixer Layers Stack
+    fProfile.addBinding(profiler.metrics.mixer, 'globalSnapshot', { readonly: true, label: 'Global Snapshot' });
+    fProfile.addBinding(profiler.metrics.mixer, 'activeLayers', { readonly: true, label: 'Active Overlays' });
+    fProfile.addBlade({ view: 'separator' });
+
+    // Transparent Bus Math
+    const fBusMath = fProfile.addFolder({ title: 'BUS MATH (Logical × RTPC = Final)', expanded: false });
+    Object.keys(profiler.metrics.buses).forEach(busId => {
+        fBusMath.addBinding(profiler.metrics.buses, busId, { readonly: true, label: busId.toUpperCase() });
+    });
+
+    const renderLoop = () => {
+        if (!pane.hidden) {
+            profiler.tick();
+            fProfile.refresh();
+        }
+        requestAnimationFrame(renderLoop);
+    };
+    requestAnimationFrame(renderLoop);
 
     // --- 1. MASTER CONTROL ---
     const fMaster = pane.addFolder({ title: 'MASTER CONTROL' });

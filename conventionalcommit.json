@@ -14,7 +14,8 @@
                 "worklets": { "description": "AudioWorklet processors (meters, lookahead)" },
                 "loader": { "description": "AudioBuffer loader and sound controller" },
                 "scheduling": { "description": "Playback scheduling and voice culling" },
-                "automation": { "description": "Automation engine and value fading" }
+                "automation": { "description": "Automation engine and value fading" },
+                "debug": { "description": "Debugging tools for audio engine" }
             }
         },
         "fix": {
