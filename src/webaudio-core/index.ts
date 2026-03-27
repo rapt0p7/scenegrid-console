@@ -25,3 +25,4 @@ export { AudioBufferLoader } from './loader/AudioBufferLoader';
 export { PlaybackScheduler } from './scheduling/PlaybackScheduler';
 export { AudioNodeFactory } from './nodes/AudioNodeFactory';
 export { safeDisconnect } from './utils/safeDisconnect';
+export { default as clamp } from './utils/clamp';

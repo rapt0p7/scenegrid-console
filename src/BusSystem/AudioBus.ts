@@ -1,9 +1,8 @@
 /* eslint-disable unicorn/prefer-structured-clone */
 // noinspection D
 
-import { safeDisconnect } from '@webaudio-core';
+import { safeDisconnect, clamp } from '@webaudio-core';
 
-import clamp from '../helpers/clamp';
 import { evaluateRTPCCurve } from '../helpers/rtpcMath';
 import { type IBus } from '../interfaces/IBuses';
 

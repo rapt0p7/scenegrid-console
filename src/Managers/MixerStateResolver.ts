@@ -1,4 +1,4 @@
-import clamp from '../helpers/clamp';
+import { clamp } from '@webaudio-core';
 
 import type { IFilter } from '../interfaces/IFilter';
 import type { MixerSnapshot, MixerState } from '../interfaces/IMixerStateManager';

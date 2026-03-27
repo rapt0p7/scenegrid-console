@@ -1,6 +1,7 @@
 // noinspection D
 
-import clamp from './helpers/clamp';
+import { clamp } from '@webaudio-core';
+
 import { InstanceRTPCBinder } from './Managers/InstanceRTPCBinder';
 
 import type AudioBusSystem from './BusSystem/AudioBusSystem';
