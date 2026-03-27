@@ -2,7 +2,6 @@
 
 import type { IAudioEngineConfig } from '../interfaces/IAudioEngineConfig';
 import type { IBuses } from '../interfaces/IBuses';
-import type { IRTPCConfig } from '../interfaces/IRTPCManager';
 import type { ISnapshots } from '../interfaces/ISnapshots';
 import type {
     IContainerSoundConfig,
@@ -28,7 +27,13 @@ export default class ConsistencyChecker {
             snapshotsConfig: config.snapshots || {}
         });
 
-        checker.run();
+        try {
+            checker.run();
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : error);
+            return false;
+        }
+
         return checker.errors.length === 0;
     }
 
@@ -58,12 +63,55 @@ export default class ConsistencyChecker {
     }
 
     private run(): void {
+        this.checkRoutingCycles();
         this.checkBuses();
         this.checkSoundMap();
         this.checkSnapshots();
         this.checkOrphanManifestSounds();
 
         this.report();
+    }
+
+    private checkRoutingCycles(): void {
+        if (!this.buses) return;
+
+        const visited = new Set<string>();
+        const visiting = new Set<string>();
+        const path: string[] = [];
+
+        const dfs = (busId: string) => {
+            if (visiting.has(busId)) {
+                const cycleStartIndex = path.indexOf(busId);
+                const cycle = path.slice(cycleStartIndex);
+                cycle.push(busId);
+
+                throw new Error(`Fatal Error: Audio routing loop detected in configuration: ${cycle.join(' -> ')}`);
+            }
+
+            if (visited.has(busId)) return;
+
+            visiting.add(busId);
+            path.push(busId);
+
+            const sends = this.buses[busId]?.sends;
+            if (sends) {
+                for (const targetBus of Object.keys(sends)) {
+                    if (this.buses[targetBus]) {
+                        dfs(targetBus);
+                    }
+                }
+            }
+
+            path.pop();
+            visiting.delete(busId);
+            visited.add(busId);
+        };
+
+        for (const busId of Object.keys(this.buses)) {
+            if (!visited.has(busId)) {
+                dfs(busId);
+            }
+        }
     }
 
     // eslint-disable-next-line max-params

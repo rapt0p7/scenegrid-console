@@ -48,6 +48,45 @@ describe('ConsistencyChecker', () => {
         });
     });
 
+    describe('Routing Cycle Validations (DFS)', () => {
+        it('should log a fatal error when an indirect feedback loop is detected (A -> B -> C -> A)', () => {
+            const config: any = {
+                buses: {
+                    bus_A: { gain: 1, sends: { bus_B: 1 } },
+                    bus_B: { gain: 1, sends: { bus_C: 1 } },
+                    bus_C: { gain: 1, sends: { bus_A: 1 } }
+                },
+                soundMap: {},
+                manifest: {},
+                snapshots: {}
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Fatal Error: Audio routing loop detected in configuration: bus_A -> bus_B -> bus_C -> bus_A'
+                )
+            );
+        });
+
+        it('should pass successfully for complex but acyclic routing (Diamond Pattern)', () => {
+            const config: any = {
+                buses: {
+                    bus_A: { gain: 1, sends: { bus_B: 1, bus_C: 1 } },
+                    bus_B: { gain: 1, sends: { bus_D: 1 } },
+                    bus_C: { gain: 1, sends: { bus_D: 1 } },
+                    bus_D: { gain: 1 }
+                },
+                soundMap: {},
+                manifest: {},
+                snapshots: {}
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(true);
+        });
+    });
+
     describe('Bus Validations (Filters, Sends)', () => {
         it('should fail if no buses are defined', () => {
             expect(ConsistencyChecker.validate({ buses: {}, manifest: {}, soundMap: {}, snapshots: {} } as any)).toBe(
