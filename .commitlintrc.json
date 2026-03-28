@@ -11,24 +11,32 @@
             "always",
             [
                 "core",
-                "core-nodes",
-                "core-context",
                 "facade",
+
                 "bus-system",
+                "managers",
                 "mixer",
                 "rtpc",
                 "smart-loop",
+
                 "plugins",
                 "worklets",
-                "loader",
-                "scheduling",
+
                 "automation",
                 "context",
+                "instance",
+                "loader",
                 "nodes",
+                "scheduling",
+                "systems",
+
                 "interfaces",
-                "managers",
+                "types",
                 "helpers",
-                "config",
+                "utils",
+
+                "debug",
+                "memory",
 
                 "api",
                 "architecture",
@@ -37,10 +45,6 @@
 
                 "formatting",
                 "lint",
-                "linting",
-
-                "memory",
-                "debug",
 
                 "test",
                 "unit",
@@ -54,6 +58,8 @@
 
                 "github",
                 "publish",
+
+                "config",
                 "tools"
             ]
         ],

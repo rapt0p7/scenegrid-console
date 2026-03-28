@@ -4,18 +4,21 @@
         "feat": {
             "description": "A new feature",
             "scopes": {
-                "core": { "description": "WebAudio core engine changes" },
+                "core": { "description": "WebAudio core engine general changes" },
                 "facade": { "description": "AudioEngine, AudioRouter and public API" },
+                "registry": { "description": "SoundRegistry and sound manifests" },
                 "bus-system": { "description": "AudioBus and Signal routing changes" },
                 "mixer": { "description": "Mixer layers, snapshots, and states" },
                 "rtpc": { "description": "RTPC Manager and macro modulations" },
                 "smart-loop": { "description": "Interactive music, segments, and audio grid" },
-                "plugins": { "description": "Insert filters, sidechain, and limiters" },
+                "plugins": { "description": "Insert filters, sidechain, and limiters (Core folder)" },
                 "worklets": { "description": "AudioWorklet processors (meters, lookahead)" },
                 "loader": { "description": "AudioBuffer loader and sound controller" },
-                "scheduling": { "description": "Playback scheduling and voice culling" },
+                "scheduling": { "description": "Playback scheduler" },
+                "systems": { "description": "Voice culling and other core systems" },
+                "instance": { "description": "SoundInstance and SoundPoolManager" },
                 "automation": { "description": "Automation engine and value fading" },
-                "debug": { "description": "Debugging tools for audio engine" }
+                "debug": { "description": "AudioDebugger and AudioProfiler tools" }
             }
         },
         "fix": {
@@ -30,8 +33,11 @@
                 "plugins": { "description": "DSP Plugins and filter fixes" },
                 "worklets": { "description": "AudioWorklet memory/audio thread fixes" },
                 "loader": { "description": "Loading and decoding fixes" },
-                "scheduling": { "description": "Voice stealing and timing fixes" },
-                "automation": { "description": "Automation glitches and clicks fixes" }
+                "scheduling": { "description": "Timing and scheduler fixes" },
+                "systems": { "description": "Voice stealing logic fixes" },
+                "instance": { "description": "SoundInstance lifecycle fixes" },
+                "automation": { "description": "Automation glitches and clicks fixes" },
+                "debug": { "description": "Visualizer and profiler fixes" }
             }
         },
         "docs": {
@@ -53,22 +59,26 @@
         "refactor": {
             "description": "A code change that neither fixes a bug nor adds a feature",
             "scopes": {
-                "core-nodes": { "description": "Refactoring AudioNode chains" },
-                "core-context": { "description": "Refactoring AudioContext management" },
-                "managers": { "description": "Refactoring Manager classes orchestration" },
+                "core": { "description": "Refactoring core modules" },
+                "facade": { "description": "Refactoring AudioEngine/AudioRouter" },
+                "nodes": { "description": "Refactoring AudioNode chains" },
+                "context": { "description": "Refactoring AudioContext management" },
+                "managers": { "description": "Refactoring general Manager orchestration" },
                 "bus-system": { "description": "Refactoring Bus logic" },
                 "interfaces": { "description": "Refactoring types and interfaces" },
-                "config": { "description": "Refactoring data schemas and manifests" },
+                "types": { "description": "Refactoring internal types (curves, etc)" },
+                "utils": { "description": "Refactoring core utilities (clamp, safeDisconnect)" },
                 "helpers": { "description": "Refactoring pure functions and math" },
-                "debug": { "description": "Refactoring debuggers and visualizers" }
+                "debug": { "description": "Refactoring debuggers and profilers" }
             }
         },
         "perf": {
             "description": "A code change that improves performance",
             "scopes": {
                 "worklets": { "description": "AudioWorklet CPU optimizations" },
-                "scheduling": { "description": "Voice culling and pool optimizations" },
-                "memory": { "description": "Garbage collection and object pooling" },
+                "systems": { "description": "Voice culling CPU optimizations" },
+                "instance": { "description": "SoundPoolManager and instance recycling" },
+                "memory": { "description": "Garbage collection and overall object pooling" },
                 "automation": { "description": "Automation smoothing performance" }
             }
         },
@@ -76,7 +86,6 @@
             "description": "Adding missing tests or correcting existing tests",
             "scopes": {
                 "unit": { "description": "Unit tests for pure classes/helpers" },
-                "core": { "description": "Unit tests for core components" },
                 "integration": { "description": "Integration tests for Managers/Buses" },
                 "worklets": { "description": "Testing audio thread processors" },
                 "mocks": { "description": "Web Audio API mocks updates" }
@@ -86,7 +95,7 @@
             "description": "Changes that affect the build system or external dependencies",
             "scopes": {
                 "deps": { "description": "Dependencies updates" },
-                "bundler": { "description": "Vite/Rollup/Webpack config" },
+                "bundler": { "description": "Vite/Webpack config" },
                 "typescript": { "description": "TSConfig changes" },
                 "worklets": { "description": "Worklet compilation pipeline" }
             }
@@ -95,7 +104,6 @@
             "description": "Changes to our CI configuration files and scripts",
             "scopes": {
                 "github": { "description": "GitHub Actions workflows" },
-                "linting": { "description": "Dependency-cruiser and ESLint CI steps" },
                 "publish": { "description": "NPM/Registry publishing scripts" }
             }
         },
@@ -114,20 +122,25 @@
         "core": { "description": "WebAudio core engine (Domain layer)" },
         "facade": { "description": "AudioEngine and public routing APIs" },
         "bus-system": { "description": "Audio buses, channels, and sends" },
+        "managers": { "description": "General manager orchestration" },
         "mixer": { "description": "Mixer layer, snapshots, and states" },
         "rtpc": { "description": "Real-Time Parameter Control (Macros)" },
         "smart-loop": { "description": "Interactive music, sequencing, grids" },
         "plugins": { "description": "High-level DSP (Filters, Duckers, Limiters)" },
         "worklets": { "description": "Low-level AudioWorklet Processors" },
         "loader": { "description": "Audio buffer loading and decoding" },
-        "scheduling": { "description": "Playback scheduling and voice limits" },
+        "scheduling": { "description": "Playback scheduling" },
+        "systems": { "description": "Voice culling and system boundaries" },
+        "instance": { "description": "Sound Instance and Pooling" },
         "automation": { "description": "Parameter fading and sample-accurate curves" },
         "context": { "description": "AudioContext and unlock management" },
         "nodes": { "description": "AudioNode chains and connections" },
         "interfaces": { "description": "TypeScript interfaces and types" },
-        "config": { "description": "Sound registries and static configs" },
+        "types": { "description": "Internal types and curve definitions" },
         "helpers": { "description": "Math, constants, and pure functions" },
-        "debug": { "description": "AudioDebugger and visualizers" },
+        "utils": { "description": "Core specific utilities" },
+        "debug": { "description": "AudioDebugger and AudioProfiler" },
+        "config": { "description": "Configs and workspace setups" },
         "test": { "description": "Test suites and mocks" },
         "build": { "description": "Build tools and compilers" }
     },
