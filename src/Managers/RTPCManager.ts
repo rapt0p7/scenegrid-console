@@ -1,6 +1,8 @@
 import mitt from 'mitt';
 import * as workerTimers from 'worker-timers';
 
+import { isDefined, isAbsent } from '../helpers/guards.js';
+
 import type { IRTPCManager, RTPCEvents } from '../interfaces/IRTPCManager.js';
 import type { Emitter } from 'mitt';
 
@@ -74,7 +76,7 @@ export default class RTPCManager implements IRTPCManager {
 
         for (const parameter of this.dirtyParams) {
             const state = this.states.get(parameter);
-            if (state !== undefined) {
+            if (isDefined(state)) {
                 this.events.emit(parameter, state.current);
             }
         }
@@ -83,20 +85,25 @@ export default class RTPCManager implements IRTPCManager {
     }
 
     private getState(name: string): ParameterState {
-        if (!this.states.has(name)) {
-            this.states.set(name, { target: 0, current: 0, attackMs: 0, releaseMs: 0 });
+        let state = this.states.get(name);
+
+        if (isAbsent(state)) {
+            state = { target: 0, current: 0, attackMs: 0, releaseMs: 0 };
+            this.states.set(name, state);
         }
-        return this.states.get(name)!;
+
+        return state;
     }
 
     private startLoop(): void {
-        if (this.tickerId !== null) return;
+        if (isDefined(this.tickerId)) return;
+
         this.lastTime = performance.now();
         this.tickerId = workerTimers.setInterval(() => this.tick(), this.TICK_RATE_MS);
     }
 
     private stopLoop(): void {
-        if (this.tickerId !== null) {
+        if (isDefined(this.tickerId)) {
             workerTimers.clearInterval(this.tickerId);
             this.tickerId = null;
         }

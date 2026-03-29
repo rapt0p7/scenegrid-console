@@ -4,6 +4,8 @@ import { safeDisconnect } from '@webaudio-core';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
+import { isDefined, isAbsent } from '../helpers/guards.js';
+
 import processorUrl from './ducker-processor.processor.js';
 
 import type { ISidechain } from '../interfaces/IAudioPlugins.js';
@@ -36,7 +38,8 @@ export default class SidechainDucker implements ISidechain {
     private sourceGainMap: Map<AudioNodeLike, GainNodeLike>;
     private intensityMap: Map<AudioNodeLike, number>;
     private running: boolean;
-    private processor: AudioWorkletNodeLike | undefined | null;
+
+    private processor: AudioWorkletNodeLike | null = null;
 
     constructor({
         ctx,
@@ -53,7 +56,7 @@ export default class SidechainDucker implements ISidechain {
         release?: number;
         lookahead?: number;
     }) {
-        if (!ctx || !targetGainNode) {
+        if (isAbsent(ctx) || isAbsent(targetGainNode)) {
             throw new Error('SidechainDucker requires ctx and targetGainNode');
         }
 
@@ -95,10 +98,11 @@ export default class SidechainDucker implements ISidechain {
     }
 
     public addSource(sourceNode: AudioNodeLike, intensity: number = 1): void {
-        if (!sourceNode || !sourceNode.connect) return;
+        if (isAbsent(sourceNode) || typeof (sourceNode as any).connect !== 'function') return;
+
         if (this.sources.has(sourceNode)) {
             const g = this.sourceGainMap.get(sourceNode);
-            if (g) g.gain.setTargetAtTime(intensity, this.ctx.currentTime, 0.01);
+            if (isDefined(g)) g.gain.setTargetAtTime(intensity, this.ctx.currentTime, 0.01);
             this.intensityMap.set(sourceNode, intensity);
             return;
         }
@@ -120,7 +124,7 @@ export default class SidechainDucker implements ISidechain {
     }
 
     public removeSource(sourceNode: AudioNodeLike): void {
-        if (!sourceNode || !this.sources.has(sourceNode)) return;
+        if (isAbsent(sourceNode) || !this.sources.has(sourceNode)) return;
 
         const g = this.sourceGainMap.get(sourceNode);
         safeDisconnect(sourceNode, g);
@@ -144,9 +148,9 @@ export default class SidechainDucker implements ISidechain {
         this.intensityMap.clear();
 
         safeDisconnect(this.target, this.delay);
-        safeDisconnect(this.duckingGain, this.nextNode!);
+        safeDisconnect(this.duckingGain, this.nextNode);
 
-        if (this.nextNode) {
+        if (isDefined(this.nextNode)) {
             try {
                 this.target.connect(this.nextNode);
             } catch (error) {
@@ -165,7 +169,7 @@ export default class SidechainDucker implements ISidechain {
         if (this.running) return;
         this.running = true;
         try {
-            if (!this.processor) {
+            if (isAbsent(this.processor)) {
                 await this.ctx.audioWorklet?.addModule?.(processorUrl);
 
                 this.processor = new AudioWorkletNode!(this.ctx as any, 'ducker-processor', {
@@ -173,14 +177,14 @@ export default class SidechainDucker implements ISidechain {
                 }) as unknown as AudioWorkletNodeLike;
 
                 this.mergeGain.connect(this.clipper);
-                this.clipper.connect(this.processor!);
+                this.clipper.connect(this.processor);
 
                 this.duckingGain.gain.value = 0;
-                this.processor!.connect(this.duckingGain.gain as unknown as AudioNodeLike);
+                this.processor.connect(this.duckingGain.gain as unknown as AudioNodeLike);
 
                 // eslint-disable-next-line unicorn/prefer-add-event-listener
                 this.processor.port.onmessage = (event: { data: { envelope: number | undefined } }) => {
-                    if (event.data.envelope !== undefined) {
+                    if (isDefined(event.data.envelope)) {
                         this.activeEnvelope = event.data.envelope;
                     }
                 };
@@ -192,9 +196,9 @@ export default class SidechainDucker implements ISidechain {
 
     public stop(): void {
         this.running = false;
-        if (this.processor) {
+        if (isDefined(this.processor)) {
             safeDisconnect(this.mergeGain, this.clipper);
-            safeDisconnect(this.clipper, this.processor!);
+            safeDisconnect(this.clipper, this.processor);
             safeDisconnect(this.processor, this.duckingGain.gain as unknown as AudioNodeLike);
             this.processor = null;
         }

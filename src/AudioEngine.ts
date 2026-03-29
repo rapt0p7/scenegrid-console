@@ -20,6 +20,7 @@ import FiltersPlugin from './Core/FiltersPlugin.js';
 import SidechainDucker from './Core/SidechainDucker.js';
 import TinyLimiterNode from './Core/TinyLimiterNode.js';
 import deepFreeze from './helpers/deepFreeze.js';
+import { isDefined } from './helpers/guards';
 import ContainerManager from './Managers/ContainerManager.js';
 import DuckingManager from './Managers/DuckingManager.js';
 import MixerCoordinator from './Managers/MixerCoordinator.js';
@@ -147,7 +148,7 @@ export class AudioEngine {
         const soundRegistry = new SoundRegistry();
         await this.loadSounds(this.config.manifest, bufferLoader, soundRegistry);
 
-        const instanceFactory = (soundId: string) => {
+        const instanceFactory = (soundId: string): SoundInstance => {
             const { buffer, options } = soundRegistry.get(soundId);
             const soundConfig = this.config.soundMap[soundId] as any;
 
@@ -273,7 +274,7 @@ export class AudioEngine {
 
     private initRTPC(rtpcManifest: IRTPCManifest): void {
         for (const [parameterName, config] of Object.entries(rtpcManifest)) {
-            if (config.defaultValue !== undefined) {
+            if (isDefined(config.defaultValue)) {
                 this.#rtpcManager.setValue(parameterName, config.defaultValue);
             }
 

@@ -1,5 +1,7 @@
 // noinspection D
 
+import { isAbsent, isDefined } from '../helpers/guards.js';
+
 import type { IAudioEngineConfig } from '../interfaces/IAudioEngineConfig.js';
 import type { IBuses } from '../interfaces/IBuses.js';
 import type { ISnapshots } from '../interfaces/ISnapshots.js';
@@ -15,7 +17,7 @@ import type { ISpriteSoundManifest } from '../interfaces/ISpriteSoundManifest.js
 
 export default class ConsistencyChecker {
     public static validate(config: IAudioEngineConfig): boolean {
-        if (!config || typeof config !== 'object') {
+        if (isAbsent(config) || typeof config !== 'object') {
             console.error('[AudioSystem] ConsistencyChecker: config is missing or not an object');
             return false;
         }
@@ -73,7 +75,7 @@ export default class ConsistencyChecker {
     }
 
     private checkRoutingCycles(): void {
-        if (!this.buses) return;
+        if (isAbsent(this.buses)) return;
 
         const visited = new Set<string>();
         const visiting = new Set<string>();
@@ -94,9 +96,9 @@ export default class ConsistencyChecker {
             path.push(busId);
 
             const sends = this.buses[busId]?.sends;
-            if (sends) {
+            if (isDefined(sends)) {
                 for (const targetBus of Object.keys(sends)) {
-                    if (this.buses[targetBus]) {
+                    if (isDefined(this.buses[targetBus])) {
                         dfs(targetBus);
                     }
                 }
@@ -121,7 +123,7 @@ export default class ConsistencyChecker {
         expectedType: 'string' | 'number' | 'boolean' | 'object' | 'function',
         isOptional = true
     ): boolean {
-        if (value === undefined || value === null) {
+        if (isAbsent(value)) {
             if (!isOptional) {
                 this.errors.push(`Missing required field at "${path}"`);
                 return false;
@@ -143,7 +145,7 @@ export default class ConsistencyChecker {
     }
 
     private assertArray(path: string, value: any, isOptional = true): boolean {
-        if (value === undefined || value === null) {
+        if (isAbsent(value)) {
             if (!isOptional) {
                 this.errors.push(`Missing required array at "${path}"`);
                 return false;
@@ -171,12 +173,12 @@ export default class ConsistencyChecker {
 
             this.assertType(`buses.${busId}.gain`, busCfg.gain, 'number');
 
-            if (busCfg.filter) {
+            if (isDefined(busCfg.filter)) {
                 this.assertType(`buses.${busId}.filter`, busCfg.filter, 'object');
                 this.assertType(`buses.${busId}.filter.type`, busCfg.filter.type, 'string', false);
             }
 
-            if (busCfg.sends) {
+            if (isDefined(busCfg.sends)) {
                 this.assertType(`buses.${busId}.sends`, busCfg.sends, 'object');
                 for (const [targetBus, gainValue] of Object.entries(busCfg.sends)) {
                     this.assertType(`buses.${busId}.sends.${targetBus}`, gainValue, 'number');
@@ -189,9 +191,9 @@ export default class ConsistencyChecker {
                 }
             }
 
-            if (busCfg.sidechain) {
+            if (isDefined(busCfg.sidechain)) {
                 this.assertType(`buses.${busId}.sidechain`, busCfg.sidechain, 'object');
-                if (busCfg.sidechain.enabled !== undefined) {
+                if (isDefined(busCfg.sidechain.enabled)) {
                     this.assertType(`buses.${busId}.sidechain.enabled`, busCfg.sidechain.enabled, 'boolean');
                 }
             }
@@ -208,7 +210,7 @@ export default class ConsistencyChecker {
 
             const baseCfg = cfg as AnySoundConfig;
 
-            if ('busId' in baseCfg && baseCfg.busId) {
+            if ('busId' in baseCfg && isDefined(baseCfg.busId)) {
                 this.assertType(`soundMap.${soundId}.busId`, baseCfg.busId, 'string');
                 if (!validBuses.includes(baseCfg.busId as string)) {
                     this.errors.push(`Sound "${soundId}" references unknown bus "${baseCfg.busId}"`);
@@ -241,7 +243,7 @@ export default class ConsistencyChecker {
                 this.assertType(`${path}.delayMs`, layer.delayMs, 'number');
                 this.assertType(`${path}.volume`, layer.volume, 'number');
 
-                if (layer.src && !this.manifest[layer.src] && !this.soundMap[layer.src]) {
+                if (isDefined(layer.src) && !this.manifest[layer.src] && !this.soundMap[layer.src]) {
                     this.errors.push(`Layered sound "${soundId}" references missing audio "${layer.src}"`);
                 }
             }
@@ -260,7 +262,7 @@ export default class ConsistencyChecker {
 
         for (const [index, source] of cfg.sources.entries()) {
             this.assertType(`soundMap.${soundId}.sources[${index}]`, source, 'string', false);
-            if (source && !this.manifest[source] && !this.soundMap[source]) {
+            if (isDefined(source) && !this.manifest[source] && !this.soundMap[source]) {
                 this.warnings.push(`Container "${soundId}" references missing source "${source}".`);
             }
         }
@@ -289,13 +291,13 @@ export default class ConsistencyChecker {
 
     private checkDuckingTargets(soundId: string, cfg: any): void {
         const ducking = cfg.ducking;
-        if (!ducking) return;
+        if (isAbsent(ducking)) return;
 
         if (!this.assertType(`soundMap.${soundId}.ducking`, ducking, 'object')) return;
 
         const validBuses = Object.keys(this.buses || {});
 
-        if (ducking.target) {
+        if (isDefined(ducking.target)) {
             const targets = Array.isArray(ducking.target) ? ducking.target : [ducking.target];
             for (const target of targets) {
                 if (typeof target !== 'string') {
@@ -304,7 +306,7 @@ export default class ConsistencyChecker {
                 }
                 if (validBuses.includes(target)) {
                     const targetBusCfg = this.buses[target] as any;
-                    if (!targetBusCfg.sidechain || targetBusCfg.sidechain.enabled !== true) {
+                    if (isAbsent(targetBusCfg.sidechain) || targetBusCfg.sidechain.enabled !== true) {
                         this.errors.push(
                             `Sound "${soundId}" targets bus "${target}" for ducking, but sidechain is not enabled on "${target}" bus.`
                         );
@@ -322,7 +324,7 @@ export default class ConsistencyChecker {
         for (const [snapshotId, snapshot] of Object.entries(this.snapshots || {})) {
             if (!this.assertType(`snapshots.${snapshotId}`, snapshot, 'object', false)) continue;
 
-            if (!snapshot.buses) continue;
+            if (isAbsent(snapshot.buses)) continue;
             if (!this.assertType(`snapshots.${snapshotId}.buses`, snapshot.buses, 'object')) continue;
 
             for (const [busId, busState] of Object.entries(snapshot.buses)) {
@@ -332,11 +334,11 @@ export default class ConsistencyChecker {
                     this.errors.push(`Snapshot "${snapshotId}" refers to unknown bus "${busId}"`);
                 }
 
-                if (busState.gain !== undefined) {
+                if (isDefined(busState.gain)) {
                     this.assertType(`snapshots.${snapshotId}.buses.${busId}.gain`, busState.gain, 'number');
                 }
 
-                if (busState.filter) {
+                if (isDefined(busState.filter)) {
                     this.assertType(
                         `snapshots.${snapshotId}.buses.${busId}.filter.type`,
                         busState.filter.type,
@@ -345,7 +347,7 @@ export default class ConsistencyChecker {
                     );
                 }
 
-                if (busState.sends) {
+                if (isDefined(busState.sends)) {
                     this.assertType(`snapshots.${snapshotId}.buses.${busId}.sends`, busState.sends, 'object');
                     for (const [targetBus, sendGain] of Object.entries(busState.sends)) {
                         this.assertType(
@@ -368,25 +370,24 @@ export default class ConsistencyChecker {
 
     // eslint-disable-next-line complexity
     private checkRTPC(contextPath: string, rtpcMap: any): void {
-        if (!rtpcMap) return;
+        if (isAbsent(rtpcMap)) return;
         if (!this.assertType(`${contextPath}.rtpc`, rtpcMap, 'object')) return;
 
         const validBuses = Object.keys(this.buses || {});
         const validCurveTypes = new Set(['linear', 'logarithmic', 'exponential', 's-curve']);
 
         for (const [targetName, config] of Object.entries(rtpcMap)) {
-            if (!config) continue;
+            if (isAbsent(config)) continue;
             const rConfig = config as any;
             const configPath = `${contextPath}.rtpc.${targetName}`;
 
             if (!this.assertType(`${configPath}.gameParam`, rConfig.gameParam, 'string', false)) continue;
 
-            if (rConfig.attackMs !== undefined) this.assertType(`${configPath}.attackMs`, rConfig.attackMs, 'number');
-            if (rConfig.releaseMs !== undefined)
-                this.assertType(`${configPath}.releaseMs`, rConfig.releaseMs, 'number');
+            if (isDefined(rConfig.attackMs)) this.assertType(`${configPath}.attackMs`, rConfig.attackMs, 'number');
+            if (isDefined(rConfig.releaseMs)) this.assertType(`${configPath}.releaseMs`, rConfig.releaseMs, 'number');
 
             const curve = rConfig.curve;
-            if (curve === undefined || curve === null) {
+            if (isAbsent(curve)) {
                 this.errors.push(`Missing required field at "${configPath}.curve"`);
             } else if (Array.isArray(curve)) {
                 if (curve.length < 2) {
@@ -413,7 +414,7 @@ export default class ConsistencyChecker {
             }
 
             if (targetName === 'sendLevel') {
-                if (!rConfig.sendTargetBus) {
+                if (isAbsent(rConfig.sendTargetBus)) {
                     this.errors.push(`${configPath} is missing 'sendTargetBus'.`);
                 } else if (!validBuses.includes(rConfig.sendTargetBus)) {
                     this.errors.push(`${configPath} references unknown bus "${rConfig.sendTargetBus}".`);
@@ -424,11 +425,11 @@ export default class ConsistencyChecker {
 
     private checkSpatial(soundId: string, cfg: any): void {
         const spatial = cfg.spatial;
-        if (!spatial) return;
+        if (isAbsent(spatial)) return;
 
         if (!this.assertType(`soundMap.${soundId}.spatial`, spatial, 'object')) return;
 
-        if (spatial.distanceModel) {
+        if (isDefined(spatial.distanceModel)) {
             const validModels = ['linear', 'inverse', 'exponential'];
             if (!validModels.includes(spatial.distanceModel)) {
                 this.errors.push(`Sound "${soundId}" has invalid distanceModel: "${spatial.distanceModel}"`);
@@ -439,7 +440,10 @@ export default class ConsistencyChecker {
         this.assertType(`soundMap.${soundId}.spatial.maxDistance`, spatial.maxDistance, 'number');
         this.assertType(`soundMap.${soundId}.spatial.rolloffFactor`, spatial.rolloffFactor, 'number');
 
-        if (spatial.position && this.assertArray(`soundMap.${soundId}.spatial.position`, spatial.position, false)) {
+        if (
+            isDefined(spatial.position) &&
+            this.assertArray(`soundMap.${soundId}.spatial.position`, spatial.position, false)
+        ) {
             if (spatial.position.length === 3) {
                 // eslint-disable-next-line unicorn/no-array-for-each
                 spatial.position.forEach((value: any, index: number) => {
@@ -460,7 +464,7 @@ export default class ConsistencyChecker {
     }
 
     private isSmartLoop(cfg: any): cfg is ISmartLoopSoundConfig {
-        return !!cfg?.smartLoop?.regions;
+        return isDefined(cfg?.smartLoop?.regions);
     }
 
     // eslint-disable-next-line complexity
@@ -473,7 +477,7 @@ export default class ConsistencyChecker {
 
                 if (Array.isArray(layers)) {
                     for (const layer of layers) {
-                        if (layer && layer.src) referenced.add(layer.src);
+                        if (isDefined(layer) && isDefined(layer.src)) referenced.add(layer.src);
                     }
                 }
             } else if (this.isContainer(cfg)) {
@@ -481,12 +485,12 @@ export default class ConsistencyChecker {
 
                 if (Array.isArray(sources)) {
                     for (const source of sources) {
-                        if (source) referenced.add(source);
+                        if (isDefined(source)) referenced.add(source);
                     }
                 }
             } else if (this.isSmartLoop(cfg)) {
                 // Smart loops generally reference their own key
-            } else if ('src' in (cfg as any) && (cfg as any).src) {
+            } else if ('src' in (cfg as any) && isDefined((cfg as any).src)) {
                 referenced.add((cfg as any).src);
             } else if (key in (this.manifest || {})) {
                 referenced.add(key);

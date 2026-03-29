@@ -3,11 +3,12 @@
 
 import { safeDisconnect, clamp } from '@webaudio-core';
 
+import { isDefined, isAbsent } from '../helpers/guards.js';
 import { evaluateRTPCCurve } from '../helpers/rtpcMath.js';
-import { type IBus } from '../interfaces/IBuses.js';
 
 import type { IAudioBus } from '../interfaces/IAudioBus.js';
 import type { IPluginFactory } from '../interfaces/IAudioPlugins.js';
+import type { IBus } from '../interfaces/IBuses.js';
 import type { IFilter } from '../interfaces/IFilter.js';
 import type { IRTPCConfig, IRTPCManager, RTPCTargetProperty } from '../interfaces/IRTPCManager.js';
 import type {
@@ -25,11 +26,12 @@ export default class AudioBus implements IAudioBus {
     postFilterGain: GainNodeLike;
     readonly preFilterGain: GainNodeLike;
     public logicalTargetGain: number = 1;
+
     private readonly pannerNode: StereoPannerNodeLike | null = null;
-    private readonly automation: AutomationEngine | null = null;
+    private readonly automation: AutomationEngine;
     private readonly id: string;
     private readonly context: AudioCtx;
-    private config: IBus;
+    private readonly config: IBus;
     private readonly defaultGain: number;
     private readonly routerMasterGain: GainNodeLike | null;
     private filterNode: BiquadFilterNodeLike | ConvolverNodeNodeLike | null = null;
@@ -48,6 +50,7 @@ export default class AudioBus implements IAudioBus {
             { logical: number | null; rtpc: number; durationMs: number; targetNode?: AudioNodeLike }
         >()
     };
+
     constructor({
         id,
         config = {},
@@ -72,8 +75,6 @@ export default class AudioBus implements IAudioBus {
         this.routerMasterGain = routerMasterGain;
         this.pluginFactory = pluginFactory;
 
-        //   inputGain → preFilterGain → (optional filterNode) → postFilterGain → (optional sendGainNode) → Master
-
         this.inputGainNode = context.createGain();
         this.inputGainNode.gain.value = this.defaultGain;
         this.automation.set(this.inputGainNode.gain, this.defaultGain);
@@ -86,7 +87,10 @@ export default class AudioBus implements IAudioBus {
 
         this.inputGainNode.connect(this.preFilterGain);
         this.preFilterGain.connect(this.postFilterGain);
-        this.postFilterGain.connect(this.routerMasterGain!);
+
+        if (isDefined(this.routerMasterGain)) {
+            this.postFilterGain.connect(this.routerMasterGain);
+        }
 
         this.targetParams.gain.logical = this.defaultGain;
         this.filterNode = null;
@@ -126,31 +130,30 @@ export default class AudioBus implements IAudioBus {
         try {
             const fade = Math.max(1, durationMs);
 
-            this.automation!.ramp(this.postFilterGain.gain, 0, fade, 'linear');
+            this.automation.ramp(this.postFilterGain.gain, 0, fade, 'linear');
 
             await new Promise(r => setTimeout(r, durationMs + 2));
 
             this.disconnectFilter();
             safeDisconnect(this.preFilterGain);
 
-            if (newFilterConfigOrNode) {
-                this.filterNode = this.isFilterNode(newFilterConfigOrNode)
+            if (isDefined(newFilterConfigOrNode)) {
+                this.filterNode = this.isAudioNode(newFilterConfigOrNode)
                     ? newFilterConfigOrNode
                     : this.createFilter(newFilterConfigOrNode);
 
-                if (this.filterNode) {
+                if (isDefined(this.filterNode)) {
                     this.connectFilter();
                 } else {
                     this.preFilterGain.connect(this.postFilterGain);
                 }
 
-                if (this.isFilterNode(newFilterConfigOrNode)) {
-                    const isBiquad = 'frequency' in this.filterNode!;
-                    this.config.filter = isBiquad
+                if (this.isAudioNode(newFilterConfigOrNode)) {
+                    this.config.filter = this.isBiquadFilterNode(this.filterNode)
                         ? {
-                              type: (this.filterNode as BiquadFilterNodeLike).type,
-                              frequency: (this.filterNode as BiquadFilterNodeLike).frequency?.value,
-                              Q: (this.filterNode as BiquadFilterNodeLike).Q?.value
+                              type: this.filterNode.type,
+                              frequency: this.filterNode.frequency?.value,
+                              Q: this.filterNode.Q?.value
                           }
                         : { type: 'reverb' };
                 } else {
@@ -162,36 +165,27 @@ export default class AudioBus implements IAudioBus {
                 delete this.config.filter;
             }
 
-            this.automation!.ramp(this.postFilterGain.gain, 1, fade, 'linear');
+            this.automation.ramp(this.postFilterGain.gain, 1, fade, 'linear');
         } finally {
             this.filterReplacePromise = null;
             resolveLock();
         }
     }
 
-    isFilterNode(
-        newFilterConfigOrNode: BiquadFilterNodeLike | IFilter | null
-    ): newFilterConfigOrNode is BiquadFilterNodeLike {
-        return newFilterConfigOrNode !== null && typeof (newFilterConfigOrNode as any).connect === 'function';
-    }
-
     updateFilterParams(config: IFilter | null): void {
-        if (!this.filterNode || !config) return;
+        if (isAbsent(this.filterNode) || isAbsent(config)) return;
 
-        if (!('frequency' in this.filterNode)) return;
-
+        if (!this.isBiquadFilterNode(this.filterNode)) return;
         if (config.type === 'reverb') return;
 
-        const biquadNode = this.filterNode as BiquadFilterNodeLike;
-
-        if (config.frequency !== undefined && biquadNode.frequency) {
+        if (isDefined(config.frequency) && isDefined(this.filterNode.frequency)) {
             this.targetParams.filterFrequency.logical = config.frequency;
             this.targetParams.filterFrequency.durationMs = 30;
             this.scheduleUpdate();
         }
 
-        if (config.Q !== undefined && biquadNode.Q) {
-            this.automation!.ramp(biquadNode.Q, config.Q, 30, 'linear');
+        if (isDefined(config.Q) && isDefined(this.filterNode.Q)) {
+            this.automation.ramp(this.filterNode.Q, config.Q, 30, 'linear');
         }
     }
 
@@ -207,7 +201,8 @@ export default class AudioBus implements IAudioBus {
         durationMs: number;
     }): void {
         let state = this.targetParams.sends.get(targetBusId);
-        if (!state) {
+
+        if (isAbsent(state)) {
             state = { logical: targetGain, rtpc: 1, durationMs: 0, targetNode };
             this.targetParams.sends.set(targetBusId, state);
         }
@@ -225,10 +220,10 @@ export default class AudioBus implements IAudioBus {
         for (const unsub of this.rtpcUnsubscribers) unsub();
         this.rtpcUnsubscribers = [];
 
-        if (!configs) return;
+        if (isAbsent(configs)) return;
 
         for (const [targetName, config] of Object.entries(configs)) {
-            if (!config) continue;
+            if (isAbsent(config)) continue;
 
             const handler = (gameValue: number): void => {
                 const mappedValue = evaluateRTPCCurve(gameValue, config.curve);
@@ -264,10 +259,10 @@ export default class AudioBus implements IAudioBus {
 
                     case 'sendLevel': {
                         const targetBusId = config.sendTargetBus;
-                        if (!targetBusId) break;
+                        if (isAbsent(targetBusId)) break;
 
                         let state = this.targetParams.sends.get(targetBusId);
-                        if (!state) {
+                        if (isAbsent(state)) {
                             state = { logical: 0, rtpc: 1, durationMs: 0 };
                             this.targetParams.sends.set(targetBusId, state);
                         }
@@ -291,6 +286,14 @@ export default class AudioBus implements IAudioBus {
         }
     }
 
+    private isAudioNode(configOrNode: BiquadFilterNodeLike | IFilter): configOrNode is BiquadFilterNodeLike {
+        return typeof (configOrNode as any).connect === 'function';
+    }
+
+    private isBiquadFilterNode(node: AudioNodeLike | null): node is BiquadFilterNodeLike {
+        return isDefined(node) && 'frequency' in node;
+    }
+
     private scheduleUpdate(): void {
         if (this.isUpdateScheduled) return;
         this.isUpdateScheduled = true;
@@ -303,17 +306,17 @@ export default class AudioBus implements IAudioBus {
 
         const finalGain = clamp(this.targetParams.gain.logical * this.targetParams.gain.rtpc, 0, 4); // Limit +12dB
         this.logicalTargetGain = finalGain;
-        this.automation!.ramp(this.inputGainNode.gain, finalGain, this.targetParams.gain.durationMs, 'linear');
+        this.automation.ramp(this.inputGainNode.gain, finalGain, this.targetParams.gain.durationMs, 'linear');
         this.targetParams.gain.durationMs = 0;
 
-        if (this.filterNode && 'frequency' in this.filterNode) {
+        if (this.isBiquadFilterNode(this.filterNode)) {
             const finalFreq = clamp(
                 this.targetParams.filterFrequency.logical + this.targetParams.filterFrequency.rtpc,
                 20,
                 20_000
             );
-            this.automation!.ramp(
-                (this.filterNode as BiquadFilterNodeLike).frequency,
+            this.automation.ramp(
+                this.filterNode.frequency,
                 finalFreq,
                 this.targetParams.filterFrequency.durationMs,
                 'exponential'
@@ -321,38 +324,41 @@ export default class AudioBus implements IAudioBus {
             this.targetParams.filterFrequency.durationMs = 0;
         }
 
-        if (this.pannerNode) {
+        if (isDefined(this.pannerNode)) {
             const finalPan = clamp(this.targetParams.pan.logical + this.targetParams.pan.rtpc, -1, 1);
-            this.automation!.ramp(this.pannerNode.pan, finalPan, this.targetParams.pan.durationMs, 'linear');
+            this.automation.ramp(this.pannerNode.pan, finalPan, this.targetParams.pan.durationMs, 'linear');
             this.targetParams.pan.durationMs = 0;
         }
 
         for (const [targetBusId, state] of this.targetParams.sends.entries()) {
-            const isRemoving = state.logical === null;
+            const logicalValue = state.logical;
+            const isRemoving = logicalValue === null;
+
             let sendGainNode = this.sendGains.get(targetBusId);
 
             if (isRemoving) {
-                if (sendGainNode) {
-                    this.automation!.ramp(sendGainNode.gain, 0, state.durationMs, 'linear');
+                if (isDefined(sendGainNode)) {
+                    this.automation.ramp(sendGainNode.gain, 0, state.durationMs, 'linear');
                     setTimeout(() => {
                         safeDisconnect(this.postFilterGain, sendGainNode);
-                        if (state.targetNode) safeDisconnect(sendGainNode, state.targetNode);
+                        if (isDefined(state.targetNode)) safeDisconnect(sendGainNode, state.targetNode);
                         this.sendGains.delete(targetBusId);
                     }, state.durationMs + 50);
                 }
                 this.targetParams.sends.delete(targetBusId);
             } else {
-                const finalSendGain = clamp(state.logical! * state.rtpc, 0, 4);
-                if (!sendGainNode && state.targetNode) {
+                const finalSendGain = clamp(logicalValue * state.rtpc, 0, 4);
+
+                if (isAbsent(sendGainNode) && isDefined(state.targetNode)) {
                     sendGainNode = this.context.createGain();
                     sendGainNode.gain.value = 0;
-                    this.automation!.set(sendGainNode.gain, 0);
+                    this.automation.set(sendGainNode.gain, 0);
                     this.postFilterGain.connect(sendGainNode);
                     sendGainNode.connect(state.targetNode);
                     this.sendGains.set(targetBusId, sendGainNode);
                 }
-                if (sendGainNode) {
-                    this.automation!.ramp(sendGainNode.gain, finalSendGain, state.durationMs, 'linear');
+                if (isDefined(sendGainNode)) {
+                    this.automation.ramp(sendGainNode.gain, finalSendGain, state.durationMs, 'linear');
                 }
             }
             state.durationMs = 0;
@@ -362,18 +368,18 @@ export default class AudioBus implements IAudioBus {
     private coldStart(): void {
         this.targetParams.gain.logical = this.defaultGain;
 
-        if (this.config.filter) {
+        if (isDefined(this.config.filter)) {
             this.filterNode = this.createFilter(this.config.filter);
-            if (this.filterNode) {
+
+            if (isDefined(this.filterNode)) {
                 this.preFilterGain.connect(this.filterNode);
                 this.filterNode.connect(this.postFilterGain);
 
-                const isBiquad = 'frequency' in this.filterNode;
-                if (isBiquad) {
+                if (this.isBiquadFilterNode(this.filterNode)) {
                     this.config.filter = {
-                        type: (this.filterNode as BiquadFilterNodeLike).type,
-                        frequency: (this.filterNode as BiquadFilterNodeLike).frequency?.value,
-                        Q: (this.filterNode as BiquadFilterNodeLike).Q?.value
+                        type: this.filterNode.type,
+                        frequency: this.filterNode.frequency?.value,
+                        Q: this.filterNode.Q?.value
                     };
                 }
             } else {
@@ -388,7 +394,7 @@ export default class AudioBus implements IAudioBus {
 
     private createFilter(filterConfig: IFilter): BiquadFilterNodeLike | ConvolverNodeNodeLike | null {
         try {
-            return this.pluginFactory.getFiltersPlugin().createNode(this.context, this.automation!, filterConfig);
+            return this.pluginFactory.getFiltersPlugin().createNode(this.context, this.automation, filterConfig);
         } catch (error) {
             console.warn(`[AudioBus] Failed to create filter for bus "${this.id}"`, error);
             return null;
@@ -396,7 +402,7 @@ export default class AudioBus implements IAudioBus {
     }
 
     private connectFilter(): void {
-        if (!this.filterNode) return;
+        if (isAbsent(this.filterNode)) return;
 
         safeDisconnect(this.preFilterGain);
 
@@ -409,7 +415,7 @@ export default class AudioBus implements IAudioBus {
     }
 
     private disconnectFilter(): void {
-        if (!this.filterNode) return;
+        if (isAbsent(this.filterNode)) return;
 
         safeDisconnect(this.preFilterGain, this.filterNode);
         safeDisconnect(this.filterNode, this.postFilterGain);

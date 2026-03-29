@@ -1,5 +1,7 @@
 // noinspection D
 
+import { isAbsent, isDefined } from '../helpers/guards.js';
+
 import type AudioBusSystem from '../BusSystem/AudioBusSystem.js';
 import type { BusId } from '../interfaces/IAudioBusSystem.js';
 import type { MixerState } from '../interfaces/IMixerStateManager.js';
@@ -84,7 +86,7 @@ export default class MixerStateManager {
 
     // eslint-disable-next-line max-params,complexity
     private async runTransition(id: number, from: MixerState, to: MixerState, durationMs: number): Promise<void> {
-        const tasks: Array<Promise<any>> = [];
+        const tasks: Array<Promise<void>> = [];
 
         for (const busId of Object.keys(to.buses)) {
             if (this.activeTransition?.id !== id) return;
@@ -93,13 +95,14 @@ export default class MixerStateManager {
             const next = to.buses[busId];
 
             const bus = this.busSystem.getBus(busId as BusId);
-            if (!bus) continue;
+
+            if (isAbsent(bus)) continue;
 
             if (this.activeTransition?.id !== id) return;
 
             const previousGain = this.isInitialized ? previous.gain : undefined;
 
-            if (next.gain !== undefined && next.gain !== previousGain) {
+            if (isDefined(next.gain) && next.gain !== previousGain) {
                 bus.setLogicalGain(next.gain, durationMs);
             }
 
@@ -107,13 +110,13 @@ export default class MixerStateManager {
                 tasks.push(bus.safeReplaceFilter(next.filter ?? null, durationMs * 0.25));
             }
 
-            if (next.sends) {
+            if (isDefined(next.sends)) {
                 for (const [targetBusId, sendGain] of Object.entries(next.sends)) {
                     this.busSystem.applySend(busId as BusId, targetBusId as BusId, sendGain, durationMs);
                 }
             }
 
-            if (next.rtpc !== undefined) {
+            if (isDefined(next.rtpc)) {
                 bus.bindRTPC(next.rtpc, this.rtpcManager);
             }
         }

@@ -1,5 +1,7 @@
 import { clamp } from '@webaudio-core';
 
+import { isDefined, isAbsent } from '../helpers/guards';
+
 import type { IFilter } from '../interfaces/IFilter.js';
 import type { MixerSnapshot, MixerState } from '../interfaces/IMixerStateManager.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '../interfaces/IRTPCManager.js';
@@ -60,17 +62,17 @@ export default class MixerStateResolver {
     ): Record<string, number | null> {
         const result = { ...base };
 
-        if (!patch) return result;
+        if (isAbsent(patch)) return result;
 
         for (const [key, patchValue] of Object.entries(patch)) {
             if (patchValue === null) {
                 delete result[key];
             } else {
                 const baseValue = base?.[key];
-                result[key] =
-                    baseValue !== undefined && baseValue !== null
-                        ? clamp(baseValue * patchValue, 0, this.maxGainLimit)
-                        : clamp(patchValue, 0, this.maxGainLimit);
+
+                result[key] = isDefined(baseValue)
+                    ? clamp(baseValue * patchValue, 0, this.maxGainLimit)
+                    : clamp(patchValue, 0, this.maxGainLimit);
             }
         }
 
@@ -79,7 +81,7 @@ export default class MixerStateResolver {
 
     private resolveFilter(base?: IFilter | null, patch?: IFilter | null): IFilter | null {
         if (patch === null) return null;
-        if (patch !== undefined) return patch;
+        if (isDefined(patch)) return patch;
         return base ?? null;
     }
 
@@ -94,7 +96,8 @@ export default class MixerStateResolver {
         patch?: Partial<Record<RTPCTargetProperty, IRTPCConfig | null>> | null
     ): Partial<Record<RTPCTargetProperty, IRTPCConfig>> {
         if (patch === null) return {};
-        if (!patch) return base ? { ...base } : {};
+
+        if (isAbsent(patch)) return isDefined(base) ? { ...base } : {};
 
         const result: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = { ...base };
 
@@ -103,7 +106,7 @@ export default class MixerStateResolver {
 
             if (patchValue === null) {
                 delete result[key];
-            } else if (patchValue !== undefined) {
+            } else if (isDefined(patchValue)) {
                 result[key] = patchValue;
             }
         }

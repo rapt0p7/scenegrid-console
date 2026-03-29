@@ -1,5 +1,7 @@
 // noinspection D
 
+import { isDefined, isAbsent } from '../helpers/guards.js';
+
 import type { IFilter, IReverbConfig } from '../interfaces/IFilter.js';
 import type {
     AudioBufferLike,
@@ -12,15 +14,16 @@ import type {
 
 export default class FiltersPlugin {
     private static impulseCache: Map<string, AudioBufferLike> = new Map();
+
     public static createNode(
         context: AudioCtx,
         automation: AutomationEngine,
         config: IFilter
     ): BiquadFilterNodeLike | ConvolverNodeNodeLike | null {
-        if (!config.type) return null;
+        if (isAbsent(config.type) || (config.type as string) === '') return null;
 
         if (config.type === 'reverb') {
-            return this.createReverb(context, config);
+            return this.createReverb(context, config as unknown as IReverbConfig);
         }
 
         const filter = context.createBiquadFilter();
@@ -31,11 +34,11 @@ export default class FiltersPlugin {
             /* empty */
         }
 
-        if (config.frequency !== undefined) {
+        if (isDefined(config.frequency)) {
             automation.set(filter.frequency, config.frequency);
         }
 
-        if (config.Q !== undefined) {
+        if (isDefined(config.Q)) {
             automation.set(filter.Q, config.Q);
         }
 
@@ -45,13 +48,14 @@ export default class FiltersPlugin {
     private static createReverb(context: AudioCtx, config: IReverbConfig): ConvolverNodeNodeLike {
         const convolver = context.createConvolver();
 
-        const time = config.reverbTime || 2;
-        const decay = config.reverbDecay || 2;
+        const time = config.reverbTime ?? 2;
+        const decay = config.reverbDecay ?? 2;
 
         const cacheKey = `${time}_${decay}_${context.sampleRate}`;
+        const cachedImpulse = this.impulseCache.get(cacheKey);
 
-        if (this.impulseCache.has(cacheKey)) {
-            convolver.buffer = this.impulseCache.get(cacheKey)!;
+        if (isDefined(cachedImpulse)) {
+            convolver.buffer = cachedImpulse;
         } else {
             const impulse = this.generateImpulseResponse(context, time, decay);
             this.impulseCache.set(cacheKey, impulse);
@@ -104,9 +108,12 @@ export default class FiltersPlugin {
         durationMs: number;
         automation: AutomationEngine;
     }): void {
-        if (!filterNode || !filterNode[parameterName]) return;
+        if (isAbsent(filterNode)) return;
 
+        // eslint-disable-next-line security/detect-object-injection
         const parameter = filterNode[parameterName];
+
+        if (isAbsent(parameter)) return;
 
         automation.ramp(parameter, targetValue, durationMs, 'linear');
     }
