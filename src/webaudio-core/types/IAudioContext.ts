@@ -16,3 +16,6 @@ export type ConvolverNodeNodeLike = ConvolverNode;
 export type StereoPannerNodeLike = StereoPannerNode;
 export type PannerNodeLike = PannerNode;
 export type WaveShaperNodeLike = WaveShaperNode;
+export type AudioParameterKeys<T> = {
+    [K in keyof T]: T[K] extends AudioParamLike ? K : never;
+}[keyof T];

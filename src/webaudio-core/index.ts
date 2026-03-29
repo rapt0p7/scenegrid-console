@@ -2,6 +2,7 @@ export type {
     AudioCtx,
     AudioNodeLike,
     AudioBufferLike,
+    AudioParameterKeys,
     GainNodeLike,
     BiquadFilterNodeLike,
     ConvolverNodeNodeLike,

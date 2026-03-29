@@ -4,6 +4,7 @@ import type { IFilter, IReverbConfig } from '../interfaces/IFilter.js';
 import type {
     AudioBufferLike,
     AudioCtx,
+    AudioParameterKeys,
     BiquadFilterNodeLike,
     ConvolverNodeNodeLike,
     AutomationEngine
@@ -98,7 +99,7 @@ export default class FiltersPlugin {
         automation
     }: {
         filterNode: BiquadFilterNodeLike;
-        parameterName: keyof BiquadFilterNodeLike;
+        parameterName: AudioParameterKeys<BiquadFilterNodeLike>;
         targetValue?: number;
         durationMs: number;
         automation: AutomationEngine;
@@ -106,8 +107,7 @@ export default class FiltersPlugin {
         if (!filterNode || !filterNode[parameterName]) return;
 
         const parameter = filterNode[parameterName];
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+
         automation.ramp(parameter, targetValue, durationMs, 'linear');
     }
 }
