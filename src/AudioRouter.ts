@@ -2,22 +2,22 @@
 
 import { clamp } from '@webaudio-core';
 
-import { InstanceRTPCBinder } from './Managers/InstanceRTPCBinder';
+import { InstanceRTPCBinder } from './Managers/InstanceRTPCBinder.js';
 
-import type AudioBusSystem from './BusSystem/AudioBusSystem';
-import type { BusId } from './interfaces/IAudioBusSystem';
-import type { IAudioRouter } from './interfaces/IAudioRouter';
-import type { IRTPCManager } from './interfaces/IRTPCManager';
+import type AudioBusSystem from './BusSystem/AudioBusSystem.js';
+import type { BusId } from './interfaces/IAudioBusSystem.js';
+import type { IAudioRouter } from './interfaces/IAudioRouter.js';
+import type { IRTPCManager } from './interfaces/IRTPCManager.js';
 import type {
     AnySoundConfig,
     IBaseSoundConfig,
     IContainerSoundConfig,
     ILayeredSoundConfig,
     IPlayOptions
-} from './interfaces/ISoundConfig';
-import type { ISoundMap } from './interfaces/ISoundMap';
-import type ContainerManager from './Managers/ContainerManager';
-import type DuckingManager from './Managers/DuckingManager';
+} from './interfaces/ISoundConfig.js';
+import type { ISoundMap } from './interfaces/ISoundMap.js';
+import type ContainerManager from './Managers/ContainerManager.js';
+import type DuckingManager from './Managers/DuckingManager.js';
 import type { SoundController, ISoundInstance } from '@webaudio-core';
 
 export default class AudioRouter implements IAudioRouter {
@@ -92,7 +92,7 @@ export default class AudioRouter implements IAudioRouter {
             offset: (finalOptions.seek ?? 0) / 1000,
             loop: finalOptions.isLoop,
             rate: finalOptions.rate,
-            onRevive: instance => this.applyConfigToInstance(instance, config)
+            onRevive: (instance: ISoundInstance) => this.applyConfigToInstance(instance, config)
         });
 
         if (!result) return null;
@@ -123,7 +123,7 @@ export default class AudioRouter implements IAudioRouter {
             offset: (finalOptions.seek ?? 0) / 1000,
             loop: finalOptions.isLoop,
             rate: finalOptions.rate,
-            onRevive: instance => this.applyConfigToInstance(instance, config)
+            onRevive: (instance: ISoundInstance) => this.applyConfigToInstance(instance, config)
         });
 
         if (!result) return null;
@@ -146,7 +146,7 @@ export default class AudioRouter implements IAudioRouter {
                 offset: ((finalOptions.seek ?? 0) || 0) / 1000,
                 loop: finalOptions.isLoop,
                 rate: finalOptions.rate,
-                onRevive: instance => this.applyConfigToInstance(instance, config)
+                onRevive: (instance: ISoundInstance) => this.applyConfigToInstance(instance, config)
             });
 
             if (!result) continue;

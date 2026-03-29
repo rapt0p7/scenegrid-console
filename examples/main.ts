@@ -1,9 +1,9 @@
-import { AudioEngine } from '../src';
+import { AudioEngine } from '../src/index.js';
 
-import Buses from './audio-config/Buses';
-import Snapshots from './audio-config/Snapshots';
-import SoundMap from './audio-config/SoundMap';
-import soundManifest from './soundManifest';
+import Buses from './audio-config/Buses.js';
+import Snapshots from './audio-config/Snapshots.js';
+import SoundMap from './audio-config/SoundMap.js';
+import soundManifest from './soundManifest.js';
 
 async function bootstrap() {
     const audio = new AudioEngine({

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { NodeChain } from '../NodeChain';
+import { NodeChain } from '../NodeChain.js';
 
 import type { AudioNodeFactory } from '@webaudio-core';
 

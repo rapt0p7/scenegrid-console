@@ -6,7 +6,7 @@ import { safeDisconnect } from '@webaudio-core';
 // @ts-ignore
 import processorUrl from './ducker-processor.processor.ts';
 
-import type { ISidechain } from '../interfaces/IAudioPlugins';
+import type { ISidechain } from '../interfaces/IAudioPlugins.js';
 import type {
     AudioCtx,
     AudioNodeLike,
@@ -168,7 +168,7 @@ export default class SidechainDucker implements ISidechain {
             if (!this.processor) {
                 await this.ctx.audioWorklet?.addModule?.(processorUrl);
 
-                this.processor = new AudioWorkletNode!(this.ctx, 'ducker-processor', {
+                this.processor = new AudioWorkletNode!(this.ctx as any, 'ducker-processor', {
                     processorOptions: { attack: this.attack, release: this.release }
                 }) as unknown as AudioWorkletNodeLike;
 
@@ -179,7 +179,7 @@ export default class SidechainDucker implements ISidechain {
                 this.processor!.connect(this.duckingGain.gain as unknown as AudioNodeLike);
 
                 // eslint-disable-next-line unicorn/prefer-add-event-listener
-                this.processor.port.onmessage = event => {
+                this.processor.port.onmessage = (event: { data: { envelope: number | undefined } }) => {
                     if (event.data.envelope !== undefined) {
                         this.activeEnvelope = event.data.envelope;
                     }

@@ -1,4 +1,4 @@
-import type { MathCurveDefinition, MathCurvePresetDefinition } from '../types/curves';
+import type { MathCurveDefinition, MathCurvePresetDefinition } from '../types/curves.js';
 import type { Emitter } from 'mitt';
 
 export type RTPCTargetProperty = 'gain' | 'filterFrequency' | 'pan' | 'pitch' | 'sendLevel';

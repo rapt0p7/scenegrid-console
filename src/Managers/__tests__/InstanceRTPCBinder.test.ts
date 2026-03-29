@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { InstanceRTPCBinder } from '../InstanceRTPCBinder';
+import { InstanceRTPCBinder } from '../InstanceRTPCBinder.js';
 
-import type { IRTPCManager, IRTPCConfig, RTPCTargetProperty } from '../../interfaces/IRTPCManager';
+import type { IRTPCManager, IRTPCConfig, RTPCTargetProperty } from '../../interfaces/IRTPCManager.js';
 import type { ISoundInstance } from '@webaudio-core';
 
 describe('InstanceRTPCBinder', () => {

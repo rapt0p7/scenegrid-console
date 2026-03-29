@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { safeDisconnect } from '@webaudio-core';
 
-import SidechainDucker from '../SidechainDucker';
+import SidechainDucker from '../SidechainDucker.js';
 
 vi.mock('@webaudio-core', () => ({
     safeDisconnect: vi.fn()

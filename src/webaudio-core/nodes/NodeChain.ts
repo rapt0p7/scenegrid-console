@@ -1,12 +1,12 @@
-import type { AudioNodeFactory, FilterConfig, PannerConfig } from '@webaudio-core/nodes/AudioNodeFactory';
+import type { AudioNodeFactory, FilterConfig, PannerConfig } from '@webaudio-core/nodes/AudioNodeFactory.js';
 import type {
     AudioNodeLike,
     BiquadFilterNodeLike,
     GainNodeLike,
     PannerNodeLike,
     StereoPannerNodeLike
-} from '@webaudio-core/types/IAudioContext';
-import type { INodeChain } from '@webaudio-core/types/INodeChain';
+} from '@webaudio-core/types/IAudioContext.js';
+import type { INodeChain } from '@webaudio-core/types/INodeChain.js';
 
 export interface INodeChainOptions {
     hasPanner?: boolean;

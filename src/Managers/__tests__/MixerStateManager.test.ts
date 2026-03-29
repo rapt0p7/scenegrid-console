@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MixerStateManager from '../MixerStateManager';
+import MixerStateManager from '../MixerStateManager.js';
 
-import type AudioBusSystem from '../../BusSystem/AudioBusSystem';
-import type { MixerState } from '../../interfaces/IMixerStateManager';
+import type AudioBusSystem from '../../BusSystem/AudioBusSystem.js';
+import type { MixerState } from '../../interfaces/IMixerStateManager.js';
 
 describe('MixerStateManager', () => {
     let mockBusSystem: any;

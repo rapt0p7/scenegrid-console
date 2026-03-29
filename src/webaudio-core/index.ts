@@ -9,20 +9,20 @@ export type {
     DelayNodeLike,
     StereoPannerNodeLike,
     WaveShaperNodeLike
-} from './types/IAudioContext';
-export type { ISoundInstance, InstanceParameterTarget } from './types/ISoundInstance';
-export type { ISoundOptions } from './types/ISoundOptions';
-export type { IVoiceConfig } from './types/IVoiceConfig';
+} from './types/IAudioContext.js';
+export type { ISoundInstance, InstanceParameterTarget } from './types/ISoundInstance.js';
+export type { ISoundOptions } from './types/ISoundOptions.js';
+export type { IVoiceConfig } from './types/IVoiceConfig.js';
 
-export { default as AudioContextManager } from './context/AudioContextManager';
-export { default as AutomationEngine } from './automation/AutomationEngine';
-export { default as MasterOutput } from './nodes/MasterOutput';
-export { default as SoundPoolManager } from './instance/SoundPoolManager';
-export { SoundController } from './loader/SoundController';
-export { VoiceCullingSystem } from './systems/VoiceCullingSystem';
-export { SoundInstance } from './instance/SoundInstance';
-export { AudioBufferLoader } from './loader/AudioBufferLoader';
-export { PlaybackScheduler } from './scheduling/PlaybackScheduler';
-export { AudioNodeFactory } from './nodes/AudioNodeFactory';
-export { safeDisconnect } from './utils/safeDisconnect';
-export { default as clamp } from './utils/clamp';
+export { default as AudioContextManager } from './context/AudioContextManager.js';
+export { default as AutomationEngine } from './automation/AutomationEngine.js';
+export { default as MasterOutput } from './nodes/MasterOutput.js';
+export { default as SoundPoolManager } from './instance/SoundPoolManager.js';
+export { SoundController } from './loader/SoundController.js';
+export { VoiceCullingSystem } from './systems/VoiceCullingSystem.js';
+export { SoundInstance } from './instance/SoundInstance.js';
+export { AudioBufferLoader } from './loader/AudioBufferLoader.js';
+export { PlaybackScheduler } from './scheduling/PlaybackScheduler.js';
+export { AudioNodeFactory } from './nodes/AudioNodeFactory.js';
+export { safeDisconnect } from './utils/safeDisconnect.js';
+export { default as clamp } from './utils/clamp.js';

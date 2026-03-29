@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import SoundRegistry from '../SoundRegistry';
+import SoundRegistry from '../SoundRegistry.js';
 
 describe('SoundRegistry', () => {
     it('should register and retrieve a sound descriptor', () => {

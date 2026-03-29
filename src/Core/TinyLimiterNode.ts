@@ -1,9 +1,10 @@
 import { AudioWorkletNode } from 'standardized-audio-context';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import processorUrl from './lookahead-brickwall-limiter.processor.ts';
+import processorUrl from './lookahead-brickwall-limiter.processor.js';
 
-import type { ILimiterNode } from '../interfaces/IAudioPlugins';
+import type { ILimiterNode } from '../interfaces/IAudioPlugins.js';
 import type { AudioCtx, AudioWorkletNodeLike, AudioNodeLike } from '@webaudio-core';
 
 export default class TinyLimiterNode implements ILimiterNode {
@@ -33,7 +34,9 @@ export default class TinyLimiterNode implements ILimiterNode {
         if (this.node) {
             try {
                 this.node.disconnect();
-            } catch {}
+            } catch {
+                /* empty */
+            }
             this.node = undefined;
         }
     }
@@ -41,12 +44,12 @@ export default class TinyLimiterNode implements ILimiterNode {
     async load(): Promise<AudioWorkletNodeLike> {
         await this.ctx.audioWorklet?.addModule?.(processorUrl);
 
-        this.node = new AudioWorkletNode!(this.ctx, 'lookahead-limiter', {
+        this.node = new AudioWorkletNode!(this.ctx as any, 'lookahead-limiter', {
             processorOptions: this.opts,
             numberOfInputs: 1,
             numberOfOutputs: 1,
             outputChannelCount: [2]
-        });
+        }) as any;
 
         return this.node as AudioWorkletNodeLike;
     }

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MasterOutput from '../MasterOutput';
+import MasterOutput from '../MasterOutput.js';
 
-import type AutomationEngine from '../../automation/AutomationEngine';
-import type AudioContextManager from '../../context/AudioContextManager';
+import type AutomationEngine from '../../automation/AutomationEngine.js';
+import type AudioContextManager from '../../context/AudioContextManager.js';
 
 describe('MasterOutput', () => {
     let mockContextManager: any;

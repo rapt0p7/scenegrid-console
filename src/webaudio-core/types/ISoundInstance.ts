@@ -3,8 +3,8 @@ import type {
     GainNodeLike,
     PannerNodeLike,
     StereoPannerNodeLike
-} from '@webaudio-core/types/IAudioContext';
-import type { IPlaybackController } from '@webaudio-core/types/IPlaybackController';
+} from '@webaudio-core/types/IAudioContext.js';
+import type { IPlaybackController } from '@webaudio-core/types/IPlaybackController.js';
 
 export type InstanceParameterTarget = 'gain' | 'pitch' | 'pan' | 'filterFrequency';
 

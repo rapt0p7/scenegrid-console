@@ -1,5 +1,5 @@
-import type { FilterConfig } from '@webaudio-core/nodes/AudioNodeFactory';
-import type { AudioNodeLike, GainNodeLike } from '@webaudio-core/types/IAudioContext';
+import type { FilterConfig } from '@webaudio-core/nodes/AudioNodeFactory.js';
+import type { AudioNodeLike, GainNodeLike } from '@webaudio-core/types/IAudioContext.js';
 
 export interface INodeChain {
     readonly inputNode: GainNodeLike;

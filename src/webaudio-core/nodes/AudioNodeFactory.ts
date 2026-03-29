@@ -1,4 +1,4 @@
-import type AudioContextManager from '@webaudio-core/context/AudioContextManager';
+import type AudioContextManager from '@webaudio-core/context/AudioContextManager.js';
 import type {
     AudioNodeLike,
     BiquadFilterNodeLike,
@@ -6,8 +6,8 @@ import type {
     DynamicsCompressorNodeLike,
     GainNodeLike,
     PannerNodeLike
-} from '@webaudio-core/types/IAudioContext';
-import clamp from '@webaudio-core/utils/clamp';
+} from '@webaudio-core/types/IAudioContext.js';
+import clamp from '@webaudio-core/utils/clamp.js';
 
 export interface PannerConfig {
     distanceModel?: DistanceModelType;
@@ -53,7 +53,6 @@ export class AudioNodeFactory {
         }
         const fallback = this.#contextManager.context.createPanner();
         fallback.panningModel = 'equalpower';
-        // @ts-expect-error
         fallback.setPosition(clamp(pan, -1, 1), 0, 1);
         return fallback;
     }

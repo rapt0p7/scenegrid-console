@@ -1,8 +1,8 @@
 // noinspection D
 
-import { evaluateRTPCCurve } from '../helpers/rtpcMath';
+import { evaluateRTPCCurve } from '../helpers/rtpcMath.js';
 
-import type { IRTPCConfig, IRTPCManager, RTPCTargetProperty } from '../interfaces/IRTPCManager';
+import type { IRTPCConfig, IRTPCManager, RTPCTargetProperty } from '../interfaces/IRTPCManager.js';
 import type { ISoundInstance, InstanceParameterTarget } from '@webaudio-core';
 
 export class InstanceRTPCBinder {
@@ -50,8 +50,10 @@ export class InstanceRTPCBinder {
             for (const unsub of instanceUnsubs) unsub();
         };
 
-        instanceUnsubs.push(instance.on('ended', cleanup));
-        instanceUnsubs.push(instance.on('stopped', cleanup));
-        instanceUnsubs.push(instance.on('disposed', cleanup));
+        instanceUnsubs.push(
+            instance.on('ended', cleanup),
+            instance.on('stopped', cleanup),
+            instance.on('disposed', cleanup)
+        );
     }
 }

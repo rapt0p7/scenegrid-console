@@ -1,4 +1,4 @@
-import type { ContainerMode, IContainerSoundConfig } from '../interfaces/ISoundConfig';
+import type { ContainerMode, IContainerSoundConfig } from '../interfaces/ISoundConfig.js';
 
 interface ContainerState {
     lastPlayedIndex: number;

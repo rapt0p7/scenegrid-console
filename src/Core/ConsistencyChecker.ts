@@ -1,17 +1,17 @@
 // noinspection D
 
-import type { IAudioEngineConfig } from '../interfaces/IAudioEngineConfig';
-import type { IBuses } from '../interfaces/IBuses';
-import type { ISnapshots } from '../interfaces/ISnapshots';
+import type { IAudioEngineConfig } from '../interfaces/IAudioEngineConfig.js';
+import type { IBuses } from '../interfaces/IBuses.js';
+import type { ISnapshots } from '../interfaces/ISnapshots.js';
 import type {
     IContainerSoundConfig,
     ILayeredSoundConfig,
     ISmartLoopSoundConfig,
     ISoundConfig,
     AnySoundConfig
-} from '../interfaces/ISoundConfig';
-import type { ISoundMap } from '../interfaces/ISoundMap';
-import type { ISpriteSoundManifest } from '../interfaces/ISpriteSoundManifest';
+} from '../interfaces/ISoundConfig.js';
+import type { ISoundMap } from '../interfaces/ISoundMap.js';
+import type { ISpriteSoundManifest } from '../interfaces/ISpriteSoundManifest.js';
 
 export default class ConsistencyChecker {
     public static validate(config: IAudioEngineConfig): boolean {

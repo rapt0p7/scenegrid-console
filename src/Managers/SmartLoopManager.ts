@@ -2,12 +2,12 @@
 
 import * as workerTimers from 'worker-timers';
 
-import { LoopState } from '../interfaces/ISmartLoopManager';
+import { LoopState } from '../interfaces/ISmartLoopManager.js';
 
-import AudioGrid from './AudioGrid';
+import AudioGrid from './AudioGrid.js';
 
-import type { IAudioRouter } from '../interfaces/IAudioRouter';
-import type { ITransitionToParameters } from '../interfaces/ISmartLoopManager';
+import type { IAudioRouter } from '../interfaces/IAudioRouter.js';
+import type { ITransitionToParameters } from '../interfaces/ISmartLoopManager.js';
 import type { SoundController, ISoundInstance, AutomationEngine } from '@webaudio-core';
 
 interface ActiveRegion {

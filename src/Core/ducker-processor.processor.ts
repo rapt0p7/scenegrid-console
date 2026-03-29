@@ -1,6 +1,6 @@
 // noinspection D
 
-import type { IAudioWorkletProcessor } from '../interfaces/IAudioWorkletProcessor';
+import type { IAudioWorkletProcessor } from '../interfaces/IAudioWorkletProcessor.js';
 
 export interface DuckerProcessorOptions {
     processorOptions?: {
@@ -43,6 +43,7 @@ class DuckerProcessorProcessor extends AudioWorkletProcessor implements IAudioWo
             const inR = input[1] || inL;
             const outChannel = output[0];
 
+            // eslint-disable-next-line prefer-const
             for (let [index, l] of inL.entries()) {
                 let r = inR[index];
 
@@ -88,6 +89,7 @@ class DuckerProcessorProcessor extends AudioWorkletProcessor implements IAudioWo
 try {
     registerProcessor('ducker-processor', DuckerProcessorProcessor);
 } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     if (error.name !== 'NotSupportedError') throw error;
     console.warn('ducker-processor уже зарегистрирован');

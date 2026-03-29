@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MixerCoordinator from '../MixerCoordinator';
+import MixerCoordinator from '../MixerCoordinator.js';
 
-import type { MixerState } from '../../interfaces/IMixerStateManager';
-import type MixerLayerStack from '../MixerLayer';
-import type MixerStateManager from '../MixerStateManager';
+import type { MixerState } from '../../interfaces/IMixerStateManager.js';
+import type MixerLayerStack from '../MixerLayer.js';
+import type MixerStateManager from '../MixerStateManager.js';
 
 describe('MixerCoordinator', () => {
     let coordinator: MixerCoordinator;

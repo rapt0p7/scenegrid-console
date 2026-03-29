@@ -2,14 +2,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { SoundController, SoundPoolManager, SoundInstance } from '@webaudio-core';
 
-import { AudioEngine } from '../AudioEngine';
-import AudioRouter from '../AudioRouter';
-import ConsistencyChecker from '../Core/ConsistencyChecker';
-import FiltersPlugin from '../Core/FiltersPlugin';
-import AudioDebugger from '../Debug/AudioDebugger';
-import MixerCoordinator from '../Managers/MixerCoordinator';
-import { PRIORITY } from '../Managers/MixerLayer';
-import RTPCManager from '../Managers/RTPCManager';
+import { AudioEngine } from '../AudioEngine.js';
+import AudioRouter from '../AudioRouter.js';
+import ConsistencyChecker from '../Core/ConsistencyChecker.js';
+import FiltersPlugin from '../Core/FiltersPlugin.js';
+import AudioDebugger from '../Debug/AudioDebugger.js';
+import MixerCoordinator from '../Managers/MixerCoordinator.js';
+import { PRIORITY } from '../Managers/MixerLayer.js';
+import RTPCManager from '../Managers/RTPCManager.js';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),
@@ -531,10 +531,14 @@ describe('AudioEngine', () => {
             const instanceFactory = soundPoolMockCalls[0][0];
 
             instanceFactory('bullet_flyby');
-            const bulletCall = vi.mocked(SoundInstance).mock.calls.find(call => call[0] === 'bullet_flyby');
+            const bulletCall = vi
+                .mocked(SoundInstance)
+                .mock.calls.find((call: ConstructorParameters<typeof SoundInstance>) => call[0] === 'bullet_flyby');
 
             instanceFactory('ui_click');
-            const clickCall = vi.mocked(SoundInstance).mock.calls.find(call => call[0] === 'ui_click');
+            const clickCall = vi
+                .mocked(SoundInstance)
+                .mock.calls.find((call: ConstructorParameters<typeof SoundInstance>) => call[0] === 'ui_click');
 
             expect(bulletCall).toBeDefined();
             expect(bulletCall![5]).toEqual(

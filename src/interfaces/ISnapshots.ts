@@ -1,3 +1,3 @@
-import type { MixerSnapshot } from './IMixerStateManager';
+import type { MixerSnapshot } from './IMixerStateManager.js';
 
 export type ISnapshots = Record<string, MixerSnapshot>;

@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import DuckingManager from '../DuckingManager';
+import DuckingManager from '../DuckingManager.js';
 
-import type AudioBusSystem from '../../BusSystem/AudioBusSystem';
+import type AudioBusSystem from '../../BusSystem/AudioBusSystem.js';
 import type { ISoundInstance, AudioNodeLike } from '@webaudio-core';
 
 describe('DuckingManager', () => {
     let mockBusSystem: any;
     let mockSidechain: any;
     let mockInstance: any;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     let eventHandlers: Record<string, Function>;
     let manager: DuckingManager;
 

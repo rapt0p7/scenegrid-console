@@ -4,7 +4,7 @@ import {
 } from 'standardized-audio-context';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import AudioContextFactory from '../AudioContextFactory';
+import AudioContextFactory from '../AudioContextFactory.js';
 
 vi.mock('standardized-audio-context', () => {
     return {

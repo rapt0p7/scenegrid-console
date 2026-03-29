@@ -1,19 +1,19 @@
 import mitt from 'mitt';
 
-import type AutomationEngine from '@webaudio-core/automation/AutomationEngine';
-import type AudioContextManager from '@webaudio-core/context/AudioContextManager';
-import type { AudioNodeFactory } from '@webaudio-core/nodes/AudioNodeFactory';
-import type { INodeChainOptions } from '@webaudio-core/nodes/NodeChain';
-import { NodeChain } from '@webaudio-core/nodes/NodeChain';
+import type AutomationEngine from '@webaudio-core/automation/AutomationEngine.js';
+import type AudioContextManager from '@webaudio-core/context/AudioContextManager.js';
+import type { AudioNodeFactory } from '@webaudio-core/nodes/AudioNodeFactory.js';
+import type { INodeChainOptions } from '@webaudio-core/nodes/NodeChain.js';
+import { NodeChain } from '@webaudio-core/nodes/NodeChain.js';
 import type {
     AudioBufferSourceNodeLike,
     AudioNodeLike,
     GainNodeLike,
     PannerNodeLike,
     StereoPannerNodeLike
-} from '@webaudio-core/types/IAudioContext';
-import type { PlaybackState } from '@webaudio-core/types/IPlaybackController';
-import type { InstanceParameterTarget, ISoundInstance } from '@webaudio-core/types/ISoundInstance';
+} from '@webaudio-core/types/IAudioContext.js';
+import type { PlaybackState } from '@webaudio-core/types/IPlaybackController.js';
+import type { InstanceParameterTarget, ISoundInstance } from '@webaudio-core/types/ISoundInstance.js';
 
 import type { Emitter } from 'mitt';
 
@@ -129,6 +129,7 @@ export class SoundInstance implements ISoundInstance {
             }
 
             default: {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/naming-convention
                 const _exhaustiveCheck: never = target;
             }
         }
@@ -165,7 +166,9 @@ export class SoundInstance implements ISoundInstance {
         if (when > 0) {
             try {
                 this.#source.stop(context.currentTime + when);
-            } catch {}
+            } catch {
+                /* empty */
+            }
             return;
         }
 
@@ -173,7 +176,9 @@ export class SoundInstance implements ISoundInstance {
 
         try {
             this.#source.stop(context.currentTime);
-        } catch {}
+        } catch {
+            /* empty */
+        }
 
         this.#source.disconnect();
         this.#source = null;
@@ -193,7 +198,9 @@ export class SoundInstance implements ISoundInstance {
             try {
                 this.#source.stop();
                 this.#source.disconnect();
-            } catch {}
+            } catch {
+                /* empty */
+            }
             this.#source = null;
         }
 
@@ -239,13 +246,17 @@ export class SoundInstance implements ISoundInstance {
 
         try {
             this.#source.stop(0);
-        } catch {}
+        } catch {
+            /* empty */
+        }
 
         const gain = this.#chain.instanceGain?.gain;
         if (gain) {
             try {
                 gain.cancelScheduledValues(0);
-            } catch {}
+            } catch {
+                /* empty */
+            }
         }
 
         this.#source.disconnect();
@@ -262,7 +273,9 @@ export class SoundInstance implements ISoundInstance {
         this.#source.disconnect();
         try {
             this.#source.stop(0);
-        } catch {}
+        } catch {
+            /* empty */
+        }
 
         this.#source = null;
 

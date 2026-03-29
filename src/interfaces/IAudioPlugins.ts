@@ -1,5 +1,5 @@
-import type { IFiltersPlugin } from './IFiltersPlugin';
-import type { IDuckingConfig } from './ISoundConfig';
+import type { IFiltersPlugin } from './IFiltersPlugin.js';
+import type { IDuckingConfig } from './ISoundConfig.js';
 import type { AudioNodeLike, GainNodeLike } from '@webaudio-core';
 
 export interface ILimiterNode {

@@ -1,4 +1,4 @@
-import type { IAudioGrid } from '../interfaces/IAudioGrid';
+import type { IAudioGrid } from '../interfaces/IAudioGrid.js';
 
 export default class AudioGrid implements IAudioGrid {
     readonly #bpm: number;

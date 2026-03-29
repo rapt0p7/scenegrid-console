@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 import CopyPlugin from 'copy-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import webpack from 'webpack';
 
 import tsconfig from './tsconfig.json' with { type: 'json' };
@@ -28,7 +27,15 @@ export default {
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
-        plugins: [new TsconfigPathsPlugin()],
+        extensionAlias: {
+            '.js': ['.ts', '.js'],
+            '.jsx': ['.tsx', '.jsx'],
+            '.cjs': ['.cts', '.cjs'],
+            '.mjs': ['.mts', '.mjs']
+        },
+        alias: {
+            '@webaudio-core': path.resolve(__dirname, 'src/webaudio-core')
+        },
         fallback: {
             'fs': false,
             'path': false,

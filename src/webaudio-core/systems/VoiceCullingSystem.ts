@@ -1,6 +1,6 @@
 import * as workerTimers from 'worker-timers';
 
-import type SoundPoolManager from '@webaudio-core/instance/SoundPoolManager';
+import type SoundPoolManager from '@webaudio-core/instance/SoundPoolManager.js';
 
 export interface CullingConfig {
     checkIntervalMs?: number;

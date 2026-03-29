@@ -1,4 +1,4 @@
-import type { PannerConfig } from '@webaudio-core/nodes/AudioNodeFactory';
+import type { PannerConfig } from '@webaudio-core/nodes/AudioNodeFactory.js';
 
 export interface ISoundOptions {
     url: string | string[];

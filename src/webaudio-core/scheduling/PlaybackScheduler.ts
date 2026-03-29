@@ -1,5 +1,5 @@
-import type AudioContextManager from '@webaudio-core/context/AudioContextManager';
-import type { ISoundInstance } from '@webaudio-core/types/ISoundInstance';
+import type AudioContextManager from '@webaudio-core/context/AudioContextManager.js';
+import type { ISoundInstance } from '@webaudio-core/types/ISoundInstance.js';
 
 interface ScheduledHandle {
     id: number;
@@ -17,6 +17,7 @@ export class PlaybackScheduler {
         this.#ctx = contextManager;
     }
 
+    // eslint-disable-next-line max-params
     public schedulePlay(instance: ISoundInstance, delay: number = 0, offset: number = 0, duration?: number): number {
         const id = ++this.#idCounter;
         const when = this.#ctx.currentTime + delay;

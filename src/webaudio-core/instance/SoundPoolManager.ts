@@ -1,7 +1,7 @@
 // noinspection D
 
-import type { ISoundInstance } from '@webaudio-core/types/ISoundInstance';
-import type { IVoiceConfig } from '@webaudio-core/types/IVoiceConfig';
+import type { ISoundInstance } from '@webaudio-core/types/ISoundInstance.js';
+import type { IVoiceConfig } from '@webaudio-core/types/IVoiceConfig.js';
 
 export type PoolPolicy = 'expand' | 'steal_oldest';
 
@@ -25,6 +25,7 @@ class SoundPoolManager {
             maxPolyphony: config.maxPolyphony ?? 32,
             policy: config.policy ?? 'steal_oldest',
             globalVoiceLimit: config.globalVoiceLimit ?? 32,
+            // eslint-disable-next-line unicorn/no-useless-undefined
             voiceConfigResolver: config.voiceConfigResolver ?? (() => undefined)
         };
     }

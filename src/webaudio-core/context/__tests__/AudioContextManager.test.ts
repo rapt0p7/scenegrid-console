@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import ListenerManager from '@webaudio-core/context/ListenerManager';
+import ListenerManager from '@webaudio-core/context/ListenerManager.js';
 
-import AudioContextFactory from '../AudioContextFactory';
-import AudioContextManager from '../AudioContextManager';
-import UnlockManager from '../UnlockManager';
+import AudioContextFactory from '../AudioContextFactory.js';
+import AudioContextManager from '../AudioContextManager.js';
+import UnlockManager from '../UnlockManager.js';
 
 vi.mock('../AudioContextFactory', () => ({
     default: {

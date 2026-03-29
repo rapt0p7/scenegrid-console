@@ -1,4 +1,4 @@
-import type { AudioCtx } from '@webaudio-core/types/IAudioContext';
+import type { AudioCtx } from '@webaudio-core/types/IAudioContext.js';
 
 export default class UnlockManager {
     private unlocked = false;
@@ -18,7 +18,9 @@ export default class UnlockManager {
             source.buffer = buffer;
             source.connect(this.context.destination);
             source.start(0);
-        } catch {}
+        } catch {
+            /* empty */
+        }
 
         await this.context.resume();
         this.unlocked = true;

@@ -1,7 +1,6 @@
 import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 
 import tsconfig from './tsconfig.json' with { type: 'json' };
@@ -12,7 +11,7 @@ const __dirname = dirname(__filename);
 export default {
     mode: 'production',
     devtool: 'source-map',
-    target: ['web', 'es2020'],
+    target: ['web', 'es2022'],
     experiments: {
         outputModule: true
     },
@@ -30,7 +29,14 @@ export default {
 
     resolve: {
         extensions: ['.ts', '.js'],
-        plugins: [new TsconfigPathsPlugin()]
+        extensionAlias: {
+            '.js': ['.ts', '.js'],
+            '.cjs': ['.cts', '.cjs'],
+            '.mjs': ['.mts', '.mjs']
+        },
+        alias: {
+            '@webaudio-core': path.resolve(__dirname, 'src/webaudio-core')
+        }
     },
 
     optimization: {
@@ -58,7 +64,7 @@ export default {
                         loader: 'esbuild-loader',
                         options: {
                             loader: 'ts',
-                            target: 'es2020'
+                            target: 'es2022'
                         }
                     }
                 ]
@@ -69,7 +75,7 @@ export default {
                 loader: 'esbuild-loader',
                 options: {
                     loader: 'ts',
-                    target: 'es2020',
+                    target: 'es2022',
                     tsconfigRaw: tsconfig
                 }
             }

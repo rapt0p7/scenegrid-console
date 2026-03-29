@@ -1,9 +1,9 @@
 // noinspection D
 
-import type AudioBusSystem from '../BusSystem/AudioBusSystem';
-import type { BusId } from '../interfaces/IAudioBusSystem';
-import type { MixerState } from '../interfaces/IMixerStateManager';
-import type { IRTPCManager } from '../interfaces/IRTPCManager';
+import type AudioBusSystem from '../BusSystem/AudioBusSystem.js';
+import type { BusId } from '../interfaces/IAudioBusSystem.js';
+import type { MixerState } from '../interfaces/IMixerStateManager.js';
+import type { IRTPCManager } from '../interfaces/IRTPCManager.js';
 import type { AutomationEngine } from '@webaudio-core';
 
 enum MixerFSMState {

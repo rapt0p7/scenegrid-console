@@ -1,8 +1,8 @@
 // noinspection D
 
-import { createFrequencyCurveWithRMS, createMeters } from '../helpers/visualizers';
+import { createFrequencyCurveWithRMS, createMeters } from '../helpers/visualizers.js';
 
-import type { IAudioBusSystem } from '../interfaces/IAudioBusSystem';
+import type { IAudioBusSystem } from '../interfaces/IAudioBusSystem.js';
 import type { AudioCtx, GainNodeLike } from '@webaudio-core';
 
 export interface DebuggerOptions {

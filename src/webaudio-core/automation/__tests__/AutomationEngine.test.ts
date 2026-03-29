@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import AutomationEngine from '../AutomationEngine';
+import AutomationEngine from '../AutomationEngine.js';
 
-import type { AudioCtx as AudioContext_ } from '../../types/IAudioContext';
+import type { AudioCtx as AudioContext_ } from '../../types/IAudioContext.js';
 
 describe('AutomationEngine', () => {
     let mockContext: AudioContext_;
@@ -199,7 +199,7 @@ describe('AutomationEngine - Chrome Android Fallback', () => {
 
         vi.resetModules();
 
-        const { default: AndroidAutomationEngine } = await import('../AutomationEngine');
+        const { default: AndroidAutomationEngine } = await import('../AutomationEngine.js');
 
         vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
             callback(performance.now());

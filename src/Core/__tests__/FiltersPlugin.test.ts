@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import FiltersPlugin from '../FiltersPlugin';
+import FiltersPlugin from '../FiltersPlugin.js';
 
 describe('FiltersPlugin', () => {
     let mockContext: any;

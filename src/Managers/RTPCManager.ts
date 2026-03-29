@@ -1,7 +1,7 @@
 import mitt from 'mitt';
 import * as workerTimers from 'worker-timers';
 
-import type { IRTPCManager, RTPCEvents } from '../interfaces/IRTPCManager';
+import type { IRTPCManager, RTPCEvents } from '../interfaces/IRTPCManager.js';
 import type { Emitter } from 'mitt';
 
 interface ParameterState {
@@ -16,7 +16,7 @@ export default class RTPCManager implements IRTPCManager {
     private states: Map<string, ParameterState> = new Map();
     private dirtyParams: Set<string> = new Set();
     private isUpdateScheduled = false;
-    private tickerId: ReturnType<typeof setInterval> | null = null;
+    private tickerId: ReturnType<typeof workerTimers.setInterval> | null = null;
     private lastTime = 0;
     // eslint-disable-next-line @typescript-eslint/naming-convention
     private readonly TICK_RATE_MS = 30;

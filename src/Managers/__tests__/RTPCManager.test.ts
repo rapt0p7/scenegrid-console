@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import RTPCManager from '../RTPCManager';
+import RTPCManager from '../RTPCManager.js';
 
 vi.mock('worker-timers', () => ({
     setInterval: (callback: TimerHandler, ms?: number) => setInterval(callback, ms),

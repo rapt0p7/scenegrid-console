@@ -1,7 +1,7 @@
 import { AudioWorkletNode } from 'standardized-audio-context';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import TinyLimiterNode from '../TinyLimiterNode';
+import TinyLimiterNode from '../TinyLimiterNode.js';
 
 vi.mock('standardized-audio-context', () => {
     return {

@@ -23,7 +23,7 @@ describe('MeterProcessorProcessor', () => {
         });
 
         vi.resetModules();
-        await import('../meter-processor.processor');
+        await import('../meter-processor.processor.js');
     });
 
     describe('Registration & Initialization', () => {
@@ -126,7 +126,7 @@ describe('MeterProcessorProcessor', () => {
             });
 
             vi.resetModules();
-            await import('../meter-processor.processor');
+            await import('../meter-processor.processor.js');
 
             expect(warnSpy).toHaveBeenCalledWith('meter-processor уже зарегистрирован');
             warnSpy.mockRestore();
@@ -138,7 +138,7 @@ describe('MeterProcessorProcessor', () => {
             });
 
             vi.resetModules();
-            await expect(import('../meter-processor.processor')).rejects.toThrow('Fatal Processor Error');
+            await expect(import('../meter-processor.processor.js')).rejects.toThrow('Fatal Processor Error');
         });
     });
 });

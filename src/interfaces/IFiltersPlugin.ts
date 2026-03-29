@@ -1,4 +1,4 @@
-import type { IFilter } from './IFilter';
+import type { IFilter } from './IFilter.js';
 import type { AudioCtx, AutomationEngine, BiquadFilterNodeLike, ConvolverNodeNodeLike } from '@webaudio-core';
 
 export interface IFiltersPlugin {

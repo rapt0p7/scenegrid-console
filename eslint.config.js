@@ -38,7 +38,8 @@ export default tseslint.config(
                 ecmaVersion: 'latest',
                 sourceType: 'module',
                 projectService: true,
-                tsconfigRootDir: import.meta.dirname
+                tsconfigRootDir: import.meta.dirname,
+                warnOnUnsupportedTypeScriptVersion: false
             },
             globals: {
                 ...globals.browser,
@@ -64,19 +65,16 @@ export default tseslint.config(
                 }
             },
             'boundaries/elements': [
-                { type: 'webaudio-core', pattern: 'src/webaudio-core' },
-                { type: 'interfaces', pattern: 'src/interfaces' },
-                { type: 'config', pattern: 'src/config' },
-                { type: 'bus-system', pattern: 'src/BusSystem' },
-                { type: 'app-core', pattern: 'src/Core' },
-                { type: 'managers', pattern: 'src/Managers' },
-                { type: 'app-root', pattern: 'src/*.*' },
-                { type: 'helpers', pattern: 'src/helpers' },
-                { type: 'debug', pattern: 'src/Debug' }
-            ],
-            'boundaries/alias': {
-                '@webaudio-core/(.*)': 'src/webaudio-core/$1'
-            }
+                { type: 'webaudio-core', mode: 'full', pattern: 'src/webaudio-core' },
+                { type: 'interfaces', mode: 'full', pattern: 'src/interfaces' },
+                { type: 'config', mode: 'full', pattern: 'src/config' },
+                { type: 'bus-system', mode: 'full', pattern: 'src/BusSystem' },
+                { type: 'app-core', mode: 'full', pattern: 'src/Core' },
+                { type: 'managers', mode: 'full', pattern: 'src/Managers' },
+                { type: 'app-root', mode: 'full', pattern: 'src/*.*' },
+                { type: 'helpers', mode: 'full', pattern: 'src/helpers' },
+                { type: 'debug', mode: 'full', pattern: 'src/Debug' }
+            ]
         },
         rules: {
             'prettier/prettier': 'error',
@@ -249,18 +247,18 @@ export default tseslint.config(
             ],
             'import/no-unused-modules': 'off',
 
-            'boundaries/element-types': [
+            'boundaries/dependencies': [
                 'error',
                 {
                     default: 'disallow',
                     rules: [
-                        { from: ['webaudio-core'], allow: ['webaudio-core'] },
-                        { from: ['interfaces'], allow: ['interfaces', 'webaudio-core'] },
-                        { from: ['config'], allow: ['config', 'interfaces', 'webaudio-core'] },
-                        { from: ['bus-system'], allow: ['bus-system', 'interfaces', 'webaudio-core', 'helpers'] },
-                        { from: ['app-core'], allow: ['app-core', 'interfaces', 'webaudio-core', 'helpers', 'debug'] },
+                        { from: 'webaudio-core', allow: ['webaudio-core'] },
+                        { from: 'interfaces', allow: ['interfaces', 'webaudio-core'] },
+                        { from: 'config', allow: ['config', 'interfaces', 'webaudio-core'] },
+                        { from: 'bus-system', allow: ['bus-system', 'interfaces', 'webaudio-core', 'helpers'] },
+                        { from: 'app-core', allow: ['app-core', 'interfaces', 'webaudio-core', 'helpers', 'debug'] },
                         {
-                            from: ['managers'],
+                            from: 'managers',
                             allow: [
                                 'managers',
                                 'bus-system',
@@ -271,16 +269,10 @@ export default tseslint.config(
                                 'helpers'
                             ]
                         },
+                        { from: 'helpers', allow: ['helpers'] },
+                        { from: 'debug', allow: ['debug', 'webaudio-core', 'interfaces', 'helpers'] },
                         {
-                            from: ['helpers'],
-                            allow: ['helpers']
-                        },
-                        {
-                            from: ['debug'],
-                            allow: ['debug', 'webaudio-core', 'interfaces', 'helpers']
-                        },
-                        {
-                            from: ['app-root'],
+                            from: 'app-root',
                             allow: [
                                 'webaudio-core',
                                 'interfaces',
@@ -344,7 +336,9 @@ export default tseslint.config(
         rules: {
             ...vitest.configs.recommended.rules,
             'unicorn/no-useless-undefined': 'off',
-            '@typescript-eslint/naming-convention': 'off'
+            '@typescript-eslint/naming-convention': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
+            'sonarjs/no-duplicate-string': 'off'
         }
     },
     {

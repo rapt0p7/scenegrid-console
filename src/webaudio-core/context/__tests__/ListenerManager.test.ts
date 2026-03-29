@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import ListenerManager from '../ListenerManager';
+import ListenerManager from '../ListenerManager.js';
 
-import type AutomationEngine from '../../automation/AutomationEngine';
-import type { AudioCtx as AudioContext__ } from '../../types/IAudioContext';
+import type AutomationEngine from '../../automation/AutomationEngine.js';
+import type { AudioCtx as AudioContext__ } from '../../types/IAudioContext.js';
 import type { Mocked } from 'vitest';
 
 describe('ListenerManager', () => {

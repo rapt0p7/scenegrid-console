@@ -1,11 +1,11 @@
 import { safeDisconnect } from '@webaudio-core';
 
-import AudioBus from './AudioBus';
+import AudioBus from './AudioBus.js';
 
-import type { IAudioBusSystem, BusId } from '../interfaces/IAudioBusSystem';
-import type { ILimiterNode, IPluginFactory, ISidechain } from '../interfaces/IAudioPlugins';
-import type { IBuses } from '../interfaces/IBuses';
-import type { IDuckingConfig } from '../interfaces/ISoundConfig';
+import type { IAudioBusSystem, BusId } from '../interfaces/IAudioBusSystem.js';
+import type { ILimiterNode, IPluginFactory, ISidechain } from '../interfaces/IAudioPlugins.js';
+import type { IBuses } from '../interfaces/IBuses.js';
+import type { IDuckingConfig } from '../interfaces/ISoundConfig.js';
 import type {
     AudioCtx,
     AudioNodeLike,

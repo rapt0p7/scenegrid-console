@@ -1,5 +1,5 @@
-import type { IFilter } from './IFilter';
-import type { IRTPCConfig, RTPCTargetProperty } from './IRTPCManager';
+import type { IFilter } from './IFilter.js';
+import type { IRTPCConfig, RTPCTargetProperty } from './IRTPCManager.js';
 
 export interface IBus {
     gain?: number;

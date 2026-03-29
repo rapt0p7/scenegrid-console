@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import AudioGrid from '../AudioGrid';
+import AudioGrid from '../AudioGrid.js';
 
 describe('AudioGrid', () => {
     describe('Initialization & Defaults', () => {

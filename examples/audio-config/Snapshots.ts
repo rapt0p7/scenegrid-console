@@ -1,4 +1,4 @@
-import type { ISnapshots } from 'src';
+import type { ISnapshots } from 'src/index.js';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Snapshots: ISnapshots = {

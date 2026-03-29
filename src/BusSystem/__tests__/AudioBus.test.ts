@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import AudioBus from '../AudioBus';
+import AudioBus from '../AudioBus.js';
 
-import type { IPluginFactory } from '../../interfaces/IAudioPlugins';
+import type { IPluginFactory } from '../../interfaces/IAudioPlugins.js';
 import type { AudioCtx, AutomationEngine, GainNodeLike } from '@webaudio-core';
 
 describe('AudioBus (Filters, Sends, RTPC)', () => {

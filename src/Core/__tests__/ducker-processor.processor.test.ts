@@ -22,7 +22,7 @@ describe('DuckerProcessorProcessor', () => {
         });
 
         vi.resetModules();
-        await import('../ducker-processor.processor');
+        await import('../ducker-processor.processor.js');
     });
 
     describe('Initialization', () => {
@@ -142,7 +142,7 @@ describe('DuckerProcessorProcessor', () => {
             });
 
             vi.resetModules();
-            await import('../ducker-processor.processor');
+            await import('../ducker-processor.processor.js');
 
             expect(warnSpy).toHaveBeenCalledWith('ducker-processor уже зарегистрирован');
             warnSpy.mockRestore();
@@ -154,7 +154,7 @@ describe('DuckerProcessorProcessor', () => {
             });
 
             vi.resetModules();
-            await expect(import('../ducker-processor.processor')).rejects.toThrow('Fatal System Error');
+            await expect(import('../ducker-processor.processor.js')).rejects.toThrow('Fatal System Error');
         });
     });
 });

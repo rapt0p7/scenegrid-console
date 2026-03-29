@@ -1,7 +1,8 @@
 // noinspection D
 
-import type { AudioCtx, AudioParamLike } from '@webaudio-core/types/IAudioContext';
+import type { AudioCtx, AudioParamLike } from '@webaudio-core/types/IAudioContext.js';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const isChromeAndroid =
     typeof navigator !== 'undefined' && /Chrome/.test(navigator.userAgent) && /Android/.test(navigator.userAgent);
 
@@ -17,6 +18,7 @@ interface PendingRamp {
 
 export default class AutomationEngine {
     readonly #ctx: AudioCtx;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     private readonly DIGITAL_SILENCE = 0.000_01;
 
     #pending: PendingRamp[] = [];
@@ -43,6 +45,7 @@ export default class AutomationEngine {
         }
     }
 
+    // eslint-disable-next-line max-params
     ramp(
         parameter: AudioParamLike,
         value: number,
@@ -83,6 +86,7 @@ export default class AutomationEngine {
         }
     }
 
+    // eslint-disable-next-line max-params
     public safeExponentialRamp(
         parameter: AudioParamLike,
         targetValue: number,
@@ -162,10 +166,13 @@ export default class AutomationEngine {
             console.warn('[AutomationEngine] ramp() failed:', error);
             try {
                 param.setValueAtTime(target, now);
-            } catch {}
+            } catch {
+                /* empty */
+            }
         }
     }
 
+    // eslint-disable-next-line max-params
     private applyEqualPowerCurve(
         parameter: AudioParamLike,
         startValue: number,

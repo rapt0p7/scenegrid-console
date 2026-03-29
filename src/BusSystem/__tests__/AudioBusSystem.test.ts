@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import AudioBusSystem from '../AudioBusSystem';
+import AudioBusSystem from '../AudioBusSystem.js';
 
-import type { IPluginFactory } from '../../interfaces/IAudioPlugins';
-import type { IBuses } from '../../interfaces/IBuses';
+import type { IPluginFactory } from '../../interfaces/IAudioPlugins.js';
+import type { IBuses } from '../../interfaces/IBuses.js';
 import type { ISoundInstance } from '@webaudio-core';
 
 vi.mock('../../helpers/nodes', () => ({

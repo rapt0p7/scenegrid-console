@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import ContainerManager from '../ContainerManager';
+import ContainerManager from '../ContainerManager.js';
 
-import type { IContainerSoundConfig } from '../../interfaces/ISoundConfig';
+import type { IContainerSoundConfig } from '../../interfaces/ISoundConfig.js';
 
 describe('ContainerManager', () => {
     let manager: ContainerManager;

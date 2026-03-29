@@ -1,6 +1,6 @@
-import type MixerStateResolver from './MixerStateResolver';
-import type { IMixerLayer } from '../interfaces/IMixerLayer';
-import type { MixerSnapshot, MixerState } from '../interfaces/IMixerStateManager';
+import type MixerStateResolver from './MixerStateResolver.js';
+import type { IMixerLayer } from '../interfaces/IMixerLayer.js';
+import type { MixerSnapshot, MixerState } from '../interfaces/IMixerStateManager.js';
 
 export const PRIORITY = {
     BASE: 0,
@@ -45,6 +45,7 @@ export default class MixerLayerStack {
     }
 
     computeState(base: MixerState): MixerState {
+        // eslint-disable-next-line unicorn/no-array-sort
         const ordered = [...this.layers.values()].sort((a, b) => a.priority - b.priority);
 
         let state = base;

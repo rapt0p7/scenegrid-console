@@ -2,9 +2,9 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { createFrequencyBarsWithRMS, createMeters, createFrequencyCurveWithRMS } from '../visualizers';
+import { createFrequencyBarsWithRMS, createMeters, createFrequencyCurveWithRMS } from '../visualizers.js';
 
-vi.mock('../meter-processor.processor.ts', () => ({
+vi.mock('../meter-processor.processor.js', () => ({
     default: 'mocked-processor-url'
 }));
 
@@ -44,6 +44,7 @@ describe('Visualizers (Smoke Tests)', () => {
                 smoothingTimeConstant: 0.8,
                 frequencyBinCount: 1024,
                 getFloatFrequencyData: vi.fn((array: Float32Array) => {
+                    // eslint-disable-next-line no-param-reassign
                     for (let index = 0; index < array.length; index++) array[index] = -50;
                 })
             })

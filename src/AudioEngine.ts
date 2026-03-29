@@ -13,31 +13,31 @@ import {
     VoiceCullingSystem
 } from '@webaudio-core';
 
-import AudioRouter from './AudioRouter';
-import AudioBusSystem from './BusSystem/AudioBusSystem';
-import ConsistencyChecker from './Core/ConsistencyChecker';
-import FiltersPlugin from './Core/FiltersPlugin';
-import SidechainDucker from './Core/SidechainDucker';
-import TinyLimiterNode from './Core/TinyLimiterNode';
-import deepFreeze from './helpers/deepFreeze';
-import ContainerManager from './Managers/ContainerManager';
-import DuckingManager from './Managers/DuckingManager';
-import MixerCoordinator from './Managers/MixerCoordinator';
-import MixerLayerStack, { PRIORITY } from './Managers/MixerLayer';
-import MixerSnapshotManager from './Managers/MixerSnapshotManager';
-import MixerStateManager from './Managers/MixerStateManager';
-import MixerStateResolver from './Managers/MixerStateResolver';
-import RTPCManager from './Managers/RTPCManager';
-import SmartLoopManager from './Managers/SmartLoopManager';
-import SoundRegistry from './SoundRegistry';
+import AudioRouter from './AudioRouter.js';
+import AudioBusSystem from './BusSystem/AudioBusSystem.js';
+import ConsistencyChecker from './Core/ConsistencyChecker.js';
+import FiltersPlugin from './Core/FiltersPlugin.js';
+import SidechainDucker from './Core/SidechainDucker.js';
+import TinyLimiterNode from './Core/TinyLimiterNode.js';
+import deepFreeze from './helpers/deepFreeze.js';
+import ContainerManager from './Managers/ContainerManager.js';
+import DuckingManager from './Managers/DuckingManager.js';
+import MixerCoordinator from './Managers/MixerCoordinator.js';
+import MixerLayerStack, { PRIORITY } from './Managers/MixerLayer.js';
+import MixerSnapshotManager from './Managers/MixerSnapshotManager.js';
+import MixerStateManager from './Managers/MixerStateManager.js';
+import MixerStateResolver from './Managers/MixerStateResolver.js';
+import RTPCManager from './Managers/RTPCManager.js';
+import SmartLoopManager from './Managers/SmartLoopManager.js';
+import SoundRegistry from './SoundRegistry.js';
 
-import type { DebuggerOptions } from './Debug/AudioDebugger';
-import type { BusId } from './interfaces/IAudioBusSystem';
-import type { IAudioEngineConfig } from './interfaces/IAudioEngineConfig';
-import type { IPluginFactory } from './interfaces/IAudioPlugins';
-import type { IRTPCManifest } from './interfaces/IRTPCManifest';
-import type { ITransitionToParameters } from './interfaces/ISmartLoopManager';
-import type { IPlayOptions } from './interfaces/ISoundConfig';
+import type { DebuggerOptions } from './Debug/AudioDebugger.js';
+import type { BusId } from './interfaces/IAudioBusSystem.js';
+import type { IAudioEngineConfig } from './interfaces/IAudioEngineConfig.js';
+import type { IPluginFactory } from './interfaces/IAudioPlugins.js';
+import type { IRTPCManifest } from './interfaces/IRTPCManifest.js';
+import type { ITransitionToParameters } from './interfaces/ISmartLoopManager.js';
+import type { IPlayOptions } from './interfaces/ISoundConfig.js';
 
 export interface InitParameters {
     isStrictValidation?: boolean;
@@ -222,8 +222,8 @@ export class AudioEngine {
         this.#cullingSystem = new VoiceCullingSystem(soundPool, {
             checkIntervalMs: 500,
             cullingThreshold: 0.01,
-            busIdResolver: id => this.config.soundMap[id]?.busId,
-            busVolumeResolver: busId => {
+            busIdResolver: (id: string) => this.config.soundMap[id]?.busId,
+            busVolumeResolver: (busId: string) => {
                 const bus = this.#busSystem.getBus(busId as BusId);
                 return bus ? Math.max(bus.inputGainNode.gain.value, bus.logicalTargetGain) : 1;
             }
@@ -247,7 +247,7 @@ export class AudioEngine {
     }
 
     public async showDebugUI(options?: DebuggerOptions): Promise<void> {
-        const { default: AudioDebugger } = await import('./Debug/AudioDebugger');
+        const { default: AudioDebugger } = await import('./Debug/AudioDebugger.js');
         const debuggerInstance = new AudioDebugger(
             this.#contextManager.context,
             this.#busSystem,

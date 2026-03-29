@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { SoundController } from '@webaudio-core';
 
-import type SoundPoolManager from '../../instance/SoundPoolManager';
+import type SoundPoolManager from '../../instance/SoundPoolManager.js';
 import type { PlaybackScheduler } from '@webaudio-core';
 
 describe('SoundController', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { safeDisconnect } from '../safeDisconnect';
+import { safeDisconnect } from '../safeDisconnect.js';
 
 describe('safeDisconnect', () => {
     it('should return immediately if node is undefined', () => {

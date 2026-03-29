@@ -3,13 +3,13 @@
 
 import { safeDisconnect, clamp } from '@webaudio-core';
 
-import { evaluateRTPCCurve } from '../helpers/rtpcMath';
-import { type IBus } from '../interfaces/IBuses';
+import { evaluateRTPCCurve } from '../helpers/rtpcMath.js';
+import { type IBus } from '../interfaces/IBuses.js';
 
-import type { IAudioBus } from '../interfaces/IAudioBus';
-import type { IPluginFactory } from '../interfaces/IAudioPlugins';
-import type { IFilter } from '../interfaces/IFilter';
-import type { IRTPCConfig, IRTPCManager, RTPCTargetProperty } from '../interfaces/IRTPCManager';
+import type { IAudioBus } from '../interfaces/IAudioBus.js';
+import type { IPluginFactory } from '../interfaces/IAudioPlugins.js';
+import type { IFilter } from '../interfaces/IFilter.js';
+import type { IRTPCConfig, IRTPCManager, RTPCTargetProperty } from '../interfaces/IRTPCManager.js';
 import type {
     AutomationEngine,
     AudioCtx,

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MixerSnapshotManager from '../MixerSnapshotManager';
+import MixerSnapshotManager from '../MixerSnapshotManager.js';
 
-import type MixerCoordinator from '../MixerCoordinator';
-import type MixerLayerStack from '../MixerLayer';
+import type MixerCoordinator from '../MixerCoordinator.js';
+import type MixerLayerStack from '../MixerLayer.js';
 
 describe('MixerSnapshotManager', () => {
     let manager: MixerSnapshotManager;

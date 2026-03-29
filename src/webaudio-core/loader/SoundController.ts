@@ -1,8 +1,8 @@
-import type SoundPoolManager from '@webaudio-core/instance/SoundPoolManager';
-import type { PlaybackScheduler } from '@webaudio-core/scheduling/PlaybackScheduler';
-import type { ILogicalVoice } from '@webaudio-core/types/ILogicalVoice';
-import type { ISoundInstance } from '@webaudio-core/types/ISoundInstance';
-import type { ISoundOptions } from '@webaudio-core/types/ISoundOptions';
+import type SoundPoolManager from '@webaudio-core/instance/SoundPoolManager.js';
+import type { PlaybackScheduler } from '@webaudio-core/scheduling/PlaybackScheduler.js';
+import type { ILogicalVoice } from '@webaudio-core/types/ILogicalVoice.js';
+import type { ISoundInstance } from '@webaudio-core/types/ISoundInstance.js';
+import type { ISoundOptions } from '@webaudio-core/types/ISoundOptions.js';
 
 export interface SoundDefinition {
     buffer: AudioBuffer;

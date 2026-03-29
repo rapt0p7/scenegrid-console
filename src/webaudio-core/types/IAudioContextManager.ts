@@ -1,4 +1,4 @@
-import type { AudioCtx } from '@webaudio-core/types/IAudioContext';
+import type { AudioCtx } from '@webaudio-core/types/IAudioContext.js';
 
 export interface IAudioContextManager {
     readonly context: AudioCtx;

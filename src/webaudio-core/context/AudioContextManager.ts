@@ -1,9 +1,9 @@
-import AudioContextFactory from '@webaudio-core/context/AudioContextFactory';
-import ListenerManager from '@webaudio-core/context/ListenerManager';
-import UnlockManager from '@webaudio-core/context/UnlockManager';
-import type { AutomationEngine } from '@webaudio-core/index';
-import type { AudioCtx } from '@webaudio-core/types/IAudioContext';
-import type { IAudioContextManager } from '@webaudio-core/types/IAudioContextManager';
+import AudioContextFactory from '@webaudio-core/context/AudioContextFactory.js';
+import ListenerManager from '@webaudio-core/context/ListenerManager.js';
+import UnlockManager from '@webaudio-core/context/UnlockManager.js';
+import type { AutomationEngine } from '@webaudio-core/index.js';
+import type { AudioCtx } from '@webaudio-core/types/IAudioContext.js';
+import type { IAudioContextManager } from '@webaudio-core/types/IAudioContextManager.js';
 
 export default class AudioContextManager implements IAudioContextManager {
     readonly #context: AudioCtx;
@@ -39,6 +39,7 @@ export default class AudioContextManager implements IAudioContextManager {
         this.#listener!.setPosition(x, y, z);
     }
 
+    // eslint-disable-next-line max-params
     public setListenerOrientation(fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
         this.#listener!.setOrientation(fx, fy, fz, ux, uy, uz);
     }

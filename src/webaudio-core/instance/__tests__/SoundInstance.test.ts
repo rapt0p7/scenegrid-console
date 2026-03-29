@@ -2,11 +2,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { NodeChain } from '@webaudio-core/nodes/NodeChain';
+import { NodeChain } from '@webaudio-core/nodes/NodeChain.js';
 
-import { SoundInstance } from '../SoundInstance';
+import { SoundInstance } from '../SoundInstance.js';
 
-import type AudioContextManager from '../../context/AudioContextManager';
+import type AudioContextManager from '../../context/AudioContextManager.js';
 import type { AudioNodeFactory, AutomationEngine } from '@webaudio-core';
 
 function createMockAudioContext() {

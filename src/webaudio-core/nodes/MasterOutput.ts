@@ -1,6 +1,6 @@
-import type AutomationEngine from '@webaudio-core/automation/AutomationEngine';
-import type AudioContextManager from '@webaudio-core/context/AudioContextManager';
-import type { GainNodeLike } from '@webaudio-core/types/IAudioContext';
+import type AutomationEngine from '@webaudio-core/automation/AutomationEngine.js';
+import type AudioContextManager from '@webaudio-core/context/AudioContextManager.js';
+import type { GainNodeLike } from '@webaudio-core/types/IAudioContext.js';
 
 export default class MasterOutput {
     public readonly silentTail: GainNodeLike;

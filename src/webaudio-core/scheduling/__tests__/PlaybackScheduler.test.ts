@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { PlaybackScheduler } from '@webaudio-core';
-import type AudioContextManager from '@webaudio-core/context/AudioContextManager';
-import type { ISoundInstance } from '@webaudio-core/types/ISoundInstance';
+import type AudioContextManager from '@webaudio-core/context/AudioContextManager.js';
+import type { ISoundInstance } from '@webaudio-core/types/ISoundInstance.js';
 
 describe('PlaybackScheduler', () => {
     let mockContextManager: any;
     let mockInstance: any;
     let scheduler: PlaybackScheduler;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     let endedHandler: Function;
     let offSpy: ReturnType<typeof vi.fn>;
 

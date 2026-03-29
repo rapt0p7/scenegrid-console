@@ -1,4 +1,4 @@
-import type { IBuses } from 'src';
+import type { IBuses } from 'src/index.js';
 
 export default {
     musicMain: {

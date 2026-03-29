@@ -1,6 +1,6 @@
 // noinspection D
 
-import type { IFilter, IReverbConfig } from '../interfaces/IFilter';
+import type { IFilter, IReverbConfig } from '../interfaces/IFilter.js';
 import type {
     AudioBufferLike,
     AudioCtx,
@@ -26,7 +26,9 @@ export default class FiltersPlugin {
 
         try {
             filter.type = (config.type as BiquadFilterType) || 'allpass';
-        } catch {}
+        } catch {
+            /* empty */
+        }
 
         if (config.frequency !== undefined) {
             automation.set(filter.frequency, config.frequency);
@@ -104,7 +106,8 @@ export default class FiltersPlugin {
         if (!filterNode || !filterNode[parameterName]) return;
 
         const parameter = filterNode[parameterName];
-        // @ts-expect-error
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         automation.ramp(parameter, targetValue, durationMs, 'linear');
     }
 }

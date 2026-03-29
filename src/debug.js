@@ -2,7 +2,7 @@
 
 import { Pane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
-import { AudioProfiler } from './Debug/AudioProfiler.ts';
+import { AudioProfiler } from './Debug/AudioProfiler.js';
 
 const audio = window.AudioEngine;
 if (!audio) {

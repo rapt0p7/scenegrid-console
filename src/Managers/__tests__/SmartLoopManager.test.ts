@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as workerTimers from 'worker-timers';
 
-import { LoopState } from '../../interfaces/ISmartLoopManager';
-import AudioGrid from '../AudioGrid';
-import SmartLoopManager from '../SmartLoopManager';
+import { LoopState } from '../../interfaces/ISmartLoopManager.js';
+import AudioGrid from '../AudioGrid.js';
+import SmartLoopManager from '../SmartLoopManager.js';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),

@@ -1,6 +1,6 @@
-import type { IBus } from './IBuses';
-import type { IFilter } from './IFilter';
-import type { IRTPCManager, IRTPCConfig, RTPCTargetProperty } from './IRTPCManager';
+import type { IBus } from './IBuses.js';
+import type { IFilter } from './IFilter.js';
+import type { IRTPCManager, IRTPCConfig, RTPCTargetProperty } from './IRTPCManager.js';
 import type { AudioNodeLike, BiquadFilterNodeLike } from '@webaudio-core';
 
 export interface IAudioBus {

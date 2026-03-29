@@ -1,4 +1,4 @@
-import type { IAudioGrid } from './IAudioGrid';
+import type { IAudioGrid } from './IAudioGrid.js';
 
 export enum LoopState {
     IDLE = 'IDLE',

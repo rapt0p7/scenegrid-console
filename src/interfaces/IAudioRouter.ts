@@ -1,4 +1,4 @@
-import type { AnySoundConfig, IPlayOptions } from './ISoundConfig';
+import type { AnySoundConfig, IPlayOptions } from './ISoundConfig.js';
 import type { ISoundInstance } from '@webaudio-core';
 
 export interface IAudioRouter {

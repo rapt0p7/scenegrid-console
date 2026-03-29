@@ -1,9 +1,10 @@
-import type AutomationEngine from '@webaudio-core/automation/AutomationEngine';
-import type { AudioCtx } from '@webaudio-core/types/IAudioContext';
+import type AutomationEngine from '@webaudio-core/automation/AutomationEngine.js';
+import type { AudioCtx } from '@webaudio-core/types/IAudioContext.js';
 
 export default class ListenerManager {
     readonly #ctx: AudioCtx;
     readonly #automation: AutomationEngine;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     private readonly SMOOTHING_MS = 50;
 
     constructor(context: AudioCtx, automation: AutomationEngine) {
@@ -23,6 +24,7 @@ export default class ListenerManager {
         }
     }
 
+    // eslint-disable-next-line max-params
     public setOrientation(fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
         const { listener } = this.#ctx;
 

@@ -20,7 +20,7 @@ describe('TinyLimiter (lookahead-brickwall-limiter.processor)', () => {
         });
 
         vi.resetModules();
-        await import('../lookahead-brickwall-limiter.processor');
+        await import('../lookahead-brickwall-limiter.processor.js');
     });
 
     describe('Registration & Initialization', () => {

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/naming-convention,no-param-reassign */
 // noinspection D
 
-import type { IAudioWorkletProcessor } from '../interfaces/IAudioWorkletProcessor';
+import type { IAudioWorkletProcessor } from '../interfaces/IAudioWorkletProcessor.js';
 
 interface FilterCoeffs {
     b0: number;
@@ -120,6 +121,7 @@ class MeterProcessorProcessor extends AudioWorkletProcessor implements IAudioWor
         let sum = 0;
         let peak = 0;
 
+        // eslint-disable-next-line prefer-const
         for (let [index, l] of L.entries()) {
             let r = R[index];
 
@@ -174,6 +176,7 @@ class MeterProcessorProcessor extends AudioWorkletProcessor implements IAudioWor
 try {
     registerProcessor('meter-processor', MeterProcessorProcessor);
 } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     if (error.name !== 'NotSupportedError') throw error;
     console.warn('meter-processor уже зарегистрирован');

@@ -1,5 +1,5 @@
-import type AudioContextManager from '@webaudio-core/context/AudioContextManager';
-import type { IAudioBufferLoader } from '@webaudio-core/types/IAudioBufferLoader';
+import type AudioContextManager from '@webaudio-core/context/AudioContextManager.js';
+import type { IAudioBufferLoader } from '@webaudio-core/types/IAudioBufferLoader.js';
 
 export class AudioBufferLoader implements IAudioBufferLoader {
     #contextManager: AudioContextManager;

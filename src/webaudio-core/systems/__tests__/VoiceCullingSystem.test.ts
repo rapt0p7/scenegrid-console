@@ -3,7 +3,7 @@ import * as workerTimers from 'worker-timers';
 
 import { VoiceCullingSystem } from '@webaudio-core';
 
-import type SoundPoolManager from '../../instance/SoundPoolManager';
+import type SoundPoolManager from '../../instance/SoundPoolManager.js';
 import type { ISoundInstance } from '@webaudio-core';
 
 vi.mock('worker-timers', () => ({

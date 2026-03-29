@@ -1,12 +1,15 @@
+/* eslint-disable no-param-reassign */
 // noinspection D
 
 import { AudioWorkletNode } from 'standardized-audio-context';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import processorUrl from './meter-processor.processor.ts';
+import processorUrl from './meter-processor.processor.js';
 
 import type { AudioWorkletNodeLike, GainNodeLike } from '@webaudio-core';
 
+// eslint-disable-next-line max-params
 function map(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
     return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
@@ -36,6 +39,7 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
     return [r, g, b];
 }
 
+// eslint-disable-next-line max-params
 function createOrthoMatrix(
     left: number,
     right: number,
@@ -46,6 +50,7 @@ function createOrthoMatrix(
 ): Float32Array {
     const rl = right - left;
     const tb = top - bottom;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const function_ = far - near;
     return new Float32Array([
         2 / rl,
@@ -96,6 +101,7 @@ function loadShader(gl: WebGLRenderingContext, type: number, source: string): We
     return shader;
 }
 
+// eslint-disable-next-line max-params
 function drawRect(
     gl: WebGLRenderingContext,
     programInfo: any,
@@ -115,6 +121,7 @@ function drawRect(
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
+// eslint-disable-next-line max-params
 function drawLine(
     gl: WebGLRenderingContext,
     programInfo: any,
@@ -136,6 +143,7 @@ function drawLine(
     gl.drawArrays(gl.LINES, 0, 2);
 }
 
+// eslint-disable-next-line max-params
 export async function createFrequencyBarsWithRMS(
     container: HTMLElement,
     gainNode: GainNodeLike,
@@ -144,7 +152,7 @@ export async function createFrequencyBarsWithRMS(
 ) {
     const { context } = gainNode;
     await context.audioWorklet!.addModule(processorUrl);
-    const amplitudeNode: AudioWorkletNodeLike = new AudioWorkletNode!(context, 'meter-processor');
+    const amplitudeNode: AudioWorkletNodeLike = new AudioWorkletNode!(context as any, 'meter-processor') as any;
     gainNode.connect(amplitudeNode);
     const analyser = context.createAnalyser();
     analyser.fftSize = 1024;
@@ -155,8 +163,9 @@ export async function createFrequencyBarsWithRMS(
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Float32Array(bufferLength);
     let currentRMS = 0;
-    amplitudeNode.port.onmessage = e => {
-        currentRMS = e.data.rms;
+    // eslint-disable-next-line unicorn/prefer-add-event-listener
+    amplitudeNode.port.onmessage = (event: { data: { rms: number } }) => {
+        currentRMS = event.data.rms;
     };
     const canvas = document.createElement('canvas');
     canvas.width = width;
@@ -217,6 +226,7 @@ export async function createFrequencyBarsWithRMS(
             const highIndex = Math.round((highFreq * analyser.fftSize) / context.sampleRate);
             let sum = 0;
             let count = 0;
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             for (let index_ = lowIndex; index_ < highIndex; index_++) {
                 if (index_ < bufferLength) {
                     sum += dataArray[index_];
@@ -257,6 +267,7 @@ export async function createFrequencyBarsWithRMS(
     requestAnimationFrame(render);
 }
 
+// eslint-disable-next-line max-params
 export async function createMeters(
     container: HTMLElement,
     gainNode: GainNodeLike,
@@ -265,22 +276,21 @@ export async function createMeters(
 ) {
     const { context } = gainNode;
 
-    // 1. Подключаем AudioWorklet
     await context.audioWorklet!.addModule(processorUrl);
-    const meterNode = new AudioWorkletNode!(context, 'meter-processor');
+    const meterNode = new AudioWorkletNode!(context as any, 'meter-processor');
     gainNode.connect(meterNode);
 
     let currentRMS = 0;
     let currentPeak = 0;
     let currentLUFS = Number.NEGATIVE_INFINITY;
 
-    meterNode.port.onmessage = e => {
-        currentRMS = e.data.rms;
-        currentPeak = e.data.peak;
-        currentLUFS = e.data.lufs;
+    // eslint-disable-next-line unicorn/prefer-add-event-listener
+    meterNode.port.onmessage = (event: { data: { rms: number; peak: number; lufs: number } }) => {
+        currentRMS = event.data.rms;
+        currentPeak = event.data.peak;
+        currentLUFS = event.data.lufs;
     };
 
-    // 2. Настройка слоев WebGL и 2D Canvas
     const webglCanvas = document.createElement('canvas');
     webglCanvas.width = width;
     webglCanvas.height = height;
@@ -297,14 +307,14 @@ export async function createMeters(
     container.append(textCanvas);
 
     const gl = webglCanvas.getContext('webgl', { antialias: false });
-    const ctx = textCanvas.getContext('2d');
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const context_ = textCanvas.getContext('2d');
 
-    if (!gl || !ctx) {
+    if (!gl || !context_) {
         console.error('WebGL or Canvas 2D not supported');
         return;
     }
 
-    // 3. Шейдеры (с поддержкой градиента OpenDAW)
     const vsSource = `
         attribute vec2 a_position;
         uniform mat4 u_projection;
@@ -324,10 +334,8 @@ export async function createMeters(
 
         void main() {
             if (u_mode == 2) {
-                // Темный фон дорожки
                 gl_FragColor = vec4(0.1, 0.1, 0.12, 1.0);
             } else if (u_mode == 1) {
-                // Градиент от уровня громкости: Зеленый -> Желтый -> Красный
                 float normY = 1.0 - (v_y / u_height);
                 vec3 color = mix(vec3(0.1, 0.8, 0.4), vec3(0.9, 0.8, 0.1), smoothstep(0.6, 0.85, normY));
                 color = mix(color, vec3(0.9, 0.2, 0.2), smoothstep(0.85, 0.95, normY));
@@ -357,22 +365,20 @@ export async function createMeters(
     const projectionMatrix = createOrthoMatrix(0, width, height, 0, -1, 1);
     const positionBuffer = gl.createBuffer();
 
-    // 4. Параметры Layout'а
     const meterCount = 4;
     const paddingLeft = 40;
     const paddingBottom = 30;
-    const paddingTop = 30; // Увеличили отступ сверху для лампочки клиппинга
+    const paddingTop = 30;
     const maxBarHeight = height - paddingBottom - paddingTop;
     const trackWidth = ((width - paddingLeft) / meterCount) * 0.6;
     const gap = (width - paddingLeft) / meterCount;
 
     const labels = ['VU', 'PEAK', 'RMS', 'LUFS'];
 
-    // Пики, баллистика и клиппинг
     const decayPerFrame = 1 / (0.4 * 60);
     const peaks: number[] = Array.from({ length: meterCount }).fill(0) as number[];
-    const clipHolds: number[] = Array.from({ length: meterCount }).fill(0) as number[]; // Хранит метку времени (ms)
-    const clipDuration = 2000; // Сколько миллисекунд горит индикатор перегруза
+    const clipHolds: number[] = Array.from({ length: meterCount }).fill(0) as number[];
+    const clipDuration = 2000;
 
     let vuLevel = -60;
     const vuAttack = 0.3;
@@ -389,11 +395,10 @@ export async function createMeters(
         gl!.uniformMatrix4fv(programInfo.uniformLocations.projection, false, projectionMatrix);
         gl!.uniform1f(programInfo.uniformLocations.height, height);
 
-        ctx!.clearRect(0, 0, width, height);
-        ctx!.font = '300 10px "Inter", "Segoe UI", sans-serif';
-        ctx!.textAlign = 'center';
+        context_!.clearRect(0, 0, width, height);
+        context_!.font = '300 10px "Inter", "Segoe UI", sans-serif';
+        context_!.textAlign = 'center';
 
-        // --- 1. Отрисовка шкалы dB (Линии WebGL + Текст 2D) ---
         const marks = [0, -6, -12, -18, -24, -36, -48, -60];
         gl!.uniform1i(programInfo.uniformLocations.mode, 0);
 
@@ -403,13 +408,12 @@ export async function createMeters(
             const grayRgb = hslToRgb(0, 0, 20);
             drawLine(gl!, programInfo, positionBuffer!, paddingLeft - 10, y, width, y, [...grayRgb, 1], 1);
 
-            ctx!.fillStyle = dB === 0 ? '#ff5555' : '#888888';
-            ctx!.textBaseline = 'middle';
-            ctx!.textAlign = 'right';
-            ctx!.fillText(dB > 0 ? `+${dB}` : `${dB}`, paddingLeft - 15, y);
+            context_!.fillStyle = dB === 0 ? '#ff5555' : '#888888';
+            context_!.textBaseline = 'middle';
+            context_!.textAlign = 'right';
+            context_!.fillText(dB > 0 ? `+${dB}` : `${dB}`, paddingLeft - 15, y);
         }
 
-        // --- 2. Расчет уровней ---
         const targetVU = 20 * Math.log10(currentRMS || 0.0001);
         vuLevel += (targetVU - vuLevel) * (1 - Math.exp(-1 / ((targetVU > vuLevel ? vuAttack : vuRelease) * 60)));
 
@@ -420,53 +424,44 @@ export async function createMeters(
             currentLUFS
         ];
 
-        // --- 3. Отрисовка Метеров ---
-        for (let i = 0; i < meterCount; i++) {
-            const rawDB = levels[i];
+        for (let index = 0; index < meterCount; index++) {
+            const rawDB = levels[index];
 
-            // Фиксируем клиппинг, если значение больше или равно 0 dB
             if (rawDB >= 0) {
-                clipHolds[i] = now + clipDuration;
+                clipHolds[index] = now + clipDuration;
             }
 
-            let dB = Math.max(-60, Math.min(0, rawDB));
+            const dB = Math.max(-60, Math.min(0, rawDB));
             const norm = map(dB, -60, 0, 0, 1);
             const barHeight = norm * maxBarHeight;
 
-            const x = paddingLeft + i * gap + (gap - trackWidth) / 2;
+            const x = paddingLeft + index * gap + (gap - trackWidth) / 2;
             const yBottom = height - paddingBottom;
 
-            peaks[i] = norm > peaks[i] ? norm : Math.max(0, peaks[i] - decayPerFrame);
-            const peakY = yBottom - peaks[i] * maxBarHeight;
+            peaks[index] = norm > peaks[index] ? norm : Math.max(0, peaks[index] - decayPerFrame);
+            const peakY = yBottom - peaks[index] * maxBarHeight;
 
-            // Фон метера (Темный прямоугольник)
             gl!.uniform1i(programInfo.uniformLocations.mode, 2);
             drawRect(gl!, programInfo, positionBuffer!, x, paddingTop, trackWidth, maxBarHeight, [0, 0, 0, 1]);
 
-            // Активный уровень (Градиент)
             gl!.uniform1i(programInfo.uniformLocations.mode, 1);
             drawRect(gl!, programInfo, positionBuffer!, x, yBottom - barHeight, trackWidth, barHeight, [1, 1, 1, 1]);
 
-            // Линия Peak Hold (Сплошной белый)
             gl!.uniform1i(programInfo.uniformLocations.mode, 0);
             drawLine(gl!, programInfo, positionBuffer!, x, peakY, x + trackWidth, peakY, [1, 1, 1, 1], 2);
 
-            // Текст под метером (Название)
-            ctx!.fillStyle = '#aaaaaa';
-            ctx!.textAlign = 'center';
-            ctx!.textBaseline = 'top';
-            ctx!.fillText(labels[i], x + trackWidth / 2, yBottom + 8);
+            context_!.fillStyle = '#aaaaaa';
+            context_!.textAlign = 'center';
+            context_!.textBaseline = 'top';
+            context_!.fillText(labels[index], x + trackWidth / 2, yBottom + 8);
 
-            // --- Индикатор клиппинга (LED) ---
-            const isClipping = now < clipHolds[i];
-            ctx!.fillStyle = isClipping ? '#ff3333' : '#331111'; // Ярко-красный или темно-бордовый
-            ctx!.fillRect(x, paddingTop - 8, trackWidth, 4);
+            const isClipping = now < clipHolds[index];
+            context_!.fillStyle = isClipping ? '#ff3333' : '#331111';
+            context_!.fillRect(x, paddingTop - 8, trackWidth, 4);
 
-            // Текст над метером (Точное значение)
-            ctx!.fillStyle = isClipping ? '#ff5555' : '#ffffff';
-            ctx!.textBaseline = 'bottom';
-            // Поднимаем текст еще чуть выше, чтобы освободить место для LED индикатора
-            ctx!.fillText(rawDB.toFixed(1), x + trackWidth / 2, paddingTop - 12);
+            context_!.fillStyle = isClipping ? '#ff5555' : '#ffffff';
+            context_!.textBaseline = 'bottom';
+            context_!.fillText(rawDB.toFixed(1), x + trackWidth / 2, paddingTop - 12);
         }
 
         requestAnimationFrame(render);
@@ -475,6 +470,7 @@ export async function createMeters(
     requestAnimationFrame(render);
 }
 
+// eslint-disable-next-line max-params
 export async function createFrequencyCurveWithRMS(
     container: HTMLElement,
     gainNode: GainNodeLike,
@@ -484,7 +480,7 @@ export async function createFrequencyCurveWithRMS(
     const { context } = gainNode;
 
     await context.audioWorklet!.addModule(processorUrl);
-    const amplitudeNode: AudioWorkletNodeLike = new AudioWorkletNode!(context, 'meter-processor');
+    const amplitudeNode: AudioWorkletNodeLike = new AudioWorkletNode!(context as any, 'meter-processor') as any;
     gainNode.connect(amplitudeNode);
 
     const analyser = context.createAnalyser();
@@ -498,8 +494,9 @@ export async function createFrequencyCurveWithRMS(
     const dataArray = new Float32Array(bufferLength);
 
     let currentRMS = 0;
-    amplitudeNode.port.onmessage = e => {
-        currentRMS = e.data.rms;
+    // eslint-disable-next-line unicorn/prefer-add-event-listener
+    amplitudeNode.port.onmessage = (event: { data: { rms: number } }) => {
+        currentRMS = event.data.rms;
     };
 
     const canvas = document.createElement('canvas');

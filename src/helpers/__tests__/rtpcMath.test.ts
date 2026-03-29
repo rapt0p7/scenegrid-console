@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
-import { evaluateRTPCCurve } from '../rtpcMath';
+import { evaluateRTPCCurve } from '../rtpcMath.js';
 
-import type { MathCurveDefinition, Point2D } from '../../types/curves';
+import type { MathCurveDefinition, Point2D } from '../../types/curves.js';
 
 describe('evaluateRTPCCurve', () => {
     describe('Edge Cases', () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import AudioRouter from '../AudioRouter';
-import { InstanceRTPCBinder } from '../Managers/InstanceRTPCBinder';
+import AudioRouter from '../AudioRouter.js';
+import { InstanceRTPCBinder } from '../Managers/InstanceRTPCBinder.js';
 
 vi.mock('../Managers/InstanceRTPCBinder', () => ({
     InstanceRTPCBinder: {

@@ -1,6 +1,6 @@
 // noinspection D
 
-import type { MathCurveDefinition } from '../types/curves';
+import type { MathCurveDefinition } from '../types/curves.js';
 
 // eslint-disable-next-line complexity
 export function evaluateRTPCCurve(inputValue: number, curve: MathCurveDefinition): number {

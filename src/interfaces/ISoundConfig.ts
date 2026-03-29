@@ -1,4 +1,4 @@
-import type { IRTPCConfig, RTPCTargetProperty } from './IRTPCManager';
+import type { IRTPCConfig, RTPCTargetProperty } from './IRTPCManager.js';
 
 export interface IBaseSoundConfig {
     busId?: string;

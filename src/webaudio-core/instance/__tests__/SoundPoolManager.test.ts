@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import SoundPoolManager from '../SoundPoolManager';
+import SoundPoolManager from '../SoundPoolManager.js';
 
 import type { ISoundInstance } from '@webaudio-core';
 import type { IVoiceConfig } from '@webaudio-core';

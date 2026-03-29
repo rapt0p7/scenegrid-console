@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MixerLayerStack, { PRIORITY } from '../MixerLayer';
+import MixerLayerStack, { PRIORITY } from '../MixerLayer.js';
 
-import type { IMixerLayer } from '../../interfaces/IMixerLayer';
-import type { MixerState } from '../../interfaces/IMixerStateManager';
-import type MixerStateResolver from '../MixerStateResolver';
+import type { IMixerLayer } from '../../interfaces/IMixerLayer.js';
+import type { MixerState } from '../../interfaces/IMixerStateManager.js';
+import type MixerStateResolver from '../MixerStateResolver.js';
 
 describe('MixerLayerStack', () => {
     let layerStack: MixerLayerStack;

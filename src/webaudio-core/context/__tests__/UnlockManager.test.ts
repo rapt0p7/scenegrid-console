@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import type { AudioCtx } from '@webaudio-core/types/IAudioContext';
+import type { AudioCtx } from '@webaudio-core/types/IAudioContext.js';
 
-import UnlockManager from '../UnlockManager';
+import UnlockManager from '../UnlockManager.js';
 
 describe('UnlockManager', () => {
     let mockContext: any;

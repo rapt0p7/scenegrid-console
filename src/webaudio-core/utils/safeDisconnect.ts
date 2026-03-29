@@ -18,8 +18,12 @@ export function safeDisconnect(node?: AudioNodeLike, output: AudioNodeLike | nul
             for (let index = 0; index < max; index++) {
                 try {
                     node.disconnect(index);
-                } catch {}
+                } catch {
+                    /* empty */
+                }
             }
-        } catch {}
+        } catch {
+            /* empty */
+        }
     }
 }

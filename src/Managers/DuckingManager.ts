@@ -1,7 +1,7 @@
 // noinspection D
 
-import type AudioBusSystem from '../BusSystem/AudioBusSystem';
-import type { ISidechain } from '../interfaces/IAudioPlugins';
+import type AudioBusSystem from '../BusSystem/AudioBusSystem.js';
+import type { ISidechain } from '../interfaces/IAudioPlugins.js';
 import type { AudioNodeLike, ISoundInstance } from '@webaudio-core';
 
 interface ActiveSidechain {
@@ -25,7 +25,9 @@ export default class DuckingManager {
             for (const { sidechain, node } of entries) {
                 try {
                     sidechain.removeSource(node);
-                } catch {}
+                } catch {
+                    /* empty */
+                }
             }
         }
         this.activeSources.clear();
@@ -84,7 +86,9 @@ export default class DuckingManager {
         for (const { sidechain, node } of entries) {
             try {
                 sidechain.removeSource(node);
-            } catch {}
+            } catch {
+                /* empty */
+            }
         }
 
         this.activeSources.delete(token);
