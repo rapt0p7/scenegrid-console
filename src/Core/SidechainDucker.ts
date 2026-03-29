@@ -2,10 +2,10 @@ import { AudioWorkletNode } from 'standardized-audio-context';
 
 import { safeDisconnect } from '@webaudio-core';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import { isDefined, isAbsent } from '../helpers/guards.js';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import processorUrl from './ducker-processor.processor.js';
 
 import type { ISidechain } from '../interfaces/IAudioPlugins.js';
