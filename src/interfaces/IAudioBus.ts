@@ -5,7 +5,6 @@ import type { AudioNodeLike, BiquadFilterNodeLike } from '@webaudio-core';
 
 export interface IAudioBus {
     logicalTargetGain: number;
-    update(id: string, config?: IBus): Promise<void>;
     getConfig(): IBus;
     updateSend(sendParameters: {
         targetBusId: string;

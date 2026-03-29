@@ -294,73 +294,144 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 2000, 50, 'exponential');
     });
 
-    describe('update() logic', () => {
-        it('should safely replace filter if filter node exists but type changed', async () => {
+    describe('coldStart() initialization logic', () => {
+        it('should connect pre to post directly if no filter is configured', () => {
             const bus = new AudioBus({
                 id: 'bus',
-                config: {},
+                config: { gain: 1 },
                 context: mockContext as any,
                 automation: mockAutomation as any,
                 routerMasterGain: mockMasterGain as any,
                 pluginFactory: mockPluginFactory as any
             });
 
-            const replaceSpy = vi.spyOn(bus, 'safeReplaceFilter');
-
-            const p1 = bus.update('bus', { filter: { type: 'lowpass', frequency: 500 } });
-            await vi.advanceTimersByTimeAsync(50);
-            await p1;
-
-            expect(replaceSpy).toHaveBeenCalledTimes(1);
-            replaceSpy.mockClear();
-
-            (bus as any).filterNode = { type: 'lowpass', frequency: {} };
-
-            const p2 = bus.update('bus', { filter: { type: 'reverb' } });
-            await vi.advanceTimersByTimeAsync(50);
-            await p2;
-
-            expect(replaceSpy).toHaveBeenCalledTimes(1);
+            expect(bus.preFilterGain.connect).toHaveBeenCalledWith(bus.postFilterGain);
+            expect((bus as any).filterNode).toBeNull();
         });
 
-        it('should call updateFilterParams if filter exists and type is the same', async () => {
+        it('should create and connect a Biquad filter if configured, and cache its parameters', () => {
             const bus = new AudioBus({
                 id: 'bus',
-                config: {},
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 22_000 } },
                 context: mockContext as any,
                 automation: mockAutomation as any,
                 routerMasterGain: mockMasterGain as any,
                 pluginFactory: mockPluginFactory as any
             });
 
-            (bus as any).filterNode = { type: 'lowpass', frequency: {} };
-            const updateParametersSpy = vi.spyOn(bus, 'updateFilterParams').mockImplementation(() => {});
+            const filterNode = (bus as any).filterNode;
+            expect(filterNode).toBeDefined();
 
-            const p = bus.update('bus', { filter: { type: 'lowpass', frequency: 1000 } });
-            await vi.advanceTimersByTimeAsync(50);
-            await p;
+            expect(bus.preFilterGain.connect).toHaveBeenCalledWith(filterNode);
+            expect(filterNode.connect).toHaveBeenCalledWith(bus.postFilterGain);
 
-            expect(updateParametersSpy).toHaveBeenCalledTimes(1);
+            expect(bus.getConfig().filter).toEqual({
+                type: 'lowpass',
+                frequency: 22_000,
+                Q: 1
+            });
         });
 
-        it('should remove filter safely if config no longer has a filter', async () => {
+        it('should create and connect a non-Biquad filter (e.g. reverb) without caching biquad params', () => {
+            const mockConvolver = { connect: vi.fn(), disconnect: vi.fn() };
+            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(mockConvolver);
+
             const bus = new AudioBus({
                 id: 'bus',
-                config: {},
+                config: { gain: 1, filter: { type: 'reverb' } },
                 context: mockContext as any,
                 automation: mockAutomation as any,
                 routerMasterGain: mockMasterGain as any,
                 pluginFactory: mockPluginFactory as any
             });
 
-            (bus as any).filterNode = { type: 'lowpass', frequency: {} };
-            const replaceSpy = vi.spyOn(bus, 'safeReplaceFilter').mockResolvedValue();
+            expect((bus as any).filterNode).toBe(mockConvolver);
+            expect(bus.preFilterGain.connect).toHaveBeenCalledWith(mockConvolver);
 
-            const p = bus.update('bus', { gain: 0.5 });
-            await vi.advanceTimersByTimeAsync(50);
-            await p;
+            expect(bus.getConfig().filter).toEqual({ type: 'reverb' });
+        });
 
-            expect(replaceSpy).toHaveBeenCalledWith(null, 8);
+        it('should fallback to direct connection and delete config.filter if filter creation fails', () => {
+            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(null);
+
+            const bus = new AudioBus({
+                id: 'bus',
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 22_000 } },
+                context: mockContext as any,
+                automation: mockAutomation as any,
+                routerMasterGain: mockMasterGain as any,
+                pluginFactory: mockPluginFactory as any
+            });
+
+            expect((bus as any).filterNode).toBeNull();
+            expect(bus.preFilterGain.connect).toHaveBeenCalledWith(bus.postFilterGain);
+            expect(bus.getConfig().filter).toBeUndefined();
+        });
+    });
+
+    describe('setLogicalGain() logic', () => {
+        it('should update logical gain, trigger microtask, and automate inputGainNode', async () => {
+            const bus = new AudioBus({
+                id: 'bus',
+                config: { gain: 1 },
+                context: mockContext as any,
+                automation: mockAutomation as any,
+                routerMasterGain: mockMasterGain as any,
+                pluginFactory: mockPluginFactory as any
+            });
+
+            mockAutomation.ramp.mockClear();
+
+            bus.setLogicalGain(0.5, 100);
+
+            expect((bus as any).targetParams.gain.logical).toBe(0.5);
+
+            await Promise.resolve();
+
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputGainNode.gain, 0.5, 100, 'linear');
+
+            expect((bus as any).targetParams.gain.durationMs).toBe(0);
+        });
+
+        it('should use Math.max for durationMs when called multiple times before flush', async () => {
+            const bus = new AudioBus({
+                id: 'bus',
+                config: { gain: 1 },
+                context: mockContext as any,
+                automation: mockAutomation as any,
+                routerMasterGain: mockMasterGain as any,
+                pluginFactory: mockPluginFactory as any
+            });
+
+            mockAutomation.ramp.mockClear();
+
+            bus.setLogicalGain(0.2, 50);
+            bus.setLogicalGain(0.8, 200);
+            bus.setLogicalGain(0.4, 10);
+
+            await Promise.resolve();
+
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputGainNode.gain, 0.4, 200, 'linear');
+        });
+
+        it('should correctly multiply logical gain with existing RTPC modifier', async () => {
+            const bus = new AudioBus({
+                id: 'bus',
+                config: { gain: 1 },
+                context: mockContext as any,
+                automation: mockAutomation as any,
+                routerMasterGain: mockMasterGain as any,
+                pluginFactory: mockPluginFactory as any
+            });
+
+            bus.setRtpcGainModifier(0.5, 0);
+            await Promise.resolve();
+            mockAutomation.ramp.mockClear();
+
+            bus.setLogicalGain(0.8, 50);
+            await Promise.resolve();
+
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputGainNode.gain, 0.4, 50, 'linear');
         });
     });
 

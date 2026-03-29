@@ -91,8 +91,7 @@ export default class AudioBus implements IAudioBus {
         this.targetParams.gain.logical = this.defaultGain;
         this.filterNode = null;
 
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        this.update(id, config);
+        this.coldStart();
     }
 
     getConfig(): IBus {
@@ -109,35 +108,6 @@ export default class AudioBus implements IAudioBus {
         this.targetParams.gain.rtpc = modifier;
         this.targetParams.gain.durationMs = Math.max(this.targetParams.gain.durationMs, durationMs);
         this.scheduleUpdate();
-    }
-
-    async update(id: string, config: IBus = {}): Promise<void> {
-        this.config =
-            typeof structuredClone === 'function' ? structuredClone(config) : JSON.parse(JSON.stringify(config));
-
-        const needsFilter = !!config.filter;
-
-        if (needsFilter) {
-            if (this.filterNode) {
-                const currentType =
-                    'frequency' in this.filterNode ? (this.filterNode as BiquadFilterNodeLike).type : 'reverb';
-                if (config.filter!.type && currentType !== config.filter!.type) {
-                    await this.safeReplaceFilter(config.filter!);
-                } else {
-                    this.updateFilterParams(config.filter!);
-                }
-            } else {
-                await this.safeReplaceFilter(config.filter!);
-            }
-        } else {
-            if (this.filterNode) {
-                await this.safeReplaceFilter(null, 8);
-            }
-        }
-
-        if (config.gain !== undefined) {
-            this.setLogicalGain(config.gain, 40);
-        }
     }
 
     async safeReplaceFilter(
@@ -260,7 +230,7 @@ export default class AudioBus implements IAudioBus {
         for (const [targetName, config] of Object.entries(configs)) {
             if (!config) continue;
 
-            const handler = (gameValue: number) => {
+            const handler = (gameValue: number): void => {
                 const mappedValue = evaluateRTPCCurve(gameValue, config.curve);
                 const target = targetName as RTPCTargetProperty;
                 const smoothing = config.smoothingMs ?? 50;
@@ -386,6 +356,33 @@ export default class AudioBus implements IAudioBus {
                 }
             }
             state.durationMs = 0;
+        }
+    }
+
+    private coldStart(): void {
+        this.targetParams.gain.logical = this.defaultGain;
+
+        if (this.config.filter) {
+            this.filterNode = this.createFilter(this.config.filter);
+            if (this.filterNode) {
+                this.preFilterGain.connect(this.filterNode);
+                this.filterNode.connect(this.postFilterGain);
+
+                const isBiquad = 'frequency' in this.filterNode;
+                if (isBiquad) {
+                    this.config.filter = {
+                        type: (this.filterNode as BiquadFilterNodeLike).type,
+                        frequency: (this.filterNode as BiquadFilterNodeLike).frequency?.value,
+                        Q: (this.filterNode as BiquadFilterNodeLike).Q?.value
+                    };
+                }
+            } else {
+                this.preFilterGain.connect(this.postFilterGain);
+                delete this.config.filter;
+            }
+        } else {
+            this.filterNode = null;
+            this.preFilterGain.connect(this.postFilterGain);
         }
     }
 
