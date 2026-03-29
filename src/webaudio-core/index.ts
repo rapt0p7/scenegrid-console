@@ -3,6 +3,7 @@ export type {
     AudioNodeLike,
     AudioBufferLike,
     AudioParameterKeys,
+    BaseAudioContextLike,
     GainNodeLike,
     BiquadFilterNodeLike,
     ConvolverNodeNodeLike,

@@ -8,7 +8,7 @@ import AudioGrid from './AudioGrid.js';
 
 import type { IAudioRouter } from '../interfaces/IAudioRouter.js';
 import type { ITransitionToParameters } from '../interfaces/ISmartLoopManager.js';
-import type { SoundController, ISoundInstance, AutomationEngine } from '@webaudio-core';
+import type { BaseAudioContextLike, SoundController, ISoundInstance, AutomationEngine } from '@webaudio-core';
 
 interface ActiveRegion {
     instance: ISoundInstance;
@@ -25,7 +25,7 @@ interface TrackContext {
     soundId: string;
     state: LoopState;
     playId: number;
-    referenceContext: AudioContext | null;
+    referenceContext: BaseAudioContextLike | null;
     nextScheduleTime: number;
     activeRegions: Set<ActiveRegion>;
     gridStartTime: number | null;
@@ -324,8 +324,6 @@ export default class SmartLoopManager {
         this.router.applyConfigToInstance(result.instance, config);
 
         if (!track.referenceContext && result.instance.outputNode && result.instance.outputNode.context) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
             // eslint-disable-next-line no-param-reassign
             track.referenceContext = result.instance.outputNode.context;
             // eslint-disable-next-line no-param-reassign

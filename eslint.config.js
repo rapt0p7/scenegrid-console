@@ -128,6 +128,15 @@ export default tseslint.config(
             '@typescript-eslint/naming-convention': [
                 'error',
                 {
+                    selector: 'property',
+                    modifiers: ['readonly'],
+                    format: ['UPPER_CASE'],
+                    filter: {
+                        regex: '^[A-Z0-9_]+$',
+                        match: true
+                    }
+                },
+                {
                     selector: 'variable',
                     modifiers: ['const'],
                     format: ['camelCase', 'PascalCase']

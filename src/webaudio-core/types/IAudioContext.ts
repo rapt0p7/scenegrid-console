@@ -2,6 +2,7 @@
 export type AudioCtx = AudioContext;
 export type AudioNodeLike = AudioNode;
 export type GainNodeLike = GainNode;
+export type BaseAudioContextLike = BaseAudioContext;
 // eslint-disable-next-line unicorn/prevent-abbreviations
 export type AudioParamLike = AudioParam;
 

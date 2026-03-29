@@ -25,7 +25,7 @@ export class InstanceRTPCBinder {
                 continue;
             }
 
-            const handler = (gameValue: number) => {
+            const handler = (gameValue: number): void => {
                 if (isCleanedUp) return;
                 const mappedValue = evaluateRTPCCurve(gameValue, config.curve);
                 const smoothing = config.smoothingMs ?? 50;
@@ -42,7 +42,7 @@ export class InstanceRTPCBinder {
 
         const instanceUnsubs: Array<() => void> = [];
 
-        const cleanup = () => {
+        const cleanup = (): void => {
             if (isCleanedUp) return;
             isCleanedUp = true;
 

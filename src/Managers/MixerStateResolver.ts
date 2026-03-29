@@ -11,6 +11,7 @@ export interface MixerResolverOptions {
 
 const DEFAULT_BUS_GAIN = 1;
 const MAX_GAIN = 4;
+
 export default class MixerStateResolver {
     private readonly defaultBusGain: number;
     private readonly maxGainLimit: number;

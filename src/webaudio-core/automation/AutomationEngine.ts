@@ -18,7 +18,6 @@ interface PendingRamp {
 
 export default class AutomationEngine {
     readonly #ctx: AudioCtx;
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     private readonly DIGITAL_SILENCE = 0.000_01;
 
     #pending: PendingRamp[] = [];

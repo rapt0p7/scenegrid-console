@@ -4,7 +4,7 @@ import { safeDisconnect } from '@webaudio-core';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import processorUrl from './ducker-processor.processor.ts';
+import processorUrl from './ducker-processor.processor.js';
 
 import type { ISidechain } from '../interfaces/IAudioPlugins.js';
 import type {

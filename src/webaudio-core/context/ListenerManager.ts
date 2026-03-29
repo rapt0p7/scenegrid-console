@@ -4,7 +4,6 @@ import type { AudioCtx } from '@webaudio-core/types/IAudioContext.js';
 export default class ListenerManager {
     readonly #ctx: AudioCtx;
     readonly #automation: AutomationEngine;
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     private readonly SMOOTHING_MS = 50;
 
     constructor(context: AudioCtx, automation: AutomationEngine) {

@@ -3,6 +3,7 @@ import type {
     IAudioNode,
     IAudioParam,
     IGainNode,
+    IBaseAudioContext,
     IBiquadFilterNode,
     IConstantSourceNode,
     IDynamicsCompressorNode,
@@ -33,6 +34,7 @@ declare global {
     type PannerNode = IPannerNode<IAudioContext>;
     type WaveShaperNode = IWaveShaperNode<IAudioContext>;
     type AudioBuffer = IAudioBuffer;
+    type BaseAudioContext = IBaseAudioContext;
 }
 
 // eslint-disable-next-line unicorn/require-module-specifiers

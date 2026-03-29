@@ -18,7 +18,6 @@ export default class RTPCManager implements IRTPCManager {
     private isUpdateScheduled = false;
     private tickerId: ReturnType<typeof workerTimers.setInterval> | null = null;
     private lastTime = 0;
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     private readonly TICK_RATE_MS = 30;
 
     public configureParam(parameterName: string, attackMs: number = 0, releaseMs: number = 0): void {
