@@ -1,3 +1,5 @@
+// noinspection D
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { AudioBufferLoader } from '@webaudio-core';
@@ -50,6 +52,81 @@ describe('AudioBufferLoader', () => {
             expect(mockFetch).toHaveBeenCalledWith('sound.mp3');
             expect(mockContextManager.context.decodeAudioData).toHaveBeenCalled();
             expect(buffer).toBe(fakeAudioBuffer);
+        });
+    });
+
+    describe('Batch Loading (loadBatch)', () => {
+        it('should return an empty object if resources record is empty', async () => {
+            const results = await loader.loadBatch({});
+
+            expect(results).toEqual({});
+            expect(mockFetch).not.toHaveBeenCalled();
+        });
+
+        it('should load multiple valid resources and return a record of AudioBuffers', async () => {
+            const resources = {
+                sound1: 'sound1.mp3',
+                sound2: 'sound2.mp3'
+            };
+
+            const results = await loader.loadBatch(resources);
+
+            expect(mockFetch).toHaveBeenCalledTimes(2);
+            expect(results).toHaveProperty('sound1', fakeAudioBuffer);
+            expect(results).toHaveProperty('sound2', fakeAudioBuffer);
+        });
+
+        it('should call onProgress callback on successful loads', async () => {
+            const resources = {
+                sound1: 'sound1.mp3',
+                sound2: 'sound2.mp3'
+            };
+            const onProgress = vi.fn();
+
+            await loader.loadBatch(resources, onProgress);
+
+            expect(onProgress).toHaveBeenCalledTimes(2);
+            expect(onProgress).toHaveBeenCalledWith(expect.any(Number), 2, expect.any(String));
+        });
+
+        it('should handle individual failures without throwing, and call onError and onProgress', async () => {
+            mockFetch.mockImplementation((url: string) => {
+                if (url === 'fail.mp3') {
+                    return Promise.resolve({ ok: false, status: 404 });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    status: 200,
+                    arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8))
+                });
+            });
+
+            const resources = {
+                good: 'good.mp3',
+                bad: 'fail.mp3'
+            };
+
+            const onProgress = vi.fn();
+            const onError = vi.fn();
+
+            const results = await loader.loadBatch(resources, onProgress, onError);
+
+            expect(results).toHaveProperty('good', fakeAudioBuffer);
+            expect(results).not.toHaveProperty('bad');
+
+            expect(onError).toHaveBeenCalledTimes(1);
+            expect(onError).toHaveBeenCalledWith('bad', expect.any(Error));
+
+            expect(onProgress).toHaveBeenCalledTimes(2);
+        });
+
+        it('should not throw if callbacks are not provided on error', async () => {
+            mockFetch.mockResolvedValueOnce({ ok: false, status: 404 });
+            const resources = { bad: 'fail.mp3' };
+
+            const results = await loader.loadBatch(resources);
+
+            expect(results).toEqual({});
         });
     });
 

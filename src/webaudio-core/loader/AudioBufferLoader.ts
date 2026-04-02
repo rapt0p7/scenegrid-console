@@ -13,12 +13,16 @@ export class AudioBufferLoader implements IAudioBufferLoader {
     public async load(url: string | string[]): Promise<AudioBuffer> {
         const resolvedUrl = this.resolveFirstSupportedUrl(url);
 
-        if (this.#bufferCache.has(resolvedUrl)) {
-            return this.#bufferCache.get(resolvedUrl)!;
+        const cachedBuffer = this.#bufferCache.get(resolvedUrl);
+
+        if (cachedBuffer !== undefined) {
+            return cachedBuffer;
         }
 
-        if (this.#inFlightPromises.has(resolvedUrl)) {
-            return this.#inFlightPromises.get(resolvedUrl)!;
+        const inFlight = this.#inFlightPromises.get(resolvedUrl);
+
+        if (inFlight !== undefined) {
+            return inFlight;
         }
 
         const loadPromise = this.performLoad(resolvedUrl);
@@ -33,11 +37,41 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         }
     }
 
+    public async loadBatch(
+        resources: Record<string, string | string[]>,
+        onProgress?: (loadedItems: number, totalItems: number, lastKey: string) => void,
+        onError?: (key: string, error: unknown) => void
+    ): Promise<Record<string, AudioBuffer>> {
+        const entries = Object.entries(resources);
+        const totalItems = entries.length;
+        let loadedItems = 0;
+        const results: Record<string, AudioBuffer> = {};
+
+        if (totalItems === 0) return results;
+
+        const loadPromises = entries.map(async ([key, url]) => {
+            try {
+                const buffer = await this.load(url);
+                results[key] = buffer;
+                loadedItems++;
+                if (onProgress !== undefined) onProgress(loadedItems, totalItems, key);
+            } catch (error) {
+                loadedItems++;
+                if (onError !== undefined) onError(key, error);
+                if (onProgress !== undefined) onProgress(loadedItems, totalItems, key);
+            }
+        });
+
+        await Promise.allSettled(loadPromises);
+
+        return results;
+    }
+
     public clearCache(url?: string): void {
-        if (url) {
-            this.#bufferCache.delete(url);
-        } else {
+        if (url === undefined) {
             this.#bufferCache.clear();
+        } else {
+            this.#bufferCache.delete(url);
         }
     }
 
@@ -68,8 +102,12 @@ export class AudioBufferLoader implements IAudioBufferLoader {
 
         for (const candidate of url) {
             const extension = candidate.split('.').pop()?.toLowerCase();
-            const mime = extension ? mimeMap[extension] : null;
-            if (!mime) continue;
+
+            if (extension === undefined) continue;
+
+            const mime = mimeMap[extension];
+
+            if (mime === undefined) continue;
 
             if (audio.canPlayType(mime) !== '') {
                 return candidate;
