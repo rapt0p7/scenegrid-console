@@ -14,10 +14,34 @@ async function bootstrap() {
         globalVoiceLimit: 32
     });
 
-    await audio.init();
+    audio.events.on('load:progress', ({ progress, lastLoadedResource }) => {
+        const percent = Math.round(progress * 100);
+        console.log(`[Demo UI] Loading: ${percent}% (${lastLoadedResource})`);
+    });
+
+    audio.events.on('load:complete', ({ failedItems, durationMs }) => {
+        console.log(`[Demo UI] Load complete in ${durationMs.toFixed(0)}ms`);
+        if (failedItems.length > 0) {
+            console.warn(`[Demo UI] Missing assets:`, failedItems);
+        }
+    });
+
+    audio.events.on('engine:error', error => {
+        console.error(`[Demo UI] Engine Error (${error.code}):`, error.message);
+    });
+
+    try {
+        await audio.init({ isStrictValidation: false });
+    } catch {
+        console.error('[Demo UI] Bootstrap aborted due to init failure.');
+        return;
+    }
+
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     globalThis.AudioEngine = audio;
+
+    console.log('[Demo UI] Engine ready! Waiting for user interaction...');
 
     globalThis.addEventListener(
         'pointerup',
@@ -38,6 +62,22 @@ async function bootstrap() {
         },
         { once: true }
     );
+
+    audio.events.on('state:suspended', () => {
+        console.log('[Demo UI] Tab hidden or audio interrupted. Pausing game...');
+    });
+
+    audio.events.on('state:resumed', () => {
+        console.log('[Demo UI] Audio resumed.');
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            audio.suspend().catch(console.error);
+        } else {
+            audio.unlock().catch(console.error);
+        }
+    });
 }
 
 try {

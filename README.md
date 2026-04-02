@@ -142,11 +142,11 @@ To ensure absolute mix predictability, the following are strictly prohibited:
 
 ## Quick Start: System Initialization
 
-The system follows a **Data-Driven** initialization pattern. This separates audio assets and bus configurations from playback logic, ensuring the engine is fully aware of the signal graph before any sound is triggered.
+The system follows a **Data-Driven** and **Event-Driven** initialization pattern. This separates audio assets and bus configurations from playback logic, ensuring the engine is fully aware of the signal graph before any sound is triggered, while providing deep hooks for your game's loading screens and UI.
 
-### Basic Bootstrap Example
+### Event-Driven Bootstrap Example
 
-The following example demonstrates how to configure the engine, initialize the registry, and unlock the `AudioContext` following a required user gesture.
+The following example demonstrates how to configure the engine, subscribe to lifecycle events (for progress bars and error handling), and unlock the `AudioContext` following a required user gesture.
 
 ```typescript
 import { AudioEngine } from 'scenegrid-console';
@@ -165,27 +165,60 @@ async function bootstrap() {
         buses: Buses,              // Fixed bus architecture
         snapshots: Snapshots,      // Preset mixer states
         soundMap: SoundMap,        // Logical mapping of sounds to buses
-        rtpcManifest: RTPCManifest,// Global Slew Rates and default values for game parameters
+        rtpcManifest: RTPCManifest,// Global Slew Rates for game parameters
         globalVoiceLimit: 32       // Polyphony limit for optimization
     });
 
-    // 2. Initialize the Audio Registry and Worklet processors
-    await audio.init();
+    // 2. Subscribe to Lifecycle Events (Ideal for UI Loading Screens)
+    audio.events.on('load:progress', ({ progress, lastLoadedResource }) => {
+        const percent = Math.round(progress * 100);
+        console.log(`[Demo UI] Loading Audio: ${percent}% (${lastLoadedResource})`);
+        // e.g., updateLoadingBar(progress);
+    });
 
-    // 3. Browser Security: Unlock AudioContext via User Interaction
+    audio.events.on('engine:error', (error) => {
+        console.error(`[Demo UI] Audio Engine Error:`, error.message);
+    });
+
+    // 3. Wait for the engine to be fully ready
+    audio.events.once('engine:ready', () => {
+        console.log('[Demo UI] Audio Engine is ready! Waiting for user interaction...');
+        // e.g., hideLoadingScreen(); showPlayButton();
+    });
+
+    // 4. Start the Initialization (Downloads assets, compiles AudioWorklets)
+    try {
+        await audio.init({ isStrictValidation: false });
+    } catch (error) {
+        console.error('Bootstrap aborted due to critical audio failure.');
+        return;
+    }
+
+    // 5. Browser Security: Unlock AudioContext via User Interaction
     globalThis.addEventListener('pointerup', async () => {
-        // Required to resume the AudioContext on modern browsers
+        // Required to resume the AudioContext on modern browsers (iOS/Safari)
         await audio.unlock();
 
-        // 4. Set Initial Mix State (Snapshots)
-        // Push the base state onto the mixer stack
+        // 6. Set Initial Mix State (Snapshots)
         await audio.mixer.setState('idle');
 
-        // 5. Start Playback
+        // 7. Start Playback
         audio.play('backgroundMain', { isLoop: true });
         audio.play('backgroundMain2', { isLoop: true });
         audio.play('backgroundMain3', { isLoop: true });
     }, { once: true });
+
+    // 8. (Optional) React to browser tab visibility
+    audio.events.on('state:suspended', () => console.log('Audio suspended (Tab hidden)'));
+    audio.events.on('state:resumed', () => console.log('Audio resumed'));
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            audio.suspend().catch(console.error);
+        } else {
+            audio.unlock().catch(console.error);
+        }
+    });
 }
 
 bootstrap().catch(console.error);
@@ -193,10 +226,10 @@ bootstrap().catch(console.error);
 
 ### Initialization Workflow
 
-* **Centralized Registry (`SoundRegistry`):** All assets and routing must be defined during construction to maintain strict hierarchical flow.
-* **Voice Culling:** Defining `globalVoiceLimit` allows the `PlaybackScheduler` to manage the Audio Thread load and maintain FPS stability from the start.
+* **Centralized Registry (`SoundManifest`):** All assets and routing must be defined during construction to maintain strict hierarchical flow.
+* **Event-Driven Loading:** By subscribing to `load:progress` and `engine:ready`, your Game UI remains fully decoupled from the Audio Engine's internal loading logic.
+* **Resilient Batch Loading:** If a single audio file fails to download (e.g., 404), the engine catches the error, emits `engine:error`, and continues loading the rest of the manifest, reporting missing assets in the `load:complete` payload.
 * **The Unlock Pattern:** The `.unlock()` method must be called within a user-initiated event (e.g., `pointerup`) to comply with browser autoplay policies.
-* **Mixer Layers:** Use `audio.mixer.push()` to apply the initial gain and filter settings defined in your Snapshots.
 
 ---
 
