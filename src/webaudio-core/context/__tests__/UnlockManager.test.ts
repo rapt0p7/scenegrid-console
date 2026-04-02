@@ -38,19 +38,22 @@ describe('UnlockManager', () => {
         expect(mockContext.resume).not.toHaveBeenCalled();
     });
 
-    it('should return early if already unlocked from a previous call', async () => {
+    it('should skip silent buffer but STILL call resume on subsequent calls if suspended', async () => {
         const manager = new UnlockManager(mockContext as AudioCtx);
 
         await manager.unlock();
+        expect(mockContext.createBuffer).toHaveBeenCalledTimes(1);
         expect(mockContext.resume).toHaveBeenCalledTimes(1);
 
         mockContext.resume.mockClear();
         mockContext.createBuffer.mockClear();
 
+        mockContext.state = 'suspended';
+
         await manager.unlock();
 
         expect(mockContext.createBuffer).not.toHaveBeenCalled();
-        expect(mockContext.resume).not.toHaveBeenCalled();
+        expect(mockContext.resume).toHaveBeenCalledTimes(1);
     });
 
     it('should play a silent buffer and resume context if state is suspended', async () => {
