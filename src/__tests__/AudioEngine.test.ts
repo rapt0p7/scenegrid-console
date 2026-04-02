@@ -1,6 +1,8 @@
+// noinspection D
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { SoundController, SoundPoolManager, SoundInstance } from '@webaudio-core';
+import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager } from '@webaudio-core';
 
 import { AudioEngine } from '../AudioEngine.js';
 import AudioRouter from '../AudioRouter.js';
@@ -112,8 +114,10 @@ vi.mock('@webaudio-core', async importOriginal => {
                     }),
                     currentTime: 0,
                     state: 'running',
+                    sampleRate: 44_100,
                     resume: vi.fn().mockResolvedValue(undefined),
-                    suspend: vi.fn().mockResolvedValue(undefined)
+                    suspend: vi.fn().mockResolvedValue(undefined),
+                    addEventListener: vi.fn()
                 },
                 resume: vi.fn().mockResolvedValue(undefined),
                 initSpatial: vi.fn(),
@@ -125,7 +129,24 @@ vi.mock('@webaudio-core', async importOriginal => {
             return { id, connect: vi.fn(), disconnect: vi.fn() };
         }),
         AudioBufferLoader: vi.fn().mockImplementation(function () {
-            return { load: vi.fn().mockResolvedValue(new ArrayBuffer(8)) };
+            return {
+                load: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+                loadBatch: vi.fn().mockImplementation(async (urls, onProgress, onError) => {
+                    const results: any = {};
+                    let loaded = 0;
+                    const total = Object.keys(urls).length;
+                    for (const [key, url] of Object.entries(urls as Record<string, string>)) {
+                        loaded++;
+                        if (url.includes('fail')) {
+                            if (onError) onError(key, new Error('Network error'));
+                        } else {
+                            results[key] = new ArrayBuffer(8);
+                        }
+                        if (onProgress) onProgress(loaded, total, key);
+                    }
+                    return results;
+                })
+            };
         }),
         SoundPoolManager: vi.fn().mockImplementation(function (factory, options) {
             (globalThis as any).__mockSoundPoolConfig = options;
@@ -164,6 +185,7 @@ describe('AudioEngine', () => {
         vi.clearAllMocks();
         vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'warn').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
 
         mockListener.positionX.value = 0;
         mockListener.positionY.value = 0;
@@ -229,17 +251,22 @@ describe('AudioEngine', () => {
             expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('initialized with errors'));
         });
 
-        it('should exit early if strict validation fails and isStrictValidation is true', async () => {
-            const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        it('should emit engine:error and exit early if strict validation fails', async () => {
             (ConsistencyChecker.validate as any).mockReturnValueOnce(false);
 
             const badEngine = new AudioEngine({ manifest: {}, buses: {}, snapshots: {}, soundMap: {} });
+            const errorSpy = vi.fn();
+            badEngine.events.on('engine:error', errorSpy);
 
             await badEngine.init({ isStrictValidation: true });
 
-            expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('strict mode with errors'));
-
-            errorSpy.mockRestore();
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('initialized with errors'));
+            expect(errorSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    code: 'INIT_FAILED',
+                    message: 'Strict validation failed'
+                })
+            );
         });
 
         it('should initialize RTPC manifest if provided in config', async () => {
@@ -265,6 +292,174 @@ describe('AudioEngine', () => {
 
             configSpy.mockRestore();
             setSpy.mockRestore();
+        });
+    });
+
+    describe('Event Dispatcher & Lifecycle Events', () => {
+        it('should expose public event API (on, off, once, clear)', () => {
+            expect(engine.events.on).toBeInstanceOf(Function);
+            expect(engine.events.off).toBeInstanceOf(Function);
+            expect(engine.events.once).toBeInstanceOf(Function);
+            expect(engine.events.clear).toBeInstanceOf(Function);
+        });
+
+        it('should successfully subscribe and unsubscribe from events', () => {
+            const handler = vi.fn();
+            engine.events.on('state:suspended', handler);
+            engine.events.off('state:suspended', handler);
+
+            const mockManager = engine._debug.contextManager as any;
+            if (mockManager.onStateChange) mockManager.onStateChange('suspended');
+
+            expect(handler).not.toHaveBeenCalled();
+        });
+
+        it('should support once() subscriptions', () => {
+            const handler = vi.fn();
+            engine.events.once('state:suspended', handler);
+
+            const mockManager = engine._debug.contextManager as any;
+            if (mockManager.onStateChange) {
+                mockManager.onStateChange('suspended');
+                mockManager.onStateChange('suspended');
+            }
+
+            expect(handler).toHaveBeenCalledTimes(1);
+        });
+
+        it('should clear all events when events.clear() is called', () => {
+            const handler = vi.fn();
+            engine.events.on('state:suspended', handler);
+            engine.events.clear();
+
+            const mockManager = engine._debug.contextManager as any;
+            if (mockManager.onStateChange) mockManager.onStateChange('suspended');
+
+            expect(handler).not.toHaveBeenCalled();
+        });
+
+        it('should emit load:start, load:progress, and load:complete during init', async () => {
+            const freshEngine = new AudioEngine({
+                manifest: {
+                    sound1: { url: 'audio/1.mp3' },
+                    sound2: { url: 'audio/2.mp3' }
+                },
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {}
+            });
+
+            const startSpy = vi.fn();
+            const progressSpy = vi.fn();
+            const completeSpy = vi.fn();
+
+            freshEngine.events.on('load:start', startSpy);
+            freshEngine.events.on('load:progress', progressSpy);
+            freshEngine.events.on('load:complete', completeSpy);
+
+            await freshEngine.init();
+
+            expect(startSpy).toHaveBeenCalledWith({ totalItems: 2 });
+            expect(progressSpy).toHaveBeenCalledTimes(2);
+            expect(progressSpy).toHaveBeenLastCalledWith(expect.objectContaining({ progress: 1, loadedItems: 2 }));
+            expect(completeSpy).toHaveBeenCalledWith(expect.objectContaining({ failedItems: [] }));
+        });
+
+        it('should emit load:complete immediately if manifest is empty', async () => {
+            const emptyEngine = new AudioEngine({
+                manifest: {},
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {}
+            });
+
+            const completeSpy = vi.fn();
+            emptyEngine.events.on('load:complete', completeSpy);
+
+            await emptyEngine.init();
+
+            expect(completeSpy).toHaveBeenCalledWith({ failedItems: [], durationMs: 0 });
+        });
+
+        it('should emit engine:error for failed files and include them in load:complete', async () => {
+            const errorEngine = new AudioEngine({
+                manifest: {
+                    good: { url: 'audio/good.mp3' },
+                    bad: { url: 'audio/fail.mp3' }
+                },
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {}
+            });
+
+            const errorSpy = vi.fn();
+            const completeSpy = vi.fn();
+            errorEngine.events.on('engine:error', errorSpy);
+            errorEngine.events.on('load:complete', completeSpy);
+
+            await errorEngine.init();
+
+            expect(errorSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    code: 'DECODE_ERROR',
+                    message: 'Failed to load resource: bad'
+                })
+            );
+            expect(completeSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    failedItems: ['bad']
+                })
+            );
+        });
+
+        it('should emit state:suspended and state:resumed when context state changes', async () => {
+            const freshEngine = new AudioEngine({
+                manifest: {},
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {}
+            });
+
+            const suspendSpy = vi.fn();
+            const resumeSpy = vi.fn();
+            freshEngine.events.on('state:suspended', suspendSpy);
+            freshEngine.events.on('state:resumed', resumeSpy);
+
+            await freshEngine.init();
+
+            const mockManager = freshEngine._debug.contextManager as any;
+
+            mockManager.onStateChange('suspended');
+            expect(suspendSpy).toHaveBeenCalledTimes(1);
+
+            mockManager.onStateChange('running');
+            expect(resumeSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('should catch critical init errors, emit engine:error, and rethrow', async () => {
+            const fatalError = new Error('Fatal core error');
+            vi.mocked(AudioContextManager).mockImplementationOnce(function () {
+                throw fatalError;
+            } as any);
+
+            const brokenEngine = new AudioEngine({
+                manifest: {},
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {}
+            });
+            const errorSpy = vi.fn();
+            brokenEngine.events.on('engine:error', errorSpy);
+
+            await expect(brokenEngine.init()).rejects.toThrow('Fatal core error');
+
+            expect(errorSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    code: 'INIT_FAILED',
+                    message: 'Fatal core error',
+                    details: fatalError
+                })
+            );
         });
     });
 
