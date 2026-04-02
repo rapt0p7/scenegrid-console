@@ -33,7 +33,8 @@ describe('AudioContextManager', () => {
             sampleRate: 48_000,
             currentTime: 1.5,
             suspend: vi.fn().mockResolvedValue(undefined),
-            close: vi.fn().mockResolvedValue(undefined)
+            close: vi.fn().mockResolvedValue(undefined),
+            addEventListener: vi.fn()
         };
 
         vi.mocked(AudioContextFactory.createRealtime).mockReturnValue(mockContext);
@@ -68,6 +69,39 @@ describe('AudioContextManager', () => {
         await manager.resume();
 
         expect(unlockerInstance.unlock).toHaveBeenCalledTimes(1);
+    });
+
+    describe('State Change Events', () => {
+        it('should register a statechange event listener on the native context', () => {
+            const manager = new AudioContextManager();
+            expect(mockContext.addEventListener).toHaveBeenCalledWith('statechange', expect.any(Function));
+        });
+
+        it('should trigger onStateChange callback when native context state changes', () => {
+            const manager = new AudioContextManager();
+            const callback = vi.fn();
+            manager.onStateChange = callback;
+
+            const listener = mockContext.addEventListener.mock.calls.find(
+                (call: any[]) => call[0] === 'statechange'
+            )[1];
+
+            mockContext.state = 'suspended';
+            listener();
+
+            expect(callback).toHaveBeenCalledTimes(1);
+            expect(callback).toHaveBeenCalledWith('suspended');
+        });
+
+        it('should not throw if native state changes and onStateChange is null', () => {
+            const manager = new AudioContextManager();
+
+            const listener = mockContext.addEventListener.mock.calls.find(
+                (call: any[]) => call[0] === 'statechange'
+            )[1];
+
+            expect(() => listener()).not.toThrow();
+        });
     });
 
     describe('suspend()', () => {
@@ -148,10 +182,26 @@ describe('AudioContextManager', () => {
             expect(setOriSpy).toHaveBeenCalledWith(0, 0, -1, 0, 1, 0);
         });
 
-        it('should throw an error if spatial methods are called before initSpatial', () => {
-            expect(() => {
-                manager.setListenerPosition(0, 0, 0);
-            }).toThrowError(TypeError);
+        it('should warn instead of throwing if setListenerPosition is called before initSpatial', () => {
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+            manager.setListenerPosition(0, 0, 0);
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                '[AudioContextManager] Spatial audio not initialized. Call initSpatial first.'
+            );
+            warnSpy.mockRestore();
+        });
+
+        it('should warn instead of throwing if setListenerOrientation is called before initSpatial', () => {
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+            manager.setListenerOrientation(0, 0, 0, 0, 0, 0);
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                '[AudioContextManager] Spatial audio not initialized. Call initSpatial first.'
+            );
+            warnSpy.mockRestore();
         });
     });
 });

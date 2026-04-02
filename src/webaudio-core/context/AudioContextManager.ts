@@ -10,9 +10,17 @@ export default class AudioContextManager implements IAudioContextManager {
     #unlocker: UnlockManager;
     #listener: ListenerManager | null = null;
 
+    public onStateChange: ((state: AudioContextState) => void) | null = null;
+
     constructor(sampleRate?: number) {
         this.#context = AudioContextFactory.createRealtime(sampleRate);
         this.#unlocker = new UnlockManager(this.#context);
+
+        this.#context.addEventListener('statechange', () => {
+            if (this.onStateChange !== null) {
+                this.onStateChange(this.#context.state);
+            }
+        });
     }
 
     get context(): AudioCtx {
@@ -36,12 +44,20 @@ export default class AudioContextManager implements IAudioContextManager {
     }
 
     public setListenerPosition(x: number, y: number, z: number): void {
-        this.#listener!.setPosition(x, y, z);
+        if (this.#listener === null) {
+            console.warn('[AudioContextManager] Spatial audio not initialized. Call initSpatial first.');
+        } else {
+            this.#listener.setPosition(x, y, z);
+        }
     }
 
     // eslint-disable-next-line max-params
     public setListenerOrientation(fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.#listener!.setOrientation(fx, fy, fz, ux, uy, uz);
+        if (this.#listener === null) {
+            console.warn('[AudioContextManager] Spatial audio not initialized. Call initSpatial first.');
+        } else {
+            this.#listener.setOrientation(fx, fy, fz, ux, uy, uz);
+        }
     }
 
     async resume(): Promise<void> {
