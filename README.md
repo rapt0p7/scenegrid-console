@@ -92,23 +92,28 @@ A virtual patchbay connecting game data (speed, health, distance) to audio param
 
 ---
 
-## 🚀 Roadmap: Towards a Complete Audio Middleware
+## 🚀 Roadmap: Towards a Complete Audio Ecosystem
 
-*Note: Core stability, Parameter Resolution Pipeline, and basic polyphony rules are part of the v1.0 (Soft Launch) milestone. The following roadmap outlines the evolution of the engine in post-launch updates.*
+*Note: Core stability, Parameter Resolution Pipeline, and basic polyphony rules are part of the v1.0 (Soft Launch) milestone. The following roadmap outlines the evolution of the engine from a runtime library into a professional, live-editable audio middleware.*
 
-### 🔴 Phase 1: Advanced Mechanics & DX (v1.1)
-* **Event-level State Machine:** Moving from basic "play(sound)" to "trigger(event)". Defining autonomous behaviors like `onPlay`, `onStop` (tails), and conditional logic.
-* **Modular Insert API:** Expanding the `FiltersPlugin` into a generalized `InsertPlugin` interface. This will allow programmers to inject custom DSP graphs (e.g., procedural synths or oscillators) into a voice's `NodeChain` without breaking routing invariants.
+### 🔴 Phase 1: Advanced Mechanics & "Hot Swap" DX (v1.1)
+* **Hot Swap Architecture:** Implementing soft-reloading of JSON configurations via state diffing. This allows the `MixerCoordinator` to smoothly apply changes to buses and filters without page reloads or audio interruption.
+* **In-Game Inspector 2.0:** Enhancing the current Debugger into an interactive overlay overlay. Developers can tweak RTPCs, test snapshots, and adjust bus gains in real-time directly over the game canvas.
+* **Event-level State Machine:** Moving from basic `play(sound)` to `trigger(event)`. Defining autonomous behaviors like `onPlay`, `onStop` (tails), and conditional playback logic.
+* **Modular Insert API:** Expanding the `FiltersPlugin` into a generalized `InsertPlugin` interface, allowing programmers to safely inject custom DSP graphs (e.g., procedural synths) into a voice's `NodeChain`.
 * **Voice Culling Hysteresis:** Adding a time buffer to the virtualization logic to prevent "voice flutter" (rapid fade-in/fade-out) when active voices hover around the hardware polyphony limit.
-* **Vite V8 Migration:** Upgrading the build pipeline to the **Rolldown-powered** engine for faster AudioWorklet compilation and improved Developer Experience.
+* **Vite V8 Migration:** Upgrading the build pipeline to a Rolldown-powered engine for faster `AudioWorklet` compilation.
 
-### 🟡 Phase 2: Adaptive Music & Living Sound (v1.2)
-* **Internal Modulators:** Native LFOs and Envelopes for continuous parameter modulation (Pitch/Gain/Filter) to eliminate "sterile" digital playback without relying on external Game Engine Tickers.
-* **Unified Music Manager (The Conductor):** A high-level facade to coordinate **Horizontal** transitions (via `SmartLoopManager`) and **Vertical** intensity changes (via `MixerStateManager`).
-    * *Example:* `music.setIntensity(0.8)` smoothly ramps RTPC parameters and mixer layers, while `music.transitionTo('Combat')` triggers a quantized region change.
-* **Semantic Music States:** Moving away from manual snapshot pushing to state-based logic (e.g., *Exploration* → *Combat*) where the engine resolves both the loop region and the mix layer automatically.
+### 🟡 Phase 2: Live Bridge & Adaptive Music (v1.2)
+* **Remote Sync Adapter (The Live Bridge):** Introducing an infrastructure module powered by WebSockets. This allows the running `AudioEngine` to act as a client, receiving live property updates and hot-swapped configurations from external sources.
+* **SceneGrid CLI Bridge:** A lightweight Node.js utility that monitors your local workspace and broadcasts configuration changes directly into your running game instance, enabling true Live Tweaking for audio.
+* **Unified Music Manager (The Conductor):** A high-level facade coordinating **Horizontal** transitions (via `SmartLoopManager`) and **Vertical** intensity (via `MixerStateManager`).
+    * *Example:* `music.setIntensity(0.8)` smoothly ramps RTPCs and mixer layers, while `music.transitionTo('Combat')` triggers a quantized region change.
+* **Semantic Music States:** Moving from manual snapshot pushing to logic-based states (e.g., *Exploration* → *Combat*) where the engine automatically resolves the appropriate loop regions and mix layers.
+* **Internal Modulators:** Native LFOs and Envelopes for continuous parameter modulation (Pitch/Gain/Filter) to eliminate "sterile" digital playback without relying on the Game Engine's main ticker.
 
-### 🟢 Phase 3: Spatial Context & Environments (v2.0)
+### 🟢 Phase 3: The Editor & Spatial Environments (v2.0)
+* **SceneGrid Editor (Standalone Web App):** A fully decoupled, visual authoring tool for sound designers. Build routing graphs, draw RTPC curves, and manage snapshots visually. Changes are pushed instantly to your running game via the Live Bridge.
 * **Dattorro Reverb Integration:** Implementing high-quality algorithmic plate reverb natively as an FX Bus plugin.
 * **Environment System:** Logic-based Reverb Zones and Acoustic States (e.g., "Underwater", "Caves") utilizing the existing Aux Sends and Snapshot architecture.
 
