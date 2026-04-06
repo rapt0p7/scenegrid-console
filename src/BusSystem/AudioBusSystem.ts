@@ -3,7 +3,6 @@ import { safeDisconnect } from '@webaudio-core';
 import AudioBus from './AudioBus.js';
 
 import type { IAudioBusSystem, BusId } from '../interfaces/IAudioBusSystem.js';
-import type { ILimiterNode, IPluginFactory, ISidechain } from '../interfaces/IAudioPlugins.js';
 import type { IBuses } from '../interfaces/IBuses.js';
 import type { IDuckingConfig } from '../interfaces/ISoundConfig.js';
 import type {
@@ -12,7 +11,10 @@ import type {
     GainNodeLike,
     ISoundInstance,
     AutomationEngine,
-    MasterOutput
+    MasterOutput,
+    ILimiterNode,
+    IPluginFactory,
+    ISidechain
 } from '@webaudio-core';
 
 export default class AudioBusSystem implements IAudioBusSystem {

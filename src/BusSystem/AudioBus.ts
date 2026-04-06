@@ -7,7 +7,6 @@ import { isDefined, isAbsent } from '../helpers/guards.js';
 import { evaluateRTPCCurve } from '../helpers/rtpcMath.js';
 
 import type { IAudioBus } from '../interfaces/IAudioBus.js';
-import type { IPluginFactory } from '../interfaces/IAudioPlugins.js';
 import type { IBus } from '../interfaces/IBuses.js';
 import type { IFilter } from '../interfaces/IFilter.js';
 import type { IRTPCConfig, IRTPCManager, RTPCTargetProperty } from '../interfaces/IRTPCManager.js';
@@ -18,7 +17,8 @@ import type {
     BiquadFilterNodeLike,
     ConvolverNodeNodeLike,
     GainNodeLike,
-    StereoPannerNodeLike
+    StereoPannerNodeLike,
+    IPluginFactory
 } from '@webaudio-core';
 
 export default class AudioBus implements IAudioBus {

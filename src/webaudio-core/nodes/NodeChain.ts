@@ -1,4 +1,4 @@
-import type { AudioNodeFactory, FilterConfig, PannerConfig } from '@webaudio-core/nodes/AudioNodeFactory.js';
+import type { AudioNodeFactory, PannerConfig } from '@webaudio-core/nodes/AudioNodeFactory.js';
 import type {
     AudioNodeLike,
     BiquadFilterNodeLike,
@@ -6,12 +6,13 @@ import type {
     PannerNodeLike,
     StereoPannerNodeLike
 } from '@webaudio-core/types/IAudioContext.js';
+import type { IFilterConfig } from '@webaudio-core/types/IFilter.js';
 import type { INodeChain } from '@webaudio-core/types/INodeChain.js';
 
 export interface INodeChainOptions {
     hasPanner?: boolean;
     spatial?: PannerConfig | boolean;
-    initialFilters?: FilterConfig[];
+    initialFilters?: IFilterConfig[];
 }
 
 export class NodeChain implements INodeChain {
@@ -53,7 +54,7 @@ export class NodeChain implements INodeChain {
         return this.#filters.length > 0 ? this.#filters[0] : null;
     }
 
-    public setFilters(configs: FilterConfig[]): void {
+    public setFilters(configs: IFilterConfig[]): void {
         for (const f of this.#filters) f.disconnect();
         this.#filters = configs.map(cfg => this.#factory.createFilter(cfg));
         this.#rebuildInternalGraph();

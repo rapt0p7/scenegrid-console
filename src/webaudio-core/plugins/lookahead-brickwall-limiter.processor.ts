@@ -1,4 +1,4 @@
-import type { IAudioWorkletProcessor } from '../interfaces/IAudioWorkletProcessor.js';
+import type { IAudioWorkletProcessor } from '../types/IAudioWorkletProcessor.js';
 
 export interface TinyLimiterOptions {
     processorOptions?: {

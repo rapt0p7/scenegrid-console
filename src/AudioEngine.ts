@@ -10,16 +10,16 @@ import {
     AudioNodeFactory,
     MasterOutput,
     PlaybackScheduler,
-    VoiceCullingSystem
+    VoiceCullingSystem,
+    FiltersPlugin,
+    SidechainDucker,
+    TinyLimiterNode
 } from '@webaudio-core';
 
 import AudioRouter from './AudioRouter.js';
 import AudioBusSystem from './BusSystem/AudioBusSystem.js';
 import ConsistencyChecker from './Core/ConsistencyChecker.js';
 import { EngineEventDispatcher } from './Core/EngineEventDispatcher';
-import FiltersPlugin from './Core/FiltersPlugin.js';
-import SidechainDucker from './Core/SidechainDucker.js';
-import TinyLimiterNode from './Core/TinyLimiterNode.js';
 import deepFreeze from './helpers/deepFreeze.js';
 import { isDefined } from './helpers/guards';
 import ContainerManager from './Managers/ContainerManager.js';
@@ -36,11 +36,11 @@ import SoundRegistry from './SoundRegistry.js';
 import type { DebuggerOptions } from './Debug/AudioDebugger.js';
 import type { BusId } from './interfaces/IAudioBusSystem.js';
 import type { IAudioEngineConfig } from './interfaces/IAudioEngineConfig.js';
-import type { IPluginFactory } from './interfaces/IAudioPlugins.js';
 import type { AudioEngineEvents } from './interfaces/IEngineEvents';
 import type { IRTPCManifest } from './interfaces/IRTPCManifest.js';
 import type { ITransitionToParameters } from './interfaces/ISmartLoopManager.js';
 import type { IPlayOptions } from './interfaces/ISoundConfig.js';
+import type { IPluginFactory } from '@webaudio-core';
 import type { Handler } from 'mitt';
 
 export interface InitParameters {
@@ -212,8 +212,6 @@ export class AudioEngine {
                 createSidechain: (target, options) =>
                     new SidechainDucker({
                         ctx: this.#contextManager.context,
-                        automation,
-                        masterOutput: this.#masterOutput,
                         targetGainNode: target,
                         ...options
                     }),

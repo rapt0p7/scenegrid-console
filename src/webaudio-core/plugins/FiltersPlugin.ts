@@ -1,16 +1,15 @@
 // noinspection D
 
-import { isDefined, isAbsent } from '../helpers/guards.js';
-
-import type { IFilter, IReverbConfig } from '../interfaces/IFilter.js';
+import type AutomationEngine from '@webaudio-core/automation/AutomationEngine.js';
 import type {
     AudioBufferLike,
     AudioCtx,
     AudioParameterKeys,
     BiquadFilterNodeLike,
-    ConvolverNodeNodeLike,
-    AutomationEngine
-} from '@webaudio-core';
+    ConvolverNodeNodeLike
+} from '@webaudio-core/types/IAudioContext.js';
+import type { IFilterConfig, IReverbFilterConfig } from '@webaudio-core/types/IFilter.js';
+import { isDefined, isAbsent } from '@webaudio-core/utils/guards.js';
 
 export default class FiltersPlugin {
     private static impulseCache: Map<string, AudioBufferLike> = new Map();
@@ -18,12 +17,12 @@ export default class FiltersPlugin {
     public static createNode(
         context: AudioCtx,
         automation: AutomationEngine,
-        config: IFilter
+        config: IFilterConfig | IReverbFilterConfig
     ): BiquadFilterNodeLike | ConvolverNodeNodeLike | null {
         if (isAbsent(config.type) || (config.type as string) === '') return null;
 
         if (config.type === 'reverb') {
-            return this.createReverb(context, config as unknown as IReverbConfig);
+            return this.createReverb(context, config as unknown as IReverbFilterConfig);
         }
 
         const filter = context.createBiquadFilter();
@@ -45,7 +44,7 @@ export default class FiltersPlugin {
         return filter;
     }
 
-    private static createReverb(context: AudioCtx, config: IReverbConfig): ConvolverNodeNodeLike {
+    private static createReverb(context: AudioCtx, config: IReverbFilterConfig): ConvolverNodeNodeLike {
         const convolver = context.createConvolver();
 
         const time = config.reverbTime ?? 2;

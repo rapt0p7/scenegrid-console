@@ -1,11 +1,11 @@
 import { AudioWorkletNode } from 'standardized-audio-context';
 
+import type { AudioCtx, AudioWorkletNodeLike, AudioNodeLike } from '@webaudio-core/types/IAudioContext.js';
+import type { ILimiterNode } from '@webaudio-core/types/IAudioPlugins.js';
+
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import processorUrl from './lookahead-brickwall-limiter.processor.js';
-
-import type { ILimiterNode } from '../interfaces/IAudioPlugins.js';
-import type { AudioCtx, AudioWorkletNodeLike, AudioNodeLike } from '@webaudio-core';
 
 export default class TinyLimiterNode implements ILimiterNode {
     private readonly ctx: AudioCtx;

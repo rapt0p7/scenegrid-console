@@ -7,6 +7,7 @@ import type {
     GainNodeLike,
     PannerNodeLike
 } from '@webaudio-core/types/IAudioContext.js';
+import type { IFilterConfig } from '@webaudio-core/types/IFilter.js';
 import clamp from '@webaudio-core/utils/clamp.js';
 
 export interface PannerConfig {
@@ -15,13 +16,6 @@ export interface PannerConfig {
     maxDistance?: number;
     rolloffFactor?: number;
     panningModel?: PanningModelType;
-}
-
-export interface FilterConfig {
-    type: BiquadFilterType;
-    frequency: number;
-    Q?: number;
-    gain?: number;
 }
 
 export interface CompressorConfig {
@@ -57,7 +51,7 @@ export class AudioNodeFactory {
         return fallback;
     }
 
-    public createFilter(config: FilterConfig): BiquadFilterNodeLike {
+    public createFilter(config: IFilterConfig): BiquadFilterNodeLike {
         const node = this.#contextManager.context.createBiquadFilter();
         node.type = config.type;
         const nyquist = this.#contextManager.context.sampleRate / 2;

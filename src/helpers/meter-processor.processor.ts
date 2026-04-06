@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention,no-param-reassign */
 // noinspection D
 
-import type { IAudioWorkletProcessor } from '../interfaces/IAudioWorkletProcessor.js';
+import type { IAudioWorkletProcessor } from '@webaudio-core';
 
 interface FilterCoeffs {
     b0: number;

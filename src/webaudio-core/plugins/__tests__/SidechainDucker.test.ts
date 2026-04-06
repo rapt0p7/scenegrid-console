@@ -1,7 +1,7 @@
 import { AudioWorkletNode } from 'standardized-audio-context';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { safeDisconnect } from '@webaudio-core';
+import { safeDisconnect } from '@webaudio-core/utils/safeDisconnect.js';
 
 import SidechainDucker from '../SidechainDucker.js';
 
@@ -23,8 +23,12 @@ vi.mock('standardized-audio-context', () => {
     };
 });
 
-vi.mock('../ducker-processor.processor.ts', () => ({
+vi.mock('../ducker-processor.processor.js', () => ({
     default: 'mock-processor-url'
+}));
+
+vi.mock('@webaudio-core/utils/safeDisconnect.js', () => ({
+    safeDisconnect: vi.fn()
 }));
 
 const createMockAudioParameter = () => ({
@@ -55,8 +59,6 @@ const createMockWaveShaper = () => ({
 describe('SidechainDucker', () => {
     let mockContext: any;
     let mockTargetGain: any;
-    let mockAutomation: any;
-    let mockMaster: any;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -75,8 +77,6 @@ describe('SidechainDucker', () => {
         };
 
         mockTargetGain = createMockGain();
-        mockAutomation = {};
-        mockMaster = {};
     });
 
     afterEach(() => {
@@ -91,9 +91,7 @@ describe('SidechainDucker', () => {
                 () =>
                     new SidechainDucker({
                         ctx: mockContext,
-                        targetGainNode: null as any,
-                        automation: mockAutomation,
-                        masterOutput: mockMaster
+                        targetGainNode: null as any
                     })
             ).toThrow();
         });
@@ -101,9 +99,7 @@ describe('SidechainDucker', () => {
         it('should initialize successfully with default parameters and create clipper', () => {
             const ducker = new SidechainDucker({
                 ctx: mockContext,
-                targetGainNode: mockTargetGain,
-                automation: mockAutomation,
-                masterOutput: mockMaster
+                targetGainNode: mockTargetGain
             });
 
             expect(ducker).toBeDefined();
@@ -119,9 +115,7 @@ describe('SidechainDucker', () => {
         beforeEach(() => {
             ducker = new SidechainDucker({
                 ctx: mockContext,
-                targetGainNode: mockTargetGain,
-                automation: mockAutomation,
-                masterOutput: mockMaster
+                targetGainNode: mockTargetGain
             });
         });
 
@@ -155,9 +149,7 @@ describe('SidechainDucker', () => {
         beforeEach(() => {
             ducker = new SidechainDucker({
                 ctx: mockContext,
-                targetGainNode: mockTargetGain,
-                automation: mockAutomation,
-                masterOutput: mockMaster
+                targetGainNode: mockTargetGain
             });
         });
 
@@ -223,9 +215,7 @@ describe('SidechainDucker', () => {
         beforeEach(() => {
             ducker = new SidechainDucker({
                 ctx: mockContext,
-                targetGainNode: mockTargetGain,
-                automation: mockAutomation,
-                masterOutput: mockMaster
+                targetGainNode: mockTargetGain
             });
         });
 

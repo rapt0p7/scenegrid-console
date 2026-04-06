@@ -1,24 +1,20 @@
 import { AudioWorkletNode } from 'standardized-audio-context';
 
-import { safeDisconnect } from '@webaudio-core';
-
-import { isDefined, isAbsent } from '../helpers/guards.js';
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import processorUrl from './ducker-processor.processor.js';
-
-import type { ISidechain } from '../interfaces/IAudioPlugins.js';
 import type {
     AudioCtx,
     AudioNodeLike,
     AudioWorkletNodeLike,
     DelayNodeLike,
     GainNodeLike,
-    AutomationEngine,
-    MasterOutput,
     WaveShaperNodeLike
-} from '@webaudio-core';
+} from '@webaudio-core/types/IAudioContext';
+import type { ISidechain } from '@webaudio-core/types/IAudioPlugins.js';
+import { isDefined, isAbsent } from '@webaudio-core/utils/guards.js';
+import { safeDisconnect } from '@webaudio-core/utils/safeDisconnect.js';
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import processorUrl from './ducker-processor.processor.js';
 
 export default class SidechainDucker implements ISidechain {
     public activeEnvelope: number = 0;
@@ -50,8 +46,6 @@ export default class SidechainDucker implements ISidechain {
     }: {
         ctx: AudioCtx;
         targetGainNode: GainNodeLike;
-        automation: AutomationEngine;
-        masterOutput: MasterOutput;
         attack?: number;
         release?: number;
         lookahead?: number;

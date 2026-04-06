@@ -1,8 +1,7 @@
 // noinspection D
 
 import type AudioBusSystem from '../BusSystem/AudioBusSystem.js';
-import type { ISidechain } from '../interfaces/IAudioPlugins.js';
-import type { AudioNodeLike, ISoundInstance } from '@webaudio-core';
+import type { AudioNodeLike, ISoundInstance, ISidechain } from '@webaudio-core';
 
 interface ActiveSidechain {
     sidechain: ISidechain;

@@ -1,6 +1,5 @@
-import type { IFiltersPlugin } from './IFiltersPlugin.js';
-import type { IDuckingConfig } from './ISoundConfig.js';
-import type { AudioNodeLike, GainNodeLike } from '@webaudio-core';
+import type { AudioNodeLike, GainNodeLike } from '@webaudio-core/types/IAudioContext';
+import type { IFiltersPlugin } from '@webaudio-core/types/IFiltersPlugin.js';
 
 export interface ILimiterNode {
     inputNode: AudioNodeLike;
@@ -21,6 +20,6 @@ export interface ISidechain {
 
 export interface IPluginFactory {
     createLimiter(): ILimiterNode;
-    createSidechain(targetGainNode: GainNodeLike, options?: IDuckingConfig): ISidechain;
+    createSidechain(targetGainNode: GainNodeLike, options?: { intensity?: number }): ISidechain;
     getFiltersPlugin(): IFiltersPlugin;
 }
