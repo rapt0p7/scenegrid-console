@@ -1,43 +1,48 @@
 import mitt from 'mitt';
 import * as workerTimers from 'worker-timers';
 
-import { isDefined, isAbsent } from '../helpers/guards.js';
-
 import type { IRTPCManager, RTPCEvents } from '../interfaces/IRTPCManager.js';
 import type { Emitter } from 'mitt';
 
-interface ParameterState {
-    target: number;
-    current: number;
-    attackMs: number;
-    releaseMs: number;
-}
+const MAX_PARAMS = 1024;
 
 export default class RTPCManager implements IRTPCManager {
     public readonly events: Emitter<RTPCEvents> = mitt<RTPCEvents>();
-    private states: Map<string, ParameterState> = new Map();
-    private dirtyParams: Set<string> = new Set();
+
+    private paramToIndex = new Map<string, number>();
+    private indexToParam: string[] = Array.from({ length: MAX_PARAMS });
+    private nextFreeIndex = 0;
+
+    private current = new Float32Array(MAX_PARAMS);
+    private target = new Float32Array(MAX_PARAMS);
+    private attack = new Float32Array(MAX_PARAMS);
+    private release = new Float32Array(MAX_PARAMS);
+
+    private dirtyIndices = new Uint16Array(MAX_PARAMS);
+    private inDirtyList = new Uint8Array(MAX_PARAMS);
+    private dirtyCount = 0;
+
     private isUpdateScheduled = false;
     private tickerId: ReturnType<typeof workerTimers.setInterval> | null = null;
     private lastTime = 0;
     private readonly TICK_RATE_MS = 30;
 
-    public configureParam(parameterName: string, attackMs: number = 0, releaseMs: number = 0): void {
-        const state = this.getState(parameterName);
-        state.attackMs = attackMs;
-        state.releaseMs = releaseMs;
+    public configureParam(name: string, attackMs: number = 0, releaseMs: number = 0): void {
+        const index = this.getParamIndex(name);
+        this.attack[index] = attackMs;
+        this.release[index] = releaseMs;
     }
 
-    public setValue(parameterName: string, value: number): void {
-        const state = this.getState(parameterName);
-        if (state.target === value) return;
+    public setValue(name: string, value: number): void {
+        const index = this.getParamIndex(name);
+        if (this.target[index] === value) return;
 
-        state.target = value;
+        this.target[index] = value;
 
-        if (state.attackMs <= 0 && state.releaseMs <= 0) {
-            if (state.current !== value) {
-                state.current = value;
-                this.dirtyParams.add(parameterName);
+        if (this.attack[index] <= 0 && this.release[index] <= 0) {
+            if (this.current[index] !== value) {
+                this.current[index] = value;
+                this.markDirty(index);
                 this.scheduleUpdate();
             }
         } else {
@@ -45,28 +50,55 @@ export default class RTPCManager implements IRTPCManager {
         }
     }
 
-    public setValues(parameters: Record<string, number>): void {
-        for (const [key, value] of Object.entries(parameters)) {
-            this.setValue(key, value);
-        }
+    public getValue(name: string, defaultValue: number = 0): number {
+        const index = this.paramToIndex.get(name);
+        return index === undefined ? defaultValue : this.current[index];
     }
 
-    public getValue(parameterName: string, defaultValue: number = 0): number {
-        return this.states.get(parameterName)?.current ?? defaultValue;
+    public setValues(parameters: Record<string, number>): void {
+        for (const key in parameters) {
+            if (Object.prototype.hasOwnProperty.call(parameters, key)) {
+                this.setValue(key, parameters[key]);
+            }
+        }
     }
 
     public reset(): void {
         this.stopLoop();
-        this.states.clear();
-        this.dirtyParams.clear();
+
+        this.paramToIndex.clear();
+
+        if (this.nextFreeIndex > 0) {
+            this.inDirtyList.fill(0, 0, this.nextFreeIndex);
+        }
+
+        this.nextFreeIndex = 0;
+        this.dirtyCount = 0;
+
         this.isUpdateScheduled = false;
         this.events.all.clear();
+    }
+
+    private getParamIndex(name: string): number {
+        let index = this.paramToIndex.get(name);
+        if (index === undefined) {
+            index = this.nextFreeIndex++;
+            this.paramToIndex.set(name, index);
+            this.indexToParam[index] = name;
+        }
+        return index;
+    }
+
+    private markDirty(index: number): void {
+        if (this.inDirtyList[index] === 0) {
+            this.dirtyIndices[this.dirtyCount++] = index;
+            this.inDirtyList[index] = 1;
+        }
     }
 
     private scheduleUpdate(): void {
         if (this.isUpdateScheduled) return;
         this.isUpdateScheduled = true;
-
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         Promise.resolve().then(() => this.flush());
     }
@@ -74,36 +106,25 @@ export default class RTPCManager implements IRTPCManager {
     private flush(): void {
         this.isUpdateScheduled = false;
 
-        for (const parameter of this.dirtyParams) {
-            const state = this.states.get(parameter);
-            if (isDefined(state)) {
-                this.events.emit(parameter, state.current);
-            }
+        for (let index = 0; index < this.dirtyCount; index++) {
+            const parameterIndex = this.dirtyIndices[index];
+            const name = this.indexToParam[parameterIndex];
+            this.events.emit(name, this.current[parameterIndex]);
+
+            this.inDirtyList[parameterIndex] = 0;
         }
 
-        this.dirtyParams.clear();
-    }
-
-    private getState(name: string): ParameterState {
-        let state = this.states.get(name);
-
-        if (isAbsent(state)) {
-            state = { target: 0, current: 0, attackMs: 0, releaseMs: 0 };
-            this.states.set(name, state);
-        }
-
-        return state;
+        this.dirtyCount = 0;
     }
 
     private startLoop(): void {
-        if (isDefined(this.tickerId)) return;
-
+        if (this.tickerId !== null) return;
         this.lastTime = performance.now();
         this.tickerId = workerTimers.setInterval(() => this.tick(), this.TICK_RATE_MS);
     }
 
     private stopLoop(): void {
-        if (isDefined(this.tickerId)) {
+        if (this.tickerId !== null) {
             workerTimers.clearInterval(this.tickerId);
             this.tickerId = null;
         }
@@ -116,33 +137,33 @@ export default class RTPCManager implements IRTPCManager {
 
         let hasActiveInterpolations = false;
 
-        for (const [parameterName, state] of this.states.entries()) {
-            const threshold = Math.max(1e-4, Math.abs(state.target) * 0.001);
-            if (Math.abs(state.current - state.target) < threshold) {
-                if (state.current !== state.target) {
-                    state.current = state.target;
-                    this.dirtyParams.add(parameterName);
+        for (let index = 0; index < this.nextFreeIndex; index++) {
+            const t = this.target[index];
+            const c = this.current[index];
+
+            if (Math.abs(c - t) < 1e-4) {
+                if (c !== t) {
+                    this.current[index] = t;
+                    this.markDirty(index);
                 }
                 continue;
             }
 
             hasActiveInterpolations = true;
-
-            const isIncreasing = state.target > state.current;
-            const slewTimeMs = isIncreasing ? state.attackMs : state.releaseMs;
+            const slewTimeMs = t > c ? this.attack[index] : this.release[index];
 
             if (slewTimeMs <= 0) {
-                state.current = state.target;
+                this.current[index] = t;
             } else {
                 const timeConstant = slewTimeMs / 1000 / 5;
                 const alpha = 1 - Math.exp(-deltaTime / Math.max(0.001, timeConstant));
-                state.current += (state.target - state.current) * alpha;
+                this.current[index] = c + (t - c) * alpha;
             }
 
-            this.dirtyParams.add(parameterName);
+            this.markDirty(index);
         }
 
-        if (this.dirtyParams.size > 0) {
+        if (this.dirtyCount > 0) {
             this.scheduleUpdate();
         }
 

@@ -24,7 +24,7 @@ describe('RTPCManager', () => {
     describe('Instant Values (Backwards Compatibility)', () => {
         it('should store and retrieve a single value', () => {
             manager.setValue('MUSIC_VOLUME', 0.8);
-            expect(manager.getValue('MUSIC_VOLUME')).toBe(0.8);
+            expect(manager.getValue('MUSIC_VOLUME')).toBeCloseTo(0.8);
         });
 
         it('should return default value if parameter is not set', () => {
@@ -68,10 +68,10 @@ describe('RTPCManager', () => {
 
             await Promise.resolve();
 
-            expect(manager.getValue('MUSIC_VOLUME')).toBe(0.7);
-            expect(manager.getValue('SFX_VOLUME')).toBe(0.9);
-            expect(spyMusic).toHaveBeenCalledWith(0.7);
-            expect(spySFX).toHaveBeenCalledWith(0.9);
+            expect(manager.getValue('MUSIC_VOLUME')).toBeCloseTo(0.7);
+            expect(manager.getValue('SFX_VOLUME')).toBeCloseTo(0.9);
+            expect(spyMusic).toHaveBeenCalledWith(Math.fround(0.7));
+            expect(spySFX).toHaveBeenCalledWith(Math.fround(0.9));
         });
 
         it('should clear all values, events, and stop loop on reset', async () => {
