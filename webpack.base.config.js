@@ -34,7 +34,10 @@ export default {
             '.mjs': ['.mts', '.mjs']
         },
         alias: {
-            '@webaudio-core': path.resolve(__dirname, 'src/webaudio-core')
+            '@infrastructure': path.resolve(__dirname, 'src/Infrastructure'),
+            '@domain': path.resolve(__dirname, 'src/Domain'),
+            '@kernel': path.resolve(__dirname, 'src/Kernel'),
+            '@application': path.resolve(__dirname, 'src/Application')
         },
         fallback: {
             'fs': false,

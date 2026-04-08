@@ -1,5 +1,17 @@
 // noinspection D
 
+import AudioBusSystem from '@domain/BusSystem/AudioBusSystem.js';
+import { VoiceCullingSystem } from '@domain/Culling/VoiceCullingSystem.js';
+import { EngineEventDispatcher } from '@domain/Events/EngineEventDispatcher';
+import ContainerManager from '@domain/Managers/ContainerManager.js';
+import DuckingManager from '@domain/Managers/DuckingManager.js';
+import SmartLoopManager from '@domain/Managers/SmartLoopManager.js';
+import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
+import MixerLayerStack, { PRIORITY } from '@domain/Mixer/MixerLayer.js';
+import MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
+import MixerStateManager from '@domain/Mixer/MixerStateManager.js';
+import MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
+import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 import {
     AutomationEngine,
     AudioContextManager,
@@ -10,37 +22,25 @@ import {
     AudioNodeFactory,
     MasterOutput,
     PlaybackScheduler,
-    VoiceCullingSystem,
     FiltersPlugin,
     SidechainDucker,
     TinyLimiterNode
-} from '@webaudio-core';
+} from '@infrastructure';
+import RTPCManager from '@kernel/RTPCManager.js';
 
 import AudioRouter from './AudioRouter.js';
-import AudioBusSystem from './BusSystem/AudioBusSystem.js';
-import ConsistencyChecker from './Core/ConsistencyChecker.js';
-import { EngineEventDispatcher } from './Core/EngineEventDispatcher';
 import deepFreeze from './helpers/deepFreeze.js';
 import { isDefined } from './helpers/guards';
-import ContainerManager from './Managers/ContainerManager.js';
-import DuckingManager from './Managers/DuckingManager.js';
-import MixerCoordinator from './Managers/MixerCoordinator.js';
-import MixerLayerStack, { PRIORITY } from './Managers/MixerLayer.js';
-import MixerSnapshotManager from './Managers/MixerSnapshotManager.js';
-import MixerStateManager from './Managers/MixerStateManager.js';
-import MixerStateResolver from './Managers/MixerStateResolver.js';
-import RTPCManager from './Managers/RTPCManager.js';
-import SmartLoopManager from './Managers/SmartLoopManager.js';
 import SoundRegistry from './SoundRegistry.js';
 
-import type { DebuggerOptions } from './Debug/AudioDebugger.js';
 import type { BusId } from './interfaces/IAudioBusSystem.js';
 import type { IAudioEngineConfig } from './interfaces/IAudioEngineConfig.js';
 import type { AudioEngineEvents } from './interfaces/IEngineEvents';
 import type { IRTPCManifest } from './interfaces/IRTPCManifest.js';
 import type { ITransitionToParameters } from './interfaces/ISmartLoopManager.js';
 import type { IPlayOptions } from './interfaces/ISoundConfig.js';
-import type { IPluginFactory } from '@webaudio-core';
+import type { IPluginFactory } from '@infrastructure';
+import type { DebuggerOptions } from '@infrastructure/debug/AudioDebugger.js';
 import type { Handler } from 'mitt';
 
 export interface InitParameters {
@@ -295,7 +295,7 @@ export class AudioEngine {
     }
 
     public async showDebugUI(options?: DebuggerOptions): Promise<void> {
-        const { default: AudioDebugger } = await import('./Debug/AudioDebugger.js');
+        const { default: AudioDebugger } = await import('@infrastructure/debug/AudioDebugger.js');
         const debuggerInstance = new AudioDebugger(
             this.#contextManager.context,
             this.#busSystem,

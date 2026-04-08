@@ -2,15 +2,15 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager, FiltersPlugin } from '@webaudio-core';
+import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
+import { PRIORITY } from '@domain/Mixer/MixerLayer.js';
+import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
+import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager, FiltersPlugin } from '@infrastructure';
+import AudioDebugger from '@infrastructure/debug/AudioDebugger.js';
+import RTPCManager from '@kernel/RTPCManager.js';
 
 import { AudioEngine } from '../AudioEngine.js';
 import AudioRouter from '../AudioRouter.js';
-import ConsistencyChecker from '../Core/ConsistencyChecker.js';
-import AudioDebugger from '../Debug/AudioDebugger.js';
-import MixerCoordinator from '../Managers/MixerCoordinator.js';
-import { PRIORITY } from '../Managers/MixerLayer.js';
-import RTPCManager from '../Managers/RTPCManager.js';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),
@@ -46,7 +46,14 @@ const mockListener = {
     setOrientation: vi.fn()
 };
 
-vi.mock('@webaudio-core', async importOriginal => {
+vi.mock('@domain/Culling/VoiceCullingSystem.js', () => ({
+    VoiceCullingSystem: vi.fn().mockImplementation(function (pool, options) {
+        (globalThis as any).__mockCullingConfig = options;
+        return { start: vi.fn(), stop: vi.fn() };
+    })
+}));
+
+vi.mock('@infrastructure', async importOriginal => {
     const actual = await importOriginal<any>();
     return {
         ...actual,
@@ -136,10 +143,6 @@ vi.mock('@webaudio-core', async importOriginal => {
             (globalThis as any).__mockSoundPoolConfig = options;
             return { getVoice: vi.fn() };
         }),
-        VoiceCullingSystem: vi.fn().mockImplementation(function (pool, options) {
-            (globalThis as any).__mockCullingConfig = options;
-            return { start: vi.fn(), stop: vi.fn() };
-        }),
         SidechainDucker: vi.fn().mockImplementation(function () {
             return { insertLookahead: vi.fn(), start: vi.fn(), activeEnvelope: 0 };
         }),
@@ -153,7 +156,7 @@ vi.mock('@webaudio-core', async importOriginal => {
     };
 });
 
-vi.mock('../Debug/AudioDebugger', () => {
+vi.mock('@infrastructure/debug/AudioDebugger.js', () => {
     return {
         default: vi.fn().mockImplementation(function () {
             return { init: vi.fn() };
@@ -161,7 +164,7 @@ vi.mock('../Debug/AudioDebugger', () => {
     };
 });
 
-vi.mock('../Core/ConsistencyChecker', () => ({
+vi.mock('@domain/Validation/ConsistencyChecker.js', () => ({
     default: {
         validate: vi.fn().mockReturnValue(true)
     }

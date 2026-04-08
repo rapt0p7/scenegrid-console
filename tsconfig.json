@@ -12,8 +12,11 @@
         "sourceMap": true,
         "outDir": "./public",
         "paths": {
-            "@webaudio-core/*": ["./src/webaudio-core/*"],
-            "@webaudio-core": ["./src/webaudio-core/index.ts"],
+            "@domain/*": ["./src/Domain/*"],
+            "@infrastructure/*": ["./src/Infrastructure/*"],
+            "@infrastructure": ["./src/Infrastructure/index.ts"],
+            "@kernel/*": ["./src/Kernel/*"],
+            "@application/*": ["./src/Application/*"],
             "*": ["./*"]
         },
         "lib": ["ESNext", "DOM", "WebWorker"],

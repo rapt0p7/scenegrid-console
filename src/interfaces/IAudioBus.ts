@@ -1,7 +1,7 @@
 import type { IBus } from './IBuses.js';
 import type { IFilter } from './IFilter.js';
 import type { IRTPCManager, IRTPCConfig, RTPCTargetProperty } from './IRTPCManager.js';
-import type { AudioNodeLike, BiquadFilterNodeLike } from '@webaudio-core';
+import type { AudioNodeLike, BiquadFilterNodeLike } from '@infrastructure';
 
 export interface IAudioBus {
     logicalTargetGain: number;

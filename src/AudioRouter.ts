@@ -1,10 +1,8 @@
 // noinspection D
 
-import { clamp } from '@webaudio-core';
+import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
+import { clamp } from '@infrastructure';
 
-import { InstanceRTPCBinder } from './Managers/InstanceRTPCBinder.js';
-
-import type AudioBusSystem from './BusSystem/AudioBusSystem.js';
 import type { BusId } from './interfaces/IAudioBusSystem.js';
 import type { IAudioRouter } from './interfaces/IAudioRouter.js';
 import type { IRTPCManager } from './interfaces/IRTPCManager.js';
@@ -16,9 +14,10 @@ import type {
     IPlayOptions
 } from './interfaces/ISoundConfig.js';
 import type { ISoundMap } from './interfaces/ISoundMap.js';
-import type ContainerManager from './Managers/ContainerManager.js';
-import type DuckingManager from './Managers/DuckingManager.js';
-import type { SoundController, ISoundInstance } from '@webaudio-core';
+import type AudioBusSystem from '@domain/BusSystem/AudioBusSystem.js';
+import type ContainerManager from '@domain/Managers/ContainerManager.js';
+import type DuckingManager from '@domain/Managers/DuckingManager.js';
+import type { SoundController, ISoundInstance } from '@infrastructure';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly busSystem: AudioBusSystem;

@@ -1,6 +1,6 @@
 import type { IAudioBus } from './IAudioBus.js';
 import type { IBuses } from './IBuses.js';
-import type { GainNodeLike, ISoundInstance, ISidechain } from '@webaudio-core';
+import type { GainNodeLike, ISoundInstance, ISidechain } from '@infrastructure';
 
 export type BusId = Extract<keyof IBuses, string>;
 

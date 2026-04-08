@@ -1,11 +1,10 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const __filename = fileURLToPath(import.meta.url);
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
@@ -29,9 +28,10 @@ export default defineConfig({
             ]
         },
         alias: {
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            '@webaudio-core': path.resolve(__dirname, './src/webaudio-core'),
-            // eslint-disable-next-line @typescript-eslint/naming-convention
+            '@infrastructure': path.resolve(__dirname, './src/Infrastructure'),
+            '@domain': path.resolve(__dirname, './src/Domain'),
+            '@kernel': path.resolve(__dirname, './src/Kernel'),
+            '@application': path.resolve(__dirname, './src/Application'),
             '@interfaces': path.resolve(__dirname, './src/interfaces')
         }
     }
