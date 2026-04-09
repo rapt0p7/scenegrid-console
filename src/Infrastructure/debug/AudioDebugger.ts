@@ -2,8 +2,8 @@
 
 import { createFrequencyCurveWithRMS, createMeters } from '../../helpers/visualizers.js';
 
-import type { IAudioBusSystem } from '../../interfaces/IAudioBusSystem.js';
 import type { AudioCtx, GainNodeLike } from '@infrastructure';
+import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 
 export interface DebuggerOptions {
     wrapperSelector?: string;
@@ -11,10 +11,10 @@ export interface DebuggerOptions {
 
 export default class AudioDebugger {
     private readonly context: AudioCtx;
-    private readonly busSystem: IAudioBusSystem;
+    private readonly busSystem: AudioBusSystem;
     private readonly masterNode: GainNodeLike;
 
-    constructor(context: AudioCtx, busSystem: IAudioBusSystem, masterNode: GainNodeLike) {
+    constructor(context: AudioCtx, busSystem: AudioBusSystem, masterNode: GainNodeLike) {
         this.context = context;
         this.busSystem = busSystem;
         this.masterNode = masterNode;

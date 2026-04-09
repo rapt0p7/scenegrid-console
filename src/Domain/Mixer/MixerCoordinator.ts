@@ -1,6 +1,6 @@
-import type MixerLayerStack from './MixerLayer.js';
-import type MixerStateManager from './MixerStateManager.js';
-import type { MixerState } from '../../interfaces/IMixerStateManager.js';
+import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
+import type MixerStateManager from '@domain/Mixer/MixerStateManager.js';
+import type { MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
 
 export default class MixerCoordinator {
     private baseState: MixerState = { buses: {} };

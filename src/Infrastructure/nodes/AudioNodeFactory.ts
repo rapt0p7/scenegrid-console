@@ -1,4 +1,4 @@
-import clamp from '@infrastructure/utils/clamp.js';
+import clamp from '@shared/clamp.js';
 
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type {

@@ -1,6 +1,6 @@
 import mitt from 'mitt';
 
-import type { AudioEngineEvents } from '../../interfaces/IEngineEvents.js';
+import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { Emitter, Handler } from 'mitt';
 
 export class EngineEventDispatcher {

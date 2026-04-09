@@ -1,120 +1,103 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import DuckingManager from '../DuckingManager.js';
+import DuckingManager from '@domain/Managers/DuckingManager.js';
 
-import type AudioBusSystem from '../../BusSystem/AudioBusSystem.js';
-import type { ISoundInstance, AudioNodeLike } from '@infrastructure';
+import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { PlaybackId } from '@domain/Types/Branded.js';
+import type { Mocked } from 'vitest';
 
 describe('DuckingManager', () => {
-    let mockBusSystem: any;
-    let mockSidechain: any;
-    let mockInstance: any;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    let eventHandlers: Record<string, Function>;
+    let mockBusSystem: Mocked<IAudioBusSystem>;
+    let mockSoundController: Mocked<ISoundController>;
     let manager: DuckingManager;
+
+    let capturedCleanupCallback: (() => void) | null;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        eventHandlers = {};
-
-        mockSidechain = {
-            addSource: vi.fn(),
-            removeSource: vi.fn()
-        };
+        capturedCleanupCallback = null;
 
         mockBusSystem = {
-            getSidechain: vi.fn().mockReturnValue(mockSidechain)
-        } as unknown as AudioBusSystem;
+            routePlayback: vi.fn(),
+            addSidechainTrigger: vi.fn(),
+            removeSidechainTrigger: vi.fn(),
+            clearAllSidechainTriggers: vi.fn(),
+            getBus: vi.fn(),
+            getAllBuses: vi.fn(),
+            applySend: vi.fn()
+        };
 
-        mockInstance = {
-            instanceGain: {} as AudioNodeLike,
-            on: vi.fn().mockImplementation((event, handler) => {
-                eventHandlers[event] = handler;
+        mockSoundController = {
+            play: vi.fn(),
+            stopById: vi.fn(),
+            stopAll: vi.fn(),
+            setVolume: vi.fn(),
+            fadeVolume: vi.fn(),
+            getCurrentTime: vi.fn(),
+            getSampleRate: vi.fn(),
+            cancelScheduled: vi.fn(),
+            fadeParameter: vi.fn(),
+            getActivePlaybacks: vi.fn(),
+            getSoundId: vi.fn(),
+            getPlaybackState: vi.fn(),
+            virtualize: vi.fn(),
+            devirtualize: vi.fn(),
+            onVoiceEnded: vi.fn().mockImplementation((id, callback) => {
+                capturedCleanupCallback = callback;
                 return vi.fn();
             })
-        } as unknown as ISoundInstance;
+        } as unknown as Mocked<ISoundController>;
 
-        manager = new DuckingManager(mockBusSystem);
+        manager = new DuckingManager(mockBusSystem, mockSoundController);
     });
 
-    it('should add instance gain to sidechain and setup cleanup events', () => {
-        manager.triggerDucking(mockInstance, 'music_bus', 0.8);
+    it('should add sidechain trigger via bus system and setup cleanup event', () => {
+        const testId = 123 as PlaybackId;
+        manager.triggerDucking(testId, 'music_bus', 0.8);
 
-        expect(mockBusSystem.getSidechain).toHaveBeenCalledWith('music_bus');
+        expect(mockBusSystem.addSidechainTrigger).toHaveBeenCalledWith('music_bus', testId, 0.8);
 
-        expect(mockSidechain.addSource).toHaveBeenCalledWith(mockInstance.instanceGain, 0.8);
-
-        expect(mockInstance.on).toHaveBeenCalledWith('ended', expect.any(Function));
-        expect(mockInstance.on).toHaveBeenCalledWith('stopped', expect.any(Function));
+        expect(mockSoundController.onVoiceEnded).toHaveBeenCalledWith(testId, expect.any(Function));
     });
 
-    it('should remove instance from sidechain when it stops playing (Memory Leak Prevention)', () => {
-        manager.triggerDucking(mockInstance, 'music_bus', 1);
+    it('should remove sidechain trigger when voice ends (Memory Leak Prevention)', () => {
+        const testId = 456 as PlaybackId;
+        manager.triggerDucking(testId, 'music_bus', 1);
 
-        expect(mockSidechain.removeSource).not.toHaveBeenCalled();
+        expect(mockBusSystem.removeSidechainTrigger).not.toHaveBeenCalled();
 
-        eventHandlers['ended']();
+        expect(capturedCleanupCallback).toBeDefined();
+        capturedCleanupCallback!();
 
-        expect(mockSidechain.removeSource).toHaveBeenCalledWith(mockInstance.instanceGain);
+        expect(mockBusSystem.removeSidechainTrigger).toHaveBeenCalledWith('music_bus', testId);
     });
 
-    it('should support ducking multiple buses simultaneously', () => {
-        manager.triggerDucking(mockInstance, ['music_bus', 'ambience_bus'], [1, 0.5]);
+    it('should support ducking multiple buses simultaneously with different intensities', () => {
+        const testId = 789 as PlaybackId;
+        manager.triggerDucking(testId, ['music_bus', 'ambience_bus'], [1, 0.5]);
 
-        expect(mockBusSystem.getSidechain).toHaveBeenCalledWith('music_bus');
-        expect(mockBusSystem.getSidechain).toHaveBeenCalledWith('ambience_bus');
+        expect(mockBusSystem.addSidechainTrigger).toHaveBeenCalledTimes(2);
+        expect(mockBusSystem.addSidechainTrigger).toHaveBeenNthCalledWith(1, 'music_bus', testId, 1);
+        expect(mockBusSystem.addSidechainTrigger).toHaveBeenNthCalledWith(2, 'ambience_bus', testId, 0.5);
 
-        expect(mockSidechain.addSource).toHaveBeenCalledTimes(2);
-        expect(mockSidechain.addSource).toHaveBeenNthCalledWith(1, mockInstance.instanceGain, 1);
-        expect(mockSidechain.addSource).toHaveBeenNthCalledWith(2, mockInstance.instanceGain, 0.5);
+        capturedCleanupCallback!();
+        expect(mockBusSystem.removeSidechainTrigger).toHaveBeenCalledTimes(2);
+        expect(mockBusSystem.removeSidechainTrigger).toHaveBeenNthCalledWith(1, 'music_bus', testId);
+        expect(mockBusSystem.removeSidechainTrigger).toHaveBeenNthCalledWith(2, 'ambience_bus', testId);
     });
 
-    it('should clear all active sidechains on clearAll() and handle removeSource errors safely', () => {
-        manager.triggerDucking(mockInstance, 'music_bus', 1);
+    it('should fallback to default intensity (1) if intensity array is shorter than buses array', () => {
+        const testId = 999 as PlaybackId;
+        manager.triggerDucking(testId, ['bus_A', 'bus_B'], [0.2]);
 
-        mockSidechain.removeSource.mockImplementationOnce(() => {
-            throw new Error('Remove failed');
-        });
-
-        expect(() => manager.clearAll()).not.toThrow();
-        expect(mockSidechain.removeSource).toHaveBeenCalledWith(mockInstance.instanceGain);
-
-        mockSidechain.removeSource.mockClear();
-        if (eventHandlers['ended']) {
-            eventHandlers['ended']();
-        }
-        expect(mockSidechain.removeSource).not.toHaveBeenCalled();
+        expect(mockBusSystem.addSidechainTrigger).toHaveBeenCalledTimes(2);
+        expect(mockBusSystem.addSidechainTrigger).toHaveBeenNthCalledWith(1, 'bus_A', testId, 0.2);
+        expect(mockBusSystem.addSidechainTrigger).toHaveBeenNthCalledWith(2, 'bus_B', testId, 1);
     });
 
-    it('should catch errors during addSource in triggerDucking and log a warning', () => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const testError = new Error('Add source failed');
-
-        mockSidechain.addSource.mockImplementationOnce(() => {
-            throw testError;
-        });
-
-        manager.triggerDucking(mockInstance, 'music_bus', 1);
-
-        expect(warnSpy).toHaveBeenCalledWith(
-            `[DuckingManager] Failed to add source to sidechain "music_bus"`,
-            testError
-        );
-
-        warnSpy.mockRestore();
-    });
-
-    it('should handle removeSource errors safely during event cleanup (cleanupInstance)', () => {
-        manager.triggerDucking(mockInstance, 'music_bus', 1);
-
-        mockSidechain.removeSource.mockImplementationOnce(() => {
-            throw new Error('Event cleanup failed');
-        });
-
-        expect(() => {
-            if (eventHandlers['ended']) eventHandlers['ended']();
-        }).not.toThrow();
-
-        expect(mockSidechain.removeSource).toHaveBeenCalled();
+    it('should delegate clearAll() to the bus system', () => {
+        manager.clearAll();
+        expect(mockBusSystem.clearAllSidechainTriggers).toHaveBeenCalledTimes(1);
     });
 });

@@ -31,4 +31,3 @@ export { default as TinyLimiterNode } from './plugins/TinyLimiterNode.js';
 export { default as SidechainDucker } from './plugins/SidechainDucker.js';
 export { default as FiltersPlugin } from './plugins/FiltersPlugin.js';
 export { safeDisconnect } from './utils/safeDisconnect.js';
-export { default as clamp } from './utils/clamp.js';

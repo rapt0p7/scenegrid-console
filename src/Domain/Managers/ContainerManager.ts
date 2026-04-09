@@ -1,4 +1,5 @@
-import type { ContainerMode, IContainerSoundConfig } from '../../interfaces/ISoundConfig.js';
+import type { ContainerMode, IContainerSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { SoundId } from '@domain/Types/Branded';
 
 interface ContainerState {
     lastPlayedIndex: number;
@@ -7,7 +8,7 @@ interface ContainerState {
 export default class ContainerManager {
     private readonly states = new Map<string, ContainerState>();
 
-    public getNextSource(containerId: string, config: IContainerSoundConfig): string | null {
+    public getNextSource(containerId: string, config: IContainerSoundConfig): SoundId | null {
         if (!config.sources || config.sources.length === 0) return null;
 
         if (config.sources.length === 1) return config.sources[0];

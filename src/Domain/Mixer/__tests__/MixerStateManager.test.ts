@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MixerStateManager from '../MixerStateManager.js';
+import MixerStateManager from '@domain/Mixer/MixerStateManager.js';
 
-import type { MixerState } from '../../../interfaces/IMixerStateManager.js';
-import type AudioBusSystem from '../../BusSystem/AudioBusSystem.js';
+import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
+import type { MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
 
 describe('MixerStateManager', () => {
     let mockBusSystem: any;
     let mockBus: any;
-    let mockAutomation: any;
     let mockRtpcManager: any;
     let manager: MixerStateManager;
 
@@ -26,15 +25,11 @@ describe('MixerStateManager', () => {
         mockBusSystem = {
             getBus: vi.fn().mockReturnValue(mockBus),
             applySend: vi.fn()
-        } as unknown as AudioBusSystem;
-
-        mockAutomation = {
-            ramp: vi.fn()
-        };
+        } as unknown as IAudioBusSystem;
 
         mockRtpcManager = {};
 
-        manager = new MixerStateManager(mockBusSystem, mockAutomation, mockRtpcManager);
+        manager = new MixerStateManager(mockBusSystem, mockRtpcManager);
     });
 
     it('should pass logical gain to bus and apply new RTPC configs when transitioning states', async () => {

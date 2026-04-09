@@ -1,12 +1,11 @@
 // noinspection D
 
-import { isAbsent, isDefined } from '../../helpers/guards.js';
+import { isAbsent, isDefined } from '@shared/guards.js';
 
-import type { BusId } from '../../interfaces/IAudioBusSystem.js';
-import type { MixerState } from '../../interfaces/IMixerStateManager.js';
-import type { IRTPCManager } from '../../interfaces/IRTPCManager.js';
-import type AudioBusSystem from '../BusSystem/AudioBusSystem.js';
-import type { AutomationEngine } from '@infrastructure';
+import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type { MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
+import type { BusId } from '@domain/Types/Branded.js';
 
 enum MixerFSMState {
     IDLE = 'idle',
@@ -27,9 +26,8 @@ export default class MixerStateManager {
     private transitionCounter = 0;
 
     constructor(
-        private readonly busSystem: AudioBusSystem,
-        private readonly automation: AutomationEngine,
-        private readonly rtpcManager: IRTPCManager
+        private readonly busSystem: IAudioBusSystem,
+        private readonly rtpcAdapter: IRTPCAdapter
     ) {}
 
     getState(): MixerState {
@@ -117,7 +115,7 @@ export default class MixerStateManager {
             }
 
             if (isDefined(next.rtpc)) {
-                bus.bindRTPC(next.rtpc, this.rtpcManager);
+                bus.bindRTPC(next.rtpc, this.rtpcAdapter);
             }
         }
 

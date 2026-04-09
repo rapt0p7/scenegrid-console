@@ -1,6 +1,6 @@
 import * as workerTimers from 'worker-timers';
 
-import type { SoundPoolManager } from '@infrastructure';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 
 export interface CullingConfig {
     checkIntervalMs?: number;
@@ -15,7 +15,7 @@ export class VoiceCullingSystem {
     private readonly cullingThreshold: number;
 
     constructor(
-        private readonly pool: SoundPoolManager,
+        private readonly controller: ISoundController,
         private readonly config: CullingConfig
     ) {
         this.checkIntervalMs = config.checkIntervalMs ?? 500;
@@ -35,23 +35,23 @@ export class VoiceCullingSystem {
     }
 
     private tick(): void {
-        const activeVoices = this.pool.getActiveVoices();
+        const activePlaybacks = this.controller.getActivePlaybacks();
 
-        for (const instance of activeVoices) {
-            const busId = this.config.busIdResolver(instance.id);
+        for (const playbackId of activePlaybacks) {
+            const soundId = this.controller.getSoundId(playbackId);
+            if (!soundId) continue;
+
+            const busId = this.config.busIdResolver(soundId);
             if (!busId) continue;
 
             const currentVolume = this.config.busVolumeResolver(busId);
             const isMuted = currentVolume <= this.cullingThreshold;
+            const state = this.controller.getPlaybackState(playbackId);
 
-            if (isMuted && instance.state === 'playing' && 'virtualize' in instance) {
-                instance.virtualize();
-            } else if (!isMuted && instance.state === 'virtual' && 'devirtualize' in instance) {
-                instance.devirtualize();
-
-                if ('onRevive' in instance && typeof (instance as any).onRevive === 'function') {
-                    (instance as any).onRevive(instance);
-                }
+            if (isMuted && state === 'playing') {
+                this.controller.virtualize(playbackId);
+            } else if (!isMuted && state === 'virtual') {
+                this.controller.devirtualize(playbackId);
             }
         }
     }

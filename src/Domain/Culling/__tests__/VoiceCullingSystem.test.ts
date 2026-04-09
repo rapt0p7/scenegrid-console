@@ -1,43 +1,31 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as workerTimers from 'worker-timers';
 
-import { VoiceCullingSystem } from '../VoiceCullingSystem.js';
+import { VoiceCullingSystem } from '@domain/Culling/VoiceCullingSystem.js';
 
-import type { ISoundInstance, SoundPoolManager } from '@infrastructure';
+import type { ISoundController, PlaybackState } from '@domain/Shared/Ports/ISoundController.js';
+import type { PlaybackId } from '@domain/Types/Branded.js';
+import type { Mocked } from 'vitest';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),
     clearInterval: vi.fn()
 }));
 
-function createMockInstance(id: string, initialState: 'playing' | 'virtual' = 'playing'): ISoundInstance {
-    return {
-        id,
-        state: initialState,
-        virtualize: vi.fn().mockImplementation(function (this: any) {
-            this.state = 'virtual';
-        }),
-        devirtualize: vi.fn().mockImplementation(function (this: any) {
-            this.state = 'playing';
-        })
-    } as unknown as ISoundInstance;
-}
-
 describe('VoiceCullingSystem (Background Optimizer)', () => {
-    let activeVoices: Set<ISoundInstance>;
-    let mockPool: Pick<SoundPoolManager, 'getActiveVoices'>;
+    let mockController: Mocked<ISoundController>;
     let mockBusVolumes: Record<string, number>;
     let mockSoundRouting: Record<string, string>;
     let cullingSystem: VoiceCullingSystem;
 
+    let playbackStates: Map<PlaybackId, PlaybackState>;
+    let playbackSounds: Map<PlaybackId, string>;
+
     beforeEach(() => {
         vi.clearAllMocks();
 
-        activeVoices = new Set();
-
-        mockPool = {
-            getActiveVoices: () => activeVoices
-        };
+        playbackStates = new Map();
+        playbackSounds = new Map();
 
         mockBusVolumes = {
             music: 1,
@@ -49,7 +37,19 @@ describe('VoiceCullingSystem (Background Optimizer)', () => {
             explosion: 'sfx'
         };
 
-        cullingSystem = new VoiceCullingSystem(mockPool as SoundPoolManager, {
+        mockController = {
+            getActivePlaybacks: vi.fn(() => [...playbackStates.keys()]),
+            getSoundId: vi.fn((id: PlaybackId) => playbackSounds.get(id)),
+            getPlaybackState: vi.fn((id: PlaybackId) => playbackStates.get(id) || 'stopped'),
+            virtualize: vi.fn((id: PlaybackId) => {
+                playbackStates.set(id, 'virtual');
+            }),
+            devirtualize: vi.fn((id: PlaybackId) => {
+                playbackStates.set(id, 'playing');
+            })
+        } as unknown as Mocked<ISoundController>;
+
+        cullingSystem = new VoiceCullingSystem(mockController, {
             checkIntervalMs: 500,
             cullingThreshold: 0.01,
             busIdResolver: soundId => mockSoundRouting[soundId],
@@ -67,6 +67,13 @@ describe('VoiceCullingSystem (Background Optimizer)', () => {
         tickCallback();
     }
 
+    function addMockPlayback(id: number, soundId: string, state: PlaybackState): PlaybackId {
+        const pId = id as PlaybackId;
+        playbackSounds.set(pId, soundId);
+        playbackStates.set(pId, state);
+        return pId;
+    }
+
     it('should properly start and stop the worker timer', () => {
         expect(workerTimers.setInterval).not.toHaveBeenCalled();
 
@@ -81,39 +88,35 @@ describe('VoiceCullingSystem (Background Optimizer)', () => {
         expect(workerTimers.clearInterval).toHaveBeenCalledTimes(1);
     });
 
-    it('should VIRTUALIZE a playing sound when its bus volume drops below threshold', () => {
-        const violins = createMockInstance('violins', 'playing');
-        activeVoices.add(violins);
+    it('should tell controller to VIRTUALIZE a playing sound when its bus volume drops below threshold', () => {
+        const violinsId = addMockPlayback(1, 'violins', 'playing');
 
         cullingSystem.start();
-
         mockBusVolumes['music'] = 0.005;
 
         triggerTick();
 
-        expect(violins.virtualize).toHaveBeenCalledTimes(1);
-        expect(violins.state).toBe('virtual');
+        expect(mockController.virtualize).toHaveBeenCalledTimes(1);
+        expect(mockController.virtualize).toHaveBeenCalledWith(violinsId);
+        expect(playbackStates.get(violinsId)).toBe('virtual');
     });
 
-    it('should DEVIRTUALIZE a sleeping sound when its bus volume rises above threshold', () => {
-        const violins = createMockInstance('violins', 'virtual');
-        activeVoices.add(violins);
+    it('should tell controller to DEVIRTUALIZE a sleeping sound when its bus volume rises above threshold', () => {
+        const violinsId = addMockPlayback(1, 'violins', 'virtual');
 
         cullingSystem.start();
-
         mockBusVolumes['music'] = 1;
+
         triggerTick();
 
-        expect(violins.devirtualize).toHaveBeenCalledTimes(1);
-        expect(violins.state).toBe('playing');
+        expect(mockController.devirtualize).toHaveBeenCalledTimes(1);
+        expect(mockController.devirtualize).toHaveBeenCalledWith(violinsId);
+        expect(playbackStates.get(violinsId)).toBe('playing');
     });
 
     it('should NOT affect sounds on other buses that are still loud', () => {
-        const violins = createMockInstance('violins', 'playing');
-        const explosion = createMockInstance('explosion', 'playing');
-
-        activeVoices.add(violins);
-        activeVoices.add(explosion);
+        const violinsId = addMockPlayback(1, 'violins', 'playing');
+        const explosionId = addMockPlayback(2, 'explosion', 'playing');
 
         cullingSystem.start();
 
@@ -122,48 +125,29 @@ describe('VoiceCullingSystem (Background Optimizer)', () => {
 
         triggerTick();
 
-        expect(violins.virtualize).toHaveBeenCalled();
-        expect(violins.state).toBe('virtual');
+        expect(mockController.virtualize).toHaveBeenCalledTimes(1);
+        expect(mockController.virtualize).toHaveBeenCalledWith(violinsId);
 
-        expect(explosion.virtualize).not.toHaveBeenCalled();
-        expect(explosion.state).toBe('playing');
+        expect(mockController.virtualize).not.toHaveBeenCalledWith(explosionId);
+        expect(playbackStates.get(explosionId)).toBe('playing');
     });
 
     it('should do nothing if sound state and volume already match', () => {
-        const violins = createMockInstance('violins', 'playing');
-        activeVoices.add(violins);
+        addMockPlayback(1, 'violins', 'playing');
 
         cullingSystem.start();
-
         triggerTick();
 
-        expect(violins.virtualize).not.toHaveBeenCalled();
-        expect(violins.devirtualize).not.toHaveBeenCalled();
+        expect(mockController.virtualize).not.toHaveBeenCalled();
+        expect(mockController.devirtualize).not.toHaveBeenCalled();
     });
-    it('should call onRevive hook when a voice is devirtualized', () => {
-        const mockRevive = vi.fn();
-        const mockInstance = {
-            id: 'test_sound',
-            state: 'virtual',
-            devirtualize: vi.fn(),
-            onRevive: mockRevive
-        };
 
-        const localMockPool = {
-            getActiveVoices: vi.fn().mockReturnValue([mockInstance])
-        } as any;
-        const localMockConfig = {
-            checkIntervalMs: 500,
-            cullingThreshold: 0.01,
-            busIdResolver: vi.fn().mockReturnValue('master'),
-            busVolumeResolver: vi.fn().mockReturnValue(0.8)
-        };
+    it('should safely ignore playbacks with unknown soundIds or busIds', () => {
+        addMockPlayback(1, 'unknown_sound', 'playing');
 
-        const localSystem = new VoiceCullingSystem(localMockPool, localMockConfig);
+        cullingSystem.start();
+        triggerTick();
 
-        (localSystem as any).tick();
-
-        expect(mockInstance.devirtualize).toHaveBeenCalledTimes(1);
-        expect(mockRevive).toHaveBeenCalledWith(mockInstance);
+        expect(mockController.virtualize).not.toHaveBeenCalled();
     });
 });

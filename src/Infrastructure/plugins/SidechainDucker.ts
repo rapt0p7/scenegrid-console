@@ -1,7 +1,7 @@
 import { AudioWorkletNode } from 'standardized-audio-context';
 
-import { isDefined, isAbsent } from '@infrastructure/utils/guards.js';
 import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
+import { isDefined, isAbsent } from '@shared/guards.js';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -199,5 +199,16 @@ export default class SidechainDucker implements ISidechain {
         }
 
         this.duckingGain.gain.setTargetAtTime(1, this.ctx.currentTime, 0.05);
+    }
+
+    public removeAllSources(): void {
+        for (const [source, gain] of this.sourceGainMap.entries()) {
+            safeDisconnect(source, gain);
+            safeDisconnect(gain, this.mergeGain);
+        }
+
+        this.sources.clear();
+        this.sourceGainMap.clear();
+        this.intensityMap.clear();
     }
 }

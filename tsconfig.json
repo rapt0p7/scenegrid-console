@@ -13,6 +13,7 @@
         "outDir": "./public",
         "paths": {
             "@domain/*": ["./src/Domain/*"],
+            "@shared/*": ["./src/Shared/*"],
             "@infrastructure/*": ["./src/Infrastructure/*"],
             "@infrastructure": ["./src/Infrastructure/index.ts"],
             "@kernel/*": ["./src/Kernel/*"],

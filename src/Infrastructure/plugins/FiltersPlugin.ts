@@ -1,6 +1,6 @@
 // noinspection D
 
-import { isDefined, isAbsent } from '@infrastructure/utils/guards.js';
+import { isDefined, isAbsent } from '@shared/guards.js';
 
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type {

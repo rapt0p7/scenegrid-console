@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 
-import MixerStateResolver from '../MixerStateResolver.js';
+import MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
 
-import type { IFilter } from '../../../interfaces/IFilter.js';
-import type { MixerSnapshot, MixerState } from '../../../interfaces/IMixerStateManager.js';
-import type { IRTPCConfig } from '../../../interfaces/IRTPCManager.js';
+import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
+import type { IRTPCConfig } from '@domain/Configuration/Ports/IRTPCConfig.js';
+import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
 
 describe('MixerStateResolver', () => {
     describe('Initialization', () => {

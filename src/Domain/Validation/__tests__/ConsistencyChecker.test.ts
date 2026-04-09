@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import ConsistencyChecker from '../ConsistencyChecker.js';
+import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 
-import type { IAudioEngineConfig } from '../../../interfaces/IAudioEngineConfig.js';
+import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
 
 describe('ConsistencyChecker', () => {
     beforeEach(() => {

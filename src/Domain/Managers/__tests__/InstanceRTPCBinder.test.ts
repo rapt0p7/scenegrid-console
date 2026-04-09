@@ -1,42 +1,53 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { InstanceRTPCBinder } from '../InstanceRTPCBinder.js';
+import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 
-import type { IRTPCManager, IRTPCConfig, RTPCTargetProperty } from '../../../interfaces/IRTPCManager.js';
-import type { ISoundInstance } from '@infrastructure';
+import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { PlaybackId } from '@domain/Types/Branded.js';
+import type { Mocked } from 'vitest';
 
 describe('InstanceRTPCBinder', () => {
-    let mockInstance: any;
-    let mockRtpcManager: any;
-    let mockEmitter: any;
+    let mockRtpcAdapter: Mocked<IRTPCAdapter>;
+    let mockSoundController: Mocked<ISoundController>;
+    let capturedCleanupCallback: (() => void) | null;
 
-    let instanceEventHandlers: Record<string, (...arguments_: any[]) => any> = {};
+    const testPlaybackId = 123 as PlaybackId;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        instanceEventHandlers = {};
+        capturedCleanupCallback = null;
 
-        mockEmitter = {
+        mockRtpcAdapter = {
+            getValue: vi.fn().mockReturnValue(0),
             on: vi.fn(),
             off: vi.fn()
         };
 
-        mockRtpcManager = {
-            events: mockEmitter,
-            getValue: vi.fn().mockReturnValue(0)
-        };
-
-        mockInstance = {
-            automate: vi.fn(),
-            on: vi.fn().mockImplementation((event: string, handler: (...arguments_: any[]) => any) => {
-                instanceEventHandlers[event] = handler;
-                return () => delete instanceEventHandlers[event];
-            }),
-            off: vi.fn()
-        };
+        mockSoundController = {
+            play: vi.fn(),
+            stopById: vi.fn(),
+            stopAll: vi.fn(),
+            setVolume: vi.fn(),
+            fadeVolume: vi.fn(),
+            fadeParameter: vi.fn(),
+            getCurrentTime: vi.fn(),
+            getSampleRate: vi.fn(),
+            cancelScheduled: vi.fn(),
+            getActivePlaybacks: vi.fn(),
+            getSoundId: vi.fn(),
+            getPlaybackState: vi.fn(),
+            virtualize: vi.fn(),
+            devirtualize: vi.fn(),
+            onVoiceEnded: vi.fn().mockImplementation((id, callback) => {
+                capturedCleanupCallback = callback;
+                return vi.fn();
+            })
+        } as unknown as Mocked<ISoundController>;
     });
 
-    it('should bind RTPC config to instance and apply initial values', () => {
+    it('should bind RTPC config to playback ID and apply initial values via SoundController', () => {
         const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
             gain: {
                 gameParam: 'car_speed',
@@ -48,13 +59,13 @@ describe('InstanceRTPCBinder', () => {
             }
         };
 
-        mockRtpcManager.getValue.mockReturnValue(50);
+        mockRtpcAdapter.getValue.mockReturnValue(50);
 
-        InstanceRTPCBinder.bind(mockInstance as ISoundInstance, configs, mockRtpcManager as IRTPCManager);
+        InstanceRTPCBinder.bind(testPlaybackId, configs, mockRtpcAdapter, mockSoundController);
 
-        expect(mockEmitter.on).toHaveBeenCalledWith('car_speed', expect.any(Function));
+        expect(mockRtpcAdapter.on).toHaveBeenCalledWith('car_speed', expect.any(Function));
 
-        expect(mockInstance.automate).toHaveBeenCalledWith('gain', 0.75, 100);
+        expect(mockSoundController.fadeParameter).toHaveBeenCalledWith(testPlaybackId, 'gain', 0.75, 100);
     });
 
     it('should ignore unsupported targets like sendLevel', () => {
@@ -68,13 +79,13 @@ describe('InstanceRTPCBinder', () => {
             }
         };
 
-        InstanceRTPCBinder.bind(mockInstance as ISoundInstance, configs, mockRtpcManager as IRTPCManager);
+        InstanceRTPCBinder.bind(testPlaybackId, configs, mockRtpcAdapter, mockSoundController);
 
-        expect(mockEmitter.on).not.toHaveBeenCalled();
-        expect(mockInstance.automate).not.toHaveBeenCalled();
+        expect(mockRtpcAdapter.on).not.toHaveBeenCalled();
+        expect(mockSoundController.fadeParameter).not.toHaveBeenCalled();
     });
 
-    it('should clean up RTPC subscriptions when instance is ended, stopped or disposed', () => {
+    it('should clean up RTPC subscriptions when voice ends via SoundController', () => {
         const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
             pitch: {
                 gameParam: 'engine_rpm',
@@ -85,16 +96,16 @@ describe('InstanceRTPCBinder', () => {
             }
         };
 
-        InstanceRTPCBinder.bind(mockInstance as ISoundInstance, configs, mockRtpcManager as IRTPCManager);
+        InstanceRTPCBinder.bind(testPlaybackId, configs, mockRtpcAdapter, mockSoundController);
 
-        expect(mockEmitter.on).toHaveBeenCalledWith('engine_rpm', expect.any(Function));
+        expect(mockRtpcAdapter.on).toHaveBeenCalledWith('engine_rpm', expect.any(Function));
 
-        expect(instanceEventHandlers['stopped']).toBeDefined();
-        instanceEventHandlers['stopped']();
+        expect(mockSoundController.onVoiceEnded).toHaveBeenCalledWith(testPlaybackId, expect.any(Function));
+        expect(capturedCleanupCallback).toBeDefined();
 
-        expect(mockEmitter.off).toHaveBeenCalledWith('engine_rpm', expect.any(Function));
+        capturedCleanupCallback!();
 
-        expect(instanceEventHandlers['stopped']).toBeUndefined();
+        expect(mockRtpcAdapter.off).toHaveBeenCalledWith('engine_rpm', expect.any(Function));
     });
 
     it('should prevent reacting to RTPC events after cleanup (Race Condition prevention)', () => {
@@ -108,17 +119,17 @@ describe('InstanceRTPCBinder', () => {
             }
         };
 
-        InstanceRTPCBinder.bind(mockInstance as ISoundInstance, configs, mockRtpcManager as IRTPCManager);
+        InstanceRTPCBinder.bind(testPlaybackId, configs, mockRtpcAdapter, mockSoundController);
 
-        const rtpcHandler = mockEmitter.on.mock.calls[0][1];
+        const rtpcHandler = mockRtpcAdapter.on.mock.calls[0][1];
 
-        instanceEventHandlers['ended']();
+        capturedCleanupCallback!();
 
-        mockInstance.automate.mockClear();
+        mockSoundController.fadeParameter.mockClear();
 
         rtpcHandler(1);
 
-        expect(mockInstance.automate).not.toHaveBeenCalled();
+        expect(mockSoundController.fadeParameter).not.toHaveBeenCalled();
     });
 
     it('should support preset curve configurations (MathCurvePresetDef)', () => {
@@ -136,12 +147,11 @@ describe('InstanceRTPCBinder', () => {
             }
         };
 
-        mockRtpcManager.getValue.mockReturnValue(50);
+        mockRtpcAdapter.getValue.mockReturnValue(50);
 
-        InstanceRTPCBinder.bind(mockInstance as ISoundInstance, configs, mockRtpcManager as IRTPCManager);
+        InstanceRTPCBinder.bind(testPlaybackId, configs, mockRtpcAdapter, mockSoundController);
 
-        expect(mockEmitter.on).toHaveBeenCalledWith('car_speed', expect.any(Function));
-
-        expect(mockInstance.automate).toHaveBeenCalledWith('gain', 0.25, 150);
+        expect(mockRtpcAdapter.on).toHaveBeenCalledWith('car_speed', expect.any(Function));
+        expect(mockSoundController.fadeParameter).toHaveBeenCalledWith(testPlaybackId, 'gain', 0.25, 150);
     });
 });

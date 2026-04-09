@@ -16,6 +16,7 @@ export interface ISidechain {
     start(): Promise<void> | void;
     stop(): void;
     dispose(): void;
+    removeAllSources(): void;
 }
 
 export interface IPluginFactory {

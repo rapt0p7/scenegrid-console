@@ -30,6 +30,7 @@ export default defineConfig({
         alias: {
             '@infrastructure': path.resolve(__dirname, './src/Infrastructure'),
             '@domain': path.resolve(__dirname, './src/Domain'),
+            '@shared': path.resolve(__dirname, './src/Shared'),
             '@kernel': path.resolve(__dirname, './src/Kernel'),
             '@application': path.resolve(__dirname, './src/Application'),
             '@interfaces': path.resolve(__dirname, './src/interfaces')

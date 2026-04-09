@@ -1,11 +1,9 @@
-import { clamp } from '@infrastructure';
+import clamp from '@shared/clamp.js';
+import { isDefined, isAbsent } from '@shared/guards.js';
 
-import { isDefined, isAbsent } from '../../helpers/guards';
-
-import type { IFilter } from '../../interfaces/IFilter.js';
-import type { MixerSnapshot, MixerState } from '../../interfaces/IMixerStateManager.js';
-import type { IRTPCConfig, RTPCTargetProperty } from '../../interfaces/IRTPCManager.js';
-
+import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
+import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
+import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
 export interface MixerResolverOptions {
     defaultBusGain?: number;
     maxGainLimit?: number;

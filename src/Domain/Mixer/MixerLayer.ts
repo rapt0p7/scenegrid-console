@@ -1,6 +1,6 @@
-import type MixerStateResolver from './MixerStateResolver.js';
-import type { IMixerLayer } from '../../interfaces/IMixerLayer.js';
-import type { MixerSnapshot, MixerState } from '../../interfaces/IMixerStateManager.js';
+import type MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
+import type { IMixerLayer } from '@domain/Mixer/Ports/IMixerLayer.js';
+import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
 
 export const PRIORITY = {
     BASE: 0,

@@ -1,3 +1,4 @@
+import type { PlaybackId } from '@domain/Types/Branded';
 import type { ISoundInstance } from '@infrastructure';
 
 export interface ILogicalVoice {
@@ -7,5 +8,5 @@ export interface ILogicalVoice {
     startedAtContextTime: number;
     startOffset: number;
     physicalInstance: ISoundInstance | null;
-    onRevive?: (instance: ISoundInstance) => void;
+    onRevive?: (id: PlaybackId) => void;
 }

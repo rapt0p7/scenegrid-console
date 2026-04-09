@@ -2,10 +2,10 @@
 
 import mitt from 'mitt';
 
-import type MixerCoordinator from './MixerCoordinator.js';
-import type MixerLayerStack from './MixerLayer.js';
-import type { MixerEvents } from '../../interfaces/IMixerStateManager.js';
-import type { ISnapshots } from '../../interfaces/ISnapshots.js';
+import type MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
+import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
+import type { MixerEvents } from '@domain/Mixer/Ports/IMixerStateManager.js';
+import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 import type { Emitter } from 'mitt';
 
 export default class MixerSnapshotManager {

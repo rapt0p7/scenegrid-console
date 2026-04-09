@@ -1,19 +1,19 @@
 // noinspection D
 
-import { isAbsent, isDefined } from '../../helpers/guards.js';
+import { isAbsent, isDefined } from '@shared/guards.js';
 
-import type { IAudioEngineConfig } from '../../interfaces/IAudioEngineConfig.js';
-import type { IBuses } from '../../interfaces/IBuses.js';
-import type { ISnapshots } from '../../interfaces/ISnapshots.js';
+import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
+import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type {
     IContainerSoundConfig,
     ILayeredSoundConfig,
     ISmartLoopSoundConfig,
     ISoundConfig,
     AnySoundConfig
-} from '../../interfaces/ISoundConfig.js';
-import type { ISoundMap } from '../../interfaces/ISoundMap.js';
-import type { ISpriteSoundManifest } from '../../interfaces/ISpriteSoundManifest.js';
+} from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
+import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
+import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 
 export default class ConsistencyChecker {
     public static validate(config: IAudioEngineConfig): boolean {

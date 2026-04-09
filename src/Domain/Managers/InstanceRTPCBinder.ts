@@ -1,15 +1,19 @@
+/* eslint-disable max-params */
 // noinspection D
 
-import { evaluateRTPCCurve } from '@kernel/Math/rtpcMath.js';
+import { evaluateRTPCCurve } from '@shared/Math/rtpcMath.js';
 
-import type { IRTPCConfig, IRTPCManager, RTPCTargetProperty } from '../../interfaces/IRTPCManager.js';
-import type { ISoundInstance, InstanceParameterTarget } from '@infrastructure';
+import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type { ISoundController, RTPCParameterTarget } from '@domain/Shared/Ports/ISoundController.js';
+import type { PlaybackId } from '@domain/Types/Branded.js';
 
 export class InstanceRTPCBinder {
     public static bind(
-        instance: ISoundInstance,
+        playbackId: PlaybackId,
         configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | undefined,
-        rtpcManager: IRTPCManager
+        rtpcAdapter: IRTPCAdapter,
+        soundController: ISoundController
     ): void {
         if (!configs) return;
 
@@ -19,7 +23,7 @@ export class InstanceRTPCBinder {
         for (const [targetName, config] of Object.entries(configs)) {
             if (!config) continue;
 
-            const target = targetName as InstanceParameterTarget;
+            const target = targetName as RTPCParameterTarget;
 
             if (target !== 'gain' && target !== 'pitch' && target !== 'pan' && target !== 'filterFrequency') {
                 continue;
@@ -29,31 +33,24 @@ export class InstanceRTPCBinder {
                 if (isCleanedUp) return;
                 const mappedValue = evaluateRTPCCurve(gameValue, config.curve);
                 const smoothing = config.smoothingMs ?? 50;
-                instance.automate(target, mappedValue, smoothing);
+
+                soundController.fadeParameter(playbackId, target, mappedValue, smoothing);
             };
 
-            rtpcManager.events.on(config.gameParam, handler);
-            rtpcUnsubs.push(() => rtpcManager.events.off(config.gameParam, handler));
+            rtpcAdapter.on(config.gameParam, handler);
+            rtpcUnsubs.push(() => rtpcAdapter.off(config.gameParam, handler));
 
-            handler(rtpcManager.getValue(config.gameParam));
+            handler(rtpcAdapter.getValue(config.gameParam));
         }
 
         if (rtpcUnsubs.length === 0) return;
 
-        const instanceUnsubs: Array<() => void> = [];
-
         const cleanup = (): void => {
             if (isCleanedUp) return;
             isCleanedUp = true;
-
             for (const unsub of rtpcUnsubs) unsub();
-            for (const unsub of instanceUnsubs) unsub();
         };
 
-        instanceUnsubs.push(
-            instance.on('ended', cleanup),
-            instance.on('stopped', cleanup),
-            instance.on('disposed', cleanup)
-        );
+        soundController.onVoiceEnded(playbackId, cleanup);
     }
 }

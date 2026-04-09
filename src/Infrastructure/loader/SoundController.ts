@@ -1,7 +1,10 @@
+import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController';
+import type { PlaybackId, SoundId } from '@domain/Types/Branded';
+import type { AutomationEngine } from '@infrastructure/index';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
+import type { AudioCtx } from '@infrastructure/types/IAudioContext';
 import type { ILogicalVoice } from '@infrastructure/types/ILogicalVoice.js';
-import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
 import type { ISoundOptions } from '@infrastructure/types/ISoundOptions.js';
 
 export interface SoundDefinition {
@@ -9,31 +12,25 @@ export interface SoundDefinition {
     options: ISoundOptions;
 }
 
-export interface IControllerPlayOptions {
-    when?: number;
-    offset?: number;
-    duration?: number;
-    loop?: boolean;
-    rate?: number;
-    onRevive?: (instance: ISoundInstance) => void;
-}
-
 const DEFAULT_COOLDOWN_MS = 15;
 
-export class SoundController {
-    public readonly activeVoices = new Map<number, ILogicalVoice>();
+export class SoundController implements ISoundController {
+    public readonly activeVoices = new Map<PlaybackId, ILogicalVoice>();
 
-    private readonly lastPlayTimes = new Map<string, number>();
-    private nextPlaybackId = 1;
+    private readonly lastPlayTimes = new Map<SoundId, number>();
+    private nextPlaybackId = 1 as PlaybackId;
 
+    // eslint-disable-next-line max-params
     constructor(
         private readonly pool: SoundPoolManager,
         private readonly scheduler: PlaybackScheduler,
-        private readonly registry = new Map<string, SoundDefinition>()
+        private readonly context: AudioCtx,
+        private readonly automation: AutomationEngine,
+        private readonly registry = new Map<SoundId, SoundDefinition>()
     ) {}
 
     // eslint-disable-next-line unicorn/no-object-as-default-parameter
-    register(soundId: string, buffer: AudioBuffer, options: ISoundOptions = { url: '' }): void {
+    register(soundId: SoundId, buffer: AudioBuffer, options: ISoundOptions = { url: '' }): void {
         if (this.registry.has(soundId)) {
             throw new Error(`Sound "${soundId}" already registered`);
         }
@@ -41,16 +38,16 @@ export class SoundController {
         this.registry.set(soundId, { buffer, options });
     }
 
-    unregister(soundId: string): void {
+    unregister(soundId: SoundId): void {
         this.registry.delete(soundId);
         this.pool.dispose(soundId);
         this.lastPlayTimes.delete(soundId);
     }
 
     play(
-        soundId: string,
+        soundId: SoundId,
         { when = 0, offset = 0, duration, loop = false, rate = 1, onRevive }: IControllerPlayOptions
-    ): { playbackId: number; instance: ISoundInstance } | null {
+    ): PlaybackId | null {
         if (!this.registry.has(soundId)) return null;
 
         const now = performance.now();
@@ -69,7 +66,9 @@ export class SoundController {
 
         if (!instance) return null;
 
-        const playbackId = this.nextPlaybackId++;
+        const playbackId = this.nextPlaybackId++ as PlaybackId;
+
+        const wrappedOnRevive = onRevive ? () => onRevive(playbackId) : undefined;
 
         const logicalVoice: ILogicalVoice = {
             playbackId,
@@ -78,22 +77,22 @@ export class SoundController {
             startedAtContextTime: 0,
             startOffset: offset || 0,
             physicalInstance: instance,
-            onRevive: onRevive
+            onRevive: wrappedOnRevive
         };
 
         this.activeVoices.set(playbackId, logicalVoice);
 
         (instance as any).playbackId = playbackId;
-        (instance as any).onRevive = onRevive;
+        (instance as any).onRevive = wrappedOnRevive;
         instance.setLoop(loop || false);
         instance.setRate(rate || 1);
         this.scheduler.schedulePlay(instance, when, offset, duration);
 
-        return { playbackId, instance };
+        return playbackId;
     }
 
     // eslint-disable-next-line max-params
-    public setPosition(playbackId: number, x: number, y: number, z: number): void {
+    public setPosition(playbackId: PlaybackId, x: number, y: number, z: number): void {
         const voice = this.activeVoices.get(playbackId);
         if (!voice) return;
 
@@ -106,19 +105,19 @@ export class SoundController {
         }
     }
 
-    getLogicalVoice(playbackId: number): ILogicalVoice | undefined {
+    getLogicalVoice(playbackId: PlaybackId): ILogicalVoice | undefined {
         return this.activeVoices.get(playbackId);
     }
 
-    stopById(playbackId: number): void {
+    stopById(playbackId: PlaybackId, timeToStop?: number): void {
         const voice = this.activeVoices.get(playbackId);
         if (voice && voice.physicalInstance) {
-            voice.physicalInstance.stop();
+            voice.physicalInstance.stop(timeToStop);
         }
         this.activeVoices.delete(playbackId);
     }
 
-    stopAll(soundId?: string): void {
+    stopAll(soundId?: SoundId): void {
         this.pool.dispose(soundId);
         if (soundId) {
             for (const [id, voice] of this.activeVoices.entries()) {
@@ -129,5 +128,101 @@ export class SoundController {
         } else {
             this.activeVoices.clear();
         }
+    }
+
+    getCurrentTime(): number {
+        return this.context.currentTime;
+    }
+
+    getSampleRate(): number {
+        return this.context.sampleRate;
+    }
+
+    setVolume(id: PlaybackId, targetVolume: number): void {
+        const voice = this.activeVoices.get(id);
+        if (voice?.physicalInstance?.instanceGain) {
+            this.automation.set(voice.physicalInstance.instanceGain.gain, targetVolume);
+        }
+    }
+
+    getActivePlaybacks(): PlaybackId[] {
+        return [...this.activeVoices.keys()];
+    }
+
+    getSoundId(id: PlaybackId): string | undefined {
+        return this.activeVoices.get(id)?.soundId;
+    }
+
+    getPlaybackState(id: PlaybackId): 'playing' | 'virtual' | 'stopped' {
+        const voice = this.activeVoices.get(id);
+        if (!voice || !voice.physicalInstance) return 'stopped';
+        return voice.physicalInstance.state as 'playing' | 'virtual' | 'stopped';
+    }
+
+    virtualize(id: PlaybackId): void {
+        const voice = this.activeVoices.get(id);
+        if (voice?.physicalInstance && 'virtualize' in voice.physicalInstance) {
+            voice.physicalInstance.virtualize();
+        }
+    }
+
+    devirtualize(id: PlaybackId): void {
+        const voice = this.activeVoices.get(id);
+        if (voice?.physicalInstance && 'devirtualize' in voice.physicalInstance) {
+            voice.physicalInstance.devirtualize();
+
+            if (voice.onRevive) {
+                voice.onRevive(id);
+            }
+        }
+    }
+
+    // eslint-disable-next-line max-params
+    fadeVolume(
+        id: PlaybackId,
+        targetVolume: number,
+        durationMs: number,
+        curveType: 'linear' | 'equal-power' = 'linear',
+        delayMs: number = 0
+    ): void {
+        const voice = this.activeVoices.get(id);
+        if (voice?.physicalInstance?.instanceGain) {
+            this.automation.ramp(
+                voice.physicalInstance.instanceGain.gain,
+                targetVolume,
+                durationMs,
+                curveType,
+                delayMs
+            );
+        }
+    }
+
+    // eslint-disable-next-line max-params
+    fadeParameter(
+        id: PlaybackId,
+        target: 'gain' | 'pitch' | 'pan' | 'filterFrequency',
+        targetValue: number,
+        durationMs: number
+    ): void {
+        const voice = this.activeVoices.get(id);
+        if (voice?.physicalInstance) {
+            voice.physicalInstance.automate(target, targetValue, durationMs);
+        }
+    }
+
+    cancelScheduled(id: PlaybackId): void {
+        const voice = this.activeVoices.get(id);
+        if (voice?.physicalInstance) {
+            voice.physicalInstance.cancelScheduled();
+        }
+    }
+
+    onVoiceEnded(id: PlaybackId, callback: () => void): () => void {
+        const voice = this.activeVoices.get(id);
+        if (voice?.physicalInstance) {
+            return voice.physicalInstance.on('ended', callback);
+        }
+        // eslint-disable-next-line unicorn/consistent-function-scoping
+        return () => void 0;
     }
 }
