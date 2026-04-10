@@ -18,6 +18,8 @@ interface PendingRamp {
 
 export default class AutomationEngine {
     readonly #ctx: AudioCtx;
+    private static readonly CURVE_STEPS = 100;
+    private static readonly CONSTANT_CURVE_BUFFER = new Float32Array(AutomationEngine.CURVE_STEPS);
     private readonly DIGITAL_SILENCE = 0.000_01;
 
     #pending: PendingRamp[] = [];
@@ -180,7 +182,7 @@ export default class AutomationEngine {
         duration: number
     ): void {
         const steps = 100;
-        const curve = new Float32Array(steps);
+        const curve = AutomationEngine.CONSTANT_CURVE_BUFFER;
 
         const isFadeIn = targetValue > startValue;
 
@@ -201,7 +203,7 @@ export default class AutomationEngine {
 
     private applyCurveFallback(parameter: AudioParamLike, target: number, duration: number): void {
         const steps = 100;
-        const curve = new Float32Array(steps);
+        const curve = AutomationEngine.CONSTANT_CURVE_BUFFER;
         const start = parameter.value;
 
         for (let index = 0; index < steps; index++) {
