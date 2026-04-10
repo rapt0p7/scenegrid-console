@@ -1,6 +1,6 @@
 // noinspection D
 
-import { createFrequencyCurveWithRMS, createMeters } from '../../helpers/visualizers.js';
+import { createFrequencyCurveWithRMS, createMeters } from '@infrastructure/debug/visualizers.js';
 
 import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 import type { AudioCtx, GainNodeLike } from '@infrastructure/types/IAudioContext.js';

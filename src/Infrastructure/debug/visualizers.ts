@@ -7,7 +7,7 @@ import { AudioWorkletNode } from 'standardized-audio-context';
 // @ts-ignore
 import processorUrl from './meter-processor.processor.js';
 
-import type { AudioWorkletNodeLike, GainNodeLike } from '../Infrastructure/types/IAudioContext.js';
+import type { AudioWorkletNodeLike, GainNodeLike } from '@infrastructure/types/IAudioContext.js';
 
 // eslint-disable-next-line max-params
 function map(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {

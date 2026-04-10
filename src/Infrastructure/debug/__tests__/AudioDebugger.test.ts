@@ -1,15 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// eslint-disable-next-line import/order
 import AudioDebugger from '../AudioDebugger.js';
 
-vi.mock('../../../helpers/visualizers.js', () => ({
+vi.mock('@infrastructure/debug/visualizers.js', () => ({
     createFrequencyCurveWithRMS: vi.fn().mockResolvedValue(undefined),
     createMeters: vi.fn().mockResolvedValue(undefined)
 }));
 
 // eslint-disable-next-line import/order
-import { createFrequencyCurveWithRMS, createMeters } from '../../../helpers/visualizers.js';
+import { createFrequencyCurveWithRMS, createMeters } from '@infrastructure/debug/visualizers.js';
 
 describe('AudioDebugger', () => {
     let mockContext: any;
