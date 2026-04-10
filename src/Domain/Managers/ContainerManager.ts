@@ -1,11 +1,12 @@
 import type { ContainerMode, IContainerSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { IContainerManager } from '@domain/Managers/Ports/IContainerManager.js';
 import type { SoundId } from '@domain/Types/Branded';
 
 interface ContainerState {
     lastPlayedIndex: number;
 }
 
-export default class ContainerManager {
+export default class ContainerManager implements IContainerManager {
     private readonly states = new Map<string, ContainerState>();
 
     public getNextSource(containerId: string, config: IContainerSoundConfig): SoundId | null {

@@ -2,8 +2,8 @@
 
 import { createFrequencyCurveWithRMS, createMeters } from '../../helpers/visualizers.js';
 
-import type { AudioCtx, GainNodeLike } from '@infrastructure';
 import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
+import type { AudioCtx, GainNodeLike } from '@infrastructure/types/IAudioContext.js';
 
 export interface DebuggerOptions {
     wrapperSelector?: string;

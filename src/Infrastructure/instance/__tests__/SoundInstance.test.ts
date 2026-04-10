@@ -7,6 +7,7 @@ import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
 import { SoundInstance } from '../SoundInstance.js';
 
 import type AudioContextManager from '../../context/AudioContextManager.js';
+import type { SoundId } from '@domain/Types/Branded';
 import type { AudioNodeFactory, AutomationEngine } from '@infrastructure';
 
 function createMockAudioContext() {
@@ -87,7 +88,13 @@ describe('SoundInstance (Playback & Virtualization Math)', () => {
             cancelScheduledValues: vi.fn()
         } as unknown as AutomationEngine;
 
-        instance = new SoundInstance('test_sound', mockContextManager, mockFactory, mockBuffer, mockAutomation);
+        instance = new SoundInstance(
+            'test_sound' as SoundId,
+            mockContextManager,
+            mockFactory,
+            mockBuffer,
+            mockAutomation
+        );
     });
 
     it('should correctly initialize and play', () => {
@@ -201,7 +208,13 @@ describe('SoundInstance (Pause, Resume & Parameters)', () => {
             cancelScheduledValues: vi.fn()
         } as unknown as AutomationEngine;
 
-        instance = new SoundInstance('test_sound', mockContextManager, mockFactory, mockBuffer, mockAutomation);
+        instance = new SoundInstance(
+            'test_sound' as SoundId,
+            mockContextManager,
+            mockFactory,
+            mockBuffer,
+            mockAutomation
+        );
     });
 
     it('should correctly PAUSE and RESUME playback, keeping track of time', () => {
@@ -289,7 +302,7 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         mockBuffer = { duration: 10 } as unknown as AudioBuffer;
         mockAutomation = { ramp: vi.fn() } as unknown as AutomationEngine;
 
-        instance = new SoundInstance('test', mockContextManager, mockFactory, mockBuffer, mockAutomation, {
+        instance = new SoundInstance('test' as SoundId, mockContextManager, mockFactory, mockBuffer, mockAutomation, {
             hasPanner: true
         });
     });
@@ -305,7 +318,7 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
     it('should handle null buffer gracefully (Early Returns)', () => {
         const noBufferInstance = new SoundInstance(
-            'test',
+            'test' as SoundId,
             mockContextManager,
             mockFactory,
             null as any,
@@ -461,7 +474,7 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
             };
 
             soundInstance = new SoundInstance(
-                'test_id',
+                'test_id' as SoundId,
                 mockContextManager,
                 mockNodeFactory,
                 {} as AudioBuffer,
@@ -475,7 +488,7 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
         it('should safely exit if PannerNode is not present (2D sound)', () => {
             const soundInstance2D = new SoundInstance(
-                'test_id_2d',
+                'test_id_2d' as SoundId,
                 mockContextManager,
                 mockNodeFactory,
                 {} as AudioBuffer,

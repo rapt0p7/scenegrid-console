@@ -4,7 +4,7 @@ import * as workerTimers from 'worker-timers';
 import { VoiceCullingSystem } from '@domain/Culling/VoiceCullingSystem.js';
 
 import type { ISoundController, PlaybackState } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId } from '@domain/Types/Branded.js';
 import type { Mocked } from 'vitest';
 
 vi.mock('worker-timers', () => ({
@@ -15,7 +15,7 @@ vi.mock('worker-timers', () => ({
 describe('VoiceCullingSystem (Background Optimizer)', () => {
     let mockController: Mocked<ISoundController>;
     let mockBusVolumes: Record<string, number>;
-    let mockSoundRouting: Record<string, string>;
+    let mockSoundRouting: Record<string, BusId>;
     let cullingSystem: VoiceCullingSystem;
 
     let playbackStates: Map<PlaybackId, PlaybackState>;
@@ -33,8 +33,8 @@ describe('VoiceCullingSystem (Background Optimizer)', () => {
         };
 
         mockSoundRouting = {
-            violins: 'music',
-            explosion: 'sfx'
+            violins: 'music' as BusId,
+            explosion: 'sfx' as BusId
         };
 
         mockController = {

@@ -2,6 +2,7 @@ import mitt from 'mitt';
 
 import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
 
+import type { SoundId } from '@domain/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { AudioNodeFactory } from '@infrastructure/nodes/AudioNodeFactory.js';
@@ -25,7 +26,7 @@ export type SoundInstanceEvents = {
 };
 
 export class SoundInstance implements ISoundInstance {
-    public readonly id: string;
+    public readonly id: SoundId;
 
     public get pannerNode(): PannerNodeLike | StereoPannerNodeLike | null {
         return this.#chain.pannerNode;
@@ -46,7 +47,7 @@ export class SoundInstance implements ISoundInstance {
 
     // eslint-disable-next-line max-params
     constructor(
-        id: string,
+        id: SoundId,
         contextManager: AudioContextManager,
         factory: AudioNodeFactory,
         buffer: AudioBuffer,

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 
+import type { BusId } from '@domain/Types/Branded.js';
 import type { AudioCtx, AutomationEngine, GainNodeLike, IPluginFactory } from '@infrastructure';
 
 describe('AudioBus (Filters, Sends, RTPC)', () => {
@@ -54,7 +55,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
     it('should safely replace filter (fade out -> rebuild -> fade in)', async () => {
         const bus = new AudioBus({
-            id: 'sfx_bus',
+            id: 'sfx_bus' as BusId,
             config: { gain: 1 },
             context: mockContext as AudioCtx,
             automation: mockAutomation as AutomationEngine,
@@ -76,7 +77,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
     it('should correctly disconnect and remove filter when null is passed', async () => {
         const bus = new AudioBus({
-            id: 'sfx_bus',
+            id: 'sfx_bus' as BusId,
             config: { gain: 1 },
             context: mockContext as any,
             automation: mockAutomation as any,
@@ -99,7 +100,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
     it('should fade out and disconnect send when targetGain is null', async () => {
         const bus = new AudioBus({
-            id: 'sfx_bus',
+            id: 'sfx_bus' as BusId,
             config: { gain: 1 },
             context: mockContext as any,
             automation: mockAutomation as any,
@@ -109,10 +110,20 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
 
-        bus.updateSend({ targetBusId: 'reverb_bus', targetNode: mockTargetNode, targetGain: 0.5, durationMs: 0 });
+        bus.updateSend({
+            targetBusId: 'reverb_bus' as BusId,
+            targetNode: mockTargetNode,
+            targetGain: 0.5,
+            durationMs: 0
+        });
         await Promise.resolve();
 
-        bus.updateSend({ targetBusId: 'reverb_bus', targetNode: mockTargetNode, targetGain: null, durationMs: 100 });
+        bus.updateSend({
+            targetBusId: 'reverb_bus' as BusId,
+            targetNode: mockTargetNode,
+            targetGain: null,
+            durationMs: 100
+        });
         await Promise.resolve();
 
         expect(mockAutomation.ramp).toHaveBeenCalledWith(expect.any(Object), 0, 100, 'linear');
@@ -125,7 +136,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
     it('should bind RTPC for filterFrequency and pan and calculate additive math correctly', async () => {
         const bus = new AudioBus({
-            id: 'sfx_bus',
+            id: 'sfx_bus' as BusId,
             config: { gain: 1 },
             context: mockContext as any,
             automation: mockAutomation as any,
@@ -174,7 +185,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
     it('should bind RTPC to sendLevel and automate send gain when gameParam changes', async () => {
         const bus = new AudioBus({
-            id: 'sfx_bus',
+            id: 'sfx_bus' as BusId,
             config: { gain: 1 },
             context: mockContext as any,
             automation: mockAutomation as any,
@@ -184,7 +195,12 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
 
-        bus.updateSend({ targetBusId: 'reverb_bus', targetNode: mockTargetNode, targetGain: 1, durationMs: 0 });
+        bus.updateSend({
+            targetBusId: 'reverb_bus' as BusId,
+            targetNode: mockTargetNode,
+            targetGain: 1,
+            durationMs: 0
+        });
         await Promise.resolve();
 
         mockAutomation.ramp.mockClear();
@@ -193,7 +209,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         bus.bindRTPC(
             {
                 sendLevel: {
-                    sendTargetBus: 'reverb_bus',
+                    sendTargetBus: 'reverb_bus' as BusId,
                     gameParam: 'cave_depth',
                     curve: [
                         { x: 0, y: 0 },
@@ -215,7 +231,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
     it('should safely ignore missing sendTargetBus and safely cache RTPC modifiers for uninitialized sends', async () => {
         const bus = new AudioBus({
-            id: 'sfx_bus',
+            id: 'sfx_bus' as BusId,
             config: { gain: 1 },
             context: mockContext as any,
             automation: mockAutomation as any,
@@ -240,7 +256,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         bus.bindRTPC(
             {
                 sendLevel: {
-                    sendTargetBus: 'ghost_bus',
+                    sendTargetBus: 'ghost_bus' as BusId,
                     gameParam: 'depth',
                     curve: [{ x: 100, y: 0.5 }]
                 }
@@ -258,7 +274,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
     it('should bind RTPC using preset curves and calculate math correctly', async () => {
         const bus = new AudioBus({
-            id: 'sfx_bus',
+            id: 'sfx_bus' as BusId,
             config: { gain: 1 },
             context: mockContext as any,
             automation: mockAutomation as any,
@@ -297,7 +313,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
     describe('coldStart() initialization logic', () => {
         it('should connect pre to post directly if no filter is configured', () => {
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: { gain: 1 },
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -311,7 +327,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         it('should create and connect a Biquad filter if configured, and cache its parameters', () => {
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: { gain: 1, filter: { type: 'lowpass', frequency: 22_000 } },
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -337,7 +353,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(mockConvolver);
 
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: { gain: 1, filter: { type: 'reverb' } },
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -355,7 +371,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(null);
 
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: { gain: 1, filter: { type: 'lowpass', frequency: 22_000 } },
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -372,7 +388,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
     describe('setLogicalGain() logic', () => {
         it('should update logical gain, trigger microtask, and automate inputGainNode', async () => {
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: { gain: 1 },
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -395,7 +411,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         it('should use Math.max for durationMs when called multiple times before flush', async () => {
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: { gain: 1 },
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -416,7 +432,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         it('should correctly multiply logical gain with existing RTPC modifier', async () => {
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: { gain: 1 },
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -440,7 +456,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         beforeEach(() => {
             bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: {},
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -491,7 +507,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
     describe('safeReplaceFilter() edge cases', () => {
         it('should lock concurrent calls with while (this.filterReplacePromise)', async () => {
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: {},
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -512,7 +528,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(null);
 
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: {},
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -534,7 +550,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(mockConvolver);
 
             const bus = new AudioBus({
-                id: 'bus',
+                id: 'bus' as BusId,
                 config: {},
                 context: mockContext as any,
                 automation: mockAutomation as any,
@@ -552,7 +568,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
     it('should bind RTPC to gain and automate inputGainNode when gameParam changes', async () => {
         const bus = new AudioBus({
-            id: 'sfx_bus',
+            id: 'sfx_bus' as BusId,
             config: { gain: 1 },
             context: mockContext as any,
             automation: mockAutomation as any,

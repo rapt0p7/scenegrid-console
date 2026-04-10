@@ -1,12 +1,13 @@
 import * as workerTimers from 'worker-timers';
 
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { BusId, SoundId } from '@domain/Types/Branded';
 
 export interface CullingConfig {
     checkIntervalMs?: number;
     cullingThreshold?: number;
-    busIdResolver: (soundId: string) => string | undefined;
-    busVolumeResolver: (busId: string) => number;
+    busIdResolver: (soundId: SoundId) => BusId | undefined;
+    busVolumeResolver: (busId: BusId) => number;
 }
 
 export class VoiceCullingSystem {

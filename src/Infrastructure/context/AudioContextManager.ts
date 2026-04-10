@@ -2,7 +2,7 @@ import AudioContextFactory from '@infrastructure/context/AudioContextFactory.js'
 import ListenerManager from '@infrastructure/context/ListenerManager.js';
 import UnlockManager from '@infrastructure/context/UnlockManager.js';
 
-import type { AutomationEngine } from '@infrastructure/index.js';
+import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 import type { IAudioContextManager } from '@infrastructure/types/IAudioContextManager.js';
 

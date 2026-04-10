@@ -17,8 +17,11 @@ export type { ISoundOptions } from './types/ISoundOptions.js';
 export type { IVoiceConfig } from './types/IVoiceConfig.js';
 export type { ISidechain, IPluginFactory, ILimiterNode } from './types/IAudioPlugins.js';
 export type { IAudioWorkletProcessor } from './types/IAudioWorkletProcessor.js';
+export type { DebuggerOptions } from './debug/AudioDebugger.js';
 
+export { default as AudioBusSystem } from './busSystem/AudioBusSystem.js';
 export { default as AudioContextManager } from './context/AudioContextManager.js';
+export { default as AudioDebugger } from './debug/AudioDebugger.js';
 export { default as AutomationEngine } from './automation/AutomationEngine.js';
 export { default as MasterOutput } from './nodes/MasterOutput.js';
 export { default as SoundPoolManager } from './instance/SoundPoolManager.js';

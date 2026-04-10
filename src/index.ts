@@ -1,6 +1,6 @@
 export { AudioEngine } from '@application/AudioEngine.js';
 export { PRIORITY } from '@domain/Mixer/MixerLayer.js';
-export { default as AudioDebugger } from '@infrastructure/debug/AudioDebugger.js';
+export { AudioDebugger } from '@infrastructure';
 
 export { LoopState } from '@domain/Orchestration/Ports/ISmartLoopManager.js';
 

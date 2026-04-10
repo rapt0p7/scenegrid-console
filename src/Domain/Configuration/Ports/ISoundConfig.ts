@@ -1,8 +1,8 @@
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import type { SoundId } from '@domain/Types/Branded';
+import type { BusId, SoundId } from '@domain/Types/Branded.js';
 
 export interface IBaseSoundConfig {
-    busId?: string;
+    busId?: BusId;
     variation?: IVariationConfig;
     ducking?: IDuckingConfig;
     rtpc?: Partial<Record<RTPCTargetProperty, IRTPCConfig>>;
@@ -17,7 +17,7 @@ export interface ISpatialConfig {
 }
 
 export interface IDuckingConfig {
-    target?: string | string[];
+    target?: BusId | BusId[];
     intensity?: number;
 }
 
@@ -42,7 +42,7 @@ export interface ISoundConfig extends IBaseSoundConfig {
 }
 
 export interface ISmartLoopSoundConfig {
-    busId: string;
+    busId: BusId;
     smartLoop: {
         bpm?: number;
         beatsPerBar?: number;
@@ -66,7 +66,7 @@ export interface ILayerConfig {
 
 export interface ILayeredSoundConfig {
     isLayered: true;
-    busId: string;
+    busId: BusId;
     ducking?: IDuckingConfig;
     layers: ILayerConfig[];
 }

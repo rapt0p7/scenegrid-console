@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import SoundPoolManager from '../SoundPoolManager.js';
 
+import type { SoundId } from '@domain/Types/Branded.js';
 import type { ISoundInstance } from '@infrastructure';
 import type { IVoiceConfig } from '@infrastructure';
 
@@ -66,8 +67,8 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
     });
 
     it('should allocate new instances up to the global limit', () => {
-        const inst1 = pool.acquire('sfx_high');
-        const inst2 = pool.acquire('sfx_high');
+        const inst1 = pool.acquire('sfx_high' as SoundId);
+        const inst2 = pool.acquire('sfx_high' as SoundId);
 
         expect(inst1).toBeDefined();
         expect(inst2).toBeDefined();
@@ -76,10 +77,10 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
 
     it('should DROP a new sound if limit is reached and its priority is too low', () => {
         const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        pool.acquire('sfx_high');
-        pool.acquire('sfx_high');
+        pool.acquire('sfx_high' as SoundId);
+        pool.acquire('sfx_high' as SoundId);
 
-        const droppedInst = pool.acquire('sfx_low');
+        const droppedInst = pool.acquire('sfx_low' as SoundId);
 
         expect(droppedInst).toBeNull();
         expect(pool.getActiveVoices().size).toBe(2);
@@ -87,12 +88,12 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
     });
 
     it('should STEAL a voice (Kill) from a lower priority sound', () => {
-        const victim1 = pool.acquire('sfx_low')!;
-        pool.acquire('sfx_low');
+        const victim1 = pool.acquire('sfx_low' as SoundId)!;
+        pool.acquire('sfx_low' as SoundId);
 
         (victim1 as any).state = 'playing';
 
-        const VIP_Inst = pool.acquire('sfx_high');
+        const VIP_Inst = pool.acquire('sfx_high' as SoundId);
 
         expect(VIP_Inst).toBeDefined();
 
@@ -101,12 +102,12 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
     });
 
     it('should VIRTUALIZE a voice instead of killing if config says so', () => {
-        const ambientInst = pool.acquire('ambient')!;
+        const ambientInst = pool.acquire('ambient' as SoundId)!;
         (ambientInst as any).state = 'playing';
 
-        pool.acquire('sfx_high');
+        pool.acquire('sfx_high' as SoundId);
 
-        const VIP_Inst = pool.acquire('sfx_high');
+        const VIP_Inst = pool.acquire('sfx_high' as SoundId);
 
         expect(VIP_Inst).toBeDefined();
 
@@ -117,14 +118,14 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
     });
 
     it('should correctly release voices back to the available pool', () => {
-        const inst = pool.acquire('sfx_high')!;
+        const inst = pool.acquire('sfx_high' as SoundId)!;
         expect(pool.getActiveVoices().size).toBe(1);
 
         pool.release(inst);
 
         expect(pool.getActiveVoices().size).toBe(0);
 
-        const instAgain = pool.acquire('sfx_high');
+        const instAgain = pool.acquire('sfx_high' as SoundId);
         expect(instAgain).toBe(inst);
         expect(instAgain?.resetForReuse).toHaveBeenCalled();
     });
@@ -170,9 +171,9 @@ describe('SoundPoolManager (Policy: "expand")', () => {
     });
 
     it('should bypass maxPolyphony and create new instances when policy is "expand"', () => {
-        const v1 = manager.acquire('sfx_gun') as any;
-        const v2 = manager.acquire('sfx_gun') as any;
-        const v3 = manager.acquire('sfx_gun') as any;
+        const v1 = manager.acquire('sfx_gun' as SoundId) as any;
+        const v2 = manager.acquire('sfx_gun' as SoundId) as any;
+        const v3 = manager.acquire('sfx_gun' as SoundId) as any;
 
         expect(mockFactory).toHaveBeenCalledTimes(3);
         expect(v1.instanceId).not.toBe(v2.instanceId);
@@ -181,11 +182,11 @@ describe('SoundPoolManager (Policy: "expand")', () => {
     });
 
     it('should respect globalVoiceLimit EVEN IF policy is "expand"', () => {
-        const v1 = manager.acquire('sfx_gun') as any;
-        const v2 = manager.acquire('sfx_gun') as any;
-        const v3 = manager.acquire('sfx_gun') as any;
-        const v4 = manager.acquire('sfx_gun') as any;
-        const v5 = manager.acquire('sfx_gun') as any;
+        const v1 = manager.acquire('sfx_gun' as SoundId) as any;
+        const v2 = manager.acquire('sfx_gun' as SoundId) as any;
+        const v3 = manager.acquire('sfx_gun' as SoundId) as any;
+        const v4 = manager.acquire('sfx_gun' as SoundId) as any;
+        const v5 = manager.acquire('sfx_gun' as SoundId) as any;
 
         expect(mockFactory).toHaveBeenCalledTimes(4);
 
@@ -198,11 +199,11 @@ describe('SoundPoolManager (Policy: "expand")', () => {
     });
 
     it('should successfully reuse released instances before expanding', () => {
-        const v1 = manager.acquire('sfx_gun') as any;
+        const v1 = manager.acquire('sfx_gun' as SoundId) as any;
 
         eventHandlers[v1.instanceId]();
 
-        const v2 = manager.acquire('sfx_gun') as any;
+        const v2 = manager.acquire('sfx_gun' as SoundId) as any;
 
         expect(mockFactory).toHaveBeenCalledTimes(1);
         expect(v1.instanceId).toBe(v2.instanceId);
@@ -230,12 +231,12 @@ describe('SoundPoolManager (Policy: "steal_oldest")', () => {
     });
 
     it('should STEAL the oldest busy instance when maxPolyphony is reached for a specific sound', () => {
-        const inst1 = manager.acquire('laser') as any;
-        const inst2 = manager.acquire('laser') as any;
+        const inst1 = manager.acquire('laser' as SoundId) as any;
+        const inst2 = manager.acquire('laser' as SoundId) as any;
 
         expect(mockFactory).toHaveBeenCalledTimes(2);
 
-        const inst3 = manager.acquire('laser') as any;
+        const inst3 = manager.acquire('laser' as SoundId) as any;
 
         expect(mockFactory).toHaveBeenCalledTimes(2);
 
@@ -259,13 +260,13 @@ describe('SoundPoolManager (Dispose)', () => {
     });
 
     it('should dispose ONLY instances of the specified soundId', () => {
-        const sfx1 = manager.acquire('sfx_a')!;
-        const sfx2 = manager.acquire('sfx_a')!;
-        const bgm = manager.acquire('bgm_b')!;
+        const sfx1 = manager.acquire('sfx_a' as SoundId)!;
+        const sfx2 = manager.acquire('sfx_a' as SoundId)!;
+        const bgm = manager.acquire('bgm_b' as SoundId)!;
 
         expect(manager.getActiveVoices().size).toBe(3);
 
-        manager.dispose('sfx_a');
+        manager.dispose('sfx_a' as SoundId);
 
         expect(sfx1.dispose).toHaveBeenCalledTimes(1);
         expect(sfx2.dispose).toHaveBeenCalledTimes(1);
@@ -277,8 +278,8 @@ describe('SoundPoolManager (Dispose)', () => {
     });
 
     it('should dispose ALL instances across all soundIds if no argument is provided', () => {
-        const sfx = manager.acquire('sfx_a')!;
-        const bgm = manager.acquire('bgm_b')!;
+        const sfx = manager.acquire('sfx_a' as SoundId)!;
+        const bgm = manager.acquire('bgm_b' as SoundId)!;
 
         manager.release(sfx);
 

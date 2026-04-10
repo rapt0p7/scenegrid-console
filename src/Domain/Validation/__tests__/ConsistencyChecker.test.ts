@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 
+// eslint-disable-next-line import/no-restricted-paths
 import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
+import type { BusId, SoundId } from '@domain/Types/Branded.js';
 
 describe('ConsistencyChecker', () => {
     beforeEach(() => {
@@ -26,7 +28,7 @@ describe('ConsistencyChecker', () => {
                 sfx: { gain: 0.8, sends: { master: 1 } }
             },
             soundMap: {
-                gun_fire: { busId: 'sfx', src: 'shoot' }
+                ['gun_fire' as SoundId]: { busId: 'sfx' as BusId, src: 'shoot' }
             },
             snapshots: {}
         };

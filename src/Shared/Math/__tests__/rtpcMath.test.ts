@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import { evaluateRTPCCurve } from '@shared/Math/rtpcMath.js';
 
-import type { MathCurveDefinition, Point2D } from '@domain/Configuration/Ports/IRTPCConfig.js';
+import type { MathCurveDefinition, Point2D } from '@shared/Math/MathCurve';
 
 describe('evaluateRTPCCurve', () => {
     describe('Edge Cases', () => {

@@ -1,10 +1,10 @@
 // noinspection D
 
-import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController';
-import type { BusId, PlaybackId } from '@domain/Types/Branded';
-
-export default class DuckingManager {
+import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
+import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { BusId, PlaybackId } from '@domain/Types/Branded.js';
+export default class DuckingManager implements IDuckingManager {
     private readonly busSystem: IAudioBusSystem;
     private readonly soundController: ISoundController;
 
@@ -19,7 +19,7 @@ export default class DuckingManager {
 
     triggerDucking(
         playbackId: PlaybackId,
-        targetBusIdOrArray: string | string[],
+        targetBusIdOrArray: BusId | BusId[],
         intensity: number | number[] = 1
     ): void {
         const targets = Array.isArray(targetBusIdOrArray) ? targetBusIdOrArray : [targetBusIdOrArray];
@@ -30,12 +30,12 @@ export default class DuckingManager {
 
         for (const [index, busId] of targets.entries()) {
             const currentIntensity = intensities[index] ?? 1;
-            this.busSystem.addSidechainTrigger(busId as BusId, playbackId, currentIntensity);
+            this.busSystem.addSidechainTrigger(busId, playbackId, currentIntensity);
         }
 
         this.soundController.onVoiceEnded(playbackId, () => {
             for (const busId of targets) {
-                this.busSystem.removeSidechainTrigger(busId as BusId, playbackId);
+                this.busSystem.removeSidechainTrigger(busId, playbackId);
             }
         });
     }

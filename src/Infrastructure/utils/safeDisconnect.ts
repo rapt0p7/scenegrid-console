@@ -1,4 +1,4 @@
-import type { AudioNodeLike } from '@infrastructure';
+import type { AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
 
 export function safeDisconnect(node?: AudioNodeLike, output: AudioNodeLike | null = null): void {
     if (!node) return;

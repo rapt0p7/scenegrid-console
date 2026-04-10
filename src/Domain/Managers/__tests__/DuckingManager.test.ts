@@ -4,7 +4,7 @@ import DuckingManager from '@domain/Managers/DuckingManager.js';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId } from '@domain/Types/Branded.js';
 import type { Mocked } from 'vitest';
 
 describe('DuckingManager', () => {
@@ -54,7 +54,7 @@ describe('DuckingManager', () => {
 
     it('should add sidechain trigger via bus system and setup cleanup event', () => {
         const testId = 123 as PlaybackId;
-        manager.triggerDucking(testId, 'music_bus', 0.8);
+        manager.triggerDucking(testId, 'music_bus' as BusId, 0.8);
 
         expect(mockBusSystem.addSidechainTrigger).toHaveBeenCalledWith('music_bus', testId, 0.8);
 
@@ -63,7 +63,7 @@ describe('DuckingManager', () => {
 
     it('should remove sidechain trigger when voice ends (Memory Leak Prevention)', () => {
         const testId = 456 as PlaybackId;
-        manager.triggerDucking(testId, 'music_bus', 1);
+        manager.triggerDucking(testId, 'music_bus' as BusId, 1);
 
         expect(mockBusSystem.removeSidechainTrigger).not.toHaveBeenCalled();
 
@@ -75,7 +75,7 @@ describe('DuckingManager', () => {
 
     it('should support ducking multiple buses simultaneously with different intensities', () => {
         const testId = 789 as PlaybackId;
-        manager.triggerDucking(testId, ['music_bus', 'ambience_bus'], [1, 0.5]);
+        manager.triggerDucking(testId, ['music_bus', 'ambience_bus'] as BusId[], [1, 0.5]);
 
         expect(mockBusSystem.addSidechainTrigger).toHaveBeenCalledTimes(2);
         expect(mockBusSystem.addSidechainTrigger).toHaveBeenNthCalledWith(1, 'music_bus', testId, 1);
@@ -89,7 +89,7 @@ describe('DuckingManager', () => {
 
     it('should fallback to default intensity (1) if intensity array is shorter than buses array', () => {
         const testId = 999 as PlaybackId;
-        manager.triggerDucking(testId, ['bus_A', 'bus_B'], [0.2]);
+        manager.triggerDucking(testId, ['bus_A', 'bus_B'] as BusId[], [0.2]);
 
         expect(mockBusSystem.addSidechainTrigger).toHaveBeenCalledTimes(2);
         expect(mockBusSystem.addSidechainTrigger).toHaveBeenNthCalledWith(1, 'bus_A', testId, 0.2);

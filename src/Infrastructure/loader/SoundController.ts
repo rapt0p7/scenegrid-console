@@ -1,6 +1,6 @@
 import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController';
 import type { PlaybackId, SoundId } from '@domain/Types/Branded';
-import type { AutomationEngine } from '@infrastructure/index';
+import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
 import type { AudioCtx } from '@infrastructure/types/IAudioContext';
@@ -149,7 +149,7 @@ export class SoundController implements ISoundController {
         return [...this.activeVoices.keys()];
     }
 
-    getSoundId(id: PlaybackId): string | undefined {
+    getSoundId(id: PlaybackId): SoundId | undefined {
         return this.activeVoices.get(id)?.soundId;
     }
 

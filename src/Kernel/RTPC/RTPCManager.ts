@@ -1,13 +1,12 @@
 import mitt from 'mitt';
 import * as workerTimers from 'worker-timers';
 
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter';
 import type { IRTPCManager, RTPCEvents } from '@kernel/RTPC/Ports/IRTPCManager.js';
 import type { Emitter } from 'mitt';
 
 const MAX_PARAMS = 1024;
 
-export default class RTPCManager implements IRTPCManager, IRTPCAdapter {
+export default class RTPCManager implements IRTPCManager {
     public readonly events: Emitter<RTPCEvents> = mitt<RTPCEvents>();
 
     private paramToIndex = new Map<string, number>();

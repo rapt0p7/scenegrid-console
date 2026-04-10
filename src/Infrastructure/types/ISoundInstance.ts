@@ -1,3 +1,4 @@
+import type { SoundId } from '@domain/Types/Branded.js';
 import type {
     AudioNodeLike,
     GainNodeLike,
@@ -9,7 +10,7 @@ import type { IPlaybackController } from '@infrastructure/types/IPlaybackControl
 export type InstanceParameterTarget = 'gain' | 'pitch' | 'pan' | 'filterFrequency';
 
 export interface ISoundInstance extends IPlaybackController {
-    readonly id: string;
+    readonly id: SoundId;
     readonly outputNode: AudioNodeLike;
     readonly instanceGain: GainNodeLike;
     readonly pannerNode: PannerNodeLike | StereoPannerNodeLike | null;

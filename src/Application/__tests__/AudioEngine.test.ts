@@ -7,11 +7,17 @@ import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 import { PRIORITY } from '@domain/Mixer/MixerLayer.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
-import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager, FiltersPlugin } from '@infrastructure';
-import AudioDebugger from '@infrastructure/debug/AudioDebugger.js';
+import {
+    SoundController,
+    SoundPoolManager,
+    SoundInstance,
+    AudioContextManager,
+    FiltersPlugin,
+    AudioDebugger
+} from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
-import type { PlaybackId, SoundId } from '@domain/Types/Branded';
+import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),
@@ -220,7 +226,7 @@ describe('AudioEngine', () => {
             soundMap: {
                 test_sound: { busId: 'sfx', voice: { priority: 5 }, spatial: true },
                 sound_no_voice: { busId: 'master' }
-            },
+            } as any,
             globalVoiceLimit: 32
         });
 
@@ -535,6 +541,12 @@ describe('AudioEngine', () => {
             expect(cullingOptions.busIdResolver('test_sound')).toBe('sfx');
             expect(cullingOptions.busIdResolver('unknown')).toBeUndefined();
 
+            const sfxBus = engine._debug.busSystem.getBus('sfx' as BusId);
+            expect(sfxBus).toBeDefined();
+
+            const originalLogicalGain = sfxBus!.logicalTargetGain;
+            sfxBus!.logicalTargetGain = 0.5;
+
             const getCurrentGainSpy = vi
                 .spyOn(engine._debug.busSystem, 'getCurrentRealGain')
                 .mockImplementation(busId => (busId === 'sfx' ? 0.8 : 1));
@@ -542,6 +554,7 @@ describe('AudioEngine', () => {
             expect(cullingOptions.busVolumeResolver('sfx')).toBe(0.8);
             expect(cullingOptions.busVolumeResolver('ghost')).toBe(1);
 
+            sfxBus!.logicalTargetGain = originalLogicalGain;
             getCurrentGainSpy.mockRestore();
         });
 
@@ -713,7 +726,7 @@ describe('AudioEngine', () => {
                 soundMap: {
                     bullet_flyby: { busId: 'master', spatial: true },
                     ui_click: { busId: 'master' }
-                }
+                } as any
             });
 
             await engine.init();
@@ -725,12 +738,12 @@ describe('AudioEngine', () => {
             expect(soundPoolMockCalls.length).toBeGreaterThan(0);
             const instanceFactory = soundPoolMockCalls[0][0];
 
-            instanceFactory('bullet_flyby');
+            instanceFactory('bullet_flyby' as SoundId);
             const bulletCall = vi
                 .mocked(SoundInstance)
                 .mock.calls.find((call: ConstructorParameters<typeof SoundInstance>) => call[0] === 'bullet_flyby');
 
-            instanceFactory('ui_click');
+            instanceFactory('ui_click' as SoundId);
             const clickCall = vi
                 .mocked(SoundInstance)
                 .mock.calls.find((call: ConstructorParameters<typeof SoundInstance>) => call[0] === 'ui_click');

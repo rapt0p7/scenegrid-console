@@ -10,7 +10,8 @@ import type { IAudioBus } from '@domain/BusSystem/Ports/IAudioBus.js';
 import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type { BusId } from '@domain/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type {
     AudioCtx,
@@ -21,6 +22,7 @@ import type {
     StereoPannerNodeLike
 } from '@infrastructure/types/IAudioContext.js';
 import type { IPluginFactory } from '@infrastructure/types/IAudioPlugins.js';
+
 export default class AudioBus implements IAudioBus {
     inputGainNode: GainNodeLike;
     postFilterGain: GainNodeLike;
@@ -29,13 +31,13 @@ export default class AudioBus implements IAudioBus {
 
     private readonly pannerNode: StereoPannerNodeLike | null = null;
     private readonly automation: AutomationEngine;
-    private readonly id: string;
+    private readonly id: BusId;
     private readonly context: AudioCtx;
     private readonly config: IBus;
     private readonly defaultGain: number;
     private readonly routerMasterGain: GainNodeLike | null;
     private filterNode: BiquadFilterNodeLike | ConvolverNodeNodeLike | null = null;
-    private readonly sendGains: Map<string, GainNodeLike> = new Map();
+    private readonly sendGains: Map<BusId, GainNodeLike> = new Map();
     private rtpcUnsubscribers: Array<() => void> = [];
     private readonly pluginFactory: IPluginFactory;
     private filterReplacePromise: Promise<void> | null = null;
@@ -46,7 +48,7 @@ export default class AudioBus implements IAudioBus {
         filterFrequency: { logical: 20_000, rtpc: 0, durationMs: 0 },
         pan: { logical: 0, rtpc: 0, durationMs: 0 },
         sends: new Map<
-            string,
+            BusId,
             { logical: number | null; rtpc: number; durationMs: number; targetNode?: AudioNodeLike }
         >()
     };
@@ -59,7 +61,7 @@ export default class AudioBus implements IAudioBus {
         routerMasterGain = null,
         pluginFactory
     }: {
-        id: string;
+        id: BusId;
         config: IBus;
         context: AudioCtx;
         automation: AutomationEngine;
@@ -195,7 +197,7 @@ export default class AudioBus implements IAudioBus {
         targetGain,
         durationMs = 0
     }: {
-        targetBusId: string;
+        targetBusId: BusId;
         targetNode: AudioNodeLike;
         targetGain: number | null;
         durationMs: number;

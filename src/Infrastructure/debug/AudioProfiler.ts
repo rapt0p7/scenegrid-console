@@ -1,5 +1,5 @@
 // noinspection D
-import type { ISoundInstance } from '@infrastructure';
+import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
 
 export class AudioProfiler {
     public readonly metrics = {

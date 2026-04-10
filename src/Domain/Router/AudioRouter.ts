@@ -12,19 +12,19 @@ import type {
     IPlayOptions
 } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
-import type ContainerManager from '@domain/Managers/ContainerManager.js';
-import type DuckingManager from '@domain/Managers/DuckingManager.js';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter';
+import type { IContainerManager } from '@domain/Managers/Ports/IContainerManager.js';
+import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController';
-import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly busSystem: IAudioBusSystem;
-    private readonly duckingManager: DuckingManager;
+    private readonly duckingManager: IDuckingManager;
     private readonly soundController: ISoundController;
     private readonly rtpcManager: IRTPCAdapter;
-    private readonly containerManager: ContainerManager;
+    private readonly containerManager: IContainerManager;
     private readonly soundMap: ISoundMap | null = null;
 
     constructor({
@@ -37,9 +37,9 @@ export default class AudioRouter implements IAudioRouter {
     }: {
         soundController: ISoundController;
         busSystem: IAudioBusSystem;
-        duckingManager: DuckingManager;
+        duckingManager: IDuckingManager;
         rtpcManager: IRTPCAdapter;
-        containerManager: ContainerManager;
+        containerManager: IContainerManager;
         soundMap: ISoundMap;
     }) {
         this.soundController = soundController;
@@ -50,7 +50,7 @@ export default class AudioRouter implements IAudioRouter {
         this.soundMap = soundMap;
     }
 
-    getSoundConfig(name: string): AnySoundConfig | null {
+    getSoundConfig(name: SoundId): AnySoundConfig | null {
         return this.soundMap![name] ?? null;
     }
 

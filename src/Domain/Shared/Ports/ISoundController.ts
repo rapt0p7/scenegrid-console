@@ -1,4 +1,4 @@
-import type { PlaybackId, SoundId } from '@domain/Types/Branded';
+import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
 
 export interface IControllerPlayOptions {
     when?: number;
@@ -32,7 +32,7 @@ export interface ISoundController {
     onVoiceEnded(id: PlaybackId, callback: () => void): () => void;
     fadeParameter(id: PlaybackId, target: RTPCParameterTarget, targetValue: number, durationMs: number): void;
     getActivePlaybacks(): PlaybackId[];
-    getSoundId(id: PlaybackId): string | undefined;
+    getSoundId(id: PlaybackId): SoundId | undefined;
     getPlaybackState(id: PlaybackId): PlaybackState;
     virtualize(id: PlaybackId): void;
     devirtualize(id: PlaybackId): void;

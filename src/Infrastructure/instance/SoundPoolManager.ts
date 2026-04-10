@@ -1,5 +1,6 @@
 // noinspection D
 
+import type { SoundId } from '@domain/Types/Branded.js';
 import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
 import type { IVoiceConfig } from '@infrastructure/types/IVoiceConfig.js';
 
@@ -9,17 +10,17 @@ export interface PoolConfig {
     maxPolyphony: number;
     policy: PoolPolicy;
     globalVoiceLimit: number;
-    voiceConfigResolver: (soundId: string) => IVoiceConfig | undefined;
+    voiceConfigResolver: (soundId: SoundId) => IVoiceConfig | undefined;
 }
 
 class SoundPoolManager {
-    #available: Map<string, ISoundInstance[]> = new Map();
-    #busy: Map<string, ISoundInstance[]> = new Map();
+    #available: Map<SoundId, ISoundInstance[]> = new Map();
+    #busy: Map<SoundId, ISoundInstance[]> = new Map();
     #activeGlobalVoices: Set<ISoundInstance> = new Set();
     #config: PoolConfig;
-    readonly #instanceFactory: (soundId: string) => ISoundInstance;
+    readonly #instanceFactory: (soundId: SoundId) => ISoundInstance;
 
-    constructor(instanceFactory: (soundId: string) => ISoundInstance, config: Partial<PoolConfig> = {}) {
+    constructor(instanceFactory: (soundId: SoundId) => ISoundInstance, config: Partial<PoolConfig> = {}) {
         this.#instanceFactory = instanceFactory;
         this.#config = {
             maxPolyphony: config.maxPolyphony ?? 32,
@@ -34,7 +35,7 @@ class SoundPoolManager {
         return this.#activeGlobalVoices;
     }
 
-    public acquire(soundId: string): ISoundInstance | null {
+    public acquire(soundId: SoundId): ISoundInstance | null {
         const voiceConfig = this.#config.voiceConfigResolver(soundId);
         const requestedPriority = voiceConfig?.priority ?? 128;
 
@@ -108,7 +109,7 @@ class SoundPoolManager {
         }
     }
 
-    public dispose(soundId?: string): void {
+    public dispose(soundId?: SoundId): void {
         const ids = soundId ? [soundId] : [...new Set([...this.#available.keys(), ...this.#busy.keys()])];
 
         for (const id of ids) {
@@ -125,7 +126,7 @@ class SoundPoolManager {
         }
     }
 
-    #getPool(map: Map<string, ISoundInstance[]>, soundId: string): ISoundInstance[] {
+    #getPool(map: Map<SoundId, ISoundInstance[]>, soundId: SoundId): ISoundInstance[] {
         if (!map.has(soundId)) {
             map.set(soundId, []);
         }
