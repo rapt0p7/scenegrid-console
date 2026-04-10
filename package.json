@@ -39,6 +39,7 @@
         "devserver": "cross-env NODE_ENV=development webpack serve --progress --config ./webpack.development.config.js --mode=development",
         "docs": "typedoc",
         "license-checker": "license-checker --production --failOn \"GPL;GPL-1.0;GPL-2.0;GPL-3.0;LGPL;LGPL-2.0;LGPL-2.1;LGPL-3.0;AGPL;AGPL-1.0;AGPL-3.0;SSPL;CDDL;EUPL;MPL-1.0;NPL;QPL;CPAL;RPL\"\n",
+        "lint:architecture": "depcruise src --config .dependency-cruiser.cjs",
         "prepare": "husky || true",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",

@@ -65,15 +65,14 @@ export default tseslint.config(
                 }
             },
             'boundaries/elements': [
-                { type: 'webaudio-core', mode: 'full', pattern: 'src/webaudio-core' },
-                { type: 'interfaces', mode: 'full', pattern: 'src/interfaces' },
-                { type: 'config', mode: 'full', pattern: 'src/config' },
-                { type: 'bus-system', mode: 'full', pattern: 'src/BusSystem' },
-                { type: 'app-core', mode: 'full', pattern: 'src/Core' },
-                { type: 'managers', mode: 'full', pattern: 'src/Managers' },
-                { type: 'app-root', mode: 'full', pattern: 'src/*.*' },
+                { type: 'application', mode: 'full', pattern: 'src/Application' },
+                { type: 'domain', mode: 'full', pattern: 'src/Domain' },
+                { type: 'kernel', mode: 'full', pattern: 'src/Kernel' },
+                { type: 'debug', mode: 'full', pattern: 'src/Infrastructure/debug' },
+                { type: 'infrastructure', mode: 'full', pattern: 'src/Infrastructure' },
+                { type: 'shared', mode: 'full', pattern: 'src/Shared' },
                 { type: 'helpers', mode: 'full', pattern: 'src/helpers' },
-                { type: 'debug', mode: 'full', pattern: 'src/Debug' }
+                { type: 'root', mode: 'full', pattern: 'src/*.ts' }
             ]
         },
         rules: {
@@ -235,12 +234,19 @@ export default tseslint.config(
                 {
                     zones: [
                         {
-                            target: './src/BusSystem/**/*.ts',
-                            from: ['./src/Managers/**/*.ts', './src/config/**/*.ts']
+                            target: './src/Domain/**/*.ts',
+                            from: ['./src/Infrastructure/**/*.ts', './src/Application/**/*.ts'],
+                            message: 'Domain layer must be pure. Infrastructure or Application details leaked.'
                         },
                         {
-                            target: './src/Core/**/*.ts',
-                            from: ['./src/Managers/**/*.ts', './src/config/**/*.ts']
+                            target: './src/Kernel/**/*.ts',
+                            from: ['./src/Domain/**/*.ts', './src/Infrastructure/**/*.ts'],
+                            message: 'Kernel should only contain low-level logic. Domain logic found.'
+                        },
+                        {
+                            target: './src/Shared/**/*.ts',
+                            from: ['./src/Domain/**/*.ts', './src/Kernel/**/*.ts', './src/Infrastructure/**/*.ts'],
+                            message: 'Shared utilities must be independent of business logic.'
                         }
                     ]
                 }
@@ -261,36 +267,39 @@ export default tseslint.config(
                 {
                     default: 'disallow',
                     rules: [
-                        { from: 'webaudio-core', allow: ['webaudio-core'] },
-                        { from: 'interfaces', allow: ['interfaces', 'webaudio-core'] },
-                        { from: 'config', allow: ['config', 'interfaces', 'webaudio-core'] },
-                        { from: 'bus-system', allow: ['bus-system', 'interfaces', 'webaudio-core', 'helpers'] },
-                        { from: 'app-core', allow: ['app-core', 'interfaces', 'webaudio-core', 'helpers', 'debug'] },
                         {
-                            from: 'managers',
-                            allow: [
-                                'managers',
-                                'bus-system',
-                                'app-core',
-                                'config',
-                                'interfaces',
-                                'webaudio-core',
-                                'helpers'
-                            ]
+                            from: 'application',
+                            allow: ['application', 'domain', 'kernel', 'infrastructure', 'shared', 'helpers', 'debug']
                         },
-                        { from: 'helpers', allow: ['helpers'] },
-                        { from: 'debug', allow: ['debug', 'webaudio-core', 'interfaces', 'helpers'] },
                         {
-                            from: 'app-root',
+                            from: 'domain',
+                            allow: ['domain', 'kernel', 'shared', 'helpers']
+                        },
+                        {
+                            from: 'kernel',
+                            allow: ['kernel', 'shared', 'helpers']
+                        },
+                        {
+                            from: 'infrastructure',
+                            allow: ['infrastructure', 'domain', 'kernel', 'shared', 'helpers', 'debug']
+                        },
+                        {
+                            from: 'debug',
+                            allow: ['debug', 'infrastructure', 'domain', 'kernel', 'shared', 'helpers']
+                        },
+                        { from: 'shared', allow: ['shared'] },
+                        { from: 'helpers', allow: ['helpers', 'shared'] },
+                        {
+                            from: 'root',
                             allow: [
-                                'webaudio-core',
-                                'interfaces',
-                                'config',
-                                'bus-system',
-                                'app-core',
-                                'managers',
-                                'app-root',
-                                'helpers'
+                                'application',
+                                'domain',
+                                'kernel',
+                                'infrastructure',
+                                'shared',
+                                'helpers',
+                                'debug',
+                                'root'
                             ]
                         }
                     ]
@@ -316,16 +325,15 @@ export default tseslint.config(
     },
     {
         files: ['**/*.ts'],
-        ignores: ['src/webaudio-core/**/*.ts'],
+        ignores: ['src/Infrastructure/**/*.ts'],
         rules: {
             'no-restricted-imports': [
                 'error',
                 {
                     patterns: [
                         {
-                            group: ['@webaudio-core/*'],
-                            message:
-                                'Deep imports from core are forbidden outside of the core domain. Import directly from the public API: "@webaudio-core".'
+                            group: ['@infrastructure/*', 'src/Infrastructure/*'],
+                            message: 'Deep imports from Infrastructure are forbidden. Use the public API facade.'
                         }
                     ]
                 }

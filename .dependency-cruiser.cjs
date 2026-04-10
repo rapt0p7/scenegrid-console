@@ -192,61 +192,66 @@ module.exports = {
             }
         },
         {
-            name: 'webaudio-core-is-isolated',
+            name: 'domain-is-pure',
+            comment: 'Domain must not depend on Infrastructure (including debug).',
+            severity: 'error',
+            from: { path: '^src/Domain' },
+            to: {
+                path: '^src/Infrastructure'
+            }
+        },
+        {
+            name: 'debug-is-internal-infrastructure',
+            comment: 'Debug tools (part of Infrastructure) can be used by Application, but not by Domain/Kernel.',
+            severity: 'error',
+            from: { path: '^src/(Domain|Kernel)' },
+            to: {
+                path: '^src/Infrastructure/debug'
+            }
+        },
+        {
+            name: 'kernel-is-low-level-only',
             comment:
-                'Core audio engine MUST NOT depend on the app layer (Managers, Buses, Configs, etc). It must remain a pure, reusable library.',
+                'The Kernel (RTPC/Core Engine) must not depend on Domain, Application, or Infrastructure to avoid circularity and keep it reusable.',
             severity: 'error',
-            from: { path: '^(src/webaudio-core/)' },
+            from: { path: '^src/Kernel' },
             to: {
-                pathNot: '^(src/webaudio-core/|node_modules/)'
+                path: '^src/(Domain|Application|Infrastructure)'
             }
         },
         {
-            name: 'interfaces-no-logic',
-            comment: 'Interfaces should only contain types and should not import app logic, managers, or configs.',
-            severity: 'error',
-            from: { path: '^(src/interfaces/)' },
-            to: {
-                path: '^(src/(Managers|BusSystem|Core|config)/)'
-            }
-        },
-        {
-            name: 'config-is-pure-data',
+            name: 'infrastructure-implements-domain',
             comment:
-                'Config files should remain pure data/declarations. They cannot import Managers or App Core logic.',
+                'Infrastructure can depend on Domain (to implement ports) and Kernel, but not on Application orchestration.',
             severity: 'error',
-            from: { path: '^(src/config/)' },
+            from: { path: '^src/Infrastructure' },
             to: {
-                path: '^(src/(Managers|BusSystem|Core)/)'
+                path: '^src/Application'
             }
         },
         {
-            name: 'bus-and-core-are-dumb',
-            comment:
-                'BusSystem and Core (Processors/Plugins) are dumb workers. They MUST NOT import from Managers or Configs. Orchestration happens in Managers.',
+            name: 'shared-is-isolated',
+            comment: 'Shared utilities must not depend on any business or infrastructure logic.',
             severity: 'error',
-            from: { path: '^(src/(BusSystem|Core)/)' },
+            from: { path: '^src/Shared' },
             to: {
-                path: '^(src/(Managers|config)/)'
+                path: '^src/(Domain|Kernel|Infrastructure|Application)'
             }
         },
         {
-            name: 'helpers-are-pure',
-            comment: 'Helpers must be pure functions/utilities. They cannot import App Logic, Managers, or Buses.',
+            name: 'no-circular',
+            comment: 'No circular dependencies allowed anywhere in the system.',
             severity: 'error',
-            from: { path: '^(src/helpers/)' },
-            to: {
-                path: '^(src/(Managers|BusSystem|Core|config)/)'
-            }
+            from: {},
+            to: { circular: true }
         },
         {
-            name: 'managers-dont-know-app-root',
-            comment:
-                'Managers orchestrate the domain but must not depend on the entry point (AudioEngine/AudioRouter).',
+            name: 'application-is-orchestrator',
+            comment: 'Application can depend on everything EXCEPT its own entry points to avoid reverse dependencies.',
             severity: 'error',
-            from: { path: '^(src/Managers/)' },
+            from: { path: '^src/Application' },
             to: {
-                path: String.raw`^(src/(AudioEngine\.ts|AudioRouter\.ts|index\.ts)$)`
+                path: String.raw`^src/index\.ts$`
             }
         },
         {
@@ -263,7 +268,8 @@ module.exports = {
         /* Which modules not to follow further when encountered */
         doNotFollow: {
             /* path: an array of regular expressions in strings to match against */
-            path: ['node_modules']
+            path: ['node_modules'],
+            dependencyTypes: ['npm', 'npm-dev', 'npm-optional', 'npm-peer']
         },
 
         /* Which modules to exclude */
