@@ -2,107 +2,85 @@
 
 Welcome to the **SceneGrid Console** project!
 
-This project is a virtual digital mixing console built on top of the Web Audio API. Our top priorities for this architecture are predictability, stability (zero digital artifacts), and strict layer isolation.
-
-Before you start writing code, please read the architectural rules and contribution standards outlined below.
+This is a high-performance virtual mixing engine. To ensure long-term stability and testability, we strictly enforce **Hexagonal Architecture (Ports & Adapters)**. Our goal is to keep the "Mixing Logic" (Domain) entirely decoupled from the "Audio Drivers" (Infrastructure/Web Audio API).
 
 ---
 
-## 🏗 Architecture & Strict Boundaries (Clean Architecture & DDD)
+## 🏗 Architectural Layers & Dependency Rules
 
-The project is built on Domain-Driven Design (DDD) principles. We use `dependency-cruiser` and `eslint-plugin-boundaries` to enforce strict dependency rules. **If your code violates these boundaries, the CI pipeline will block your commit.**
+We use `dependency-cruiser` to enforce the **Inward Dependency Rule**: logic flows toward the center (Domain), and the center is agnostic of the outside world.
 
-### Core Layers & Dependency Rules:
+### 1. Domain Layer (`src/Domain`) — *The Golden Circle*
+* **Role:** Pure business logic (Mixer states, routing calculations, voice culling rules).
+* **Strict Rule:** **ZERO dependencies on Web Audio API.** You must not import `AudioContext`, `GainNode`, or any browser-specific audio types.
+* **Communication:** Defines **Ports** (interfaces) that describe what the engine needs (e.g., `IAudioBusSystem`).
 
-1. **`@webaudio-core` (Domain Core):**
-    * **Rule:** The core is completely isolated. It is **strictly prohibited** from importing anything from other application folders (Managers, BusSystem, Configs, etc.).
-    * **Access:** External modules can only access the core via the public facade: `src/webaudio-core/index.ts`. Deep imports are forbidden.
-2. **`interfaces` (Abstraction Layer):**
-    * **Rule:** Contains only TypeScript types and interfaces. Importing business logic is forbidden. Only `import type { ... }` from the core is allowed.
-3. **`config` (Data & Manifests):**
-    * **Rule:** Configuration files are pure data. They cannot import execution logic (Managers, Core).
-4. **`helpers` (Utilities):**
-    * **Rule:** Pure functions and math operations (e.g., `rtpcMath`). They must remain completely unaware of Managers, Buses, or business logic.
-5. **`BusSystem` & `Core` (Processors / Plugins):**
-    * **Rule:** These are "dumb" workers. They are forbidden from importing Managers or Configs.
-6. **`Managers` (Orchestrators):**
-    * **Rule:** They orchestrate the buses and the core, but they **must not** import the main system facade (`AudioEngine.ts` / `AudioRouter.ts`). The control flow is strictly top-down.
+### 2. Infrastructure Layer (`src/Infrastructure`) — *Adapters*
+* **Role:** Technical implementation of Domain Ports. This is where the Web Audio nodes, `AudioWorklet` processors, and buffer loaders reside.
+* **Dependency:** May depend on `Domain` (to implement ports) and `Shared`.
+
+### 3. Kernel Layer (`src/Kernel`) — *The Math Engine*
+* **Role:** High-performance, performance-critical mathematical code (RTPC modulation engine, curve evaluation).
+* **Dependency:** May depend on `Shared` and `Domain/*/Ports`. It must remain stateless and optimized for high-frequency execution.
+
+### 4. Application Layer (`src/Application`) — *The Orchestrator*
+* **Role:** Bootstrapping and coordinating use cases. The `AudioEngine` facade and high-level orchestration live here.
+* **Dependency:** Can depend on all layers to "wire" the adapters to the domain.
+
+### 5. Shared Layer (`src/Shared`) — *Common Utilities*
+* **Role:** Mathematical constants, universal types, and guards used by all layers.
+* **Strict Rule:** Must have **zero dependencies** on other internal layers.
 
 ---
 
 ## 📜 Commit Guidelines (Conventional Commits)
 
-We use a strict commit messaging system, enforced automatically by `husky` and `commitlint`. Every commit must match the following format:
+We use a strict commit messaging system. Every commit must follow the format: `<type>(<scope>): <subject>`
 
-```text
-<type>(<scope>): <subject>
+### Allowed Types
+* `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 
-[optional body]
+### Scopes (Aligned with Hexagonal Layers)
+Your scope must indicate the affected layer or logical module:
 
-[optional footer(s)]
-```
+* **Layer Scopes:** `domain`, `infra`, `kernel`, `app`, `shared`.
+* **Domain Components:** `mixer`, `router`, `registry`, `orchestration`, `culling`, `logic`.
+* **Infrastructure Components:** `bus-adapter`, `dsp`, `voices`, `output`, `automation`, `loader`, `context`, `nodes`.
+* **Quality & Tooling:** `test`, `unit`, `integration`, `mocks`, `build`, `ci`, `readme`, `api`, `architecture`.
 
-### Allowed Types (`type`)
-* `feat`: A new feature
-* `fix`: A bug fix
-* `docs`: Documentation only changes
-* `refactor`: A code change that neither fixes a bug nor adds a feature
-* `perf`: A code change that improves performance
-* `test`: Adding or correcting tests
-* `build`: Changes that affect the build system or dependencies (Webpack, npm)
-* `ci`: Changes to CI/CD configuration files and scripts
-* `style`: Changes that do not affect the meaning of the code (Prettier, ESLint fixes)
-* `chore`: Other changes that don't modify src or test files
-
-### Allowed Scopes (`scope`)
-Your commit must precisely indicate the affected module using **kebab-case**.
-
-**Architectural Modules:**
-* `core`, `core-nodes`, `core-context` — Internals of `webaudio-core`
-* `facade` — `AudioEngine`, `AudioRouter`
-* `bus-system` — Routing and bus logic
-* `mixer` — Layers, snapshots, and states
-* `rtpc` — Macros and parameter modulation
-* `smart-loop` — Interactive music, transitions, grid
-* `plugins` — Insert filters, limiters, sidechain
-* `worklets` — `AudioWorklet` processors
-* `loader` — Buffer loading and decoding
-* `scheduling` — Playback scheduling, voice culling
-* `automation` — Automation engine, value curves
-* `managers`, `config`, `helpers`, `interfaces`
-
-**Infrastructure:**
-* `api`, `readme`, `architecture`, `examples` — for `docs`
-* `deps`, `bundler`, `typescript` — for `build`
-* `unit`, `integration`, `mocks` — for `test`
-
-*Example of a good commit message:*
-> `feat(rtpc): add custom piecewise linear curves for pitch modulation`
-> `fix(bus-system): prevent duplicate connections to master output`
-
-*(Note: The subject line must be lower-case and must not end with a period).*
+*Example of a good commit:*
+> `feat(domain/mixer): add VCA-style scaling logic for multi-layered snapshots`
+> `fix(infra/dsp): resolve memory leak in SidechainDucker worklet`
 
 ---
 
-## ✅ Development Workflow (Pull Requests)
+## 🛠 System Invariants (Strictly Prohibited)
 
-1. **Create a branch** from `main` (format: `feat/your-feature`, `fix/issue-description`).
-2. **Write your code**, strictly respecting the module boundaries (Clean Architecture).
-3. **Update tests**. If you added new functionality, write unit or integration tests using `vitest`.
-4. **Run local checks** before committing:
-    * **Tests:** `npm run test` or `npm run test:coverage`
-    * **Linting & Formatting:** Handled automatically on pre-commit via `lint-staged` (ESLint + Prettier).
-    * **Architecture Check:** `npm run createDependencyGraph` to ensure `dependency-cruiser` passes and generates the latest mermaid graph.
-5. **Commit your changes.** Husky will automatically lint your commit message.
-6. **Open a Pull Request.** Ensure the CI pipeline passes all checks.
+To protect the integrity of the engine, the following are strictly forbidden:
+
+1.  **Domain Pollution:** Importing anything from `src/Infrastructure` or `src/Application` into `src/Domain`.
+2.  **Bypass Routing:** Connecting audio sources (Voices) directly to the Master Output. All signals **must** flow through the hierarchical `AudioBus` system.
+3.  **Direct Parameter Manipulation:** Bypassing the `RTPCManager` or `AutomationEngine`. All real-time parameter changes must be batched and throttled to protect the Audio Thread.
+4.  **Circular Dependencies:** Creating circular references between components (e.g., `Mixer` calling `Router` while `Router` calls `Mixer`). Use events or third-party orchestrators.
 
 ---
 
-## 🛠 System Invariants (Strictly Prohibited Actions)
+## ✅ Development Workflow
 
-When contributing new code, ensure you do not violate the engine's core guarantees:
-* **DO NOT** connect audio sources (Voices) directly to the `MasterOutput` bypassing the group buses (`AudioBus`).
-* **DO NOT** bypass the automation engine (all parameter changes must flow through `AutomationEngine` or `RTPCManager`).
-* **DO NOT** create Feedback Loops within the `Sends` system (mutual sends between buses are strictly forbidden).
+1.  **Branching:** Create a branch from `main` (e.g., `feat/kernel-optimizations`).
+2.  **Architecture Verification:** Run `npm run lint:architecture` (or your equivalent `dependency-cruiser` command). If you imported an Infra adapter into a Domain service, the build **will** fail.
+3.  **Unit Testing:** * **Domain Logic:** Test using pure TypeScript mocks (no `AudioContext` required).
+    * **Infrastructure:** Use integration tests with `vitest` and Web Audio mocks.
+4.  **Submission:** Ensure all tests pass and the dependency graph remains clean.
 
-Thank you for contributing to the SceneGrid Console!
+---
+
+## 🎛 Visualizing the Boundaries
+
+Always keep the **Ports and Adapters** pattern in mind:
+* **The Domain** defines the *Interface* (The Port).
+* **The Infrastructure** defines the *Implementation* (The Adapter).
+
+If you need to access a new Web Audio feature, first define its logical behavior as an interface in `src/domain/busSystem/ports`.
+
+Thank you for contributing to the **SceneGrid Console**!
