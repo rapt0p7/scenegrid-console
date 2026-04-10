@@ -7,17 +7,30 @@ Conceptually, it is a hybrid of:
 * A game audio engine
 * A console with recall scenes
 ---
-![image](./architecture.svg)
+![image](./architecture/containers.svg)
+![image](./architecture/infra-components.svg)
 
 **Facade and Configuration Management (Engine API)**
-Interaction between the client application and the audio engine occurs through a single facade (`AudioEngine` / `AudioRouter`). The system operates on a **Data-Driven** principle: all routing, macro, and bus settings are initialized via a centralized manifest registry (**`SoundRegistry`**), decoupling playback logic from hardcoded values.
+Interaction between the client application and the audio engine occurs through a single facade (`AudioEngine`). The system operates on a **Data-Driven** principle: all routing, macro, and bus settings are initialized via a centralized manifest registry (**`SoundRegistry`**), decoupling playback logic from hardcoded values.
 
 ---
+
+## 0. Architectural Philosophy: Ports & Adapters
+
+To ensure long-term maintainability and testability, the system follows a **Hexagonal (Ports and Adapters)** pattern.
+
+* **Logic vs. Implementation:** The logic of how a signal *should* flow (Domain) is separated from the creation of `GainNode` or `AudioWorklet` (Infrastructure).
+* **Modularity:** You can theoretically replace the Web Audio implementation with a different backend without modifying the `MixerStateManager` or `SoundRegistry`.
+
+---
+
 ### 1. Signal Flow Architecture
 
 **Core Principle**
 Signals follow a strict hierarchy:
 **Source → Individual Channel → Group Bus → Master** No bypass routes are permitted.
+* **Logical Routing (Domain):** The `AudioRouter` calculates the signal path based on the manifest. It deals with abstract entities like "Buses" and "Voices".
+* **Physical Routing (Infrastructure):** The `AudioBusSystem` and `SoundController` receive commands from the Domain and physically connect `GainNodes` and `Filters`.
 
 **Sources (Voices)**
 Each sound:
@@ -28,7 +41,7 @@ Each sound:
 This guarantees an absence of phase conflicts, stable dynamic processing, and predictable routing.
 
 **Voice Culling (Polyphony Optimization)**
-A Voice Culling mechanism is implemented at the core level (`PlaybackScheduler`). The system automatically monitors active voice limits and prevents Audio Thread overload by transparently terminating the lowest-priority or quietest sounds, thus maintaining FPS stability.
+A Voice Culling mechanism is implemented at the core level (`PlaybackScheduler`). The system automatically monitors active voice limits and prevents Audio Thread overload by seamlessly terminating the lowest-priority or quietest sounds, thus maintaining FPS stability.
 
 **Audio Buses**
 Buses function like **console group channels**.
@@ -188,6 +201,9 @@ The following are **strictly prohibited**:
 * Direct source connection to the Master.
 * Bypassing automation.
 * Manual parameter management outside the system.
+* **Domain Isolation:** Domain components must never import anything from the `Infrastructure` or `Application` directories. Communication with external systems must occur through **Ports** (interfaces).
+* **Inward Dependency:** Dependencies must always point towards the Domain. The Domain is the most stable part of the system and is agnostic of the Web Audio API or the browser environment.
+* **Kernel Purity:** The Kernel layer should have zero dependencies on external state, acting as a pure mathematical engine for the engine's modulation needs.
 * **Synchronous Parameter Spam**: High-frequency game ticks must pass through the `RTPCManager`'s batching system; direct, unthrottled manipulation of AudioParams is prevented by design.
 
 This ensures mix predictability, prevents automation conflicts, protects CPU resources, and maintains DSP stability.

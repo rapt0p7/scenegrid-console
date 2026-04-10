@@ -121,16 +121,29 @@ A virtual patchbay connecting game data (speed, health, distance) to audio param
 
 ## 5. Repository Structure
 
-Based on the internal dependency graph:
+## 🏗️ Architecture: The Hexagonal Approach
+
+The system is built using **Hexagonal Architecture**, ensuring that the core mixing logic remains independent of the Web Audio API or any external infrastructure.
+
+| Layer | Responsibility | Content |
+| :--- | :--- | :--- |
+| **Domain** | Pure Business Logic | Mixer state, Routing logic, Culling rules, Port definitions. |
+| **Infrastructure**| Technical Adapters | Web Audio Node implementations, Worklet processors, File loading. |
+| **Application** | Orchestration | System bootstrapping, high-level API Facades (`AudioEngine`). |
+| **Kernel** | Math & Performance | RTPC modulation engine, curve evaluation, high-speed math. |
+| **Shared** | Cross-cutting | Mathematical constants, shared types, and universal guards. |
+
+
+### Dependency Rule
+All dependencies point **inwards** towards the Domain. The Infrastructure layer depends on the Domain (implements its interfaces), but the Domain knows nothing about the Web Audio API.
 
 ```text
 src/
-├── AudioEngine.ts        # Primary API Facade
-├── BusSystem/            # Bus logic and Channel Strip management
-├── Core/                 # DSP (Sidechain, Limiters, Filters)
-├── Managers/             # State, Snapshots, and RTPC Management
-├── webaudio-core/        # Low-level Web Audio wrappers & Automation
-└── helpers/              # Math, Visualizers, and Worklet Processors
+├── Application/     # Application Layer: Engine bootstrapping & use-case coordination
+├── Domain/          # Domain Layer: Pure logic (Mixer, Router, Registry, Culling)
+├── Infrastructure/  # Infrastructure Layer: Web Audio adapters, DSP, Worklets
+├── Kernel/          # Kernel Layer: RTPC modulation math & performance-critical code
+└── Shared/          # Shared Layer: Common utilities, math constants, and guards
 ```
 
 ---
