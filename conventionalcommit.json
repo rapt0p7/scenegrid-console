@@ -4,82 +4,51 @@
         "feat": {
             "description": "A new feature",
             "scopes": {
-                "core": { "description": "WebAudio core engine general changes" },
-                "facade": { "description": "AudioEngine, AudioRouter and public API" },
-                "registry": { "description": "SoundRegistry and sound manifests" },
-                "bus-system": { "description": "AudioBus and Signal routing changes" },
-                "mixer": { "description": "Mixer layers, snapshots, and states" },
-                "rtpc": { "description": "RTPC Manager and macro modulations" },
-                "smart-loop": { "description": "Interactive music, segments, and audio grid" },
-                "plugins": { "description": "Insert filters, sidechain, and limiters (Core folder)" },
-                "worklets": { "description": "AudioWorklet processors (meters, lookahead)" },
-                "loader": { "description": "AudioBuffer loader and sound controller" },
-                "scheduling": { "description": "Playback scheduler" },
-                "systems": { "description": "Voice culling and other core systems" },
-                "instance": { "description": "SoundInstance and SoundPoolManager" },
-                "automation": { "description": "Automation engine and value fading" },
-                "debug": { "description": "AudioDebugger and AudioProfiler tools" }
+                "facade": { "description": "App Layer: Engine API and public interfaces" },
+                "domain": { "description": "Domain Layer: Core business logic changes" },
+                "registry": { "description": "Domain: SoundRegistry and configuration" },
+                "mixer": { "description": "Domain: Mixer logic, layers and snapshots" },
+                "router": { "description": "Domain: Logical signal path calculation" },
+                "orchestration": { "description": "Domain: SmartLoop music sequencing and grid" },
+                "culling": { "description": "Domain: Voice culling business rules" },
+                "infra": { "description": "Infra Layer: Technical adapters and Web Audio" },
+                "dsp": { "description": "Infra: Filters, Duckers and AudioWorklets" },
+                "voices": { "description": "Infra: SoundInstance and Pool management" },
+                "rtpc": { "description": "Kernel: Modulation engine and RTPC math" },
+                "automation": { "description": "Infra: Sample-accurate parameter curves" },
+                "loader": { "description": "Infra: Buffer loading and decoding" }
             }
         },
         "fix": {
             "description": "A bug fix",
             "scopes": {
-                "core": { "description": "WebAudio core engine fixes" },
+                "domain": { "description": "Fixes in pure business logic" },
                 "facade": { "description": "AudioEngine/Router fixes" },
-                "bus-system": { "description": "AudioBus routing fixes" },
-                "mixer": { "description": "Mixer states and snapshot fixes" },
-                "rtpc": { "description": "RTPC binding and math fixes" },
-                "smart-loop": { "description": "Music transitions and loop fixes" },
-                "plugins": { "description": "DSP Plugins and filter fixes" },
-                "worklets": { "description": "AudioWorklet memory/audio thread fixes" },
-                "loader": { "description": "Loading and decoding fixes" },
-                "scheduling": { "description": "Timing and scheduler fixes" },
-                "systems": { "description": "Voice stealing logic fixes" },
-                "instance": { "description": "SoundInstance lifecycle fixes" },
-                "automation": { "description": "Automation glitches and clicks fixes" },
+                "infra": { "description": "Fixes in Web Audio nodes or adapters" },
+                "kernel": { "description": "Fixes in modulation math or RTPC Manager" },
+                "mixer": { "description": "Fixes in state resolution/layering" },
+                "rtpc": { "description": "Fixes in curve calculations or bindings" },
+                "dsp": { "description": "Fixes in AudioWorklet processors" },
+                "scheduling": { "description": "Fixes in timing and playback scheduler" },
                 "debug": { "description": "Visualizer and profiler fixes" }
             }
         },
         "docs": {
             "description": "Documentation only changes",
             "scopes": {
-                "api": { "description": "Public API documentation" },
-                "architecture": { "description": "System design and flow diagrams" },
-                "readme": { "description": "README files" },
-                "examples": { "description": "Usage examples and sound manifests" }
-            }
-        },
-        "style": {
-            "description": "Changes that do not affect the meaning of the code",
-            "scopes": {
-                "formatting": { "description": "Code formatting changes (Prettier)" },
-                "lint": { "description": "ESLint rule fixes (Boundaries, etc.)" }
+                "architecture": { "description": "Hexagonal design and C4 diagrams" },
+                "api": { "description": "Public interface documentation" },
+                "readme": { "description": "General project info" }
             }
         },
         "refactor": {
             "description": "A code change that neither fixes a bug nor adds a feature",
             "scopes": {
-                "core": { "description": "Refactoring core modules" },
-                "facade": { "description": "Refactoring AudioEngine/AudioRouter" },
+                "interfaces": { "description": "Refactoring Domain Ports and Types" },
+                "shared": { "description": "Refactoring constants and universal helpers" },
+                "bus-adapter": { "description": "Refactoring WebAudio Bus implementation" },
                 "nodes": { "description": "Refactoring AudioNode chains" },
-                "context": { "description": "Refactoring AudioContext management" },
-                "managers": { "description": "Refactoring general Manager orchestration" },
-                "bus-system": { "description": "Refactoring Bus logic" },
-                "interfaces": { "description": "Refactoring types and interfaces" },
-                "types": { "description": "Refactoring internal types (curves, etc)" },
-                "utils": { "description": "Refactoring core utilities (clamp, safeDisconnect)" },
-                "helpers": { "description": "Refactoring pure functions and math" },
-                "debug": { "description": "Refactoring debuggers and profilers" }
-            }
-        },
-        "perf": {
-            "description": "A code change that improves performance",
-            "scopes": {
-                "worklets": { "description": "AudioWorklet CPU optimizations" },
-                "systems": { "description": "Voice culling CPU optimizations" },
-                "instance": { "description": "SoundPoolManager and instance recycling" },
-                "memory": { "description": "Garbage collection and overall object pooling" },
-                "automation": { "description": "Automation smoothing performance" }
+                "utils": { "description": "Refactoring core/internal utilities" }
             }
         },
         "test": {
@@ -119,38 +88,18 @@
         }
     },
     "commonScopes": {
-        "core": { "description": "WebAudio core engine (Domain layer)" },
-        "facade": { "description": "AudioEngine and public routing APIs" },
-        "bus-system": { "description": "Audio buses, channels, and sends" },
-        "managers": { "description": "General manager orchestration" },
-        "mixer": { "description": "Mixer layer, snapshots, and states" },
-        "rtpc": { "description": "Real-Time Parameter Control (Macros)" },
-        "smart-loop": { "description": "Interactive music, sequencing, grids" },
-        "plugins": { "description": "High-level DSP (Filters, Duckers, Limiters)" },
-        "worklets": { "description": "Low-level AudioWorklet Processors" },
-        "loader": { "description": "Audio buffer loading and decoding" },
-        "scheduling": { "description": "Playback scheduling" },
-        "systems": { "description": "Voice culling and system boundaries" },
-        "instance": { "description": "Sound Instance and Pooling" },
-        "automation": { "description": "Parameter fading and sample-accurate curves" },
-        "context": { "description": "AudioContext and unlock management" },
-        "nodes": { "description": "AudioNode chains and connections" },
-        "interfaces": { "description": "TypeScript interfaces and types" },
-        "types": { "description": "Internal types and curve definitions" },
-        "helpers": { "description": "Math, constants, and pure functions" },
-        "utils": { "description": "Core specific utilities" },
-        "debug": { "description": "AudioDebugger and AudioProfiler" },
-        "config": { "description": "Configs and workspace setups" },
+        "app": { "description": "Application layer (Entry points/Bootstrapping)" },
+        "domain": { "description": "Domain layer (Pure logic/Ports)" },
+        "infra": { "description": "Infrastructure layer (Adapters/WebAudio)" },
+        "kernel": { "description": "Kernel layer (High-perf math/RTPC)" },
+        "shared": { "description": "Shared layer (Math/Guards/Constants)" },
+        "facade": { "description": "AudioEngine/Router facades" },
+        "bus-system": { "description": "General bus and signal routing" },
+        "mixer": { "description": "Mixer states and layering" },
+        "rtpc": { "description": "RTPC and modulation" },
+        "dsp": { "description": "DSP Plugins and Worklets" },
+        "interfaces": { "description": "TS Interfaces and Ports" },
         "test": { "description": "Test suites and mocks" },
-        "build": { "description": "Build tools and compilers" }
-    },
-    "footerTypes": [
-        { "name": "BREAKING-CHANGE", "description": "The commit introduces breaking API changes" },
-        { "name": "BREAKING CHANGE", "description": "The commit introduces breaking API changes" },
-        { "name": "Closes", "description": "The commit closes issues or pull requests" },
-        { "name": "Fixes", "description": "The commit fixes issues" },
-        { "name": "Resolves", "description": "The commit resolves issues" },
-        { "name": "Implements", "description": "The commit implements features" },
-        { "name": "Refs", "description": "The commit references another commit by its hash ID" }
-    ]
+        "build": { "description": "Build tools and dependencies" }
+    }
 }

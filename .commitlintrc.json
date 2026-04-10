@@ -10,39 +10,43 @@
             2,
             "always",
             [
-                "core",
+                "domain",
+                "infra",
+                "kernel",
+                "app",
+                "shared",
+
                 "facade",
 
-                "bus-system",
-                "managers",
+                "registry",
                 "mixer",
-                "rtpc",
-                "smart-loop",
+                "managers",
+                "router",
+                "bus-system",
+                "logic",
+                "orchestration",
+                "culling",
 
-                "plugins",
-                "worklets",
-
+                "bus-adapter",
+                "dsp",
+                "voices",
+                "output",
                 "automation",
-                "context",
-                "instance",
                 "loader",
-                "nodes",
                 "scheduling",
-                "systems",
+                "context",
+                "nodes",
 
+                "rtpc",
+                "math",
+                "events",
                 "interfaces",
                 "types",
                 "helpers",
                 "utils",
 
                 "debug",
-                "memory",
-
-                "api",
-                "architecture",
-                "readme",
-                "examples",
-
+                "profiler",
                 "formatting",
                 "lint",
 
@@ -56,11 +60,14 @@
                 "bundler",
                 "typescript",
 
+                "ci",
                 "github",
                 "publish",
-
                 "config",
-                "tools"
+                "readme",
+                "architecture",
+                "api",
+                "examples"
             ]
         ],
         "scope-case": [2, "always", "kebab-case"],
