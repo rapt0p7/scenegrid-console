@@ -1,7 +1,7 @@
 // noinspection D
 
 import SoundRegistry from '@domain/Configuration/SoundRegistry.js';
-import { VoiceCullingSystem } from '@domain/Culling/VoiceCullingSystem.js';
+import { VoiceCullingArbiter } from '@domain/Culling/VoiceCullingArbiter.js';
 import { EngineEventDispatcher } from '@domain/Events/EngineEventDispatcher.js';
 import ContainerManager from '@domain/Managers/ContainerManager.js';
 import DuckingManager from '@domain/Managers/DuckingManager.js';
@@ -27,6 +27,7 @@ import {
     AudioNodeFactory,
     MasterOutput,
     PlaybackScheduler,
+    CullingRunner,
     FiltersPlugin,
     SidechainDucker,
     TinyLimiterNode
@@ -56,7 +57,7 @@ export class AudioEngine {
     #rtpcManager!: RTPCManager;
     #snapshotManager!: MixerSnapshotManager;
     #smartLoopManager!: SmartLoopManager;
-    #cullingSystem!: VoiceCullingSystem;
+    #cullingRunner!: CullingRunner;
     #masterOutput!: MasterOutput;
     #dispatcher: EngineEventDispatcher = new EngineEventDispatcher();
     #isInitialized = false;
@@ -267,20 +268,29 @@ export class AudioEngine {
             const coordinator = new MixerCoordinator(layerStack, mixerStateManager);
             this.#snapshotManager = new MixerSnapshotManager(layerStack, this.config.snapshots, coordinator);
 
-            this.#cullingSystem = new VoiceCullingSystem(this.#soundController, {
-                checkIntervalMs: 500,
-                cullingThreshold: 0.01,
-                busIdResolver: (id: SoundId) => this.config.soundMap[id]?.busId,
-                busVolumeResolver: (busId: string) => {
-                    const bus = this.#busSystem.getBus(busId as BusId);
+            const cullingArbiter = new VoiceCullingArbiter(0.01);
+
+            // eslint-disable-next-line @typescript-eslint/no-this-alias,unicorn/no-this-assignment
+            const engineReference: AudioEngine = this;
+            const cullingContext = {
+                get activePlaybacks() {
+                    return engineReference.#soundController.getActivePlaybacks();
+                },
+                getSoundId: (id: PlaybackId) => engineReference.#soundController.getSoundId(id),
+                getPlaybackState: (id: PlaybackId) => engineReference.#soundController.getPlaybackState(id),
+                resolveBusId: (id: SoundId) => engineReference.config.soundMap[id]?.busId as BusId | undefined,
+                getBusVolume: (busId: BusId) => {
+                    const bus = engineReference.#busSystem.getBus(busId);
                     if (!bus) return 1;
 
-                    const realGain = (this.#busSystem as any).getCurrentRealGain?.(busId) ?? 0;
+                    const realGain = (engineReference.#busSystem as any).getCurrentRealGain?.(busId) ?? 0;
                     return Math.max(realGain, bus.logicalTargetGain);
                 }
-            });
+            };
 
-            this.#cullingSystem.start();
+            this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingContext, 500);
+
+            this.#cullingRunner.start();
             this.#isInitialized = true;
 
             this.#dispatcher.emit('engine:ready', {

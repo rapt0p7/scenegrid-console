@@ -53,10 +53,9 @@ const mockListener = {
     setOrientation: vi.fn()
 };
 
-vi.mock('@domain/Culling/VoiceCullingSystem.js', () => ({
-    VoiceCullingSystem: vi.fn().mockImplementation(function (pool, options) {
-        (globalThis as any).__mockCullingConfig = options;
-        return { start: vi.fn(), stop: vi.fn() };
+vi.mock('@domain/Culling/VoiceCullingArbiter.js', () => ({
+    VoiceCullingArbiter: vi.fn().mockImplementation(function () {
+        return { evaluate: vi.fn().mockReturnValue({ toVirtualize: [], toDevirtualize: [] }) };
     })
 }));
 
@@ -150,6 +149,11 @@ vi.mock('@infrastructure', async importOriginal => {
             (globalThis as any).__mockSoundPoolConfig = options;
             return { getVoice: vi.fn() };
         }),
+        // eslint-disable-next-line max-params
+        CullingRunner: vi.fn().mockImplementation(function (arbiter, controller, contextProvider, interval) {
+            (globalThis as any).__mockCullingContext = contextProvider;
+            return { start: vi.fn(), stop: vi.fn() };
+        }),
         SidechainDucker: vi.fn().mockImplementation(function () {
             return { insertLookahead: vi.fn(), start: vi.fn(), activeEnvelope: 0 };
         }),
@@ -237,7 +241,7 @@ describe('AudioEngine', () => {
         vi.restoreAllMocks();
         delete (globalThis as any).__mockSoundPoolConfig;
         delete (globalThis as any).__mockSoundPoolFactory;
-        delete (globalThis as any).__mockCullingConfig;
+        delete (globalThis as any).__mockCullingContext;
     });
 
     describe('Initialization Edge Cases', () => {
@@ -535,11 +539,11 @@ describe('AudioEngine', () => {
             expect(instance).toBeDefined();
         });
 
-        it('should resolve bus ID and volume in VoiceCullingSystem', () => {
-            const cullingOptions = (globalThis as any).__mockCullingConfig;
+        it('should resolve bus ID and volume in CullingContext', () => {
+            const cullingContext = (globalThis as any).__mockCullingContext;
 
-            expect(cullingOptions.busIdResolver('test_sound')).toBe('sfx');
-            expect(cullingOptions.busIdResolver('unknown')).toBeUndefined();
+            expect(cullingContext.resolveBusId('test_sound')).toBe('sfx');
+            expect(cullingContext.resolveBusId('unknown')).toBeUndefined();
 
             const sfxBus = engine._debug.busSystem.getBus('sfx' as BusId);
             expect(sfxBus).toBeDefined();
@@ -551,8 +555,8 @@ describe('AudioEngine', () => {
                 .spyOn(engine._debug.busSystem, 'getCurrentRealGain')
                 .mockImplementation(busId => (busId === 'sfx' ? 0.8 : 1));
 
-            expect(cullingOptions.busVolumeResolver('sfx')).toBe(0.8);
-            expect(cullingOptions.busVolumeResolver('ghost')).toBe(1);
+            expect(cullingContext.getBusVolume('sfx')).toBe(0.8);
+            expect(cullingContext.getBusVolume('ghost')).toBe(1);
 
             sfxBus!.logicalTargetGain = originalLogicalGain;
             getCurrentGainSpy.mockRestore();
