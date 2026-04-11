@@ -16,6 +16,7 @@ export interface ISoundInstance extends IPlaybackController {
     readonly pannerNode: PannerNodeLike | StereoPannerNodeLike | null;
     dispose(): void;
     cancelScheduled(): void;
+    rebind(id: SoundId, buffer: AudioBuffer): void;
     resetForReuse(): void;
     virtualize(): void;
     devirtualize(): void;

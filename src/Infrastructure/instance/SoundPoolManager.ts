@@ -13,11 +13,12 @@ export interface PoolConfig {
     voiceConfigResolver: (soundId: SoundId) => IVoiceConfig | undefined;
 }
 
-class SoundPoolManager {
-    #available: Map<SoundId, ISoundInstance[]> = new Map();
-    #busy: Map<SoundId, ISoundInstance[]> = new Map();
-    #activeGlobalVoices: Set<ISoundInstance> = new Set();
-    #config: PoolConfig;
+export default class SoundPoolManager {
+    readonly #allInstances: ISoundInstance[];
+    readonly #freeStack: Uint16Array;
+    #stackPtr: number;
+    readonly #activeIndices: Set<number> = new Set();
+    readonly #config: PoolConfig;
     readonly #instanceFactory: (soundId: SoundId) => ISoundInstance;
 
     constructor(instanceFactory: (soundId: SoundId) => ISoundInstance, config: Partial<PoolConfig> = {}) {
@@ -29,60 +30,51 @@ class SoundPoolManager {
             // eslint-disable-next-line unicorn/no-useless-undefined
             voiceConfigResolver: config.voiceConfigResolver ?? (() => undefined)
         };
+
+        const size = this.#config.globalVoiceLimit;
+        this.#allInstances = Array.from({ length: size });
+        this.#freeStack = new Uint16Array(size);
+        this.#stackPtr = size - 1;
+
+        for (let index = 0; index < size; index++) {
+            const inst = this.#instanceFactory('__RESERVED__' as SoundId);
+            (inst as any)._poolIndex = index;
+            this.#allInstances[index] = inst;
+            this.#freeStack[index] = index;
+        }
     }
 
-    public getActiveVoices(): ReadonlySet<ISoundInstance> {
-        return this.#activeGlobalVoices;
-    }
-
-    public acquire(soundId: SoundId): ISoundInstance | null {
+    public acquire(soundId: SoundId, buffer: AudioBuffer): ISoundInstance | null {
         const voiceConfig = this.#config.voiceConfigResolver(soundId);
-        const requestedPriority = voiceConfig?.priority ?? 128;
+        const priority = voiceConfig?.priority ?? 128;
 
-        let hardwareVoicesCount = 0;
-        for (const inst of this.#activeGlobalVoices) {
-            if (inst.state !== 'virtual') hardwareVoicesCount++;
+        const activeForId = this.#getActiveIndicesById(soundId);
+        if (activeForId.length >= this.#config.maxPolyphony) {
+            if (this.#config.policy === 'steal_oldest') {
+                this.release(this.#allInstances[activeForId[0]]);
+            } else {
+                return null;
+            }
         }
 
-        if (hardwareVoicesCount >= this.#config.globalVoiceLimit) {
-            const victim = this.#findStealCandidate(requestedPriority);
+        if (this.#stackPtr < 0) {
+            const victimIndex = this.#findStealCandidate(priority);
 
-            if (!victim) {
-                console.warn(`[Voice Limit] Dropped "${soundId}": priority ${requestedPriority} is too low.`);
+            if (victimIndex === -1) {
+                console.warn(`[Pool] Rejected "${soundId}": No victims with lower priority.`);
                 return null;
             }
 
-            const victimConfig = this.#config.voiceConfigResolver(victim.id);
-            if (victimConfig?.virtualization === 'virtualize' && 'virtualize' in victim) {
-                victim.virtualize();
-            } else {
-                victim.stop();
-            }
+            this.release(this.#allInstances[victimIndex]);
         }
 
-        const available = this.#getPool(this.#available, soundId);
-        const busy = this.#getPool(this.#busy, soundId);
+        const index = this.#freeStack[this.#stackPtr--];
+        const instance = this.#allInstances[index];
 
-        let instance: ISoundInstance;
+        instance.rebind(soundId, buffer);
+        instance.resetForReuse();
 
-        if (available.length > 0) {
-            instance = available.pop()!;
-            instance.resetForReuse();
-        } else if (busy.length >= this.#config.maxPolyphony) {
-            if (this.#config.policy === 'steal_oldest') {
-                instance = busy.shift()!;
-                instance.resetForReuse();
-            } else {
-                instance = this.#instanceFactory(soundId);
-            }
-        } else {
-            instance = this.#instanceFactory(soundId);
-        }
-
-        if (!busy.includes(instance)) {
-            busy.push(instance);
-        }
-        this.#activeGlobalVoices.add(instance);
+        this.#activeIndices.add(index);
 
         const off = instance.on('ended', () => {
             off();
@@ -93,68 +85,64 @@ class SoundPoolManager {
     }
 
     public release(instance: ISoundInstance): void {
-        const soundId = instance.id;
-        const busy = this.#getPool(this.#busy, soundId);
-        const available = this.#getPool(this.#available, soundId);
+        const index = (instance as any)._poolIndex;
 
-        this.#activeGlobalVoices.delete(instance);
+        if (!this.#activeIndices.has(index)) return;
 
-        const index = busy.indexOf(instance);
-        if (index !== -1) {
-            busy.splice(index, 1);
+        this.#activeIndices.delete(index);
+
+        instance.stop();
+
+        this.#freeStack[++this.#stackPtr] = index;
+    }
+
+    public getActiveVoices(): ISoundInstance[] {
+        const result: ISoundInstance[] = [];
+        for (const index of this.#activeIndices) {
+            result.push(this.#allInstances[index]);
         }
-
-        if (!available.includes(instance)) {
-            available.push(instance);
-        }
+        return result;
     }
 
     public dispose(soundId?: SoundId): void {
-        const ids = soundId ? [soundId] : [...new Set([...this.#available.keys(), ...this.#busy.keys()])];
-
-        for (const id of ids) {
-            const available = this.#available.get(id) ?? [];
-            const busy = this.#busy.get(id) ?? [];
-
-            for (const instance of [...available, ...busy]) {
-                instance.dispose();
-                this.#activeGlobalVoices.delete(instance);
+        for (const index of this.#activeIndices) {
+            const inst = this.#allInstances[index];
+            if (!soundId || inst.id === soundId) {
+                this.release(inst);
             }
+        }
 
-            this.#available.delete(id);
-            this.#busy.delete(id);
+        if (!soundId) {
+            for (const inst of this.#allInstances) inst.dispose();
+            this.#activeIndices.clear();
+            this.#stackPtr = -1;
         }
     }
 
-    #getPool(map: Map<SoundId, ISoundInstance[]>, soundId: SoundId): ISoundInstance[] {
-        if (!map.has(soundId)) {
-            map.set(soundId, []);
+    #getActiveIndicesById(soundId: SoundId): number[] {
+        const found: number[] = [];
+        for (const index of this.#activeIndices) {
+            if (this.#allInstances[index].id === soundId) found.push(index);
         }
-        return map.get(soundId)!;
+        return found;
     }
 
-    #findStealCandidate(requestedPriority: number): ISoundInstance | null {
-        let weakestInstance: ISoundInstance | null = null;
+    #findStealCandidate(requestedPriority: number): number {
+        let weakestIndex = -1;
         let weakestPriority = -1;
 
-        for (const instance of this.#activeGlobalVoices) {
-            if (instance.state === 'virtual') continue;
+        for (const index of this.#activeIndices) {
+            const inst = this.#allInstances[index];
+            if (inst.state === 'virtual') continue;
 
-            const config = this.#config.voiceConfigResolver(instance.id);
-            const priority = config?.priority ?? 128;
+            const p = this.#config.voiceConfigResolver(inst.id)?.priority ?? 128;
 
-            if (priority > weakestPriority) {
-                weakestPriority = priority;
-                weakestInstance = instance;
+            if (p > weakestPriority) {
+                weakestPriority = p;
+                weakestIndex = index;
             }
         }
 
-        if (weakestPriority >= requestedPriority) {
-            return weakestInstance;
-        }
-
-        return null;
+        return weakestPriority >= requestedPriority ? weakestIndex : -1;
     }
 }
-
-export default SoundPoolManager;

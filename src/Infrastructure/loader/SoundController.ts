@@ -31,10 +31,7 @@ export class SoundController implements ISoundController {
 
     // eslint-disable-next-line unicorn/no-object-as-default-parameter
     register(soundId: SoundId, buffer: AudioBuffer, options: ISoundOptions = { url: '' }): void {
-        if (this.registry.has(soundId)) {
-            throw new Error(`Sound "${soundId}" already registered`);
-        }
-
+        if (this.registry.has(soundId)) return;
         this.registry.set(soundId, { buffer, options });
     }
 
@@ -62,30 +59,31 @@ export class SoundController implements ISoundController {
 
         this.lastPlayTimes.set(soundId, now);
 
-        const instance = this.pool.acquire(soundId);
+        const instance = this.pool.acquire(soundId, definition.buffer);
 
         if (!instance) return null;
 
         const playbackId = this.nextPlaybackId++ as PlaybackId;
 
-        const wrappedOnRevive = onRevive ? () => onRevive(playbackId) : undefined;
-
         const logicalVoice: ILogicalVoice = {
             playbackId,
             soundId,
             position: { x: 0, y: 0, z: 0 },
-            startedAtContextTime: 0,
+            startedAtContextTime: this.context.currentTime,
             startOffset: offset || 0,
             physicalInstance: instance,
-            onRevive: wrappedOnRevive
+            onRevive: onRevive ? () => onRevive(playbackId) : undefined
         };
+
+        (instance as any)._currentPlaybackId = playbackId;
 
         this.activeVoices.set(playbackId, logicalVoice);
 
-        (instance as any).playbackId = playbackId;
-        (instance as any).onRevive = wrappedOnRevive;
-        instance.setLoop(loop || false);
-        instance.setRate(rate || 1);
+        instance.setLoop(loop);
+        instance.setRate(rate);
+
+        instance.on('ended', this.#handleVoiceEnded);
+
         this.scheduler.schedulePlay(instance, when, offset, duration);
 
         return playbackId;
@@ -114,19 +112,15 @@ export class SoundController implements ISoundController {
         if (voice && voice.physicalInstance) {
             voice.physicalInstance.stop(timeToStop);
         }
-        this.activeVoices.delete(playbackId);
     }
 
     stopAll(soundId?: SoundId): void {
-        this.pool.dispose(soundId);
         if (soundId) {
             for (const [id, voice] of this.activeVoices.entries()) {
-                if (voice.soundId === soundId) {
-                    this.activeVoices.delete(id);
-                }
+                if (voice.soundId === soundId) this.stopById(id);
             }
         } else {
-            this.activeVoices.clear();
+            for (const id of this.activeVoices.keys()) this.stopById(id);
         }
     }
 
@@ -225,4 +219,11 @@ export class SoundController implements ISoundController {
         // eslint-disable-next-line unicorn/consistent-function-scoping
         return () => void 0;
     }
+
+    #handleVoiceEnded = (instance: any): void => {
+        const playbackId = (instance as any)._currentPlaybackId;
+        if (playbackId) {
+            this.activeVoices.delete(playbackId);
+        }
+    };
 }

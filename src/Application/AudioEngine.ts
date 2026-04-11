@@ -176,6 +176,10 @@ export class AudioEngine {
             await this.loadSounds(this.config.manifest, bufferLoader, soundRegistry);
 
             const instanceFactory = (soundId: SoundId): SoundInstance => {
+                if (soundId === ('__RESERVED__' as SoundId)) {
+                    return new SoundInstance(soundId, this.#contextManager, nodeFactory, null, automation, {});
+                }
+
                 const { buffer, options } = soundRegistry.get(soundId);
                 const soundConfig = this.config.soundMap[soundId] as any;
 

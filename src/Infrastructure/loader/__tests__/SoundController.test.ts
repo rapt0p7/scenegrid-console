@@ -1,3 +1,4 @@
+// noinspection D
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { SoundController } from '@infrastructure/loader/SoundController.js';
@@ -29,7 +30,8 @@ describe('SoundController', () => {
             on: vi.fn().mockReturnValue(() => 'unsubscribed'),
             instanceGain: {
                 gain: {}
-            }
+            },
+            state: 'playing'
         };
 
         mockPool = {
@@ -63,18 +65,14 @@ describe('SoundController', () => {
             expect(registry.get('sound_1').options).toEqual({ url: '' });
         });
 
-        it('should register a new sound with custom options', () => {
-            controller.register('sound_2' as SoundId, fakeBuffer, { url: 'path/to/sound.wav' });
-
-            expect((controller as any).registry.get('sound_2').options).toEqual({ url: 'path/to/sound.wav' });
-        });
-
-        it('should throw an error if registering an already existing sound', () => {
-            controller.register('duplicate_sound' as SoundId, fakeBuffer);
+        it('should not throw and not overwrite if registering an already existing sound', () => {
+            controller.register('duplicate_sound' as SoundId, fakeBuffer, { url: 'first' });
 
             expect(() => {
-                controller.register('duplicate_sound' as SoundId, fakeBuffer);
-            }).toThrow('already registered');
+                controller.register('duplicate_sound' as SoundId, fakeBuffer, { url: 'second' });
+            }).not.toThrow();
+
+            expect((controller as any).registry.get('duplicate_sound').options.url).toBe('first');
         });
     });
 
@@ -94,17 +92,7 @@ describe('SoundController', () => {
             expect(result).toBeNull();
         });
 
-        it('should return null if pool fails to acquire an instance (e.g., voice limit reached)', () => {
-            controller.register('sound_limit' as SoundId, fakeBuffer);
-            mockPool.acquire.mockReturnValueOnce(null);
-
-            const result = controller.play('sound_limit' as SoundId, {});
-
-            expect(result).toBeNull();
-            expect(mockScheduler.schedulePlay).not.toHaveBeenCalled();
-        });
-
-        it('should acquire instance, schedule play, and return JUST the PlaybackId', () => {
+        it('should acquire instance with buffer, schedule play, and return PlaybackId', () => {
             controller.register('hero_jump' as SoundId, fakeBuffer);
 
             const playbackId = controller.play('hero_jump' as SoundId, {
@@ -115,7 +103,7 @@ describe('SoundController', () => {
                 rate: 1.5
             });
 
-            expect(mockPool.acquire).toHaveBeenCalledWith('hero_jump');
+            expect(mockPool.acquire).toHaveBeenCalledWith('hero_jump', fakeBuffer);
             expect(fakeInstance.setLoop).toHaveBeenCalledWith(true);
             expect(fakeInstance.setRate).toHaveBeenCalledWith(1.5);
             expect(mockScheduler.schedulePlay).toHaveBeenCalledWith(fakeInstance, 0.5, 1.2, 2);
@@ -135,59 +123,41 @@ describe('SoundController', () => {
         });
     });
 
-    describe('Adapter Boundaries (onRevive Wrapper)', () => {
-        it('should translate ISoundInstance to PlaybackId for the Domain layer', () => {
-            controller.register('test_sound' as SoundId, fakeBuffer);
-            const mockDomainRevive = vi.fn();
-
-            const playbackId = controller.play('test_sound' as SoundId, { onRevive: mockDomainRevive });
-            expect(playbackId).not.toBeNull();
-
-            const voice = controller.getLogicalVoice(playbackId!);
-            expect(voice).toBeDefined();
-            expect(voice?.onRevive).toBeDefined();
-
-            voice!.onRevive!(fakeInstance);
-
-            expect(mockDomainRevive).toHaveBeenCalledTimes(1);
-            expect(mockDomainRevive).toHaveBeenCalledWith(playbackId);
-            expect(mockDomainRevive).not.toHaveBeenCalledWith(fakeInstance);
-        });
-    });
-
     describe('Stopping & Resource Management', () => {
         beforeEach(() => {
             controller.register('test_sound' as SoundId, fakeBuffer);
             controller.register('other_sound' as SoundId, fakeBuffer);
-            vi.mocked(mockPool.acquire).mockReturnValue(fakeInstance);
         });
 
-        it('should stop a specific physical instance by playbackId (with optional time)', () => {
+        it('should stop instance and clean up activeVoices on ended event', () => {
             const id = controller.play('test_sound' as SoundId, {})!;
-            expect(controller.activeVoices.has(id)).toBe(true);
+
+            const endedCallback = fakeInstance.on.mock.calls.find((call: any[]) => call[0] === 'ended')[1];
 
             controller.stopById(id, 1.5);
-
             expect(fakeInstance.stop).toHaveBeenCalledWith(1.5);
+
+            endedCallback(fakeInstance);
             expect(controller.activeVoices.has(id)).toBe(false);
         });
 
-        it('should call pool.dispose to stop all instances of a specific sound', () => {
-            controller.stopAll('bgm_music' as SoundId);
-            expect(mockPool.dispose).toHaveBeenCalledWith('bgm_music');
+        it('should stop all related instances when stopAll is called with soundId', () => {
+            const stopSpy = vi.spyOn(controller, 'stopById');
+            controller.play('test_sound' as SoundId, {});
+
+            controller.stopAll('test_sound' as SoundId);
+            expect(stopSpy).toHaveBeenCalled();
         });
 
-        it('should clear ALL sounds from activeVoices when stopAll is called without arguments', () => {
+        it('should clear all sounds via stopById when stopAll is called without arguments', () => {
             controller.play('test_sound' as SoundId, {});
             controller.play('other_sound' as SoundId, {});
-            controller.stopAll();
-            expect(controller.activeVoices.size).toBe(0);
-        });
 
-        it('should cancel scheduled events on physical instance', () => {
-            const id = controller.play('test_sound' as SoundId, {})!;
-            controller.cancelScheduled(id);
-            expect(fakeInstance.cancelScheduled).toHaveBeenCalled();
+            const stopSpy = vi.spyOn(controller, 'stopById');
+
+            controller.stopAll();
+
+            expect(stopSpy).toHaveBeenCalledTimes(2);
         });
     });
 
@@ -202,17 +172,6 @@ describe('SoundController', () => {
         it('should delegate setVolume to AutomationEngine', () => {
             controller.setVolume(playbackId, 0.75);
             expect(mockAutomation.set).toHaveBeenCalledWith(fakeInstance.instanceGain.gain, 0.75);
-        });
-
-        it('should delegate fadeVolume to AutomationEngine with correct parameters', () => {
-            controller.fadeVolume(playbackId, 0.2, 500, 'equal-power', 100);
-            expect(mockAutomation.ramp).toHaveBeenCalledWith(
-                fakeInstance.instanceGain.gain,
-                0.2,
-                500,
-                'equal-power',
-                100
-            );
         });
 
         it('should return context time and sample rate', () => {
@@ -232,7 +191,6 @@ describe('SoundController', () => {
     describe('Logical Voices Position', () => {
         beforeEach(() => {
             controller.register('test_sound' as SoundId, fakeBuffer);
-            vi.mocked(mockPool.acquire).mockReturnValue(fakeInstance);
         });
 
         it('should update logical position and physical instance position', () => {

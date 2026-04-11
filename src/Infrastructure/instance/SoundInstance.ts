@@ -26,12 +26,17 @@ export type SoundInstanceEvents = {
 };
 
 export class SoundInstance implements ISoundInstance {
-    public readonly id: SoundId;
+    public get id(): SoundId {
+        return this.#id;
+    }
 
     public get pannerNode(): PannerNodeLike | StereoPannerNodeLike | null {
         return this.#chain.pannerNode;
     }
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public _poolIndex: number = -1;
 
+    #id: SoundId;
     #automation: AutomationEngine;
     #emitter: Emitter<SoundInstanceEvents> = mitt<SoundInstanceEvents>();
     #ctxManager: AudioContextManager;
@@ -47,14 +52,14 @@ export class SoundInstance implements ISoundInstance {
 
     // eslint-disable-next-line max-params
     constructor(
-        id: SoundId,
+        initialId: SoundId,
         contextManager: AudioContextManager,
         factory: AudioNodeFactory,
-        buffer: AudioBuffer,
+        buffer: AudioBuffer | null,
         automation: AutomationEngine,
         options: INodeChainOptions = {}
     ) {
-        this.id = id;
+        this.#id = initialId;
         this.#ctxManager = contextManager;
         this.#buffer = buffer;
         this.#automation = automation;
@@ -96,6 +101,15 @@ export class SoundInstance implements ISoundInstance {
 
     public get duration(): number {
         return this.#buffer?.duration ?? 0;
+    }
+
+    public rebind(newId: SoundId, buffer: AudioBuffer): void {
+        if (this.#state === 'playing' || this.#state === 'virtual') {
+            this.stop(0);
+        }
+
+        this.#id = newId;
+        this.#buffer = buffer;
     }
 
     public automate(target: InstanceParameterTarget, value: number, smoothingMs: number = 50): void {
@@ -245,6 +259,8 @@ export class SoundInstance implements ISoundInstance {
 
         this.#endedByStop = true;
 
+        this.#source.removeEventListener('ended', this.#onSourceEnded);
+
         try {
             this.#source.stop(0);
         } catch {
@@ -271,24 +287,25 @@ export class SoundInstance implements ISoundInstance {
     public virtualize(): void {
         if (this.#state !== 'playing' || !this.#source) return;
 
-        this.#source.disconnect();
+        this.#setState('virtual');
+
+        this.#source.removeEventListener('ended', this.#onSourceEnded);
         try {
             this.#source.stop(0);
+            this.#source.disconnect();
         } catch {
             /* empty */
         }
 
         this.#source = null;
-
-        this.#setState('virtual');
     }
 
     public devirtualize(): void {
         if (this.#state !== 'virtual' || !this.#buffer) return;
 
         const now = this.#ctxManager.context.currentTime;
-        const elapsedSinceOriginalStart = Math.max(0, now - this.#startTime);
-        const currentOffset = elapsedSinceOriginalStart % this.#buffer.duration;
+        const elapsed = Math.max(0, now - this.#startTime);
+        const currentOffset = elapsed % this.#buffer.duration;
 
         const source = this.#createAndBindSource();
         source.start(now, currentOffset);
@@ -306,6 +323,10 @@ export class SoundInstance implements ISoundInstance {
         this.automate('pitch', 1, 0);
         this.automate('pan', 0, 0);
         // this.automate('filterFrequency', 22000, 0);
+
+        if (this.#chain.pannerNode) {
+            this.setPosition(0, 0, 0);
+        }
 
         this.#endedByStop = false;
         this.#playbackRate = 1;
@@ -345,6 +366,18 @@ export class SoundInstance implements ISoundInstance {
         return () => this.#emitter.off(event, handler);
     }
 
+    #onSourceEnded = (): void => {
+        if (this.#endedByStop) return;
+
+        if (this.#state === 'virtual') return;
+
+        if (this.#state !== 'playing') return;
+
+        this.#source = null;
+        this.#setState('idle');
+        this.#emitter.emit('ended', this);
+    };
+
     #setState(state: PlaybackState): void {
         this.#state = state;
     }
@@ -357,14 +390,7 @@ export class SoundInstance implements ISoundInstance {
 
         source.connect(this.#chain.inputNode);
 
-        source.addEventListener('ended', () => {
-            if (this.#endedByStop) return;
-            if (this.#state !== 'playing') return;
-
-            this.#source = null;
-            this.#setState('idle');
-            this.#emitter.emit('ended', this);
-        });
+        source.addEventListener('ended', this.#onSourceEnded);
 
         return source;
     }

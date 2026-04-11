@@ -19,7 +19,8 @@ function createMockAudioContext() {
         disconnect: vi.fn(),
         start: vi.fn(),
         stop: vi.fn(),
-        addEventListener: vi.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
     };
 
     const mockGainNode = {
@@ -265,18 +266,17 @@ describe('SoundInstance (Pause, Resume & Parameters)', () => {
         expect(mockContext._mockSourceNode.loop).toBe(false);
     });
 
-    it('should reset parameters correctly on resetForReuse()', () => {
-        instance.setRate(2);
-        instance.setLoop(true);
-        instance.play();
-        instance.stop();
+    it('should clear all event listeners on resetForReuse()', () => {
+        const spy = vi.fn();
+        instance.on('ended', spy);
 
+        instance.play();
         instance.resetForReuse();
-        expect(instance.state).toBe('idle');
 
-        instance.play();
-        expect(mockContext._mockSourceNode.playbackRate.value).toBe(1);
-        expect(mockContext._mockSourceNode.loop).toBe(false);
+        const onEndedCallback = mockContext._mockSourceNode.addEventListener.mock.calls[0][1];
+        onEndedCallback();
+
+        expect(spy).not.toHaveBeenCalled();
     });
 });
 
@@ -381,11 +381,13 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
     });
 
     it('should handle cancelScheduled() edge cases', () => {
-        instance.cancelScheduled();
+        expect(() => instance.cancelScheduled()).not.toThrow();
 
         instance.play();
         instance.cancelScheduled();
+
         expect(instance.state).toBe('stopped');
+        expect(mockContext._mockSourceNode.removeEventListener).toHaveBeenCalledWith('ended', expect.any(Function));
 
         instance.play();
         mockContext._mockSourceNode.stop.mockImplementationOnce(() => {
@@ -396,6 +398,29 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         });
 
         expect(() => instance.cancelScheduled()).not.toThrow();
+    });
+
+    it('should support pre-allocation with null buffer and subsequent rebind', () => {
+        const preAllocated = new SoundInstance(
+            '__RESERVED__' as SoundId,
+            mockContextManager,
+            mockFactory,
+            null,
+            mockAutomation
+        );
+
+        expect(preAllocated.state).toBe('idle');
+        expect(preAllocated.duration).toBe(0);
+
+        preAllocated.play();
+        expect(mockContext.createBufferSource).not.toHaveBeenCalled();
+
+        preAllocated.rebind('real_sound' as SoundId, mockBuffer);
+        expect(preAllocated.duration).toBe(10);
+
+        preAllocated.play();
+        expect(mockContext.createBufferSource).toHaveBeenCalled();
+        expect(preAllocated.state).toBe('playing');
     });
 
     it('should execute dispose() correctly', () => {
