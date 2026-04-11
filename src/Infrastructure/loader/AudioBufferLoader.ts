@@ -1,3 +1,4 @@
+// noinspection D
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { IAudioBufferLoader } from '@infrastructure/types/IAudioBufferLoader.js';
 
@@ -5,6 +6,7 @@ export class AudioBufferLoader implements IAudioBufferLoader {
     #contextManager: AudioContextManager;
     #bufferCache: Map<string, AudioBuffer> = new Map();
     #inFlightPromises: Map<string, Promise<AudioBuffer>> = new Map();
+    #dummyBuffer: AudioBuffer | null = null;
 
     constructor(contextManager: AudioContextManager) {
         this.#contextManager = contextManager;
@@ -53,6 +55,7 @@ export class AudioBufferLoader implements IAudioBufferLoader {
             try {
                 const buffer = await this.load(url);
                 results[key] = buffer;
+
                 loadedItems++;
                 if (onProgress !== undefined) onProgress(loadedItems, totalItems, key);
             } catch (error) {
@@ -79,14 +82,27 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         try {
             const response = await fetch(url);
             if (!response.ok) {
-                throw new Error(`AudioBufferLoader: network error ${response.status} for ${url}`);
+                console.warn(`[AudioBufferLoader] Network error ${response.status} for ${url}. Using dummy buffer.`);
+                return this.getDummyBuffer();
             }
 
             const arrayBuffer = await response.arrayBuffer();
             return await this.#contextManager.context.decodeAudioData(arrayBuffer);
         } catch (error) {
-            throw new Error(`AudioBufferLoader: failed to load or decode ${url}`, { cause: error });
+            console.error(`[AudioBufferLoader] Failed to load or decode ${url}. Using dummy buffer.`, error);
+            return this.getDummyBuffer();
         }
+    }
+
+    private getDummyBuffer(): AudioBuffer {
+        if (!this.#dummyBuffer) {
+            this.#dummyBuffer = this.#contextManager.context.createBuffer(
+                1,
+                1,
+                this.#contextManager.context.sampleRate
+            );
+        }
+        return this.#dummyBuffer;
     }
 
     private resolveFirstSupportedUrl(url: string | string[]): string {
