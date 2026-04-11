@@ -2,7 +2,15 @@
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { IAudioBufferLoader } from '@infrastructure/types/IAudioBufferLoader.js';
 
+type Extension = 'mp3' | 'ogg' | 'wav' | 'm4a';
+
 export class AudioBufferLoader implements IAudioBufferLoader {
+    private static readonly mimeMap: Record<Extension, string> = {
+        mp3: 'audio/mpeg',
+        ogg: 'audio/ogg',
+        wav: 'audio/wav',
+        m4a: 'audio/mp4'
+    };
     #contextManager: AudioContextManager;
     #bufferCache: Map<string, AudioBuffer> = new Map();
     #inFlightPromises: Map<string, Promise<AudioBuffer>> = new Map();
@@ -109,19 +117,13 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         if (typeof url === 'string') return url;
 
         const audio = document.createElement('audio');
-        const mimeMap: Record<string, string> = {
-            mp3: 'audio/mpeg',
-            ogg: 'audio/ogg',
-            wav: 'audio/wav',
-            m4a: 'audio/mp4'
-        };
 
         for (const candidate of url) {
             const extension = candidate.split('.').pop()?.toLowerCase();
 
             if (extension === undefined) continue;
 
-            const mime = mimeMap[extension];
+            const mime = AudioBufferLoader.mimeMap[extension as Extension];
 
             if (mime === undefined) continue;
 
