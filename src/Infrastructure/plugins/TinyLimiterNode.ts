@@ -2,7 +2,7 @@ import { AudioWorkletNode } from 'standardized-audio-context';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import processorUrl from './lookahead-brickwall-limiter.processor.js';
+import processorUrl from '../worklets/lookahead-brickwall-limiter.processor.js';
 
 import type { AudioCtx, AudioWorkletNodeLike, AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
 import type { ILimiterNode } from '@infrastructure/types/IAudioPlugins.js';

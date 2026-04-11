@@ -5,7 +5,7 @@ class MockAudioWorkletProcessor {
     port = { postMessage: mockPostMessage };
 }
 
-describe('DuckerProcessorProcessor', () => {
+describe('DuckerProcessor', () => {
     let capturedDuckerClass: any;
 
     beforeEach(async () => {
@@ -22,7 +22,7 @@ describe('DuckerProcessorProcessor', () => {
         });
 
         vi.resetModules();
-        await import('../ducker-processor.processor.js');
+        await import('../ducker.processor.js');
     });
 
     describe('Initialization', () => {
@@ -142,7 +142,7 @@ describe('DuckerProcessorProcessor', () => {
             });
 
             vi.resetModules();
-            await import('../ducker-processor.processor.js');
+            await import('../ducker.processor.js');
 
             expect(warnSpy).toHaveBeenCalledWith('ducker-processor уже зарегистрирован');
             warnSpy.mockRestore();
@@ -154,7 +154,7 @@ describe('DuckerProcessorProcessor', () => {
             });
 
             vi.resetModules();
-            await expect(import('../ducker-processor.processor.js')).rejects.toThrow('Fatal System Error');
+            await expect(import('../ducker.processor.js')).rejects.toThrow('Fatal System Error');
         });
     });
 });

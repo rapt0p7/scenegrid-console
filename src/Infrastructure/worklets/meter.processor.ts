@@ -25,7 +25,7 @@ interface HighshelfFilter extends FilterCoeffs {
     z2_R: number;
 }
 
-class MeterProcessorProcessor extends AudioWorkletProcessor implements IAudioWorkletProcessor {
+class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProcessor {
     public static parameterDescriptors = [];
     private readonly sampleRate: number;
     private rms: number;
@@ -174,7 +174,7 @@ class MeterProcessorProcessor extends AudioWorkletProcessor implements IAudioWor
 }
 
 try {
-    registerProcessor('meter-processor', MeterProcessorProcessor);
+    registerProcessor('meter-processor', MeterProcessor);
 } catch (error) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error

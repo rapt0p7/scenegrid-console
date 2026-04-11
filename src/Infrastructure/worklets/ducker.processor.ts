@@ -9,7 +9,7 @@ export interface DuckerProcessorOptions {
     };
 }
 
-class DuckerProcessorProcessor extends AudioWorkletProcessor implements IAudioWorkletProcessor {
+class DuckerProcessor extends AudioWorkletProcessor implements IAudioWorkletProcessor {
     public static parameterDescriptors = [];
     private frameCounter: number = 0;
     private readonly attack: number;
@@ -87,7 +87,7 @@ class DuckerProcessorProcessor extends AudioWorkletProcessor implements IAudioWo
 }
 
 try {
-    registerProcessor('ducker-processor', DuckerProcessorProcessor);
+    registerProcessor('ducker-processor', DuckerProcessor);
 } catch (error) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error

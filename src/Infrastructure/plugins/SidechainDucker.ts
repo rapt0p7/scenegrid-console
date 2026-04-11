@@ -5,7 +5,7 @@ import { isDefined, isAbsent } from '@shared/guards.js';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import processorUrl from './ducker-processor.processor.js';
+import processorUrl from '../worklets/ducker.processor.js';
 
 import type {
     AudioCtx,
