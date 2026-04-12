@@ -25,7 +25,8 @@ describe('DuckingManager', () => {
             clearAllSidechainTriggers: vi.fn(),
             getBus: vi.fn(),
             getAllBuses: vi.fn(),
-            applySend: vi.fn()
+            applySend: vi.fn(),
+            getCurrentRealGain: vi.fn()
         };
 
         mockSoundController = {

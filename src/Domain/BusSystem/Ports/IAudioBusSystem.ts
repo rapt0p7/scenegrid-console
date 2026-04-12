@@ -9,4 +9,5 @@ export interface IAudioBusSystem {
     getBus(id: BusId): IAudioBus | undefined;
     getAllBuses(): ReadonlyMap<BusId, IAudioBus>;
     applySend(sourceBusId: BusId, targetBusId: BusId, gain: number | null, durationMs?: number): void;
+    getCurrentRealGain(busId: BusId): number;
 }
