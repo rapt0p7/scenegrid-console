@@ -103,6 +103,10 @@ export class SoundController implements ISoundController {
         }
     }
 
+    public get debugPool(): SoundPoolManager {
+        return this.pool;
+    }
+
     getLogicalVoice(playbackId: PlaybackId): ILogicalVoice | undefined {
         return this.activeVoices.get(playbackId);
     }

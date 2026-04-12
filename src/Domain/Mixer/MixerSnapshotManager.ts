@@ -57,4 +57,8 @@ export default class MixerSnapshotManager {
 
         this.events.emit('transition:end', { layerId, snapshotName: 'clear' });
     }
+
+    public get debugLayerStack(): MixerLayerStack {
+        return this.layerStack;
+    }
 }

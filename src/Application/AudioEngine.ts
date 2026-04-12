@@ -331,8 +331,8 @@ export class AudioEngine {
             router: this.#router,
             contextManager: this.#contextManager,
             snapshotManager: this.#snapshotManager,
-            poolManager: (this.#soundController as any).pool,
-            layerStack: (this.#snapshotManager as any).layerStack
+            poolManager: this.#soundController.debugPool,
+            layerStack: this.#snapshotManager.debugLayerStack
         };
     }
 
