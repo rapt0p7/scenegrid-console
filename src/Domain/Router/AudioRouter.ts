@@ -1,12 +1,11 @@
 // noinspection D
 
 import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
-import clamp from '@shared/clamp.js';
+import { VariationResolver } from '@domain/Router/VariationResolver.js';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type {
     AnySoundConfig,
-    IBaseSoundConfig,
     IContainerSoundConfig,
     ILayeredSoundConfig,
     IPlayOptions
@@ -84,7 +83,7 @@ export default class AudioRouter implements IAudioRouter {
             return this.handleLayering(config, options);
         }
 
-        const finalOptions = this.applyVariation(config, options);
+        const finalOptions = VariationResolver.apply(config, options);
 
         const playbackId = this.soundController.play(name, {
             when: (finalOptions.seek ?? 0) / 1000,
@@ -115,7 +114,7 @@ export default class AudioRouter implements IAudioRouter {
         const nextSource = this.containerManager.getNextSource(name, config);
         if (!nextSource) return null;
 
-        const finalOptions = this.applyVariation(config, options);
+        const finalOptions = VariationResolver.apply(config, options);
 
         const playbackId = this.soundController.play(nextSource, {
             when: (finalOptions.seek ?? 0) / 1000,
@@ -135,7 +134,7 @@ export default class AudioRouter implements IAudioRouter {
     private handleLayering(config: ILayeredSoundConfig, options: IPlayOptions): PlaybackId[] | null {
         const playbackIds: PlaybackId[] = [];
         for (const layer of config.layers) {
-            const finalOptions = this.applyVariation(config, {
+            const finalOptions = VariationResolver.apply(config, {
                 ...options,
                 ...layer
             });
@@ -155,28 +154,5 @@ export default class AudioRouter implements IAudioRouter {
         }
 
         return playbackIds.length > 0 ? playbackIds : null;
-    }
-
-    private applyVariation(config: IBaseSoundConfig, options: IPlayOptions): IPlayOptions {
-        if (!config.variation) return { ...options };
-
-        const v = config.variation;
-        const final: IPlayOptions = { ...options };
-
-        if (v.pitchVar) {
-            const delta = (Math.random() * 2 - 1) * v.pitchVar;
-            final.rate = clamp((final.rate ?? 1) + delta, 0.1, 4);
-        }
-
-        if (v.volumeVar) {
-            const delta = (Math.random() * 2 - 1) * v.volumeVar;
-            final.volume = clamp((final.volume ?? 1) + delta, 0, 1);
-        }
-
-        if (v.randomOffset) {
-            final.seek = Math.random() * v.randomOffset;
-        }
-
-        return final;
     }
 }
