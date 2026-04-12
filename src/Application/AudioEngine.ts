@@ -39,9 +39,10 @@ import { isDefined } from '@shared/guards.js';
 
 import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISmartLoopManager.js';
-import type { PlaybackId, SoundId, BusId } from '@domain/Types/Branded.js';
+import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
 import type { IPluginFactory, DebuggerOptions } from '@infrastructure';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { Handler } from 'mitt';
@@ -214,7 +215,7 @@ export class AudioEngine {
                 scheduler,
                 this.#contextManager.context,
                 automation,
-                soundRegistry.registry as any
+                soundRegistry.registry
             );
 
             const pluginFactory: IPluginFactory = {
@@ -346,7 +347,7 @@ export class AudioEngine {
     }
 
     private async loadSounds(
-        manifest: Record<string, any>,
+        manifest: ISpriteSoundManifest,
         loader: AudioBufferLoader,
         registry: SoundRegistry
     ): Promise<void> {
@@ -391,7 +392,7 @@ export class AudioEngine {
             if (isDefined(buffer)) {
                 registry.register(key, {
                     buffer,
-                    options: { url: entry.url, hasPanner: entry.hasPanner }
+                    options: { url: entry.url }
                 });
             }
         }

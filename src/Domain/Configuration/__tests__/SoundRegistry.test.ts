@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 
 import SoundRegistry from '@domain/Configuration/SoundRegistry.js';
 
+import type { SoundId } from '@domain/Types/Branded.js';
+
 describe('SoundRegistry', () => {
     it('should register and retrieve a sound descriptor', () => {
         const registry = new SoundRegistry();
@@ -26,6 +28,6 @@ describe('SoundRegistry', () => {
         const map = registry.registry;
 
         expect(map).toBeInstanceOf(Map);
-        expect(map.get('test_sound')).toBe(mockDescriptor);
+        expect(map.get('test_sound' as SoundId)).toBe(mockDescriptor);
     });
 });

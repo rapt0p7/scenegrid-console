@@ -1,3 +1,5 @@
+import type { SoundId } from '@domain/Types/Branded';
+
 interface SoundDescriptor {
     buffer: AudioBuffer;
     options: {
@@ -7,18 +9,18 @@ interface SoundDescriptor {
 }
 
 export default class SoundRegistry {
-    #map = new Map<string, SoundDescriptor>();
+    #map = new Map<SoundId, SoundDescriptor>();
 
     register(id: string, desc: SoundDescriptor): void {
-        this.#map.set(id, desc);
+        this.#map.set(id as SoundId, desc);
     }
 
-    get registry(): Map<string, SoundDescriptor> {
+    get registry(): Map<SoundId, SoundDescriptor> {
         return this.#map;
     }
 
     get(id: string): SoundDescriptor {
-        const entry = this.#map.get(id);
+        const entry = this.#map.get(id as SoundId);
         if (!entry) {
             throw new Error(`Sound "${id}" not registered`);
         }
