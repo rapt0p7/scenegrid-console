@@ -21,7 +21,7 @@ export class NodeChain implements INodeChain {
     public readonly instanceGain: GainNodeLike;
 
     readonly #factory: AudioNodeFactory;
-    readonly #panner: AudioNodeLike | null = null;
+    #panner: AudioNodeLike | null = null;
     #filters: BiquadFilterNodeLike[] = [];
     #externalDestination: AudioNodeLike | null = null;
 
@@ -82,6 +82,23 @@ export class NodeChain implements INodeChain {
         for (const f of this.#filters) f.disconnect();
         if (this.#panner) this.#panner.disconnect();
         this.outputNode.disconnect();
+    }
+
+    public setPannerMode(options: { hasPanner?: boolean; spatial?: PannerConfig | boolean }): void {
+        if (this.#panner) {
+            this.#panner.disconnect();
+        }
+
+        if (options.spatial) {
+            const spatialConfig = typeof options.spatial === 'object' ? options.spatial : {};
+            this.#panner = this.#factory.create3DPanner(spatialConfig);
+        } else if (options.hasPanner) {
+            this.#panner = this.#factory.createStereoPanner(0);
+        } else {
+            this.#panner = null;
+        }
+
+        this.#rebuildInternalGraph();
     }
 
     #rebuildInternalGraph(): void {

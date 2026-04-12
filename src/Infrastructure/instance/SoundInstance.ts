@@ -1,3 +1,5 @@
+// noinspection D
+
 import mitt from 'mitt';
 
 import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
@@ -5,7 +7,7 @@ import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
 import type { SoundId } from '@domain/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
-import type { AudioNodeFactory } from '@infrastructure/nodes/AudioNodeFactory.js';
+import type { AudioNodeFactory, PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
 import type { INodeChainOptions } from '@infrastructure/nodes/NodeChain.js';
 import type {
     AudioBufferSourceNodeLike,
@@ -103,13 +105,26 @@ export class SoundInstance implements ISoundInstance {
         return this.#buffer?.duration ?? 0;
     }
 
-    public rebind(newId: SoundId, buffer: AudioBuffer): void {
+    public rebind(
+        newId: SoundId,
+        buffer: AudioBuffer,
+        options?: { spatial?: PannerConfig; hasPanner?: boolean }
+    ): void {
         if (this.#state === 'playing' || this.#state === 'virtual') {
             this.stop(0);
         }
 
         this.#id = newId;
         this.#buffer = buffer;
+
+        this.#chain.setPannerMode({
+            spatial: options?.spatial,
+            hasPanner: options?.hasPanner
+        });
+
+        if (options?.spatial) {
+            this.setPosition(0, 0, 0);
+        }
     }
 
     public automate(target: InstanceParameterTarget, value: number, smoothingMs: number = 50): void {

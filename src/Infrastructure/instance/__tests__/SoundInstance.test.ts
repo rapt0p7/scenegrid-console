@@ -2,13 +2,14 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { AudioNodeFactory } from '@infrastructure/nodes/AudioNodeFactory.js';
 import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
 
 import { SoundInstance } from '../SoundInstance.js';
 
 import type AudioContextManager from '../../context/AudioContextManager.js';
 import type { SoundId } from '@domain/Types/Branded';
-import type { AudioNodeFactory, AutomationEngine } from '@infrastructure';
+import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 
 function createMockAudioContext() {
     const mockSourceNode = {
@@ -561,5 +562,80 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
                 expect(mockPanner.positionZ.setTargetAtTime).toHaveBeenCalledWith(0.2, CURRENT_TIME, 0.01);
             });
         });
+    });
+});
+
+describe('SoundInstance Rebinding Lifecycle', () => {
+    let mockContextManager: any;
+    let nodeFactory: AudioNodeFactory;
+    let automation: AutomationEngine;
+    let mockBuffer: AudioBuffer;
+
+    beforeEach(() => {
+        const createMockAudioParameter = () => ({
+            value: 0,
+            setValueAtTime: vi.fn(),
+            setTargetAtTime: vi.fn(),
+            cancelScheduledValues: vi.fn(),
+            linearRampToValueAtTime: vi.fn(),
+            exponentialRampToValueAtTime: vi.fn()
+        });
+
+        const mockPanner = {
+            positionX: createMockAudioParameter(),
+            positionY: createMockAudioParameter(),
+            positionZ: createMockAudioParameter(),
+            distanceModel: 'linear',
+            refDistance: 1,
+            maxDistance: 10_000,
+            connect: vi.fn(),
+            disconnect: vi.fn()
+        };
+
+        mockContextManager = {
+            context: {
+                createGain: vi.fn().mockImplementation(() => ({
+                    gain: createMockAudioParameter(),
+                    connect: vi.fn(),
+                    disconnect: vi.fn()
+                })),
+                createPanner: vi.fn().mockReturnValue(mockPanner),
+                createBiquadFilter: vi.fn().mockImplementation(() => ({
+                    type: '',
+                    frequency: createMockAudioParameter(),
+                    Q: createMockAudioParameter(),
+                    gain: createMockAudioParameter(),
+                    connect: vi.fn(),
+                    disconnect: vi.fn()
+                })),
+                currentTime: 0
+            }
+        };
+
+        nodeFactory = new AudioNodeFactory(mockContextManager as any);
+        automation = { ramp: vi.fn() } as unknown as AutomationEngine;
+        mockBuffer = {} as AudioBuffer;
+    });
+
+    it('Pre-allocated pool instance should acquire spatial properties on rebind', () => {
+        const instance = new SoundInstance(
+            '__RESERVED__' as SoundId,
+            mockContextManager,
+            nodeFactory,
+            null,
+            automation,
+            {}
+        );
+
+        expect(instance.pannerNode).toBeNull();
+
+        instance.rebind('explosion' as SoundId, mockBuffer, {
+            spatial: { distanceModel: 'linear', refDistance: 1, maxDistance: 1000 }
+        });
+
+        instance.setPosition(10, 20, 30);
+
+        expect(instance.pannerNode).not.toBeNull();
+        expect((instance.pannerNode as any).distanceModel).toBe('linear');
     });
 });

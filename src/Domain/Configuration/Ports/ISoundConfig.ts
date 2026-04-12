@@ -39,6 +39,7 @@ export interface ISoundConfig extends IBaseSoundConfig {
     voice?: IVoiceConfig;
     src?: string;
     spatial?: ISpatialConfig | boolean;
+    hasPanner?: boolean;
 }
 
 export interface ISmartLoopSoundConfig {

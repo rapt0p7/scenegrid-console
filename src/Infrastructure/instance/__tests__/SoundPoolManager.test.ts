@@ -132,7 +132,7 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
 
         const instAgain = pool.acquire('sfx_high' as SoundId, fakeBuffer);
         expect(instAgain).toBe(inst);
-        expect(instAgain?.rebind).toHaveBeenCalledWith('sfx_high', fakeBuffer);
+        expect(instAgain?.rebind).toHaveBeenCalledWith('sfx_high', fakeBuffer, undefined);
         expect(instAgain?.resetForReuse).toHaveBeenCalled();
     });
 });
@@ -166,7 +166,7 @@ describe('SoundPoolManager (Policy Logic)', () => {
         const inst3 = manager.acquire('laser' as SoundId, fakeBuffer) as any;
 
         expect(inst3.instanceId).toBe(inst1.instanceId);
-        expect(inst3.rebind).toHaveBeenCalledWith('laser', fakeBuffer);
+        expect(inst3.rebind).toHaveBeenCalledWith('laser', fakeBuffer, undefined);
 
         expect(inst3.resetForReuse).toHaveBeenCalledTimes(2);
         expect(manager.getActiveVoices().length).toBe(2);

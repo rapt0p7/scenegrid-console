@@ -1,4 +1,5 @@
 import type { SoundId } from '@domain/Types/Branded.js';
+import type { PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
 import type {
     AudioNodeLike,
     GainNodeLike,
@@ -9,6 +10,11 @@ import type { IPlaybackController } from '@infrastructure/types/IPlaybackControl
 
 export type InstanceParameterTarget = 'gain' | 'pitch' | 'pan' | 'filterFrequency';
 
+export interface ISoundConfig {
+    spatial?: PannerConfig;
+    hasPanner?: boolean;
+}
+
 export interface ISoundInstance extends IPlaybackController {
     readonly id: SoundId;
     readonly outputNode: AudioNodeLike;
@@ -16,7 +22,7 @@ export interface ISoundInstance extends IPlaybackController {
     readonly pannerNode: PannerNodeLike | StereoPannerNodeLike | null;
     dispose(): void;
     cancelScheduled(): void;
-    rebind(id: SoundId, buffer: AudioBuffer): void;
+    rebind(id: SoundId, buffer: AudioBuffer, config?: ISoundConfig): void;
     resetForReuse(): void;
     virtualize(): void;
     devirtualize(): void;

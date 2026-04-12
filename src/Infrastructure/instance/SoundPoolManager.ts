@@ -1,7 +1,7 @@
 // noinspection D
 
 import type { SoundId } from '@domain/Types/Branded.js';
-import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
+import type { ISoundInstance, ISoundConfig } from '@infrastructure/types/ISoundInstance.js';
 import type { IVoiceConfig } from '@infrastructure/types/IVoiceConfig.js';
 
 export type PoolPolicy = 'expand' | 'steal_oldest';
@@ -11,6 +11,7 @@ export interface PoolConfig {
     policy: PoolPolicy;
     globalVoiceLimit: number;
     voiceConfigResolver: (soundId: SoundId) => IVoiceConfig | undefined;
+    soundConfigResolver?: (soundId: SoundId) => ISoundConfig;
 }
 
 export default class SoundPoolManager {
@@ -70,8 +71,9 @@ export default class SoundPoolManager {
 
         const index = this.#freeStack[this.#stackPtr--];
         const instance = this.#allInstances[index];
+        const soundConfig = this.#config.soundConfigResolver?.(soundId);
 
-        instance.rebind(soundId, buffer);
+        instance.rebind(soundId, buffer, soundConfig);
         instance.resetForReuse();
 
         this.#activeIndices.add(index);
