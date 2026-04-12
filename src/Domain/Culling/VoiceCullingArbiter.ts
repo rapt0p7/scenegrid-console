@@ -1,9 +1,9 @@
-import type { CullingContext, CullingDecisions, ICullingArbiter } from '@domain/Culling/Ports/ICullingArbiter.js';
+import type { ICullingContext, CullingDecisions, ICullingArbiter } from '@domain/Culling/Ports/ICullingArbiter.js';
 
 export class VoiceCullingArbiter implements ICullingArbiter {
     constructor(private readonly cullingThreshold: number = 0.01) {}
 
-    public evaluate(context: CullingContext): CullingDecisions {
+    public evaluate(context: ICullingContext): CullingDecisions {
         const decisions: CullingDecisions = { toVirtualize: [], toDevirtualize: [] };
 
         for (const playbackId of context.activePlaybacks) {

@@ -1,6 +1,6 @@
 import * as workerTimers from 'worker-timers';
 
-import type { ICullingArbiter, CullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
+import type { ICullingArbiter, ICullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 
 export class CullingRunner {
@@ -10,7 +10,7 @@ export class CullingRunner {
     constructor(
         private readonly arbiter: ICullingArbiter,
         private readonly controller: ISoundController,
-        private readonly contextProvider: CullingContext,
+        private readonly contextProvider: ICullingContext,
         private readonly checkIntervalMs: number = 500
     ) {}
 

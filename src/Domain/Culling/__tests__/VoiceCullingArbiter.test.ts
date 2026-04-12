@@ -3,12 +3,12 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { VoiceCullingArbiter } from '../VoiceCullingArbiter.js';
 
-import type { CullingContext } from '../Ports/ICullingArbiter.js';
+import type { ICullingContext } from '../Ports/ICullingArbiter.js';
 import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
 
 describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
     let arbiter: VoiceCullingArbiter;
-    let mockContext: CullingContext;
+    let mockContext: ICullingContext;
 
     let activePlaybacks: PlaybackId[];
     let playbackStates: Record<number, 'playing' | 'virtual' | 'stopped'>;

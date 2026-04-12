@@ -1,6 +1,6 @@
 import type { PlaybackId, SoundId, BusId } from '@domain/Types/Branded.js';
 
-export interface CullingContext {
+export interface ICullingContext {
     activePlaybacks: PlaybackId[];
     getSoundId: (id: PlaybackId) => SoundId | undefined;
     getPlaybackState: (id: PlaybackId) => 'playing' | 'virtual' | 'stopped';
@@ -14,5 +14,5 @@ export interface CullingDecisions {
 }
 
 export interface ICullingArbiter {
-    evaluate(context: CullingContext): CullingDecisions;
+    evaluate(context: ICullingContext): CullingDecisions;
 }

@@ -4,7 +4,7 @@ import * as workerTimers from 'worker-timers';
 
 import { CullingRunner } from '../CullingRunner.js';
 
-import type { ICullingArbiter, CullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
+import type { ICullingArbiter, ICullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { PlaybackId } from '@domain/Types/Branded.js';
 
@@ -16,7 +16,7 @@ vi.mock('worker-timers', () => ({
 describe('CullingRunner (Infrastructure Adapter)', () => {
     let mockArbiter: ICullingArbiter;
     let mockController: ISoundController;
-    let mockContext: CullingContext;
+    let mockContext: ICullingContext;
     let runner: CullingRunner;
 
     beforeEach(() => {
@@ -34,7 +34,7 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
             devirtualize: vi.fn()
         } as unknown as ISoundController;
 
-        mockContext = {} as CullingContext;
+        mockContext = {} as ICullingContext;
 
         runner = new CullingRunner(mockArbiter, mockController, mockContext, 500);
     });

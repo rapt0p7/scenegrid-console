@@ -30,7 +30,8 @@ import {
     CullingRunner,
     FiltersPlugin,
     SidechainDucker,
-    TinyLimiterNode
+    TinyLimiterNode,
+    CullingContextProvider
 } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 import deepFreeze from '@shared/deepFreeze.js';
@@ -270,25 +271,13 @@ export class AudioEngine {
 
             const cullingArbiter = new VoiceCullingArbiter(0.01);
 
-            // eslint-disable-next-line @typescript-eslint/no-this-alias,unicorn/no-this-assignment
-            const engineReference: AudioEngine = this;
-            const cullingContext = {
-                get activePlaybacks() {
-                    return engineReference.#soundController.getActivePlaybacks();
-                },
-                getSoundId: (id: PlaybackId) => engineReference.#soundController.getSoundId(id),
-                getPlaybackState: (id: PlaybackId) => engineReference.#soundController.getPlaybackState(id),
-                resolveBusId: (id: SoundId) => engineReference.config.soundMap[id]?.busId as BusId | undefined,
-                getBusVolume: (busId: BusId) => {
-                    const bus = engineReference.#busSystem.getBus(busId);
-                    if (!bus) return 1;
+            const cullingProvider = new CullingContextProvider(
+                this.#soundController,
+                this.#busSystem,
+                this.config.soundMap
+            );
 
-                    const realGain = (engineReference.#busSystem as any).getCurrentRealGain?.(busId) ?? 0;
-                    return Math.max(realGain, bus.logicalTargetGain);
-                }
-            };
-
-            this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingContext, 500);
+            this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingProvider, 500);
 
             this.#cullingRunner.start();
             this.#isInitialized = true;
