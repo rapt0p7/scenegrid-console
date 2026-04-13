@@ -2,16 +2,10 @@
     "idle": {
         "buses": {
             "music_base": {
-                "gain": 1,
-                "sends": {},
-                "filter": null,
-                "sidechain": { "enabled": true }
+                "gain": 1
             },
             "music_strings": {
                 "gain": 0,
-                "sends": {},
-                "filter": null,
-                "sidechain": { "enabled": true },
                 "rtpc": {
                     "gain": {
                         "gameParam": "game_intensity",
@@ -25,9 +19,6 @@
             },
             "music_perc": {
                 "gain": 1,
-                "sends": {},
-                "filter": null,
-                "sidechain": { "enabled": true },
                 "rtpc": {
                     "gain": {
                         "gameParam": "game_intensity",
@@ -39,10 +30,7 @@
                 }
             },
             "sfx": {
-                "gain": 1,
-                "sends": {},
-                "filter": null,
-                "sidechain": { "enabled": false }
+                "gain": 1
             }
         }
     }
