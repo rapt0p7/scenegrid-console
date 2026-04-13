@@ -48,3 +48,9 @@ The audio-specific icons used in the UI of this project are provided by the **Fo
   *(Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)*
 
 *Note: All brand logos included in the Fontaudio set are trademarks of their respective owners. The use of these trademarks does not indicate endorsement of the trademark holder by this project, nor vice versa. They are used solely to represent the company, product, or service to which they refer.*
+
+---
+## Other
+
+- **svg-spinners** by [@n3r4zzurr0](https://github.com/n3r4zzurr0) - https://github.com/n3r4zzurr0/svg-spinners
+- **License**: https://github.com/n3r4zzurr0/svg-spinners/blob/main/LICENSE

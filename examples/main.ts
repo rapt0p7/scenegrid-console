@@ -14,6 +14,9 @@ async function bootstrap() {
         globalVoiceLimit: 32
     });
 
+    const spinner = document.querySelector('#spinner');
+    const startMessage = document.querySelector('.start-trigger');
+
     audio.events.on('load:progress', ({ progress, lastLoadedResource }) => {
         const percent = Math.round(progress * 100);
         console.log(`[Demo UI] Loading: ${percent}% (${lastLoadedResource})`);
@@ -23,6 +26,11 @@ async function bootstrap() {
         console.log(`[Demo UI] Load complete in ${durationMs.toFixed(0)}ms`);
         if (failedItems.length > 0) {
             console.warn(`[Demo UI] Missing assets:`, failedItems);
+        }
+
+        spinner?.remove();
+        if (startMessage) {
+            (startMessage as HTMLElement).style.display = 'block';
         }
     });
 

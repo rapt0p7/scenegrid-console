@@ -1,109 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-        name="viewport"
-        content="width=device-width,height=device-height, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"
-    />
-    <meta name="robots" content="noindex, nofollow, noarchive">
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="rating" content="General">
-    <meta name="google" content="notranslate" />
-    <meta name="google" content="nositelinkssearchbox">
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="theme-color" content="#000000" />
-    <title></title>
-    <style>
-        * {
-            -webkit-touch-callout: none;
-            touch-action: auto;
-            user-select: none;
-            box-sizing: inherit;
-            cursor: default;
-            margin: 0;
-            padding: 0;
-        }
-        html {
-            /*pointer-events: none;*/
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            touch-action: none;
-            background-color: transparent;
-            text-rendering: optimizeLegibility;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            -webkit-tap-highlight-color: rgba(0,0,0,0);
-        }
-        body {
-            /*pointer-events: none;*/
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: transparent;
-            touch-action: none;
-            user-select: none;
-            text-size-adjust: none;
-        }
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta
+            name="viewport"
+            content="width=device-width,height=device-height, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"
+        />
+        <meta name="robots" content="noindex, nofollow, noarchive" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="rating" content="General" />
+        <meta name="google" content="notranslate" />
+        <meta name="google" content="nositelinkssearchbox" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="theme-color" content="#000000" />
+        <title></title>
+        <style>
+            * {
+                -webkit-touch-callout: none;
+                touch-action: auto;
+                user-select: none;
+                box-sizing: inherit;
+                cursor: default;
+                margin: 0;
+                padding: 0;
+            }
+            html {
+                /*pointer-events: none;*/
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                touch-action: none;
+                background-color: transparent;
+                text-rendering: optimizeLegibility;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            }
+            body {
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                background-color: transparent;
+                touch-action: none;
+                user-select: none;
+                text-size-adjust: none;
+            }
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* Запрещаем скролл глобально */
-            background-color: #0d0d0d;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            background-color: rgba(255, 255, 255, 0);
-            z-index: 100;
-        }
-        #wrapper {
-            display: flex;
-            flex-direction: row; /* Каналы в ряд */
-            width: 100vw;
-            height: 100vh;
-            box-sizing: border-box;
-            padding: 2px;
-            gap: 2px; /* Минимальный зазор между каналами */
-        }
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background-color: #0d0d0d;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                background-color: rgba(255, 255, 255, 0);
+                z-index: 100;
+            }
+            #wrapper {
+                display: flex;
+                flex-direction: row;
+                width: 100vw;
+                height: 100vh;
+                box-sizing: border-box;
+                padding: 2px;
+                gap: 2px;
+            }
 
-        /* Колонка одного канала */
-        .bus-column {
-            flex: 1; /* Растягиваем все колонки поровну */
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            min-width: 0; /* Важно: позволяет сжимать контент, если экран узкий */
-        }
+            .bus-column {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: #1a1a1a;
+                border: 1px solid #333;
+                min-width: 0;
+            }
 
-        .bus-title {
-            flex: 0 0 20px; /* Фиксированная высота заголовка */
-            line-height: 20px;
-            font-size: 11px;
-            color: #ccc;
-            text-align: center;
-            background: #2a2a2a;
-            text-transform: uppercase;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            border-bottom: 1px solid #000;
-            font-family: "Inter", sans-serif;
-        }
+            .bus-title {
+                flex: 0 0 20px;
+                line-height: 20px;
+                font-size: 11px;
+                color: #ccc;
+                text-align: center;
+                background: #2a2a2a;
+                text-transform: uppercase;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                border-bottom: 1px solid #000;
+                font-family: 'Inter', sans-serif;
+            }
 
         .eq-bg {
             background:
@@ -128,44 +127,63 @@
                 linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px)
                 0 0 / 6.25% 100%;
 
-            background-color: #0d1320;
-        }
+                background-color: #0d1320;
+            }
 
-        /* Контейнеры для канвасов, чтобы они знали свои размеры */
-        .spectrum-box {
-            flex: 0 0 0; /* Спектр занимает 30% высоты */
-            width: 100%;
-            position: relative;
-            border-bottom: 1px solid #333;
-        }
 
-        .meter-box {
-            width: 100%;
-            position: relative;
-        }
+            .spectrum-box {
+                flex: 0 0 0;
+                width: 100%;
+                position: relative;
+                border-bottom: 1px solid #333;
+            }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-        .font-preload {
-            position: absolute;
-            left: -9999px;
-            width: 1px;
-            height: 1px;
-            overflow: hidden;
-            white-space: nowrap;
-            pointer-events: none;
-            user-select: none;
-            opacity: 0;
-        }
-        :root {
-            --tp-base-font-family: "Inter", sans-serif;
-        }
-        .tp-rotv {
-            font-weight: 300 !important;
-        }
+            .meter-box {
+                width: 100%;
+                position: relative;
+            }
+
+            canvas {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+            .font-preload {
+                position: absolute;
+                left: -9999px;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                white-space: nowrap;
+                pointer-events: none;
+                user-select: none;
+                opacity: 0;
+            }
+            #spinner {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                fill: #fafafa;
+            }
+
+            :root {
+                --tp-base-font-family: 'Inter', sans-serif;
+            }
+            .tp-rotv {
+                font-weight: 300 !important;
+            }
+
+            .start-trigger {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                display: none;
+                font: inherit;
+                font-size: 24px;
+                color: #fafafa;
+            }
 
         .tp-dfwv {
             width: 400px !important;
@@ -182,6 +200,8 @@
          style="font-family: 'Rajdhani SemiBold', system-ui, sans-serif; font-size: 32px;">
         0123456789AaBbCcDdEeFfGg
     </div>
+    <svg id="spinner" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><style>.spinner_7uc5{animation:spinner_3l8F .9s linear infinite;animation-delay:-.9s}.spinner_RibN{animation-delay:-.7s}.spinner_ZAxd{animation-delay:-.5s}@keyframes spinner_3l8F{0%,66.66%{animation-timing-function:cubic-bezier(0.14,.73,.34,1);y:6px;height:12px}33.33%{animation-timing-function:cubic-bezier(0.65,.26,.82,.45);y:1px;height:22px}}</style><rect class="spinner_7uc5 spinner_ZAxd" x="1" y="6" width="2.8" height="12"/><rect class="spinner_7uc5 spinner_RibN" x="5.8" y="6" width="2.8" height="12"/><rect class="spinner_7uc5" x="10.6" y="6" width="2.8" height="12"/><rect class="spinner_7uc5 spinner_RibN" x="15.4" y="6" width="2.8" height="12"/><rect class="spinner_7uc5 spinner_ZAxd" x="20.2" y="6" width="2.8" height="12"/></svg>
+    <span class="start-trigger">Please, click in any place of document to proceed</span>
 </div>
 <svg xmlns="http://www.w3.org/2000/svg" style="/* visibility: hidden; *//* position: absolute; */top: 10000;left: 10000;">
     <defs>
