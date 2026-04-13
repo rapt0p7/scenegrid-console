@@ -111,4 +111,15 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
         expect(decisions.toVirtualize).toHaveLength(0);
         expect(decisions.toDevirtualize).toHaveLength(0);
     });
+
+    it('should safely ignore playbacks with a valid SoundId but an unknown BusId', () => {
+        addMockPlayback(3, 'orphan_sound', 'unknown_bus', 'playing', 1);
+
+        delete soundRouting['orphan_sound'];
+
+        const decisions = arbiter.evaluate(mockContext);
+
+        expect(decisions.toVirtualize).toHaveLength(0);
+        expect(decisions.toDevirtualize).toHaveLength(0);
+    });
 });

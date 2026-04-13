@@ -461,6 +461,112 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         expect(instance.state).toBe('idle');
     });
 
+    it('should return pauseOffset when currentTime is accessed while paused (Line 98)', () => {
+        instance.play();
+        mockContext.currentTime = 2.5;
+        instance.pause();
+
+        expect(instance.currentTime).toBe(2.5);
+    });
+
+    it('should forcefully stop playback if rebind is called on a playing or virtual instance (Line 114)', () => {
+        instance.play();
+        const stopSpy = vi.spyOn(instance, 'stop');
+
+        instance.rebind('new_id_1' as SoundId, mockBuffer);
+        expect(stopSpy).toHaveBeenCalledWith(0);
+
+        instance.play();
+        instance.virtualize();
+        instance.rebind('new_id_2' as SoundId, mockBuffer);
+        expect(stopSpy).toHaveBeenCalledWith(0);
+    });
+
+    it('should NOT change state to stopped in cancelScheduled if instance was not playing (Line 241)', () => {
+        instance.play();
+        instance.pause();
+
+        instance.cancelScheduled();
+        expect(instance.state).not.toBe('stopped');
+    });
+
+    it('should early return in devirtualize if state is not virtual or buffer is missing (Line 303)', () => {
+        instance.play();
+        instance.devirtualize();
+        expect(instance.state).toBe('playing');
+
+        const emptyInstance = new SoundInstance(
+            'empty' as SoundId,
+            mockContextManager,
+            mockFactory,
+            null,
+            mockAutomation
+        );
+        (emptyInstance as any)['#state'] = 'virtual';
+        emptyInstance.devirtualize();
+    });
+
+    it('should reset position if pannerNode exists during resetForReuse (Line 319)', () => {
+        const pannerInstance = new SoundInstance(
+            'pan_id' as SoundId,
+            mockContextManager,
+            mockFactory,
+            mockBuffer,
+            mockAutomation,
+            { hasPanner: true }
+        );
+        const setPosSpy = vi.spyOn(pannerInstance, 'setPosition');
+
+        pannerInstance.resetForReuse();
+        expect(setPosSpy).toHaveBeenCalledWith(0, 0, 0);
+    });
+
+    it('should ignore onSourceEnded native callback if state is virtual or not playing (Line 343)', () => {
+        instance.play();
+        const onEndedCallback = mockContext._mockSourceNode.addEventListener.mock.calls[0][1];
+
+        instance.virtualize();
+        onEndedCallback();
+        expect(instance.state).toBe('virtual');
+
+        instance.devirtualize();
+        instance.pause();
+        onEndedCallback();
+        expect(instance.state).toBe('paused');
+    });
+
+    it('should safely ignore automate targets if specific nodes lack properties (Line 387)', () => {
+        const pannerSpy = vi.spyOn(NodeChain.prototype, 'pannerNode', 'get').mockReturnValue({} as any);
+        expect(() => instance.automate('pan', 1)).not.toThrow();
+        pannerSpy.mockRestore();
+
+        const filterSpy = vi.spyOn(NodeChain.prototype, 'mainFilterNode', 'get').mockReturnValue({} as any);
+        expect(() => instance.automate('filterFrequency', 2000)).not.toThrow();
+        filterSpy.mockRestore();
+    });
+
+    it('should early return in resume() if state is not paused or buffer is missing', () => {
+        expect(instance.state).toBe('idle');
+        instance.resume();
+        expect(mockContext._mockSourceNode.start).not.toHaveBeenCalled();
+
+        instance.play();
+        instance.pause();
+
+        instance.rebind('empty_id' as SoundId, null as any);
+
+        instance.resume();
+
+        expect(instance.state).toBe('paused');
+    });
+
+    it('should early return in virtualize() if state is not playing', () => {
+        instance.virtualize();
+
+        expect(instance.state).toBe('idle');
+        expect(mockContext._mockSourceNode.disconnect).not.toHaveBeenCalled();
+    });
+
     describe('SoundInstance - Spatial Audio (setPosition)', () => {
         let mockPanner: any;
         let mockContextManager: any;
@@ -628,6 +734,7 @@ describe('SoundInstance Rebinding Lifecycle', () => {
         );
 
         expect(instance.pannerNode).toBeNull();
+        expect(instance.id).toBe('__RESERVED__');
 
         instance.rebind('explosion' as SoundId, mockBuffer, {
             spatial: { distanceModel: 'linear', refDistance: 1, maxDistance: 1000 }
@@ -637,5 +744,6 @@ describe('SoundInstance Rebinding Lifecycle', () => {
 
         expect(instance.pannerNode).not.toBeNull();
         expect((instance.pannerNode as any).distanceModel).toBe('linear');
+        expect(instance.id).toBe('explosion');
     });
 });

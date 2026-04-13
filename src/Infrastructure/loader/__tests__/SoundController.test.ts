@@ -202,4 +202,103 @@ describe('SoundController', () => {
             expect(fakeInstance.setPosition).toHaveBeenCalledWith(10, 20, 30);
         });
     });
+
+    describe('Missing Coverage & Edge Cases (API & Virtualization)', () => {
+        let playbackId: PlaybackId;
+
+        beforeEach(() => {
+            fakeInstance.virtualize = vi.fn();
+            fakeInstance.devirtualize = vi.fn();
+            fakeInstance.automate = vi.fn();
+
+            controller.register('test_sound' as SoundId, fakeBuffer);
+            playbackId = controller.play('test_sound' as SoundId, {}) as PlaybackId;
+        });
+
+        it('should return null from play() if pool fails to acquire an instance', () => {
+            mockPool.acquire.mockReturnValueOnce(null);
+
+            controller.register('failed_sound' as SoundId, fakeBuffer);
+            const result = controller.play('failed_sound' as SoundId, {});
+
+            expect(result).toBeNull();
+        });
+
+        it('should early return in setPosition if voice does not exist', () => {
+            expect(() => controller.setPosition(999 as PlaybackId, 0, 0, 0)).not.toThrow();
+        });
+
+        it('should correctly return active playbacks and resolve sound ids', () => {
+            const active = controller.getActivePlaybacks();
+            expect(active).toEqual([playbackId]);
+
+            expect(controller.getSoundId(playbackId)).toBe('test_sound');
+
+            expect(controller.getSoundId(999 as PlaybackId)).toBeUndefined();
+        });
+
+        it('should correctly resolve playback states', () => {
+            expect(controller.getPlaybackState(playbackId)).toBe('playing');
+
+            expect(controller.getPlaybackState(999 as PlaybackId)).toBe('stopped');
+
+            const voice = controller.getLogicalVoice(playbackId);
+            (voice as any).physicalInstance = null;
+            expect(controller.getPlaybackState(playbackId)).toBe('stopped');
+        });
+
+        it('should handle virtualize() safely', () => {
+            controller.virtualize(playbackId);
+            expect(fakeInstance.virtualize).toHaveBeenCalled();
+            expect(() => controller.virtualize(999 as PlaybackId)).not.toThrow();
+        });
+
+        it('should handle devirtualize() and trigger onRevive correctly', () => {
+            const reviveSpy = vi.fn();
+            controller.register('revive_sound' as SoundId, fakeBuffer);
+            const revivableId = controller.play('revive_sound' as SoundId, { onRevive: reviveSpy }) as PlaybackId;
+
+            controller.devirtualize(revivableId);
+            expect(fakeInstance.devirtualize).toHaveBeenCalled();
+            expect(reviveSpy).toHaveBeenCalledWith(revivableId);
+
+            expect(() => controller.devirtualize(999 as PlaybackId)).not.toThrow();
+        });
+
+        it('should format arguments and delegate fadeVolume() correctly', () => {
+            controller.fadeVolume(playbackId, 0.5, 1000, 'equal-power', 100);
+
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(
+                fakeInstance.instanceGain.gain,
+                0.5,
+                1000,
+                'equal-power',
+                100
+            );
+
+            expect(() => controller.fadeVolume(999 as PlaybackId, 1, 1)).not.toThrow();
+        });
+
+        it('should delegate fadeParameter() correctly', () => {
+            controller.fadeParameter(playbackId, 'filterFrequency', 2000, 500);
+
+            expect(fakeInstance.automate).toHaveBeenCalledWith('filterFrequency', 2000, 500);
+
+            expect(() => controller.fadeParameter(999 as PlaybackId, 'pitch', 1, 1)).not.toThrow();
+        });
+
+        it('should delegate cancelScheduled() correctly', () => {
+            controller.cancelScheduled(playbackId);
+
+            expect(fakeInstance.cancelScheduled).toHaveBeenCalled();
+
+            expect(() => controller.cancelScheduled(999 as PlaybackId)).not.toThrow();
+        });
+
+        it('should return a dummy unsubscribe function for onVoiceEnded if voice is missing', () => {
+            const dummyUnsub = controller.onVoiceEnded(999 as PlaybackId, vi.fn());
+
+            expect(() => dummyUnsub()).not.toThrow();
+        });
+    });
 });

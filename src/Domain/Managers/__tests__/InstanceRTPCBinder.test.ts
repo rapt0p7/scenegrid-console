@@ -154,4 +154,61 @@ describe('InstanceRTPCBinder', () => {
         expect(mockRtpcAdapter.on).toHaveBeenCalledWith('car_speed', expect.any(Function));
         expect(mockSoundController.fadeParameter).toHaveBeenCalledWith(testPlaybackId, 'gain', 0.25, 150);
     });
+
+    describe('Missing Coverage & Guard Clauses (Early Returns & Continues)', () => {
+        it('should early return if configs object is undefined', () => {
+            InstanceRTPCBinder.bind(testPlaybackId, undefined, mockRtpcAdapter, mockSoundController);
+
+            expect(mockRtpcAdapter.on).not.toHaveBeenCalled();
+            expect(mockSoundController.onVoiceEnded).not.toHaveBeenCalled();
+        });
+
+        it('should continue loop if a specific config property is undefined', () => {
+            const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
+                gain: undefined as any,
+                pitch: {
+                    gameParam: 'engine',
+                    curve: [
+                        { x: 0, y: 0 },
+                        { x: 1, y: 1 }
+                    ],
+                    smoothingMs: 50
+                }
+            };
+
+            InstanceRTPCBinder.bind(testPlaybackId, configs, mockRtpcAdapter, mockSoundController);
+
+            expect(mockRtpcAdapter.on).toHaveBeenCalledTimes(1);
+            expect(mockRtpcAdapter.on).toHaveBeenCalledWith('engine', expect.any(Function));
+        });
+
+        it('should early return without registering cleanup if no valid subscriptions were made', () => {
+            InstanceRTPCBinder.bind(testPlaybackId, {}, mockRtpcAdapter, mockSoundController);
+            expect(mockSoundController.onVoiceEnded).not.toHaveBeenCalled();
+
+            const unsupportedConfigs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
+                sendLevel: { gameParam: 'verb', curve: [] }
+            };
+            InstanceRTPCBinder.bind(testPlaybackId, unsupportedConfigs, mockRtpcAdapter, mockSoundController);
+
+            expect(mockSoundController.onVoiceEnded).not.toHaveBeenCalled();
+        });
+
+        it('should early return in cleanup if already cleaned up (Idempotency)', () => {
+            const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
+                gain: { gameParam: 'speed', curve: [] }
+            };
+
+            InstanceRTPCBinder.bind(testPlaybackId, configs, mockRtpcAdapter, mockSoundController);
+
+            expect(capturedCleanupCallback).toBeDefined();
+
+            capturedCleanupCallback!();
+            expect(mockRtpcAdapter.off).toHaveBeenCalledTimes(1);
+
+            capturedCleanupCallback!();
+
+            expect(mockRtpcAdapter.off).toHaveBeenCalledTimes(1);
+        });
+    });
 });
