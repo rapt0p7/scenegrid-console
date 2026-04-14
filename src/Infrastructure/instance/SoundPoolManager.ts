@@ -1,8 +1,16 @@
 // noinspection D
 
+import mitt from 'mitt';
+
 import type { SoundId } from '@domain/Types/Branded.js';
 import type { ISoundInstance, ISoundConfig } from '@infrastructure/types/ISoundInstance.js';
 import type { IVoiceConfig } from '@infrastructure/types/IVoiceConfig.js';
+import type { Emitter } from 'mitt';
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+type PoolEvents = {
+    released: ISoundInstance;
+};
 
 export type PoolPolicy = 'expand' | 'steal_oldest';
 
@@ -15,6 +23,7 @@ export interface PoolConfig {
 }
 
 export default class SoundPoolManager {
+    public readonly events: Emitter<PoolEvents> = mitt<PoolEvents>();
     readonly #allInstances: ISoundInstance[];
     readonly #freeStack: Uint16Array;
     #stackPtr: number;
@@ -43,6 +52,10 @@ export default class SoundPoolManager {
             this.#allInstances[index] = inst;
             this.#freeStack[index] = index;
         }
+    }
+
+    public get globalVoiceLimit(): number {
+        return this.#config.globalVoiceLimit;
     }
 
     public acquire(soundId: SoundId, buffer: AudioBuffer): ISoundInstance | null {
@@ -96,6 +109,8 @@ export default class SoundPoolManager {
         instance.stop();
 
         this.#freeStack[++this.#stackPtr] = index;
+
+        this.events.emit('released', instance);
     }
 
     public getActiveVoices(): ISoundInstance[] {
