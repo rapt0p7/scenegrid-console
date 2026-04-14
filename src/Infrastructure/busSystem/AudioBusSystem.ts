@@ -4,9 +4,8 @@ import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IDuckingConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { BusId, PlaybackId } from '@domain/Types/Branded.js';
+import type { BusId } from '@domain/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
-import type { SoundController } from '@infrastructure/loader/SoundController.js';
 import type { AudioCtx, AudioNodeLike, GainNodeLike } from '@infrastructure/types/IAudioContext.js';
 import type { ILimiterNode, IPluginFactory, ISidechain } from '@infrastructure/types/IAudioPlugins.js';
 import type { IMasterOutput } from '@infrastructure/types/IMasterOutput.js';
@@ -24,27 +23,23 @@ export default class AudioBusSystem implements IAudioBusSystem {
     private readonly masterOutput: IMasterOutput;
     private readonly pluginFactory: IPluginFactory;
     private masterLimiter?: ILimiterNode;
-    private soundController: SoundController;
     constructor(
         {
             context,
             automation,
             masterOutput,
             busConfig,
-            pluginFactory,
-            soundController
+            pluginFactory
         }: {
             context: AudioCtx;
             automation: AutomationEngine;
             masterOutput: IMasterOutput;
             busConfig: IBuses;
             pluginFactory: IPluginFactory;
-            soundController: SoundController;
         },
 
         { isUseLimiter = true } = {}
     ) {
-        this.soundController = soundController;
         this.busConfig = busConfig;
         this.isUseLimiter = isUseLimiter;
         this.context = context;
@@ -58,16 +53,20 @@ export default class AudioBusSystem implements IAudioBusSystem {
         this.masterBus = context.createGain();
         this.masterBus.gain.value = 1;
         this.masterBus.connect(this.routerMasterGain);
+    }
 
+    public async initialize(): Promise<void> {
         if (this.isUseLimiter) {
-            this.initLimiter().catch(error => {
+            try {
+                await this.initLimiter();
+            } catch (error) {
                 console.error('[AudioBusSystem] Critical failure during limiter initialization', error);
-            });
+            }
         } else {
             this.routerMasterGain.connect(this.postLimiterGain);
         }
 
-        void this.initBuses();
+        await this.initBuses();
     }
 
     public getAllBuses(): ReadonlyMap<BusId, AudioBus> {
@@ -119,50 +118,37 @@ export default class AudioBusSystem implements IAudioBusSystem {
         return this.buses.get(id);
     }
 
-    public routePlayback(playbackId: PlaybackId, busId: BusId): void {
+    public connectNodeToBus(node: AudioNodeLike, busId: BusId): void {
         const bus = this.getBus(busId);
         if (!bus || this.context.state !== 'running') return;
 
-        const voice = this.soundController.getLogicalVoice(playbackId);
-        const node = voice?.physicalInstance?.outputNode;
+        try {
+            safeDisconnect(node);
+            node.connect(bus.inputGainNode);
+        } catch (error) {
+            console.warn(`[AudioBusSystem] Routing failed.`, error);
+        }
+    }
 
-        if (node) {
+    public addSidechainSource(node: AudioNodeLike, busId: BusId, intensity: number): void {
+        const sidechain = this.sidechains.get(busId);
+        if (sidechain) {
             try {
-                safeDisconnect(node);
-                node.connect(bus.inputGainNode);
+                sidechain.addSource(node, intensity);
             } catch (error) {
-                console.warn(`[AudioBusSystem] Routing failed.`, error);
+                console.warn(`[AudioBusSystem] Failed to add source to sidechain "${busId}"`, error);
             }
         }
     }
 
-    public addSidechainTrigger(busId: BusId, playbackId: PlaybackId, intensity: number): void {
+    public removeSidechainSource(node: AudioNodeLike, busId: BusId): void {
         const sidechain = this.sidechains.get(busId);
-        if (!sidechain) return;
-
-        const voice = this.soundController.getLogicalVoice(playbackId);
-        const node = voice?.physicalInstance?.instanceGain;
-        if (!node) return;
-
-        try {
-            sidechain.addSource(node, intensity);
-        } catch (error) {
-            console.warn(`[AudioBusSystem] Failed to add source to sidechain "${busId}"`, error);
-        }
-    }
-
-    public removeSidechainTrigger(busId: BusId, playbackId: PlaybackId): void {
-        const sidechain = this.sidechains.get(busId);
-        if (!sidechain) return;
-
-        const voice = this.soundController.getLogicalVoice(playbackId);
-        const node = voice?.physicalInstance?.instanceGain;
-        if (!node) return;
-
-        try {
-            sidechain.removeSource(node);
-        } catch {
-            /* empty */
+        if (sidechain) {
+            try {
+                sidechain.removeSource(node);
+            } catch {
+                /* empty */
+            }
         }
     }
 

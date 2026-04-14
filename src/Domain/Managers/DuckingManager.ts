@@ -17,26 +17,17 @@ export default class DuckingManager implements IDuckingManager {
         this.busSystem.clearAllSidechainTriggers();
     }
 
-    triggerDucking(
+    public triggerDucking(
         playbackId: PlaybackId,
-        targetBusIdOrArray: BusId | BusId[],
-        intensity: number | number[] = 1
+        targetBuses: BusId | BusId[],
+        intensities: number | number[] = 1
     ): void {
-        const targets = Array.isArray(targetBusIdOrArray) ? targetBusIdOrArray : [targetBusIdOrArray];
+        const buses = Array.isArray(targetBuses) ? targetBuses : [targetBuses];
+        const intensityArray = Array.isArray(intensities) ? intensities : [intensities];
 
-        const intensities: number[] = Array.isArray(intensity)
-            ? intensity
-            : Array.from<number>({ length: targets.length }).fill(intensity);
-
-        for (const [index, busId] of targets.entries()) {
-            const currentIntensity = intensities[index] ?? 1;
-            this.busSystem.addSidechainTrigger(busId, playbackId, currentIntensity);
+        for (const [index, busId] of buses.entries()) {
+            const intensity = intensityArray[index] ?? 1;
+            this.soundController.addSidechainTrigger(playbackId, busId, intensity);
         }
-
-        this.soundController.onVoiceEnded(playbackId, () => {
-            for (const busId of targets) {
-                this.busSystem.removeSidechainTrigger(busId, playbackId);
-            }
-        });
     }
 }

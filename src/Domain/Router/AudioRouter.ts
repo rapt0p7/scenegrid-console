@@ -55,7 +55,7 @@ export default class AudioRouter implements IAudioRouter {
 
     public applyConfigToPlayback(playbackId: PlaybackId, config: AnySoundConfig): void {
         if (config.busId) {
-            this.busSystem.routePlayback(playbackId, config.busId as BusId);
+            this.soundController.routeToBus(playbackId, config.busId as BusId);
         }
 
         if ('ducking' in config && config.ducking?.target) {

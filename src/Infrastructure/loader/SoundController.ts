@@ -1,6 +1,7 @@
 import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController';
-import type { PlaybackId, SoundId } from '@domain/Types/Branded';
+import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
+import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
 import type { AudioCtx } from '@infrastructure/types/IAudioContext';
@@ -19,6 +20,7 @@ export class SoundController implements ISoundController {
 
     private readonly lastPlayTimes = new Map<SoundId, number>();
     private nextPlaybackId = 1 as PlaybackId;
+    readonly #sidechainLinks: Array<Set<BusId>>;
 
     // eslint-disable-next-line max-params
     constructor(
@@ -26,8 +28,12 @@ export class SoundController implements ISoundController {
         private readonly scheduler: PlaybackScheduler,
         private readonly context: AudioCtx,
         private readonly automation: AutomationEngine,
-        private readonly registry = new Map<SoundId, SoundDefinition>()
-    ) {}
+        private readonly registry = new Map<SoundId, SoundDefinition>(),
+        private readonly busSystem: AudioBusSystem
+    ) {
+        this.#sidechainLinks = Array.from({ length: pool.globalVoiceLimit }, () => new Set<BusId>());
+        this.pool.events.on('released', this.#handleInstanceReleased);
+    }
 
     // eslint-disable-next-line unicorn/no-object-as-default-parameter
     register(soundId: SoundId, buffer: AudioBuffer, options: ISoundOptions = { url: '' }): void {
@@ -105,6 +111,39 @@ export class SoundController implements ISoundController {
 
     public get debugPool(): SoundPoolManager {
         return this.pool;
+    }
+
+    public routeToBus(playbackId: PlaybackId, busId: BusId): void {
+        const voice = this.getLogicalVoice(playbackId);
+        const node = voice?.physicalInstance?.outputNode;
+
+        if (node) {
+            this.busSystem.connectNodeToBus(node, busId);
+        }
+    }
+
+    public addSidechainTrigger(playbackId: PlaybackId, busId: BusId, intensity: number): void {
+        const voice = this.getLogicalVoice(playbackId);
+        const instance = voice?.physicalInstance;
+        const node = instance?.instanceGain;
+
+        if (instance && node) {
+            const poolIndex = (instance as any)._poolIndex;
+            this.busSystem.addSidechainSource(node, busId, intensity);
+            this.#sidechainLinks[poolIndex]?.add(busId);
+        }
+    }
+
+    public removeSidechainTrigger(playbackId: PlaybackId, busId: BusId): void {
+        const voice = this.getLogicalVoice(playbackId);
+        const instance = voice?.physicalInstance;
+        const node = instance?.instanceGain;
+
+        if (node) {
+            const poolIndex = (instance as any)._poolIndex;
+            this.busSystem.removeSidechainSource(node, busId);
+            this.#sidechainLinks[poolIndex]?.delete(busId);
+        }
     }
 
     getLogicalVoice(playbackId: PlaybackId): ILogicalVoice | undefined {
@@ -229,5 +268,16 @@ export class SoundController implements ISoundController {
         if (playbackId) {
             this.activeVoices.delete(playbackId);
         }
+    };
+
+    #handleInstanceReleased = (instance: any): void => {
+        const poolIndex = (instance as any)._poolIndex;
+        if (poolIndex === undefined || poolIndex < 0) return;
+
+        const targetBuses = this.#sidechainLinks[poolIndex];
+        for (const busId of targetBuses) {
+            this.busSystem.removeSidechainSource(instance.instanceGain, busId);
+        }
+        targetBuses.clear();
     };
 }

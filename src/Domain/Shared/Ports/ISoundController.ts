@@ -1,4 +1,4 @@
-import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
 
 export interface IControllerPlayOptions {
     when?: number;
@@ -34,6 +34,9 @@ export interface ISoundController {
     getActivePlaybacks(): PlaybackId[];
     getSoundId(id: PlaybackId): SoundId | undefined;
     getPlaybackState(id: PlaybackId): PlaybackState;
+    routeToBus(playbackId: PlaybackId, busId: BusId): void;
+    addSidechainTrigger(playbackId: PlaybackId, busId: BusId, intensity: number): void;
+    removeSidechainTrigger(playbackId: PlaybackId, busId: BusId): void;
     virtualize(id: PlaybackId): void;
     devirtualize(id: PlaybackId): void;
 }

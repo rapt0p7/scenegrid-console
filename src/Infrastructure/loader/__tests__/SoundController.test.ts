@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { SoundController } from '@infrastructure/loader/SoundController.js';
 
-import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
 import type { PlaybackScheduler, AutomationEngine, AudioCtx } from '@infrastructure';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 
@@ -12,6 +12,7 @@ describe('SoundController', () => {
     let mockScheduler: any;
     let mockContext: any;
     let mockAutomation: any;
+    let mockBusSystem: any;
     let controller: SoundController;
     let fakeBuffer: AudioBuffer;
     let fakeInstance: any;
@@ -22,6 +23,7 @@ describe('SoundController', () => {
         fakeBuffer = {} as AudioBuffer;
 
         fakeInstance = {
+            _poolIndex: 5,
             setLoop: vi.fn(),
             setRate: vi.fn(),
             stop: vi.fn(),
@@ -31,12 +33,15 @@ describe('SoundController', () => {
             instanceGain: {
                 gain: {}
             },
+            outputNode: {},
             state: 'playing'
         };
 
         mockPool = {
             acquire: vi.fn().mockReturnValue(fakeInstance),
-            dispose: vi.fn()
+            dispose: vi.fn(),
+            globalVoiceLimit: 32,
+            events: { on: vi.fn(), emit: vi.fn() }
         } as unknown as SoundPoolManager;
 
         mockScheduler = {
@@ -53,7 +58,20 @@ describe('SoundController', () => {
             ramp: vi.fn()
         } as unknown as AutomationEngine;
 
-        controller = new SoundController(mockPool, mockScheduler, mockContext, mockAutomation);
+        mockBusSystem = {
+            connectNodeToBus: vi.fn(),
+            addSidechainSource: vi.fn(),
+            removeSidechainSource: vi.fn()
+        };
+
+        controller = new SoundController(
+            mockPool,
+            mockScheduler,
+            mockContext,
+            mockAutomation,
+            new Map() as any,
+            mockBusSystem
+        );
     });
 
     describe('Registration', () => {
@@ -200,6 +218,50 @@ describe('SoundController', () => {
             const voice = controller.getLogicalVoice(id);
             expect(voice?.position).toEqual({ x: 10, y: 20, z: 30 });
             expect(fakeInstance.setPosition).toHaveBeenCalledWith(10, 20, 30);
+        });
+    });
+
+    describe('Routing & Bus Integration', () => {
+        let playbackId: PlaybackId;
+
+        beforeEach(() => {
+            controller.register('route_sound' as SoundId, fakeBuffer);
+            playbackId = controller.play('route_sound' as SoundId, {}) as PlaybackId;
+        });
+
+        it('should delegate routeToBus using physical outputNode', () => {
+            controller.routeToBus(playbackId, 'music' as BusId);
+
+            expect(mockBusSystem.connectNodeToBus).toHaveBeenCalledWith(fakeInstance.outputNode, 'music');
+        });
+
+        it('should safely ignore routeToBus if voice is missing', () => {
+            expect(() => controller.routeToBus(999 as PlaybackId, 'sfx' as BusId)).not.toThrow();
+        });
+
+        it('should delegate addSidechainTrigger using instanceGain node', () => {
+            controller.addSidechainTrigger(playbackId, 'ducked' as BusId, 0.8);
+
+            expect(mockBusSystem.addSidechainSource).toHaveBeenCalledWith(fakeInstance.instanceGain, 'ducked', 0.8);
+        });
+
+        it('should delegate removeSidechainTrigger using instanceGain node', () => {
+            controller.removeSidechainTrigger(playbackId, 'ducked' as BusId);
+
+            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(fakeInstance.instanceGain, 'ducked');
+        });
+
+        it('should automatically clear ALL sidechain triggers when instance is released back to pool', () => {
+            controller.addSidechainTrigger(playbackId, 'ducked' as BusId, 0.8);
+            controller.addSidechainTrigger(playbackId, 'ambience' as BusId, 0.5);
+
+            const releasedHandler = mockPool.events.on.mock.calls.find((call: any[]) => call[0] === 'released')[1];
+            expect(releasedHandler).toBeDefined();
+
+            releasedHandler(fakeInstance);
+
+            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(fakeInstance.instanceGain, 'ducked');
+            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(fakeInstance.instanceGain, 'ambience');
         });
     });
 

@@ -210,14 +210,6 @@ export class AudioEngine {
                 }
             });
 
-            this.#soundController = new SoundController(
-                soundPool,
-                scheduler,
-                this.#contextManager.context,
-                automation,
-                soundRegistry.registry
-            );
-
             const pluginFactory: IPluginFactory = {
                 createLimiter: () =>
                     new TinyLimiterNode(this.#contextManager.context, {
@@ -240,10 +232,19 @@ export class AudioEngine {
                     automation,
                     masterOutput: this.#masterOutput as any,
                     busConfig: this.config.buses,
-                    pluginFactory,
-                    soundController: this.#soundController
+                    pluginFactory
                 },
                 { isUseLimiter: true }
+            );
+            await this.#busSystem.initialize();
+
+            this.#soundController = new SoundController(
+                soundPool,
+                scheduler,
+                this.#contextManager.context,
+                automation,
+                soundRegistry.registry,
+                this.#busSystem
             );
 
             const duckingManager = new DuckingManager(this.#busSystem, this.#soundController);

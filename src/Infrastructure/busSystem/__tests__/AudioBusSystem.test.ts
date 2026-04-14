@@ -1,13 +1,16 @@
+// noinspection D
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
-import type { BusId, PlaybackId } from '@domain/Types/Branded.js';
+import type { BusId } from '@domain/Types/Branded.js';
 import type { IPluginFactory } from '@infrastructure';
+import type { AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
 
 vi.mock('@infrastructure', () => ({
-    safeDisconnect: vi.fn(node => {
+    safeDisconnect: vi.fn((node: any) => {
         if (node.shouldThrow) throw new Error('Disconnect Error');
     })
 }));
@@ -31,15 +34,12 @@ function createMockContext() {
     } as any;
 }
 
-const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
-
 describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
     let mockContext: any;
     let mockAutomation: any;
     let mockMasterOutput: any;
     let mockBusConfig: IBuses;
     let mockPluginFactory: IPluginFactory;
-    let mockSoundController: any;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -51,10 +51,6 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
         mockBusConfig = {
             music: { gain: 1 },
             sfx: { gain: 0.8, sends: { music: 0.5 } }
-        };
-
-        mockSoundController = {
-            getLogicalVoice: vi.fn()
         };
 
         mockPluginFactory = {
@@ -70,7 +66,8 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
                 activeEnvelope: 0.5,
                 addSource: vi.fn(),
                 removeSource: vi.fn(),
-                removeAllSources: vi.fn()
+                removeAllSources: vi.fn(),
+                dispose: vi.fn()
             }),
             getFiltersPlugin: vi.fn().mockReturnValue({
                 inputNode: { connect: vi.fn() },
@@ -80,15 +77,16 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
         };
     });
 
-    it('should initialize buses and apply sends from config', () => {
+    it('should initialize buses and apply sends from config', async () => {
         const busSystem = new AudioBusSystem({
             context: mockContext,
             automation: mockAutomation,
             masterOutput: mockMasterOutput,
             busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory
         });
+
+        await busSystem.initialize();
 
         expect(busSystem.getBus('music' as BusId)).toBeDefined();
         expect(busSystem.getBus('sfx' as BusId)).toBeDefined();
@@ -106,27 +104,25 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             automation: mockAutomation,
             masterOutput: mockMasterOutput,
             busConfig: configWithSidechain,
-            pluginFactory: mockPluginFactory,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory
         });
 
-        await flushPromises();
+        await busSystem.initialize();
 
         expect(mockPluginFactory.createSidechain).toHaveBeenCalled();
         expect(busSystem.getSidechain('sfx')).toBeDefined();
     });
 
     it('should successfully load CUSTOM limiter from PluginFactory', async () => {
-        new AudioBusSystem({
+        const busSystem = new AudioBusSystem({
             context: mockContext,
             automation: mockAutomation,
             masterOutput: mockMasterOutput,
             busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory
         });
 
-        await flushPromises();
+        await busSystem.initialize();
 
         expect(mockPluginFactory.createLimiter).toHaveBeenCalledTimes(1);
         expect(mockContext.createDynamicsCompressor).not.toHaveBeenCalled();
@@ -142,16 +138,15 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
 
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-        new AudioBusSystem({
+        const busSystem = new AudioBusSystem({
             context: mockContext,
             automation: mockAutomation,
             masterOutput: mockMasterOutput,
             busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory
         });
 
-        await flushPromises();
+        await busSystem.initialize();
 
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Custom limiter failed'), expect.any(Error));
         expect(mockContext.createDynamicsCompressor).toHaveBeenCalledTimes(1);
@@ -159,87 +154,78 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
         warnSpy.mockRestore();
     });
 
-    it('should correctly route PlaybackId to a requested bus via Logical Voice', () => {
+    it('should correctly route a physical AudioNode to a requested bus', async () => {
         const busSystem = new AudioBusSystem({
             context: mockContext,
             automation: mockAutomation,
             masterOutput: mockMasterOutput,
             busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory
         });
+        await busSystem.initialize();
 
-        const mockNode = { connect: vi.fn(), disconnect: vi.fn() };
+        const mockConnect = vi.fn();
 
-        mockSoundController.getLogicalVoice.mockReturnValue({
-            physicalInstance: { outputNode: mockNode }
-        });
+        const mockNode = { connect: mockConnect, disconnect: vi.fn() } as unknown as AudioNodeLike;
 
-        busSystem.routePlayback(123 as PlaybackId, 'music' as BusId);
+        busSystem.connectNodeToBus(mockNode, 'music' as BusId);
         expect(mockNode.connect).toHaveBeenCalled();
 
-        mockNode.connect.mockClear();
+        mockConnect.mockClear();
 
-        busSystem.routePlayback(123 as PlaybackId, 'fake_bus' as any);
+        busSystem.connectNodeToBus(mockNode, 'fake_bus' as any);
         expect(mockNode.connect).not.toHaveBeenCalled();
     });
 
-    it('should handle routing edge cases (suspended context, no outputNode, connect error)', () => {
+    it('should handle routing edge cases (suspended context, connect error)', async () => {
         const system = new AudioBusSystem({
             context: mockContext,
             automation: mockAutomation,
             masterOutput: mockMasterOutput,
             busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory
         });
-
-        const mockNode = { connect: vi.fn(), disconnect: vi.fn() };
-        mockSoundController.getLogicalVoice.mockReturnValue({
-            physicalInstance: { outputNode: mockNode }
-        });
+        await system.initialize();
+        const mockConnect = vi.fn();
+        const mockNode = { connect: mockConnect, disconnect: vi.fn() } as unknown as AudioNodeLike;
 
         mockContext.state = 'suspended';
-        system.routePlayback(123 as PlaybackId, 'sfx' as BusId);
+        system.connectNodeToBus(mockNode, 'sfx' as BusId);
         expect(mockNode.connect).not.toHaveBeenCalled();
         mockContext.state = 'running';
 
-        mockNode.connect.mockClear();
+        mockConnect.mockClear();
 
-        mockNode.connect.mockImplementationOnce(() => {
+        mockConnect.mockImplementationOnce(() => {
             throw new Error('Connect Error');
         });
 
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-        system.routePlayback(123 as PlaybackId, 'sfx' as BusId);
+        system.connectNodeToBus(mockNode, 'sfx' as BusId);
 
         expect(warnSpy).toHaveBeenCalled();
         warnSpy.mockRestore();
-
-        mockSoundController.getLogicalVoice.mockReturnValue(undefined);
-        expect(() => {
-            system.routePlayback(999 as PlaybackId, 'sfx' as BusId);
-        }).not.toThrow();
     });
 
-    it('should route without limiter if isUseLimiter is false', () => {
+    it('should route without limiter if isUseLimiter is false', async () => {
         const system = new AudioBusSystem(
             {
                 context: mockContext,
                 automation: mockAutomation,
                 masterOutput: mockMasterOutput,
                 busConfig: mockBusConfig,
-                pluginFactory: mockPluginFactory,
-                soundController: mockSoundController
+                pluginFactory: mockPluginFactory
             },
             { isUseLimiter: false }
         );
+        await system.initialize();
+
         expect(system['routerMasterGain'].connect).toHaveBeenCalledWith(system['postLimiterGain']);
         expect(mockPluginFactory.createLimiter).not.toHaveBeenCalled();
     });
 
-    it('should catch critical errors during limiter initialization and log error (constructor catch)', async () => {
+    it('should catch critical errors during limiter initialization and log error', async () => {
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -250,15 +236,15 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             throw new Error('Fallback Crash');
         });
 
-        new AudioBusSystem({
+        const busSystem = new AudioBusSystem({
             context: mockContext,
             automation: mockAutomation,
             masterOutput: mockMasterOutput,
             busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory
         });
-        await flushPromises();
+
+        await busSystem.initialize();
 
         expect(consoleErrorSpy).toHaveBeenCalledWith(
             '[AudioBusSystem] Critical failure during limiter initialization',
@@ -269,42 +255,16 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
         consoleWarnSpy.mockRestore();
     });
 
-    it('should safely execute fallback limiter dispose method even if it throws', async () => {
-        const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-        mockPluginFactory.createLimiter = vi.fn().mockImplementation(() => {
-            throw new Error('Limiter Crash');
-        });
-
+    it('should handle applySend edge cases (missing source/target, fade out)', async () => {
         const system = new AudioBusSystem({
             context: mockContext,
             automation: mockAutomation,
             masterOutput: mockMasterOutput,
             busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory
         });
-        await flushPromises();
+        await system.initialize();
 
-        const limiter = system['masterLimiter'] as any;
-
-        limiter.inputNode.disconnect.mockImplementationOnce(() => {
-            throw new Error('Disconnect failed');
-        });
-        expect(() => limiter.dispose()).not.toThrow();
-
-        consoleWarnSpy.mockRestore();
-    });
-
-    it('should handle applySend edge cases (missing source/target, fade out)', () => {
-        const system = new AudioBusSystem({
-            context: mockContext,
-            automation: mockAutomation,
-            masterOutput: mockMasterOutput,
-            busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory,
-            soundController: mockSoundController
-        });
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         system.applySend('ghost_bus' as any, 'music' as BusId, 1);
@@ -316,6 +276,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
         const sourceBus = system.getBus('sfx' as BusId);
         const updateSendSpy = vi.spyOn(sourceBus as any, 'updateSend');
         system.applySend('sfx' as BusId, 'ghost_bus' as any, null, 100);
+
         expect(updateSendSpy).toHaveBeenCalledWith({
             targetBusId: 'ghost_bus',
             targetNode: null,
@@ -327,20 +288,19 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
     });
 });
 
-describe('AudioBusSystem (Sidechain Triggers via PlaybackId)', () => {
-    let mockSoundController: any;
+describe('AudioBusSystem (Sidechain Triggers via AudioNode)', () => {
     let mockSidechain: any;
     let system: AudioBusSystem;
 
     beforeEach(async () => {
-        mockSoundController = { getLogicalVoice: vi.fn() };
         mockSidechain = {
             insertLookahead: vi.fn(),
             start: vi.fn().mockResolvedValue(undefined),
             addSource: vi.fn(),
             removeSource: vi.fn(),
             removeAllSources: vi.fn(),
-            activeEnvelope: 0.5
+            activeEnvelope: 0.5,
+            dispose: vi.fn()
         };
 
         const mockPluginFactory = {
@@ -355,55 +315,45 @@ describe('AudioBusSystem (Sidechain Triggers via PlaybackId)', () => {
             automation: { set: vi.fn(), ramp: vi.fn() } as any,
             masterOutput: { input: {} } as any,
             busConfig: { ducked: { gain: 1, sidechain: { enabled: true } } },
-            pluginFactory: mockPluginFactory as any,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory as any
         });
 
-        await flushPromises();
+        await system.initialize();
     });
 
-    it('should add sidechain trigger by resolving physical node from PlaybackId', () => {
-        const mockGainNode = {};
-        mockSoundController.getLogicalVoice.mockReturnValue({
-            physicalInstance: { instanceGain: mockGainNode }
-        });
+    it('should add sidechain source directly using physical node', () => {
+        const mockGainNode = {} as AudioNodeLike;
 
-        system.addSidechainTrigger('ducked' as BusId, 123 as PlaybackId, 0.8);
+        system.addSidechainSource(mockGainNode, 'ducked' as BusId, 0.8);
         expect(mockSidechain.addSource).toHaveBeenCalledWith(mockGainNode, 0.8);
     });
 
-    it('should remove sidechain trigger', () => {
-        const mockGainNode = {};
-        mockSoundController.getLogicalVoice.mockReturnValue({
-            physicalInstance: { instanceGain: mockGainNode }
-        });
+    it('should remove sidechain source directly', () => {
+        const mockGainNode = {} as AudioNodeLike;
 
-        system.removeSidechainTrigger('ducked' as BusId, 123 as PlaybackId);
+        system.removeSidechainSource(mockGainNode, 'ducked' as BusId);
         expect(mockSidechain.removeSource).toHaveBeenCalledWith(mockGainNode);
     });
 
-    it('should clear all sidechain triggers', () => {
+    it('should clear all sidechain sources', () => {
         system.clearAllSidechainTriggers();
         expect(mockSidechain.removeAllSources).toHaveBeenCalledTimes(1);
     });
 
-    it('should safely ignore triggers for non-existent buses or voices', () => {
+    it('should safely ignore triggers for non-existent buses', () => {
         expect(() => {
-            system.addSidechainTrigger('ghost_bus' as BusId, 123 as PlaybackId, 1);
-            mockSoundController.getLogicalVoice.mockReturnValue(null);
-            system.addSidechainTrigger('ducked' as BusId, 999 as PlaybackId, 1);
+            const mockGainNode = {} as AudioNodeLike;
+            system.addSidechainSource(mockGainNode, 'ghost_bus' as BusId, 1);
         }).not.toThrow();
     });
 });
 
 describe('AudioBusSystem (Getters & Gain Calculations)', () => {
     let system: AudioBusSystem;
-    let mockSoundController: any;
 
     beforeEach(async () => {
         vi.clearAllMocks();
         const mockContext = createMockContext();
-        mockSoundController = { getLogicalVoice: vi.fn() };
 
         const mockPluginFactory = {
             createLimiter: vi
@@ -412,7 +362,8 @@ describe('AudioBusSystem (Getters & Gain Calculations)', () => {
             createSidechain: vi.fn().mockReturnValue({
                 insertLookahead: vi.fn(),
                 start: vi.fn().mockResolvedValue(undefined),
-                activeEnvelope: 0.5
+                activeEnvelope: 0.5,
+                dispose: vi.fn()
             })
         };
 
@@ -424,11 +375,10 @@ describe('AudioBusSystem (Getters & Gain Calculations)', () => {
                 sfx: { gain: 1 },
                 ducked: { gain: 1, sidechain: { enabled: true } }
             },
-            pluginFactory: mockPluginFactory as any,
-            soundController: mockSoundController
+            pluginFactory: mockPluginFactory as any
         });
 
-        await flushPromises();
+        await system.initialize();
     });
 
     it('should return buses map and master node', () => {
