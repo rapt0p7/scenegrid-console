@@ -15,7 +15,7 @@ vi.mock('standardized-audio-context', () => {
     };
 });
 
-vi.mock('../../worklets/lookahead-brickwall-limiter.processor.js', () => ({
+vi.mock('../../worklets/lookahead-brickwall-limiter.processor.js?worklet', () => ({
     default: 'mock-limiter-url'
 }));
 

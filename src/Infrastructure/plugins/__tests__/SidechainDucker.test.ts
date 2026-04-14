@@ -23,7 +23,7 @@ vi.mock('standardized-audio-context', () => {
     };
 });
 
-vi.mock('../../worklets/ducker.processor.js', () => ({
+vi.mock('../../worklets/ducker.processor.js?worklet', () => ({
     default: 'mock-processor-url'
 }));
 

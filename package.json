@@ -15,10 +15,12 @@
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.js"
+            "import": "./dist/scenegrid-audio.es.js",
+            "require": "./dist/scenegrid-audio.umd.js"
         }
     },
-    "main": "./dist/index.js",
+    "main": "./dist/scenegrid-audio.umd.js",
+    "module": "./dist/scenegrid-audio.es.js",
     "types": "./dist/index.d.ts",
     "files": [
         "dist",
@@ -27,23 +29,21 @@
     ],
     "scripts": {
         "build": "npm run build:lib && npm run build:demo",
-        "build:demo": "cross-env NODE_ENV=production webpack --config ./webpack.production.config.js --mode=production",
-        "build:lib": "npm run build:lib:js && npm run build:lib:types",
-        "build:lib:js": "cross-env NODE_ENV=production webpack --config ./webpack.library.config.js",
-        "build:lib:types": "tsc --project tsconfig.build.json",
+        "build:demo": "vite build",
+        "build:lib": "vite build --config vite.library.config.ts",
         "changelog": "git cliff -o CHANGELOG.md",
         "changelog:latest": "git cliff --latest -o CHANGELOG.md",
         "changelog:preview": "git cliff --latest",
         "createDependencyGraph": "npx depcruise src --include-only \"^src\" --exclude \"(__tests__|\\\\.test\\\\.ts$|\\\\.spec\\\\.ts$)\" --output-type mermaid > docs/dependency-graph.mmd",
-        "devbuild": "cross-env NODE_ENV=development webpack --progress --config ./webpack.development.config.js --mode=development",
-        "devserver": "cross-env NODE_ENV=development webpack serve --progress --config ./webpack.development.config.js --mode=development",
+        "dev": "vite",
         "docs": "typedoc",
         "license-checker": "license-checker --production --failOn \"GPL;GPL-1.0;GPL-2.0;GPL-3.0;LGPL;LGPL-2.0;LGPL-2.1;LGPL-3.0;AGPL;AGPL-1.0;AGPL-3.0;SSPL;CDDL;EUPL;MPL-1.0;NPL;QPL;CPAL;RPL\"\n",
         "lint:architecture": "depcruise src --config .dependency-cruiser.cjs",
         "prepare": "husky || true",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit"
     },
     "lint-staged": {
         "*.{ts,tsx,js,jsx}": [
@@ -65,48 +65,33 @@
             "last 1 safari version"
         ]
     },
+    "overrides": {
+        "typedoc": {
+            "typescript": "6.0.2"
+        },
+        "typescript-eslint": {
+            "typescript": "6.0.2"
+        }
+    },
     "dependencies": {
         "@tweakpane/plugin-essentials": "0.2.1",
-        "globalthis": "1.0.4",
-        "mitt": "3.0.1",
-        "standardized-audio-context": "25.3.77",
-        "tweakpane": "4.0.5",
-        "worker-timers": "8.0.30"
+        "globalthis": "1.0.4"
     },
     "devDependencies": {
-        "@babel/cli": "7.28.3",
-        "@babel/core": "7.29.0",
-        "@babel/eslint-parser": "7.28.5",
-        "@babel/eslint-plugin": "7.27.1",
-        "@babel/plugin-proposal-class-properties": "7.18.6",
-        "@babel/plugin-proposal-object-rest-spread": "7.20.7",
-        "@babel/plugin-transform-destructuring": "7.28.5",
-        "@babel/plugin-transform-runtime": "7.29.0",
-        "@babel/preset-env": "7.29.2",
         "@commitlint/cli": "20.5.0",
         "@commitlint/config-conventional": "20.5.0",
         "@eslint/js": "9.39.4",
         "@eslint/json": "1.1.0",
-        "@swc/cli": "^0.5.0",
-        "@swc/core": "1.15.7",
-        "@swc/html": "1.15.7",
         "@vitest/coverage-v8": "4.1.0",
         "@vitest/eslint-plugin": "1.6.12",
-        "babel-loader": "10.1.1",
-        "babel-plugin-syntax-dynamic-import": "6.18.0",
         "browserslist": "4.28.1",
-        "clean-webpack-plugin": "4.0.0",
-        "compression-webpack-plugin": "12.0.0",
-        "copy-webpack-plugin": "14.0.0",
-        "core-js": "3.49.0",
         "cross-env": "10.1.0",
-        "dependency-cruiser": "17.3.9",
+        "dependency-cruiser": "17.3.10",
         "dotenv": "17.3.1",
-        "esbuild-loader": "4.4.2",
         "eslint": "9.39.4",
         "eslint-config-prettier": "10.1.8",
         "eslint-import-resolver-typescript": "4.4.4",
-        "eslint-plugin-boundaries": "6.0.0",
+        "eslint-plugin-boundaries": "6.0.2",
         "eslint-plugin-de-morgan": "2.1.1",
         "eslint-plugin-import": "2.32.0",
         "eslint-plugin-jsonc": "3.1.2",
@@ -116,14 +101,10 @@
         "eslint-plugin-security": "4.0.0",
         "eslint-plugin-sonarjs": "4.0.2",
         "eslint-plugin-unicorn": "63.0.0",
-        "fork-ts-checker-webpack-plugin": "9.1.0",
         "git-cliff": "2.12.0",
         "globals": "17.4.0",
-        "happy-dom": "20.8.4",
-        "html-minimizer-webpack-plugin": "6.0.0",
-        "html-webpack-plugin": "5.6.6",
+        "happy-dom": "20.9.0",
         "husky": "9.1.7",
-        "json-minimizer-webpack-plugin": "5.0.0",
         "jsonc-eslint-parser": "3.1.0",
         "license-checker": "25.0.1",
         "prettier": "3.8.1",
@@ -131,19 +112,23 @@
         "prettier-plugin-packagejson": "3.0.2",
         "prettier-plugin-sh": "0.18.0",
         "repomix": "1.12.0",
-        "terser-webpack-plugin": "5.4.0",
         "ts-node": "10.9.2",
         "tsc-alias": "1.8.16",
         "tsconfig-paths": "4.2.0",
-        "tsconfig-paths-webpack-plugin": "4.2.0",
         "typedoc": "0.28.17",
         "typescript": "6.0.2",
-        "typescript-eslint": "8.57.1",
-        "vitest": "4.1.0",
-        "webpack": "5.105.4",
-        "webpack-cli": "7.0.1",
-        "webpack-dev-server": "5.2.3",
-        "webpack-merge": "6.0.1"
+        "typescript-eslint": "8.58.2",
+        "vite": "8.0.8",
+        "vite-plugin-checker": "0.12.0",
+        "vite-plugin-dts": "4.5.4",
+        "vite-plugin-static-copy": "4.0.1",
+        "vitest": "4.1.0"
+    },
+    "peerDependencies": {
+        "mitt": "3.0.1",
+        "standardized-audio-context": "25.3.77",
+        "tweakpane": "4.0.5",
+        "worker-timers": "8.0.30"
     },
     "engines": {
         "node": "22.14.0"

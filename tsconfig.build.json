@@ -1,13 +1,12 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "types": [],
+        "rootDir": "./src",
         "outDir": "./dist",
-        "emitDeclarationOnly": true,
         "declaration": true,
-        "declarationMap": true,
-        "sourceMap": true,
-        "rootDir": "./src"
+        "emitDeclarationOnly": true
     },
     "include": ["src/**/*.ts"],
-    "exclude": ["node_modules", "examples", "**/__tests__/**", "**/*.test.ts", "**/*.spec.ts"]
+    "exclude": ["src/**/*.test.ts", "src/**/*.d.ts", "src/Infrastructure/worklets/**/*", "examples/**/*"]
 }

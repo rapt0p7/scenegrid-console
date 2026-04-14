@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { createFrequencyBarsWithRMS, createMeters, createFrequencyCurveWithRMS } from '../visualizers.js';
 
-vi.mock('../../worklets/meter.processor.js', () => ({
+vi.mock('../../worklets/meter.processor.js?worklet', () => ({
     default: 'mocked-processor-url'
 }));
 

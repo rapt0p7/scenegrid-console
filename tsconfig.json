@@ -30,7 +30,8 @@
         "examples/**/*.tsx",
         "src/audio.d.ts",
         "*.ts",
-        "*.config.js"
+        "vite.config.ts",
+        "vite.library.config.ts"
     ],
     "exclude": ["node_modules", "dist", "public"]
 }
