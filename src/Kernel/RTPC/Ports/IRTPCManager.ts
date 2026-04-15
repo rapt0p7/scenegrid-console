@@ -8,5 +8,6 @@ export interface IRTPCManager {
     setValues(parameters: Record<string, number>): void;
     getValue(parameterName: string, defaultValue?: number): number;
     configureParam(parameterName: string, attackMs: number, releaseMs: number): void;
+    tick(deltaTimeMs: number): void;
     reset(): void;
 }

@@ -1,24 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+// noinspection D
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
-vi.mock('worker-timers', () => ({
-    setInterval: (callback: TimerHandler, ms?: number) => setInterval(callback, ms),
-    clearInterval: (id: number | undefined) => clearInterval(id)
-}));
-
-describe('RTPCManager', () => {
+describe('RTPCManager (Kernel Layer)', () => {
     let manager: RTPCManager;
 
     beforeEach(() => {
-        vi.useFakeTimers();
-        manager = new RTPCManager();
-    });
-
-    afterEach(() => {
-        vi.runOnlyPendingTimers();
-        vi.useRealTimers();
         vi.clearAllMocks();
+        manager = new RTPCManager();
     });
 
     describe('Instant Values (Backwards Compatibility)', () => {
@@ -74,7 +64,7 @@ describe('RTPCManager', () => {
             expect(spySFX).toHaveBeenCalledWith(Math.fround(0.9));
         });
 
-        it('should clear all values, events, and stop loop on reset', async () => {
+        it('should clear all values, events, and reset state on reset()', async () => {
             const spy = vi.fn();
             manager.events.on('MUSIC_VOLUME', spy);
 
@@ -92,7 +82,7 @@ describe('RTPCManager', () => {
         });
     });
 
-    describe('Interpolation and Slew Rates', () => {
+    describe('Interpolation and Slew Rates (Tick based)', () => {
         it('should correctly configure parameters without triggering immediate change', () => {
             manager.configureParam('HP', 1000, 2000);
             manager.setValue('HP', 100);
@@ -114,7 +104,7 @@ describe('RTPCManager', () => {
             manager.configureParam('HP', 1000, 0);
             manager.setValue('HP', 100);
 
-            vi.advanceTimersByTime(30);
+            manager.tick(30);
             await Promise.resolve();
 
             const firstTickValue = manager.getValue('HP');
@@ -122,12 +112,12 @@ describe('RTPCManager', () => {
             expect(firstTickValue).toBeLessThan(100);
             expect(spy).toHaveBeenCalledWith(firstTickValue);
 
-            vi.advanceTimersByTime(3000);
+            manager.tick(3000);
+            manager.tick(30);
             await Promise.resolve();
 
             expect(manager.getValue('HP')).toBe(100);
         });
-
         it('should interpolate value over time when decreasing (Release)', async () => {
             manager.setValue('HP', 100);
             await Promise.resolve();
@@ -135,27 +125,28 @@ describe('RTPCManager', () => {
             manager.configureParam('HP', 0, 1000);
             manager.setValue('HP', 0);
 
-            vi.advanceTimersByTime(30);
+            manager.tick(30);
             await Promise.resolve();
 
             const firstTickValue = manager.getValue('HP');
             expect(firstTickValue).toBeLessThan(100);
             expect(firstTickValue).toBeGreaterThan(0);
 
-            vi.advanceTimersByTime(3000);
+            manager.tick(3000);
+            manager.tick(30);
             await Promise.resolve();
 
             expect(manager.getValue('HP')).toBe(0);
         });
 
-        it('should handle multiple parameters interpolating in the same loop', async () => {
+        it('should handle multiple parameters interpolating in the same tick', async () => {
             manager.configureParam('P1', 1000, 1000);
             manager.configureParam('P2', 500, 500);
 
             manager.setValue('P1', 100);
             manager.setValue('P2', 50);
 
-            vi.advanceTimersByTime(30);
+            manager.tick(30);
             await Promise.resolve();
 
             expect(manager.getValue('P1')).toBeGreaterThan(0);
@@ -172,7 +163,7 @@ describe('RTPCManager', () => {
 
             manager.setValue('HP', 100);
 
-            vi.advanceTimersByTime(30);
+            manager.tick(30);
             await Promise.resolve();
 
             expect(manager.getValue('HP')).toBe(100);
@@ -182,29 +173,34 @@ describe('RTPCManager', () => {
             manager.configureParam('HP', 1000, 1000);
             manager.setValue('HP', 100);
 
-            vi.advanceTimersByTime(30);
+            manager.tick(30);
 
             manager.configureParam('HP', 0, 0);
 
-            vi.advanceTimersByTime(30);
+            manager.tick(30);
             await Promise.resolve();
 
             expect(manager.getValue('HP')).toBe(100);
         });
 
-        it('should stop the loop automatically when all interpolations finish', async () => {
+        it('should sleep automatically (isInterpolating = false) when all interpolations finish', async () => {
             manager.configureParam('HP', 100, 100);
             manager.setValue('HP', 10);
 
-            vi.advanceTimersByTime(500);
+            expect((manager as any).isInterpolating).toBe(true);
+
+            manager.tick(500);
+            manager.tick(30);
             await Promise.resolve();
 
             expect(manager.getValue('HP')).toBe(10);
 
+            expect((manager as any).isInterpolating).toBe(false);
+
             const spy = vi.fn();
             manager.events.on('HP', spy);
 
-            vi.advanceTimersByTime(100);
+            manager.tick(100);
             await Promise.resolve();
 
             expect(spy).not.toHaveBeenCalled();
