@@ -97,7 +97,8 @@ module.exports = {
             severity: 'error',
             from: {},
             to: {
-                couldNotResolve: true
+                couldNotResolve: true,
+                pathNot: [String.raw`\.processor\.js\?worklet$`]
             }
         },
         {
@@ -185,7 +186,7 @@ module.exports = {
                 'in your package.json. This makes sense if your package is e.g. a plugin, but in ' +
                 'other cases - maybe not so much. If the use of a peer dependency is intentional ' +
                 'add an exception to your dependency-cruiser configuration.',
-            severity: 'warn',
+            severity: 'ignore',
             from: {},
             to: {
                 dependencyTypes: ['npm-peer']
