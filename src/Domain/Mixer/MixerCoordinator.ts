@@ -10,7 +10,7 @@ export default class MixerCoordinator {
         private readonly stateManager: MixerStateManager
     ) {}
 
-    recompute(options?: { durationMs?: number; interruptible?: boolean }): Promise<void> {
+    recompute(options?: { durationMs?: number; interruptible?: boolean }): void {
         const next = this.layerStack.computeState(this.baseState);
         return this.stateManager.applyState(next, options);
     }
@@ -19,7 +19,7 @@ export default class MixerCoordinator {
         return this.stateManager.getState();
     }
 
-    setBaseState(state: MixerState): Promise<void> {
+    setBaseState(state: MixerState): void {
         this.baseState = state;
         return this.recompute();
     }

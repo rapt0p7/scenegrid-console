@@ -17,7 +17,7 @@ export default class MixerSnapshotManager {
         private readonly coordinator: MixerCoordinator
     ) {}
 
-    async activateSnapshot(name: string, layerId: string, priority: number): Promise<void> {
+    activateSnapshot(name: string, layerId: string, priority: number): void {
         const snapshot = this.snapshots[name];
         if (!snapshot) return;
 
@@ -37,8 +37,6 @@ export default class MixerSnapshotManager {
                 }
             }
         });
-
-        await this.coordinator.recompute({ durationMs });
 
         this.events.emit('transition:end', { layerId, snapshotName: name });
     }
