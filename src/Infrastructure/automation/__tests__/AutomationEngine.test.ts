@@ -1,21 +1,21 @@
+// noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AutomationEngine from '../AutomationEngine.js';
 
 import type { AudioCtx as AudioContext_ } from '../../types/IAudioContext.js';
+import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 
 describe('AutomationEngine', () => {
     let mockContext: AudioContext_;
     let mockParameter: any;
+    let mockTicker: any;
+    let capturedFlushCallback: (() => void) | null;
     let engine: AutomationEngine;
 
     beforeEach(() => {
         vi.clearAllMocks();
-
-        vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-            callback(performance.now());
-            return 1;
-        });
+        capturedFlushCallback = null;
 
         mockContext = {
             state: 'running',
@@ -31,7 +31,14 @@ describe('AutomationEngine', () => {
             setValueCurveAtTime: vi.fn()
         };
 
-        engine = new AutomationEngine(mockContext);
+        mockTicker = {
+            add: vi.fn().mockImplementation((id, rate, callback) => {
+                capturedFlushCallback = callback;
+            }),
+            remove: vi.fn()
+        } as unknown as EngineTicker;
+
+        engine = new AutomationEngine(mockContext, mockTicker);
     });
 
     afterEach(() => {
@@ -70,6 +77,15 @@ describe('AutomationEngine', () => {
     });
 
     describe('ramp() - Batching and Math', () => {
+        it('should register flush callback to EngineTicker on init', () => {
+            expect(mockTicker.add).toHaveBeenCalledWith(
+                'automation-engine',
+                AutomationEngine.TICK_RATE_MS,
+                expect.any(Function)
+            );
+            expect(capturedFlushCallback).toBeDefined();
+        });
+
         it('should ignore invalid targets in ramp (NaN or Infinity)', () => {
             const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -94,8 +110,11 @@ describe('AutomationEngine', () => {
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.5, 3);
         });
 
-        it('should apply linear ramp correctly via requestAnimationFrame batching', () => {
+        it('should apply linear ramp correctly via EngineTicker batching', () => {
             engine.ramp(mockParameter, 1, 2000);
+
+            capturedFlushCallback!();
+
             expect(mockParameter.cancelScheduledValues).toHaveBeenCalledWith(1);
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.5, 1);
             expect(mockParameter.linearRampToValueAtTime).toHaveBeenCalledWith(1, 3);
@@ -103,17 +122,20 @@ describe('AutomationEngine', () => {
 
         it('should apply exponential ramp correctly', () => {
             engine.ramp(mockParameter, 1, 1000, 'exponential');
+            capturedFlushCallback!();
             expect(mockParameter.exponentialRampToValueAtTime).toHaveBeenCalledWith(1, 2);
         });
 
         it('should apply equal-power curve correctly (Fade In)', () => {
             engine.ramp(mockParameter, 1, 1000, 'equal-power');
+            capturedFlushCallback!();
             expect(mockParameter.setValueCurveAtTime).toHaveBeenCalledWith(expect.any(Float32Array), 1, 1);
         });
 
         it('should generate equal-power curve correctly (Fade Out / target < start)', () => {
             mockParameter.value = 1;
             engine.ramp(mockParameter, 0.1, 1000, 'equal-power');
+            capturedFlushCallback!();
 
             expect(mockParameter.setValueCurveAtTime).toHaveBeenCalled();
             const curve = mockParameter.setValueCurveAtTime.mock.calls[0][0];
@@ -138,6 +160,8 @@ describe('AutomationEngine', () => {
             const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
             engine.ramp(mockParameter, 1, 1000, 'linear');
+            capturedFlushCallback!();
+
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(1, 1);
 
             consoleSpy.mockRestore();
@@ -147,6 +171,7 @@ describe('AutomationEngine', () => {
     describe('ramp() - Time and Delay Edge Cases', () => {
         it('should schedule delayed linear ramp correctly', () => {
             engine.ramp(mockParameter, 1, 1000, 'linear', 500);
+            capturedFlushCallback!();
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.5, 1.5);
             expect(mockParameter.linearRampToValueAtTime).toHaveBeenCalledWith(1, 2.5);
@@ -154,6 +179,7 @@ describe('AutomationEngine', () => {
 
         it('should schedule delayed exponential ramp correctly', () => {
             engine.ramp(mockParameter, 1, 1000, 'exponential', 500);
+            capturedFlushCallback!();
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.5, 1.5);
             expect(mockParameter.exponentialRampToValueAtTime).toHaveBeenCalledWith(1, 2.5);
@@ -161,24 +187,18 @@ describe('AutomationEngine', () => {
 
         it('should schedule delayed equal-power ramp correctly', () => {
             engine.ramp(mockParameter, 1, 1000, 'equal-power', 500);
+            capturedFlushCallback!();
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.5, 1.5);
             expect(mockParameter.setValueCurveAtTime).toHaveBeenCalledWith(expect.any(Float32Array), 1.5, 1);
         });
 
         it('should immediately set value if remaining duration <= 0 during delayed flush', () => {
-            let rAFCallback: FrameRequestCallback | null = null;
-            vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-                rAFCallback = callback;
-                return 1;
-            });
-
-            engine = new AutomationEngine(mockContext);
             engine.ramp(mockParameter, 0.8, 1000);
 
             (mockContext as any).currentTime = 3;
 
-            if (rAFCallback) (rAFCallback as any)(performance.now());
+            capturedFlushCallback!();
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.8, 3);
             expect(mockParameter.linearRampToValueAtTime).not.toHaveBeenCalled();
@@ -201,11 +221,6 @@ describe('AutomationEngine - Chrome Android Fallback', () => {
 
         const { default: AndroidAutomationEngine } = await import('../AutomationEngine.js');
 
-        vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-            callback(performance.now());
-            return 1;
-        });
-
         const mContext = { state: 'running', currentTime: 1 } as unknown as AudioContext_;
         const mParameter = {
             value: 0.5,
@@ -215,9 +230,18 @@ describe('AutomationEngine - Chrome Android Fallback', () => {
             setValueCurveAtTime: vi.fn()
         };
 
-        const eng = new AndroidAutomationEngine(mContext);
+        let capturedFlush: (() => void) | null = null;
+        const mTicker = {
+            add: vi.fn().mockImplementation((_id, _rate, callback) => {
+                capturedFlush = callback;
+            })
+        } as unknown as EngineTicker;
+
+        const eng = new AndroidAutomationEngine(mContext, mTicker);
 
         eng.ramp(mParameter as any, 1, 1000, 'linear');
+
+        capturedFlush!();
 
         expect(mParameter.linearRampToValueAtTime).not.toHaveBeenCalled();
         expect(mParameter.setValueCurveAtTime).toHaveBeenCalledWith(expect.any(Float32Array), 1, 1);

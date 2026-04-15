@@ -1,5 +1,6 @@
 // noinspection D
 
+import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { AudioCtx, AudioParamLike } from '@infrastructure/types/IAudioContext.js';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -18,15 +19,18 @@ interface PendingRamp {
 
 export default class AutomationEngine {
     readonly #ctx: AudioCtx;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public static TICK_RATE_MS = 16;
     private static readonly CURVE_STEPS = 100;
     private static readonly CONSTANT_CURVE_BUFFER = new Float32Array(AutomationEngine.CURVE_STEPS);
     private readonly DIGITAL_SILENCE = 0.000_01;
 
     #pending: PendingRamp[] = [];
-    #rafId: number | null = null;
 
-    constructor(context: AudioCtx) {
+    constructor(context: AudioCtx, ticker: EngineTicker) {
         this.#ctx = context;
+
+        ticker.add('automation-engine', AutomationEngine.TICK_RATE_MS, () => this.flush());
     }
 
     set(parameter: AudioParamLike, value: number): void {
@@ -81,10 +85,6 @@ export default class AutomationEngine {
             type,
             startTime
         });
-
-        if (this.#rafId === null) {
-            this.#rafId = requestAnimationFrame(() => this.flush());
-        }
     }
 
     // eslint-disable-next-line max-params
@@ -108,12 +108,14 @@ export default class AutomationEngine {
     }
 
     private flush(): void {
+        if (this.#pending.length === 0) return;
+
         const batch = this.#pending;
         this.#pending = [];
-        this.#rafId = null;
 
-        for (const item of batch) {
-            this.applyRamp(item);
+        // eslint-disable-next-line unicorn/no-for-loop
+        for (let index = 0; index < batch.length; index++) {
+            this.applyRamp(batch[index]);
         }
     }
 
