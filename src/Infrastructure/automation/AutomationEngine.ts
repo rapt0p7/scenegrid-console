@@ -23,6 +23,7 @@ export default class AutomationEngine {
     public static TICK_RATE_MS = 16;
     private static readonly CURVE_STEPS = 100;
     private static readonly CONSTANT_CURVE_BUFFER = new Float32Array(AutomationEngine.CURVE_STEPS);
+    private static readonly MS_IN_SECONDS = 1000;
     private readonly DIGITAL_SILENCE = 0.000_01;
 
     #pending: PendingRamp[] = [];
@@ -64,8 +65,8 @@ export default class AutomationEngine {
             return;
         }
 
-        const duration = durationMs / 1000;
-        const delay = delayMs / 1000;
+        const duration = durationMs / AutomationEngine.MS_IN_SECONDS;
+        const delay = delayMs / AutomationEngine.MS_IN_SECONDS;
         const now = this.#ctx.currentTime;
         const startTime = now + delay;
 
@@ -183,7 +184,7 @@ export default class AutomationEngine {
         startTime: number,
         duration: number
     ): void {
-        const steps = 100;
+        const steps = AutomationEngine.CURVE_STEPS;
         const curve = AutomationEngine.CONSTANT_CURVE_BUFFER;
 
         const isFadeIn = targetValue > startValue;
@@ -204,7 +205,7 @@ export default class AutomationEngine {
     }
 
     private applyCurveFallback(parameter: AudioParamLike, target: number, duration: number): void {
-        const steps = 100;
+        const steps = AutomationEngine.CURVE_STEPS;
         const curve = AutomationEngine.CONSTANT_CURVE_BUFFER;
         const start = parameter.value;
 
