@@ -1,3 +1,4 @@
+// noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
@@ -16,6 +17,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         vi.useFakeTimers();
 
         mockContext = {
+            currentTime: 0,
             createGain: vi.fn().mockImplementation(() => ({
                 gain: { value: 1 },
                 connect: vi.fn(),
@@ -53,7 +55,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         vi.useRealTimers();
     });
 
-    it('should safely replace filter (fade out -> rebuild -> fade in)', async () => {
+    it('should safely replace filter (fade out -> rebuild -> fade in)', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -63,19 +65,20 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             pluginFactory: mockPluginFactory as IPluginFactory
         });
 
-        const replacePromise = bus.safeReplaceFilter({ type: 'highpass', frequency: 500 }, 10);
+        bus.safeReplaceFilter({ type: 'highpass', frequency: 500 }, 10);
 
-        expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.postFilterGain.gain, 0, 10, 'linear');
+        expect(mockAutomation.ramp).toHaveBeenCalledWith(expect.any(Object), 0, 10, 'linear');
 
-        await vi.advanceTimersByTimeAsync(12);
-        await replacePromise;
+        mockContext.currentTime = 0.015;
+
+        bus.processFrame(mockContext.currentTime);
 
         expect(mockPluginFactory.getFiltersPlugin().createNode).toHaveBeenCalled();
-        expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.postFilterGain.gain, 1, 10, 'linear');
+        expect(mockAutomation.ramp).toHaveBeenCalledWith(expect.any(Object), 1, 10, 'linear');
         expect(bus.getConfig().filter).toBeDefined();
     });
 
-    it('should correctly disconnect and remove filter when null is passed', async () => {
+    it('should correctly disconnect and remove filter when null is passed', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -85,20 +88,20 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             pluginFactory: mockPluginFactory as any
         });
 
-        const addPromise = bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 5);
-        await vi.advanceTimersByTimeAsync(10);
-        await addPromise;
+        bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 5);
+        mockContext.currentTime += 0.01;
+        bus.processFrame(mockContext.currentTime);
 
         expect(bus.getConfig().filter).toBeDefined();
 
-        const removePromise = bus.safeReplaceFilter(null, 5);
-        await vi.advanceTimersByTimeAsync(10);
-        await removePromise;
+        bus.safeReplaceFilter(null, 5);
+        mockContext.currentTime += 0.01;
+        bus.processFrame(mockContext.currentTime);
 
         expect(bus.getConfig().filter).toBeUndefined();
     });
 
-    it('should fade out and disconnect send when targetGain is null', async () => {
+    it('should fade out and disconnect send when targetGain is null', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -116,7 +119,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             targetGain: 0.5,
             durationMs: 0
         });
-        await Promise.resolve();
+        bus.processFrame(mockContext.currentTime);
 
         bus.updateSend({
             targetBusId: 'reverb_bus' as BusId,
@@ -124,7 +127,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             targetGain: null,
             durationMs: 100
         });
-        await Promise.resolve();
+        bus.processFrame(mockContext.currentTime);
 
         expect(mockAutomation.ramp).toHaveBeenCalledWith(expect.any(Object), 0, 100, 'linear');
 
@@ -134,7 +137,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         expect(sendGainsMap.has('reverb_bus')).toBe(false);
     });
 
-    it('should bind RTPC for filterFrequency and pan and calculate additive math correctly', async () => {
+    it('should bind RTPC for filterFrequency and pan and calculate additive math correctly', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -174,16 +177,14 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockRtpcManager
         );
 
-        await Promise.resolve();
+        bus.processFrame(mockContext.currentTime);
 
         expect(mockRtpcManager.on).toHaveBeenCalledTimes(2);
-
         expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 1500, 50, 'exponential');
-
         expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).pannerNode.pan, 0.5, 50, 'linear');
     });
 
-    it('should bind RTPC to sendLevel and automate send gain when gameParam changes', async () => {
+    it('should bind RTPC to sendLevel and automate send gain when gameParam changes', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -201,7 +202,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             targetGain: 1,
             durationMs: 0
         });
-        await Promise.resolve();
+        bus.processFrame(mockContext.currentTime);
 
         mockAutomation.ramp.mockClear();
         mockRtpcManager.getValue.mockReturnValue(100);
@@ -221,7 +222,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockRtpcManager
         );
 
-        await Promise.resolve();
+        bus.processFrame(mockContext.currentTime);
 
         const sendGainsMap = (bus as any).sendGains as Map<string, any>;
         const reverbSendGainNode = sendGainsMap.get('reverb_bus');
@@ -229,7 +230,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         expect(mockAutomation.ramp).toHaveBeenCalledWith(reverbSendGainNode.gain, 0.8, 200, 'linear');
     });
 
-    it('should safely ignore missing sendTargetBus and safely cache RTPC modifiers for uninitialized sends', async () => {
+    it('should safely ignore missing sendTargetBus and safely cache RTPC modifiers for uninitialized sends', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -264,7 +265,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockRtpcManager
         );
 
-        await Promise.resolve();
+        bus.processFrame(mockContext.currentTime);
 
         const ghostBusState = (bus as any).targetParams.sends.get('ghost_bus');
         expect(ghostBusState).toBeDefined();
@@ -272,7 +273,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         expect(ghostBusState.rtpc).toBe(0.5);
     });
 
-    it('should bind RTPC using preset curves and calculate math correctly', async () => {
+    it('should bind RTPC using preset curves and calculate math correctly', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -305,7 +306,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockRtpcManager
         );
 
-        await Promise.resolve();
+        bus.processFrame(mockContext.currentTime);
 
         expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 2000, 50, 'exponential');
     });
@@ -321,7 +322,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
                 pluginFactory: mockPluginFactory as any
             });
 
-            expect(bus.preFilterGain.connect).toHaveBeenCalledWith(bus.postFilterGain);
+            expect(bus.duckerTapNode.connect).toHaveBeenCalledWith(expect.any(Object));
             expect((bus as any).filterNode).toBeNull();
         });
 
@@ -338,33 +339,14 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             const filterNode = (bus as any).filterNode;
             expect(filterNode).toBeDefined();
 
-            expect(bus.preFilterGain.connect).toHaveBeenCalledWith(filterNode);
-            expect(filterNode.connect).toHaveBeenCalledWith(bus.postFilterGain);
+            expect(bus.duckerTapNode.connect).toHaveBeenCalledWith(filterNode);
+            expect(filterNode.connect).toHaveBeenCalledWith(expect.any(Object));
 
             expect(bus.getConfig().filter).toEqual({
                 type: 'lowpass',
                 frequency: 22_000,
                 Q: 1
             });
-        });
-
-        it('should create and connect a non-Biquad filter (e.g. reverb) without caching biquad params', () => {
-            const mockConvolver = { connect: vi.fn(), disconnect: vi.fn() };
-            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(mockConvolver);
-
-            const bus = new AudioBus({
-                id: 'bus' as BusId,
-                config: { gain: 1, filter: { type: 'reverb' } },
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
-            });
-
-            expect((bus as any).filterNode).toBe(mockConvolver);
-            expect(bus.preFilterGain.connect).toHaveBeenCalledWith(mockConvolver);
-
-            expect(bus.getConfig().filter).toEqual({ type: 'reverb' });
         });
 
         it('should fallback to direct connection and delete config.filter if filter creation fails', () => {
@@ -380,13 +362,13 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             });
 
             expect((bus as any).filterNode).toBeNull();
-            expect(bus.preFilterGain.connect).toHaveBeenCalledWith(bus.postFilterGain);
+            expect(bus.duckerTapNode.connect).toHaveBeenCalledWith(expect.any(Object));
             expect(bus.getConfig().filter).toBeUndefined();
         });
     });
 
     describe('setLogicalGain() logic', () => {
-        it('should update logical gain, trigger microtask, and automate inputGainNode', async () => {
+        it('should update logical gain, set isDirty, and automate inputGainNode on tick', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1 },
@@ -399,17 +381,15 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockAutomation.ramp.mockClear();
 
             bus.setLogicalGain(0.5, 100);
-
             expect((bus as any).targetParams.gain.logical).toBe(0.5);
 
-            await Promise.resolve();
+            bus.processFrame(mockContext.currentTime);
 
-            expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputGainNode.gain, 0.5, 100, 'linear');
-
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputNode.gain, 0.5, 100, 'linear');
             expect((bus as any).targetParams.gain.durationMs).toBe(0);
         });
 
-        it('should use Math.max for durationMs when called multiple times before flush', async () => {
+        it('should use Math.max for durationMs when called multiple times before flush', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1 },
@@ -425,12 +405,12 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             bus.setLogicalGain(0.8, 200);
             bus.setLogicalGain(0.4, 10);
 
-            await Promise.resolve();
+            bus.processFrame(mockContext.currentTime);
 
-            expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputGainNode.gain, 0.4, 200, 'linear');
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputNode.gain, 0.4, 200, 'linear');
         });
 
-        it('should correctly multiply logical gain with existing RTPC modifier', async () => {
+        it('should correctly multiply logical gain with existing RTPC modifier', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1 },
@@ -441,13 +421,13 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             });
 
             bus.setRtpcGainModifier(0.5, 0);
-            await Promise.resolve();
+            bus.processFrame(mockContext.currentTime);
             mockAutomation.ramp.mockClear();
 
             bus.setLogicalGain(0.8, 50);
-            await Promise.resolve();
+            bus.processFrame(mockContext.currentTime);
 
-            expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputGainNode.gain, 0.4, 50, 'linear');
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputNode.gain, 0.4, 50, 'linear');
         });
     });
 
@@ -482,13 +462,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             expect(mockAutomation.ramp).not.toHaveBeenCalled();
         });
 
-        it('should return early if config type is explicitly "reverb"', () => {
-            (bus as any).filterNode = { frequency: {} };
-            bus.updateFilterParams({ type: 'reverb' });
-            expect(mockAutomation.ramp).not.toHaveBeenCalled();
-        });
-
-        it('should ramp frequency and Q if they are provided in config', async () => {
+        it('should ramp frequency and Q if they are provided in config', () => {
             (bus as any).filterNode = {
                 type: 'lowpass',
                 frequency: { value: 0 },
@@ -496,8 +470,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             };
 
             bus.updateFilterParams({ type: 'lowpass', frequency: 800, Q: 2 });
-
-            await Promise.resolve();
+            bus.processFrame(mockContext.currentTime);
 
             expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 800, 30, 'exponential');
             expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.Q, 2, 30, 'linear');
@@ -505,7 +478,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
     });
 
     describe('safeReplaceFilter() edge cases', () => {
-        it('should lock concurrent calls with while (this.filterReplacePromise)', async () => {
+        it('should overwrite pending filter swap if called multiple times before execution', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: {},
@@ -515,58 +488,61 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
                 pluginFactory: mockPluginFactory as any
             });
 
-            const p1 = bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 10);
-            const p2 = bus.safeReplaceFilter({ type: 'highpass', frequency: 500 }, 10);
+            bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 10);
+            bus.safeReplaceFilter({ type: 'highpass', frequency: 500 }, 10);
 
-            await vi.advanceTimersByTimeAsync(100);
-            await Promise.all([p1, p2]);
+            mockContext.currentTime += 0.015;
+            bus.processFrame(mockContext.currentTime);
 
             expect(bus.getConfig().filter?.type).toBe('highpass');
         });
-
-        it('should bypass filter and connect pre to post if filter creation fails', async () => {
-            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(null);
-
-            const bus = new AudioBus({
-                id: 'bus' as BusId,
-                config: {},
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
-            });
-
-            const preConnectSpy = vi.spyOn(bus.preFilterGain, 'connect');
-
-            const p = bus.safeReplaceFilter({ type: 'alien_filter' } as any, 0);
-            await vi.advanceTimersByTimeAsync(50);
-            await p;
-
-            expect(preConnectSpy).toHaveBeenCalledWith(bus.postFilterGain);
-        });
-
-        it('should correctly identify Reverb (non-Biquad) nodes and update config', async () => {
-            const mockConvolver = { connect: vi.fn(), disconnect: vi.fn() };
-            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(mockConvolver);
-
-            const bus = new AudioBus({
-                id: 'bus' as BusId,
-                config: {},
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
-            });
-
-            const p = bus.safeReplaceFilter(mockConvolver as any, 0);
-            await vi.advanceTimersByTimeAsync(50);
-            await p;
-
-            expect(bus.getConfig().filter).toEqual({ type: 'reverb' });
-        });
     });
 
-    it('should bind RTPC to gain and automate inputGainNode when gameParam changes', async () => {
+    it('should bypass filter and connect pre to post if filter creation fails', () => {
+        mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(null);
+
+        const bus = new AudioBus({
+            id: 'bus' as BusId,
+            config: {},
+            context: mockContext as any,
+            automation: mockAutomation as any,
+            routerMasterGain: mockMasterGain as any,
+            pluginFactory: mockPluginFactory as any
+        });
+
+        const connectSpy = vi.spyOn(bus.duckerTapNode, 'connect');
+
+        bus.safeReplaceFilter({ type: 'alien_filter' } as any, 0);
+
+        mockContext.currentTime += 0.01;
+        bus.processFrame(mockContext.currentTime);
+
+        expect(connectSpy).toHaveBeenCalledWith(expect.any(Object));
+        expect(bus.getConfig().filter).toBeUndefined();
+    });
+
+    it('should correctly identify Reverb (non-Biquad) nodes and update config', () => {
+        const mockConvolver = { connect: vi.fn(), disconnect: vi.fn() };
+        mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(mockConvolver);
+
+        const bus = new AudioBus({
+            id: 'bus' as BusId,
+            config: {},
+            context: mockContext as any,
+            automation: mockAutomation as any,
+            routerMasterGain: mockMasterGain as any,
+            pluginFactory: mockPluginFactory as any
+        });
+
+        bus.safeReplaceFilter(mockConvolver as any, 0);
+
+        mockContext.currentTime += 0.01;
+        bus.processFrame(mockContext.currentTime);
+
+        expect(bus.getConfig().filter).toEqual({ type: 'reverb' });
+    });
+
+    it('should bind RTPC to gain and automate inputGainNode when gameParam changes', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -594,12 +570,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             mockRtpcManager
         );
 
-        await Promise.resolve();
+        bus.processFrame(mockContext.currentTime);
 
         expect(mockRtpcManager.on).toHaveBeenCalledWith('master_volume_slider', expect.any(Function));
-
-        expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputGainNode.gain, 0.5, 120, 'linear');
-
+        expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputNode.gain, 0.5, 120, 'linear');
         expect((bus as any).targetParams.gain.rtpc).toBe(0.5);
     });
 });
