@@ -68,7 +68,9 @@ vi.mock('@infrastructure', async importOriginal => {
                 gain: createMockAudioParameter(),
                 connect: vi.fn(),
                 disconnect: vi.fn(),
-                delayTime: createMockAudioParameter()
+                delayTime: createMockAudioParameter(),
+                setGainImmediate: vi.fn(),
+                safeReplaceFilter: vi.fn()
             };
             const pannerMock = {
                 panningModel: '',
@@ -147,7 +149,17 @@ vi.mock('@infrastructure', async importOriginal => {
         }),
         SoundPoolManager: vi.fn().mockImplementation(function (factory, options) {
             (globalThis as any).__mockSoundPoolConfig = options;
-            return { getVoice: vi.fn() };
+
+            return {
+                events: {
+                    on: vi.fn().mockReturnThis(),
+                    off: vi.fn().mockReturnThis(),
+                    emit: vi.fn().mockReturnThis(),
+                    once: vi.fn().mockReturnThis()
+                },
+                getVoice: vi.fn(),
+                globalVoiceLimit: 32
+            };
         }),
         // eslint-disable-next-line max-params
         CullingRunner: vi.fn().mockImplementation(function (arbiter, controller, contextProvider, interval) {

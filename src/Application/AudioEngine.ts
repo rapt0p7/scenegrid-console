@@ -17,21 +17,22 @@ import SmartLoopManager from '@domain/Orchestration/SmartLoopManager.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 import {
-    AudioBusSystem,
-    AutomationEngine,
-    AudioContextManager,
-    SoundInstance,
-    SoundPoolManager,
     AudioBufferLoader,
-    SoundController,
+    AudioBusSystem,
+    AudioContextManager,
     AudioNodeFactory,
+    AutomationEngine,
+    CullingContextProvider,
+    CullingRunner,
+    EngineTicker,
+    FiltersPlugin,
     MasterOutput,
     PlaybackScheduler,
-    CullingRunner,
-    FiltersPlugin,
     SidechainDucker,
-    TinyLimiterNode,
-    CullingContextProvider
+    SoundController,
+    SoundInstance,
+    SoundPoolManager,
+    TinyLimiterNode
 } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 import deepFreeze from '@shared/deepFreeze.js';
@@ -53,6 +54,7 @@ export interface InitParameters {
 
 export class AudioEngine {
     #contextManager!: AudioContextManager;
+    #engineTicker!: EngineTicker;
     #router!: AudioRouter;
     #busSystem!: AudioBusSystem;
     #soundController!: SoundController;
@@ -165,7 +167,10 @@ export class AudioEngine {
                 if (state === 'running') this.#dispatcher.emit('state:resumed', void 0);
             };
 
-            const automation = new AutomationEngine(this.#contextManager.context);
+            this.#engineTicker = new EngineTicker(() => this.#contextManager.currentTime);
+            this.#engineTicker.start();
+
+            const automation = new AutomationEngine(this.#contextManager.context, this.#engineTicker);
             this.#contextManager.initSpatial(automation);
             const nodeFactory = new AudioNodeFactory(this.#contextManager);
             const scheduler = new PlaybackScheduler(this.#contextManager);
@@ -236,7 +241,7 @@ export class AudioEngine {
                 },
                 { isUseLimiter: true }
             );
-            await this.#busSystem.initialize();
+            await this.#busSystem.initialize(this.#engineTicker);
 
             this.#soundController = new SoundController(
                 soundPool,
@@ -279,9 +284,17 @@ export class AudioEngine {
                 this.config.soundMap
             );
 
-            this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingProvider, 500);
+            this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingProvider);
 
-            this.#cullingRunner.start();
+            this.#engineTicker.add('rtpc-manager', RTPCManager.TICK_RATE_MS, (_, deltaTimeMs) =>
+                this.#rtpcManager.tick(deltaTimeMs)
+            );
+            this.#engineTicker.add('culling-runner', CullingRunner.TICK_RATE_MS, () => this.#cullingRunner.tick());
+            mixerStateManager.events.on('transition:start', () => this.#cullingRunner.tick());
+            this.#engineTicker.add('mixer-state-manager', MixerStateManager.TICK_RATE_MS, (_, deltaTimeMs) =>
+                mixerStateManager.update(deltaTimeMs)
+            );
+
             this.#isInitialized = true;
 
             this.#dispatcher.emit('engine:ready', {

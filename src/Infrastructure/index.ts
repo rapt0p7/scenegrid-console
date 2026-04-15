@@ -31,6 +31,7 @@ export { AudioBufferLoader } from './loader/AudioBufferLoader.js';
 export { PlaybackScheduler } from './scheduling/PlaybackScheduler.js';
 export { CullingRunner } from './scheduling/CullingRunner.js';
 export { CullingContextProvider } from './scheduling/CullingContextProvider.js';
+export { EngineTicker } from './scheduling/EngineTicker.js';
 export { AudioNodeFactory } from './nodes/AudioNodeFactory.js';
 export { default as TinyLimiterNode } from './plugins/TinyLimiterNode.js';
 export { default as SidechainDucker } from './plugins/SidechainDucker.js';
