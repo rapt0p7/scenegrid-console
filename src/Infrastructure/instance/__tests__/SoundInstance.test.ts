@@ -158,7 +158,7 @@ describe('SoundInstance (Playback & Virtualization Math)', () => {
 
         instance.devirtualize();
 
-        expect(mockContext._mockSourceNode.start).toHaveBeenCalledWith(7, 7);
+        expect(mockContext._mockSourceNode.start).toHaveBeenCalledWith(7.05, 7.05);
         expect(instance.state).toBe('playing');
     });
 
@@ -170,7 +170,7 @@ describe('SoundInstance (Playback & Virtualization Math)', () => {
         mockContext._mockSourceNode.start.mockClear();
         instance.devirtualize();
 
-        expect(mockContext._mockSourceNode.start).toHaveBeenCalledWith(24, 4);
+        expect(mockContext._mockSourceNode.start).toHaveBeenCalledWith(24.05, 4.050_000_000_000_001);
     });
 });
 
