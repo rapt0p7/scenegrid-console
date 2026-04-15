@@ -1,3 +1,4 @@
+// noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
@@ -30,7 +31,7 @@ const testSoundMap: any = {
     test_sound: { busId: 'sfx', voice: { priority: 5 } }
 };
 
-describe('AudioRouter', () => {
+describe('AudioRouter (Command Dispatcher)', () => {
     let mockController: any;
     let mockBusSystem: any;
     let mockDuckingManager: any;
@@ -46,10 +47,12 @@ describe('AudioRouter', () => {
         mockController = {
             play: vi.fn().mockReturnValue(1 as PlaybackId),
             stopById: vi.fn(),
-            stopAll: vi.fn()
+            stopAll: vi.fn(),
+            routeToBus: vi.fn()
         };
 
-        mockBusSystem = { routePlayback: vi.fn() };
+        mockBusSystem = {};
+
         mockDuckingManager = { triggerDucking: vi.fn() };
         mockRtpcAdapter = {};
         mockContainerManager = {
@@ -79,7 +82,7 @@ describe('AudioRouter', () => {
         expect(mockController.play).toHaveBeenCalledWith('simple_sound', expect.any(Object));
 
         expect(applyConfigSpy).toHaveBeenCalledWith(1, testSoundMap['simple_sound']);
-        expect(mockBusSystem.routePlayback).toHaveBeenCalledWith(1, 'sfx');
+        expect(mockController.routeToBus).toHaveBeenCalledWith(1, 'sfx');
     });
 
     it('should handle layered sounds correctly and return array of IDs', () => {
@@ -107,7 +110,7 @@ describe('AudioRouter', () => {
 
         expect(result).toBe(null);
         expect(mockController.play).not.toHaveBeenCalled();
-        expect(mockBusSystem.routePlayback).not.toHaveBeenCalled();
+        expect(mockController.routeToBus).not.toHaveBeenCalled();
     });
 
     describe('Playback Control (stop)', () => {
