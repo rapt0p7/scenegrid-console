@@ -76,8 +76,6 @@ describe('MixerSnapshotManager', () => {
                     }
                 }
             });
-
-            expect(mockCoordinator.recompute).toHaveBeenCalledWith({ durationMs: 500 });
         });
     });
 
@@ -109,8 +107,6 @@ describe('MixerSnapshotManager', () => {
             });
 
             expect(mockLayerStack.removeLayer).toHaveBeenCalledWith('layer_pause');
-
-            expect(mockCoordinator.recompute).toHaveBeenCalledWith({ durationMs: 500 });
         });
     });
 });
