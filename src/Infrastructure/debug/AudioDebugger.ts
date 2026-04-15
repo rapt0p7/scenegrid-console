@@ -35,9 +35,7 @@ export default class AudioDebugger {
 
         const activeBuses = this.busSystem.getAllBuses();
         for (const [busId, bus] of activeBuses.entries()) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            busesToAnalyze.push({ name: busId, node: bus.postFilterGain });
+            busesToAnalyze.push({ name: busId, node: bus.analyzerTapNode });
         }
 
         const uiColumns = busesToAnalyze

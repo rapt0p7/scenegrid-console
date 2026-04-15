@@ -23,16 +23,38 @@ describe('AudioDebugger', () => {
         wrapperElement.id = 'wrapper';
         document.body.append(wrapperElement);
 
-        mockContext = {};
-        mockMasterNode = { connect: vi.fn() };
-
-        const mockBuses = new Map([['sfx_bus', { postFilterGain: { connect: vi.fn() } }]]);
-
-        mockBusSystem = {
-            getAllBuses: vi.fn().mockReturnValue(mockBuses)
+        mockContext = {
+            sampleRate: 44_100
         };
 
-        vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback: FrameRequestCallback) => {
+        const createMockGainNode = () => ({
+            connect: vi.fn().mockReturnThis(),
+            disconnect: vi.fn().mockReturnThis(),
+            context: mockContext,
+            gain: { value: 1, setValueAtTime: vi.fn() }
+        });
+
+        mockMasterNode = createMockGainNode();
+
+        const mockSfxBus = {
+            id: 'sfx_bus',
+            analyzerTapNode: createMockGainNode(),
+            postFilterGain: createMockGainNode(),
+            inputNode: createMockGainNode(),
+            setGainImmediate: vi.fn(),
+            setLogicalGain: vi.fn(),
+            safeReplaceFilter: vi.fn(),
+            bindRTPC: vi.fn(),
+
+            logicalTargetGain: 1,
+            volumes: { rms: [0.5, 0.5], peak: [0.7, 0.7] }
+        };
+
+        mockBusSystem = {
+            getAllBuses: vi.fn().mockReturnValue(new Map([['sfx_bus', mockSfxBus]]))
+        };
+
+        vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(callback => {
             callback(performance.now());
             return 1;
         });
