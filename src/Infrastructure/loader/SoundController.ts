@@ -1,4 +1,4 @@
-import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController';
+import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
