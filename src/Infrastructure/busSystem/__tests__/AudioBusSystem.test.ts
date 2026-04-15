@@ -2,6 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 import AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
@@ -40,9 +41,12 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
     let mockMasterOutput: any;
     let mockBusConfig: IBuses;
     let mockPluginFactory: IPluginFactory;
+    let mockTicker: any;
+    let capturedTickCallback: ((time: number) => void) | null;
 
     beforeEach(() => {
         vi.clearAllMocks();
+        capturedTickCallback = null;
 
         mockContext = createMockContext();
         mockAutomation = { ramp: vi.fn(), set: vi.fn() };
@@ -75,6 +79,13 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
                 dispose: vi.fn()
             })
         };
+
+        mockTicker = {
+            add: vi.fn().mockImplementation((id, rate, callback) => {
+                capturedTickCallback = callback;
+            }),
+            remove: vi.fn()
+        };
     });
 
     it('should initialize buses and apply sends from config', async () => {
@@ -86,11 +97,35 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             pluginFactory: mockPluginFactory
         });
 
-        await busSystem.initialize();
+        await busSystem.initialize(mockTicker);
 
         expect(busSystem.getBus('music' as BusId)).toBeDefined();
         expect(busSystem.getBus('sfx' as BusId)).toBeDefined();
         expect(mockContext.createGain).toHaveBeenCalled();
+    });
+
+    it('should register with EngineTicker and process frames on tick', async () => {
+        const busSystem = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: mockBusConfig,
+            pluginFactory: mockPluginFactory
+        });
+
+        await busSystem.initialize(mockTicker);
+
+        expect(mockTicker.add).toHaveBeenCalledWith('audio-bus-system', 20, expect.any(Function));
+        expect(capturedTickCallback).toBeDefined();
+
+        const processFrameSpy = vi.spyOn(AudioBus.prototype, 'processFrame').mockImplementation(() => {});
+
+        capturedTickCallback!(123.45);
+
+        expect(processFrameSpy).toHaveBeenCalledTimes(2);
+        expect(processFrameSpy).toHaveBeenCalledWith(123.45);
+
+        processFrameSpy.mockRestore();
     });
 
     it('should auto-initialize sidechains if defined in bus config', async () => {
@@ -107,7 +142,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             pluginFactory: mockPluginFactory
         });
 
-        await busSystem.initialize();
+        await busSystem.initialize(mockTicker);
 
         expect(mockPluginFactory.createSidechain).toHaveBeenCalled();
         expect(busSystem.getSidechain('sfx')).toBeDefined();
@@ -122,7 +157,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             pluginFactory: mockPluginFactory
         });
 
-        await busSystem.initialize();
+        await busSystem.initialize(mockTicker);
 
         expect(mockPluginFactory.createLimiter).toHaveBeenCalledTimes(1);
         expect(mockContext.createDynamicsCompressor).not.toHaveBeenCalled();
@@ -146,7 +181,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             pluginFactory: mockPluginFactory
         });
 
-        await busSystem.initialize();
+        await busSystem.initialize(mockTicker);
 
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Custom limiter failed'), expect.any(Error));
         expect(mockContext.createDynamicsCompressor).toHaveBeenCalledTimes(1);
@@ -162,7 +197,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             busConfig: mockBusConfig,
             pluginFactory: mockPluginFactory
         });
-        await busSystem.initialize();
+        await busSystem.initialize(mockTicker);
 
         const mockConnect = vi.fn();
 
@@ -185,7 +220,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             busConfig: mockBusConfig,
             pluginFactory: mockPluginFactory
         });
-        await system.initialize();
+        await system.initialize(mockTicker);
         const mockConnect = vi.fn();
         const mockNode = { connect: mockConnect, disconnect: vi.fn() } as unknown as AudioNodeLike;
 
@@ -219,7 +254,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             },
             { isUseLimiter: false }
         );
-        await system.initialize();
+        await system.initialize(mockTicker);
 
         expect(system['routerMasterGain'].connect).toHaveBeenCalledWith(system['postLimiterGain']);
         expect(mockPluginFactory.createLimiter).not.toHaveBeenCalled();
@@ -244,7 +279,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             pluginFactory: mockPluginFactory
         });
 
-        await busSystem.initialize();
+        await busSystem.initialize(mockTicker);
 
         expect(consoleErrorSpy).toHaveBeenCalledWith(
             '[AudioBusSystem] Critical failure during limiter initialization',
@@ -263,7 +298,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
             busConfig: mockBusConfig,
             pluginFactory: mockPluginFactory
         });
-        await system.initialize();
+        await system.initialize(mockTicker);
 
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -291,6 +326,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
 describe('AudioBusSystem (Sidechain Triggers via AudioNode)', () => {
     let mockSidechain: any;
     let system: AudioBusSystem;
+    let mockTicker: any;
 
     beforeEach(async () => {
         mockSidechain = {
@@ -310,6 +346,8 @@ describe('AudioBusSystem (Sidechain Triggers via AudioNode)', () => {
             createSidechain: vi.fn().mockReturnValue(mockSidechain)
         };
 
+        mockTicker = { add: vi.fn(), remove: vi.fn() };
+
         system = new AudioBusSystem({
             context: createMockContext(),
             automation: { set: vi.fn(), ramp: vi.fn() } as any,
@@ -318,7 +356,7 @@ describe('AudioBusSystem (Sidechain Triggers via AudioNode)', () => {
             pluginFactory: mockPluginFactory as any
         });
 
-        await system.initialize();
+        await system.initialize(mockTicker);
     });
 
     it('should add sidechain source directly using physical node', () => {
@@ -350,6 +388,7 @@ describe('AudioBusSystem (Sidechain Triggers via AudioNode)', () => {
 
 describe('AudioBusSystem (Getters & Gain Calculations)', () => {
     let system: AudioBusSystem;
+    let mockTicker: any;
 
     beforeEach(async () => {
         vi.clearAllMocks();
@@ -367,6 +406,8 @@ describe('AudioBusSystem (Getters & Gain Calculations)', () => {
             })
         };
 
+        mockTicker = { add: vi.fn(), remove: vi.fn() };
+
         system = new AudioBusSystem({
             context: mockContext,
             automation: { set: vi.fn(), ramp: vi.fn() } as any,
@@ -378,7 +419,7 @@ describe('AudioBusSystem (Getters & Gain Calculations)', () => {
             pluginFactory: mockPluginFactory as any
         });
 
-        await system.initialize();
+        await system.initialize(mockTicker);
     });
 
     it('should return buses map and master node', () => {

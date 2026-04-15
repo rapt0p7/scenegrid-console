@@ -6,6 +6,7 @@ import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IDuckingConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { BusId } from '@domain/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
+import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { AudioCtx, AudioNodeLike, GainNodeLike } from '@infrastructure/types/IAudioContext.js';
 import type { ILimiterNode, IPluginFactory, ISidechain } from '@infrastructure/types/IAudioPlugins.js';
 import type { IMasterOutput } from '@infrastructure/types/IMasterOutput.js';
@@ -15,6 +16,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
     private readonly busConfig: IBuses | null = null;
     private readonly automation: AutomationEngine | null = null;
     private readonly buses: Map<BusId, AudioBus> = new Map();
+    private readonly hotPathBuses: AudioBus[] = [];
     private readonly isUseLimiter: boolean;
     private readonly sidechains: Map<string, ISidechain> = new Map();
     private readonly routerMasterGain: GainNodeLike;
@@ -23,6 +25,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
     private readonly masterOutput: IMasterOutput;
     private readonly pluginFactory: IPluginFactory;
     private masterLimiter?: ILimiterNode;
+    private readonly TICK_RATE_MS = 20;
     constructor(
         {
             context,
@@ -55,7 +58,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
         this.masterBus.connect(this.routerMasterGain);
     }
 
-    public async initialize(): Promise<void> {
+    public async initialize(ticker: EngineTicker): Promise<void> {
         if (this.isUseLimiter) {
             try {
                 await this.initLimiter();
@@ -67,6 +70,13 @@ export default class AudioBusSystem implements IAudioBusSystem {
         }
 
         await this.initBuses();
+
+        ticker.add('audio-bus-system', this.TICK_RATE_MS, currentTime => {
+            const length = this.hotPathBuses.length;
+            for (let index = 0; index < length; index++) {
+                this.hotPathBuses[index].processFrame(currentTime);
+            }
+        });
     }
 
     public getAllBuses(): ReadonlyMap<BusId, AudioBus> {
@@ -81,7 +91,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
         const bus = this.getBus(busId);
         if (!bus) return 0;
 
-        const mixerGain = bus.inputGainNode.gain.value;
+        const mixerGain = bus.inputNode.gain.value;
         const sidechain = this.getSidechain(busId);
 
         if (sidechain) {
@@ -124,7 +134,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
         try {
             safeDisconnect(node);
-            node.connect(bus.inputGainNode);
+            node.connect(bus.inputNode);
         } catch (error) {
             console.warn(`[AudioBusSystem] Routing failed.`, error);
         }
@@ -174,7 +184,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
             return;
         }
 
-        const targetInputNode = targetBus ? targetBus.inputGainNode : null;
+        const targetInputNode = targetBus ? targetBus.inputNode : null;
 
         if (targetInputNode || gain === null) {
             sourceBus.updateSend({
@@ -200,12 +210,12 @@ export default class AudioBusSystem implements IAudioBusSystem {
             this.sidechains.delete(busId);
         }
 
-        const ducker = this.pluginFactory.createSidechain(bus.inputGainNode, options);
+        const ducker = this.pluginFactory.createSidechain(bus.inputNode, options);
 
         try {
             await ducker.start();
 
-            ducker.insertLookahead(bus.preFilterGain);
+            ducker.insertLookahead(bus.duckerTapNode);
 
             this.sidechains.set(busId, ducker);
         } catch (error) {
@@ -265,6 +275,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 pluginFactory: this.pluginFactory
             });
             this.buses.set(busId as BusId, bus);
+            this.hotPathBuses.push(bus);
         }
 
         for (const [busId, busConfig] of Object.entries(this.busConfig!)) {
