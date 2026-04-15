@@ -1,32 +1,16 @@
-import * as workerTimers from 'worker-timers';
-
 import type { ICullingArbiter, ICullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 
 export class CullingRunner {
-    private timerId: number | null = null;
-
-    // eslint-disable-next-line max-params
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public static TICK_RATE_MS = 500;
     constructor(
         private readonly arbiter: ICullingArbiter,
         private readonly controller: ISoundController,
-        private readonly contextProvider: ICullingContext,
-        private readonly checkIntervalMs: number = 500
+        private readonly contextProvider: ICullingContext
     ) {}
 
-    public start(): void {
-        if (this.timerId !== null) return;
-        this.timerId = workerTimers.setInterval(() => this.tick(), this.checkIntervalMs);
-    }
-
-    public stop(): void {
-        if (this.timerId !== null) {
-            workerTimers.clearInterval(this.timerId);
-            this.timerId = null;
-        }
-    }
-
-    private tick(): void {
+    public tick(): void {
         const decisions = this.arbiter.evaluate(this.contextProvider);
 
         for (const id of decisions.toVirtualize) {

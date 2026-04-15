@@ -1,17 +1,11 @@
 // noinspection D
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import * as workerTimers from 'worker-timers';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { CullingRunner } from '../CullingRunner.js';
 
 import type { ICullingArbiter, ICullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { PlaybackId } from '@domain/Types/Branded.js';
-
-vi.mock('worker-timers', () => ({
-    setInterval: vi.fn(),
-    clearInterval: vi.fn()
-}));
 
 describe('CullingRunner (Infrastructure Adapter)', () => {
     let mockArbiter: ICullingArbiter;
@@ -36,31 +30,7 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
 
         mockContext = {} as ICullingContext;
 
-        runner = new CullingRunner(mockArbiter, mockController, mockContext, 500);
-    });
-
-    afterEach(() => {
-        runner.stop();
-    });
-
-    // eslint-disable-next-line unicorn/consistent-function-scoping
-    function triggerTick(): void {
-        const tickCallback = vi.mocked(workerTimers.setInterval).mock.calls[0][0] as (...arguments_: any[]) => any;
-        tickCallback();
-    }
-
-    it('should start and stop the worker timer correctly', () => {
-        expect(workerTimers.setInterval).not.toHaveBeenCalled();
-
-        runner.start();
-        expect(workerTimers.setInterval).toHaveBeenCalledTimes(1);
-        expect(workerTimers.setInterval).toHaveBeenCalledWith(expect.any(Function), 500);
-
-        runner.start();
-        expect(workerTimers.setInterval).toHaveBeenCalledTimes(1);
-
-        runner.stop();
-        expect(workerTimers.clearInterval).toHaveBeenCalledTimes(1);
+        runner = new CullingRunner(mockArbiter, mockController, mockContext);
     });
 
     it('should query the arbiter and dispatch virtualization commands to the controller', () => {
@@ -69,8 +39,7 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
             toDevirtualize: []
         });
 
-        runner.start();
-        triggerTick();
+        runner.tick();
 
         expect(mockArbiter.evaluate).toHaveBeenCalledWith(mockContext);
 
@@ -87,8 +56,7 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
             toDevirtualize: [201 as PlaybackId]
         });
 
-        runner.start();
-        triggerTick();
+        runner.tick();
 
         expect(mockArbiter.evaluate).toHaveBeenCalledWith(mockContext);
 
