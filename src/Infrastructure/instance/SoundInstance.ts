@@ -51,6 +51,7 @@ export class SoundInstance implements ISoundInstance {
     #playbackRate: number = 1;
     #loop: boolean = false;
     #endedByStop: boolean = false;
+    private readonly SCHEDULE_DELAY = 0.05;
 
     // eslint-disable-next-line max-params
     constructor(
@@ -318,15 +319,19 @@ export class SoundInstance implements ISoundInstance {
     public devirtualize(): void {
         if (this.#state !== 'virtual' || !this.#buffer) return;
 
-        const now = this.#ctxManager.context.currentTime;
-        const elapsed = Math.max(0, now - this.#startTime);
-        const currentOffset = elapsed % this.#buffer.duration;
+        const context = this.#ctxManager.context;
+        const now = context.currentTime;
+        const startTimeWithLookAhead = now + this.SCHEDULE_DELAY;
+        const elapsed = Math.max(0, startTimeWithLookAhead - this.#startTime);
+        const offsetInFuture = elapsed % this.#buffer.duration;
 
         const source = this.#createAndBindSource();
-        source.start(now, currentOffset);
+
+        source.start(startTimeWithLookAhead, offsetInFuture);
 
         this.#source = source;
-        this.#startTime = now - currentOffset;
+
+        this.#startTime = startTimeWithLookAhead - offsetInFuture;
 
         this.#setState('playing');
     }
