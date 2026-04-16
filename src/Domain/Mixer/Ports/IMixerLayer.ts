@@ -1,4 +1,4 @@
-import type { MixerSnapshot } from '@domain/Mixer/Ports/IMixerStateManager.js';
+import type { MixerSnapshot } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 
 export interface IMixerLayer {
     id: string;

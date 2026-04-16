@@ -3,27 +3,27 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
-import type MixerStateManager from '@domain/Mixer/MixerStateManager.js';
-import type { MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
+import type MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
+import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 
 describe('MixerCoordinator', () => {
     let coordinator: MixerCoordinator;
     let mockLayerStack: any;
-    let mockStateManager: any;
+    let mockTransitionEngine: any;
 
     beforeEach(() => {
         mockLayerStack = {
             computeState: vi.fn()
         };
 
-        mockStateManager = {
+        mockTransitionEngine = {
             applyState: vi.fn().mockResolvedValue(undefined),
             getState: vi.fn()
         };
 
         coordinator = new MixerCoordinator(
             mockLayerStack as unknown as MixerLayerStack,
-            mockStateManager as unknown as MixerStateManager
+            mockTransitionEngine as unknown as MixerTransitionEngine
         );
     });
 
@@ -34,7 +34,7 @@ describe('MixerCoordinator', () => {
         await coordinator.recompute();
 
         expect(mockLayerStack.computeState).toHaveBeenCalledWith({ buses: {} });
-        expect(mockStateManager.applyState).toHaveBeenCalledWith(nextState, undefined);
+        expect(mockTransitionEngine.applyState).toHaveBeenCalledWith(nextState, undefined);
     });
 
     it('should pass options through recompute to the state manager', async () => {
@@ -44,17 +44,17 @@ describe('MixerCoordinator', () => {
         const options = { durationMs: 250, interruptible: true };
         await coordinator.recompute(options);
 
-        expect(mockStateManager.applyState).toHaveBeenCalledWith(nextState, options);
+        expect(mockTransitionEngine.applyState).toHaveBeenCalledWith(nextState, options);
     });
 
     it('should delegate getState to stateManager', () => {
         const currentState: MixerState = { buses: { music: { gain: 0.8 } } };
-        mockStateManager.getState.mockReturnValue(currentState);
+        mockTransitionEngine.getState.mockReturnValue(currentState);
 
         const result = coordinator.getState();
 
         expect(result).toBe(currentState);
-        expect(mockStateManager.getState).toHaveBeenCalledTimes(1);
+        expect(mockTransitionEngine.getState).toHaveBeenCalledTimes(1);
     });
 
     it('should set a new base state and trigger recompute immediately', async () => {
@@ -66,6 +66,6 @@ describe('MixerCoordinator', () => {
         await coordinator.setBaseState(newBaseState);
 
         expect(mockLayerStack.computeState).toHaveBeenCalledWith(newBaseState);
-        expect(mockStateManager.applyState).toHaveBeenCalledWith(computedState, undefined);
+        expect(mockTransitionEngine.applyState).toHaveBeenCalledWith(computedState, undefined);
     });
 });

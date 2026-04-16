@@ -4,7 +4,7 @@ import MixerLayerStack, { PRIORITY } from '@domain/Mixer/MixerLayer.js';
 
 import type MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
 import type { IMixerLayer } from '@domain/Mixer/Ports/IMixerLayer.js';
-import type { MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
+import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 
 describe('MixerLayerStack', () => {
     let layerStack: MixerLayerStack;

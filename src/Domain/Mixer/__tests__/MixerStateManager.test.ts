@@ -1,12 +1,12 @@
 // noinspection D
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MixerStateManager from '@domain/Mixer/MixerStateManager.js';
+import MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
 
-describe('MixerStateManager (Tick-based FSM)', () => {
+describe('MixerTransitionEngine (Tick-based FSM)', () => {
     let mockBusSystem: any;
     let mockBus: any;
-    let manager: MixerStateManager;
+    let manager: MixerTransitionEngine;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -20,7 +20,7 @@ describe('MixerStateManager (Tick-based FSM)', () => {
             getBus: vi.fn().mockReturnValue(mockBus),
             getAllBuses: vi.fn().mockReturnValue(new Map([['music', mockBus]]))
         };
-        manager = new MixerStateManager(mockBusSystem, {} as any);
+        manager = new MixerTransitionEngine(mockBusSystem, {} as any);
     });
 
     it('should perform Cold Start (instant) on first applyState', () => {

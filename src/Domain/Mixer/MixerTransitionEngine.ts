@@ -1,5 +1,4 @@
 // noinspection D
-// noinspection D
 
 import mitt from 'mitt';
 
@@ -8,31 +7,30 @@ import { isAbsent, isDefined } from '@shared/guards.js';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
+import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { BusId } from '@domain/Types/Branded.js';
 import type { Emitter } from 'mitt';
 
-enum MixerFSMState {
-    IDLE = 'idle',
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    FADE_OUT_FILTERS = 'fade_out_filters',
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    RUNNING_TRANSITION = 'running_transition'
-}
+type MixerFSMState =
+    | { type: 'IDLE' }
+    | {
+          type: 'FADE_OUT_FILTERS' | 'RUNNING_TRANSITION';
+          target: MixerState;
+          elapsed: number;
+          totalDuration: number;
+          filterPhaseDuration: number;
+          isInterruptible: boolean;
+      };
 
-export default class MixerStateManager {
+export default class MixerTransitionEngine {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public static TICK_RATE_MS = 16;
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly events: Emitter<{ 'transition:start': { durationMs: number } }> = mitt();
+
     private current: MixerState = { buses: {} };
-    private target: MixerState | null = null;
-    private fsm: MixerFSMState = MixerFSMState.IDLE;
+    private state: MixerFSMState = { type: 'IDLE' };
     private isInitialized = false;
-    private elapsed = 0;
-    private totalDuration = 0;
-    private filterPhaseDuration = 0;
-    private isCurrentTransitionInterruptible = true;
 
     constructor(
         private readonly busSystem: IAudioBusSystem,
@@ -44,7 +42,7 @@ export default class MixerStateManager {
     }
 
     public applyState(next: MixerState, { durationMs = 500, interruptible = true } = {}): void {
-        if (this.fsm !== MixerFSMState.IDLE && !this.isCurrentTransitionInterruptible) {
+        if (this.state.type !== 'IDLE' && !this.state.isInterruptible) {
             return;
         }
 
@@ -57,72 +55,70 @@ export default class MixerStateManager {
 
         this.events.emit('transition:start', { durationMs });
 
-        this.target = next;
-        this.totalDuration = durationMs;
-        this.filterPhaseDuration = durationMs * 0.25;
-        this.elapsed = 0;
-        this.isCurrentTransitionInterruptible = interruptible;
-
-        this.startFilterPhase();
-
         if (!this.isInitialized || durationMs <= 0) {
-            this.forceInstantTransition();
+            this.forceInstantTransition(next);
             return;
         }
 
-        this.fsm = MixerFSMState.FADE_OUT_FILTERS;
+        const filterPhaseDuration = durationMs * 0.25;
+
+        this.state = {
+            type: 'FADE_OUT_FILTERS',
+            target: next,
+            elapsed: 0,
+            totalDuration: durationMs,
+            filterPhaseDuration,
+            isInterruptible: interruptible
+        };
+
+        this.startFilterPhase(next, filterPhaseDuration);
     }
 
     public cancelActiveTransition(): void {
-        if (this.fsm === MixerFSMState.IDLE) return;
-
-        this.target = null;
-        this.fsm = MixerFSMState.IDLE;
-        this.elapsed = 0;
-        this.isCurrentTransitionInterruptible = true;
+        if (this.state.type === 'IDLE') return;
+        this.state = { type: 'IDLE' };
     }
 
     public update(dt: number): void {
-        if (this.fsm === MixerFSMState.IDLE || !this.target) return;
+        if (this.state.type === 'IDLE') return;
 
-        this.elapsed += dt;
+        const s = this.state;
+        s.elapsed += dt;
 
-        if (this.fsm === MixerFSMState.FADE_OUT_FILTERS && this.elapsed >= this.filterPhaseDuration) {
-            this.startMainTransitionPhase();
-            this.fsm = MixerFSMState.RUNNING_TRANSITION;
+        if (s.type === 'FADE_OUT_FILTERS' && s.elapsed >= s.filterPhaseDuration) {
+            const remainingTime = Math.max(0, s.totalDuration - s.elapsed);
+            this.startMainTransitionPhase(s.target, remainingTime);
+            s.type = 'RUNNING_TRANSITION';
         }
 
-        if (this.elapsed >= this.totalDuration) {
-            this.completeTransition();
+        if (s.elapsed >= s.totalDuration) {
+            this.completeTransition(s.target);
         }
     }
 
-    private forceInstantTransition(): void {
+    private forceInstantTransition(target: MixerState): void {
         for (const [busId, bus] of this.busSystem.getAllBuses()) {
-            const busConfig = this.target?.buses[busId];
+            const busConfig = target.buses[busId];
             const targetGain = busConfig ? (busConfig.gain ?? 0) : 0;
             bus.setGainImmediate(targetGain);
             const targetFilter = busConfig?.filter ?? null;
             bus.safeReplaceFilter(targetFilter, 0);
         }
 
-        this.current = this.target!;
-        this.target = null;
-        this.fsm = MixerFSMState.IDLE;
+        this.current = target;
+        this.state = { type: 'IDLE' };
         this.isInitialized = true;
     }
 
-    private startFilterPhase(): void {
-        if (!this.target) return;
-
-        for (const [busId, nextBus] of Object.entries(this.target.buses)) {
+    private startFilterPhase(target: MixerState, filterPhaseDuration: number): void {
+        for (const [busId, nextBus] of Object.entries(target.buses)) {
             const bus = this.busSystem.getBus(busId as BusId);
             const previousBus = this.current.buses[busId];
 
             if (isAbsent(bus)) continue;
 
             if (!isFilterEqual(previousBus?.filter, nextBus.filter)) {
-                bus.safeReplaceFilter(nextBus.filter ?? null, this.filterPhaseDuration);
+                bus.safeReplaceFilter(nextBus.filter ?? null, filterPhaseDuration);
             }
 
             if (isDefined(nextBus.rtpc)) {
@@ -131,21 +127,15 @@ export default class MixerStateManager {
         }
     }
 
-    private startMainTransitionPhase(): void {
-        if (!this.target) return;
-
-        const remainingTime = Math.max(0, this.totalDuration - this.elapsed);
-
+    private startMainTransitionPhase(target: MixerState, remainingTime: number): void {
         for (const [busId, bus] of this.busSystem.getAllBuses()) {
-            const nextBusConfig = this.target.buses[busId];
+            const nextBusConfig = target.buses[busId];
             const previousBusConfig = this.current.buses[busId];
 
             const nextGain = isDefined(nextBusConfig?.gain) ? nextBusConfig!.gain : 0;
-
-            const shouldForce = !this.isInitialized;
             const previousGain = previousBusConfig?.gain;
 
-            if (shouldForce || nextGain !== previousGain) {
+            if (nextGain !== previousGain) {
                 bus.setLogicalGain(nextGain, remainingTime);
             }
 
@@ -161,12 +151,9 @@ export default class MixerStateManager {
         }
     }
 
-    private completeTransition(): void {
-        this.current = this.target!;
-        this.target = null;
-        this.fsm = MixerFSMState.IDLE;
-        this.elapsed = 0;
-        this.isCurrentTransitionInterruptible = true;
+    private completeTransition(target: MixerState): void {
+        this.current = target;
+        this.state = { type: 'IDLE' };
         this.isInitialized = true;
     }
 }

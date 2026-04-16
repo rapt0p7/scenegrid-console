@@ -10,4 +10,4 @@ export type { AnySoundConfig } from './Domain/Configuration/Ports/ISoundConfig.j
 export type { ISnapshots } from './Domain/Mixer/Ports/ISnapshots.js';
 export type { IRTPCManager } from './Kernel/RTPC/Ports/IRTPCManager.js';
 export type { QuantizeType } from '@domain/Orchestration/Ports/ISequencer.js';
-export type { MixerSnapshot } from './Domain/Mixer/Ports/IMixerStateManager.js';
+export type { MixerSnapshot } from './Domain/Mixer/Ports/IMixerTransitionEngine.js';

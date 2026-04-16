@@ -9,7 +9,7 @@ import {
     MixerCoordinator,
     MixerLayerStack,
     MixerSnapshotManager,
-    MixerStateManager,
+    MixerTransitionEngine,
     MixerStateResolver,
     PRIORITY
 } from '@domain/Mixer/index.js';
@@ -272,8 +272,8 @@ export class AudioEngine {
                 await coordinator.recompute({ durationMs: 500 });
             });
 
-            const mixerStateManager = new MixerStateManager(this.#busSystem, this.#rtpcManager);
-            const coordinator = new MixerCoordinator(layerStack, mixerStateManager);
+            const mixerTransitionEngine = new MixerTransitionEngine(this.#busSystem, this.#rtpcManager);
+            const coordinator = new MixerCoordinator(layerStack, mixerTransitionEngine);
             this.#snapshotManager = new MixerSnapshotManager(layerStack, this.config.snapshots, coordinator);
 
             const cullingArbiter = new VoiceCullingArbiter(0.01);
@@ -290,9 +290,9 @@ export class AudioEngine {
                 this.#rtpcManager.tick(deltaTimeMs)
             );
             this.#engineTicker.add('culling-runner', CullingRunner.TICK_RATE_MS, () => this.#cullingRunner.tick());
-            mixerStateManager.events.on('transition:start', () => this.#cullingRunner.tick());
-            this.#engineTicker.add('mixer-state-manager', MixerStateManager.TICK_RATE_MS, (_, deltaTimeMs) =>
-                mixerStateManager.update(deltaTimeMs)
+            mixerTransitionEngine.events.on('transition:start', () => this.#cullingRunner.tick());
+            this.#engineTicker.add('mixer-state-manager', MixerTransitionEngine.TICK_RATE_MS, (_, deltaTimeMs) =>
+                mixerTransitionEngine.update(deltaTimeMs)
             );
 
             this.#isInitialized = true;

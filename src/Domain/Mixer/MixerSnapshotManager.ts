@@ -4,7 +4,7 @@ import mitt from 'mitt';
 
 import type MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
-import type { MixerEvents } from '@domain/Mixer/Ports/IMixerStateManager.js';
+import type { MixerEvents } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 import type { Emitter } from 'mitt';
 

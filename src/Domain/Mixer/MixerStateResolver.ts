@@ -3,7 +3,7 @@ import { isDefined, isAbsent } from '@shared/guards.js';
 
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
+import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 export interface MixerResolverOptions {
     defaultBusGain?: number;
     maxGainLimit?: number;

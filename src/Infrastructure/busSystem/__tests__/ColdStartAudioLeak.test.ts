@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MixerStateManager from '@domain/Mixer/MixerStateManager.js';
+import MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
 import AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 
 const BUS_CONFIG = {
@@ -20,7 +20,7 @@ const IDLE_SNAPSHOT = {
 
 describe('Integration: Cold Start Audio Leak', () => {
     let busSystem: AudioBusSystem;
-    let mixer: MixerStateManager;
+    let mixer: MixerTransitionEngine;
     let mockContext: any;
 
     beforeEach(async () => {
@@ -85,7 +85,7 @@ describe('Integration: Cold Start Audio Leak', () => {
 
         await busSystem.initialize({ add: vi.fn() } as any);
 
-        mixer = new MixerStateManager(busSystem, {} as any);
+        mixer = new MixerTransitionEngine(busSystem, {} as any);
     });
 
     it('should NOT allow leaked audio when playing sounds immediately after setState', async () => {

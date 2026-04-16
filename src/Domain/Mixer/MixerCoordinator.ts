@@ -1,13 +1,13 @@
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
-import type MixerStateManager from '@domain/Mixer/MixerStateManager.js';
-import type { MixerState } from '@domain/Mixer/Ports/IMixerStateManager.js';
+import type MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
+import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 
 export default class MixerCoordinator {
     private baseState: MixerState = { buses: {} };
 
     constructor(
         private readonly layerStack: MixerLayerStack,
-        private readonly stateManager: MixerStateManager
+        private readonly stateManager: MixerTransitionEngine
     ) {}
 
     recompute(options?: { durationMs?: number; interruptible?: boolean }): void {
