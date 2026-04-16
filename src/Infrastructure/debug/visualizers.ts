@@ -3,8 +3,6 @@
 
 import { AudioWorkletNode } from 'standardized-audio-context';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import processorUrl from '../worklets/meter.processor.js?worklet';
 
 import type { AudioWorkletNodeLike, GainNodeLike } from '@infrastructure/types/IAudioContext.js';
