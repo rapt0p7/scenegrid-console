@@ -1,5 +1,7 @@
 import * as workerTimers from 'worker-timers';
 
+import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
+
 interface TickerTask {
     id: string;
     callback: (currentTime: number, deltaTimeMs: number) => void;
@@ -7,7 +9,7 @@ interface TickerTask {
     accumulator: number;
 }
 
-export class EngineTicker {
+export class EngineTicker implements IEngineTicker {
     private tickerId: number | null = null;
     private lastTickTime: number = 0;
     private readonly tasks: Map<string, TickerTask> = new Map();
