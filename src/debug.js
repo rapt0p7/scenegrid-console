@@ -223,19 +223,24 @@ function setupDuckingMonitor(pane) {
 function setupRTPCSection(pane) {
     if (!rtpcManager) return;
 
-    const rtpcsKeys = Array.from(rtpcManager.values?.keys() || []);
+    const paramMap = rtpcManager['paramToIndex'];
+    const rtpcsKeys = paramMap ? Array.from(paramMap.keys()) : [];
+
     if (rtpcsKeys.length === 0) return;
 
     const fRTPC = pane.addFolder({ title: 'RTPC (Real-Time Parameters)', expanded: false });
     applyIcon(fRTPC, 'fad-slider-round-2', 'RTPC (Real-Time Parameters)');
 
     rtpcsKeys.forEach(key => {
-        PARAMS.rtpc[key] = audio.params.get(key);
+        PARAMS.rtpc[key] = rtpcManager.getValue(key);
+
         const binding = fRTPC.addBinding(PARAMS.rtpc, key, { label: key, step: 0.01 });
 
-        binding.on('change', ev => audio.params.set(key, ev.value));
+        binding.on('change', ev => {
+            rtpcManager.setValue(key, ev.value);
+        });
 
-        rtpcManager.events.on(key, newValue => {
+        rtpcManager.on(key, newValue => {
             if (PARAMS.rtpc[key] !== newValue) {
                 PARAMS.rtpc[key] = newValue;
                 binding.refresh();
