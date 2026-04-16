@@ -97,22 +97,18 @@ describe('Sequencer (Interactive Music)', () => {
 
     it('should start timer on init and clear on destroy via EngineTicker', () => {
         expect(mockTicker.add).toHaveBeenCalledTimes(1);
-
         expect(mockTicker.add).toHaveBeenCalledWith(expect.any(String), expect.any(Number), expect.any(Function));
-
         manager.destroy();
         expect(mockTicker.remove).toHaveBeenCalledTimes(1);
     });
 
     it('should schedule the initial loop region correctly', () => {
         manager.playLoop('battle_music' as SoundId, 'intro');
-
         expect(mockController.play).toHaveBeenCalledWith('battle_music', {
             when: 0,
             offset: 0,
             duration: 1
         });
-
         const expectedConfig = mockRouter.getSoundConfig('battle_music');
         expect(mockRouter.applyConfigToPlayback).toHaveBeenCalledWith(1, expectedConfig);
     });
@@ -136,7 +132,6 @@ describe('Sequencer (Interactive Music)', () => {
     it('should stop loop and cancel scheduled regions', () => {
         manager.playLoop('battle_music' as SoundId, 'intro');
         manager.stopLoop('battle_music' as SoundId);
-
         expect(mockController.cancelScheduled).toHaveBeenCalledWith(1);
     });
 
@@ -152,7 +147,7 @@ describe('Sequencer (Interactive Music)', () => {
         });
 
         expect(mockController.fadeVolume).toHaveBeenCalledWith(1, 0, 1000, 'equal-power', 0);
-        expect(mockController.stopById).toHaveBeenCalledWith(1, 1.5); // now (0.5) + 1s = 1.5
+        expect(mockController.stopById).toHaveBeenCalledWith(1, 1.5);
 
         expect(mockController.play).toHaveBeenCalledWith('battle_music', {
             when: 0,
@@ -262,5 +257,122 @@ describe('Sequencer (Interactive Music)', () => {
         capturedOnVoiceEnded!();
 
         expect(track.activeRegions.size).toBe(0);
+    });
+
+    describe('Coverage Edge Cases & Branches', () => {
+        it('should ignore transition if track is TRANSITIONING and not interruptable', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro');
+
+            const track = (manager as any).getTrackContext('battle_music');
+            track.state = LoopState.TRANSITIONING;
+
+            mockController.play.mockClear();
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main',
+                options: { quantize: 'Immediate', interruptable: false }
+            });
+
+            expect(mockController.play).not.toHaveBeenCalled();
+        });
+
+        it('should return early from transitionTo if config has no smartLoop', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro');
+
+            mockRouter.getSoundConfig.mockReturnValueOnce({ busId: 'music' });
+
+            const track = (manager as any).getTrackContext('battle_music');
+            const playIdBefore = track.playId;
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main',
+                options: { quantize: 'Immediate' }
+            });
+
+            expect(track.playId).toBe(playIdBefore);
+        });
+
+        it('should correctly process NextBeat and NextBar with explicit grid', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro');
+
+            const customGrid = {
+                getNextBeatTime: vi.fn().mockReturnValue(5),
+                getNextBarTime: vi.fn().mockReturnValue(8)
+            } as any;
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main',
+                options: { quantize: 'NextBeat', grid: customGrid }
+            });
+            expect(customGrid.getNextBeatTime).toHaveBeenCalled();
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main',
+                options: { quantize: 'NextBar', grid: customGrid }
+            });
+            expect(customGrid.getNextBarTime).toHaveBeenCalled();
+        });
+
+        it('should use internal grid for NextBeat when explicit grid is not provided', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro');
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main',
+                options: { quantize: 'NextBeat' }
+            });
+
+            const track = (manager as any).getTrackContext('battle_music');
+            expect(track.nextScheduleTime).toBe(1.5);
+        });
+
+        it('should skip processing tick for tracks that are not LOOPING', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro');
+            manager.stopLoop('battle_music' as SoundId);
+
+            mockController.play.mockClear();
+            triggerTick();
+
+            expect(mockController.play).not.toHaveBeenCalled();
+        });
+
+        it('should break processing loop if nextRegionName is null', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro');
+
+            const track = (manager as any).getTrackContext('battle_music');
+            track.loopRegion = null;
+            track.regionQueue = [];
+
+            mockController.play.mockClear();
+            triggerTick();
+
+            expect(mockController.play).not.toHaveBeenCalled();
+        });
+
+        it('should return null in scheduleRegion if region does not exist in config', () => {
+            manager.playLoop('battle_music' as SoundId, 'invalid_region_name');
+
+            expect(mockController.play).not.toHaveBeenCalledWith('battle_music', expect.anything());
+        });
+
+        it('should return null in scheduleRegion if smartLoop config is missing', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro');
+
+            mockRouter.getSoundConfig.mockReturnValueOnce({ busId: 'music' });
+
+            const track = (manager as any).getTrackContext('battle_music');
+            const result = (manager as any).scheduleRegion({
+                soundId: 'battle_music',
+                regionName: 'intro',
+                targetTime: 0,
+                track
+            });
+
+            expect(result).toBeNull();
+        });
     });
 });
