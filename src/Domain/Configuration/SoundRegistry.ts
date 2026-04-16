@@ -4,7 +4,6 @@ interface SoundDescriptor {
     buffer: AudioBuffer;
     options: {
         url: string;
-        hasPanner?: boolean;
     };
 }
 
