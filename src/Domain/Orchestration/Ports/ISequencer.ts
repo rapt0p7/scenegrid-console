@@ -26,7 +26,7 @@ export interface TransitionOptions {
     interruptable?: boolean;
 }
 
-export interface ISmartLoopManager {
+export interface ISequencer {
     playLoop(soundId: SoundId, regionName: string): void;
     stopLoop(soundId: SoundId): void;
     transitionTo(parameters: ITransitionToParameters): void;

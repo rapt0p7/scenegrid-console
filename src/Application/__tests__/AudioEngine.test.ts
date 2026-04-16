@@ -502,7 +502,7 @@ describe('AudioEngine', () => {
             expect(() => engine.mixer.removeModifier('layer1')).not.toThrow();
         });
 
-        it('should delegate music loops and transitions to SmartLoopManager', () => {
+        it('should delegate music loops and transitions to Sequencer', () => {
             expect(() => engine.music.playLoop('bgm', 'verse1')).not.toThrow();
             expect(() => engine.music.stopLoop('bgm')).not.toThrow();
             expect(() =>

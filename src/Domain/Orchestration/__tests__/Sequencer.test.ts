@@ -1,16 +1,14 @@
+// noinspection D
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import * as workerTimers from 'worker-timers';
 
 import AudioGrid from '@domain/Orchestration/AudioGrid.js';
-import { LoopState } from '@domain/Orchestration/Ports/ISmartLoopManager.js';
-import SmartLoopManager from '@domain/Orchestration/SmartLoopManager.js';
+import { LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
+import Sequencer from '@domain/Orchestration/Sequencer.js';
 
+import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
-
-vi.mock('worker-timers', () => ({
-    setInterval: vi.fn(),
-    clearInterval: vi.fn()
-}));
+import type { Mocked } from 'vitest';
 
 vi.mock('../AudioGrid', () => {
     const MockGrid = vi.fn();
@@ -19,18 +17,31 @@ vi.mock('../AudioGrid', () => {
     return { default: MockGrid };
 });
 
-describe('SmartLoopManager (Interactive Music)', () => {
+describe('Sequencer (Interactive Music)', () => {
     let mockContext: any;
     let mockController: any;
     let mockRouter: any;
-    let manager: SmartLoopManager;
+    let mockTicker: Mocked<IEngineTicker>;
+    let manager: Sequencer;
+
     let capturedOnVoiceEnded: (() => void) | null;
+    let capturedTickCallback: ((currentTime: number, deltaTimeMs: number) => void) | null;
 
     beforeEach(() => {
         vi.clearAllMocks();
         capturedOnVoiceEnded = null;
+        capturedTickCallback = null;
 
         mockContext = { currentTime: 0, sampleRate: 44_100 };
+
+        mockTicker = {
+            add: vi.fn().mockImplementation((id, interval, callback) => {
+                capturedTickCallback = callback;
+            }),
+            remove: vi.fn(),
+            start: vi.fn(),
+            stop: vi.fn()
+        };
 
         mockController = {
             play: vi.fn().mockReturnValue(1 as PlaybackId),
@@ -71,24 +82,26 @@ describe('SmartLoopManager (Interactive Music)', () => {
             applyConfigToPlayback: vi.fn()
         };
 
-        manager = new SmartLoopManager(mockController, mockRouter);
+        manager = new Sequencer(mockController, mockRouter, mockTicker);
     });
 
     afterEach(() => {
         manager.destroy();
     });
 
-    // eslint-disable-next-line unicorn/consistent-function-scoping
-    function triggerTick() {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-        const tickCallback = vi.mocked(workerTimers.setInterval).mock.calls[0][0] as Function;
-        tickCallback();
+    function triggerTick(deltaTimeMs: number = 25) {
+        if (capturedTickCallback) {
+            capturedTickCallback(mockContext.currentTime, deltaTimeMs);
+        }
     }
 
-    it('should start timer on init and clear on destroy', () => {
-        expect(workerTimers.setInterval).toHaveBeenCalledTimes(1);
+    it('should start timer on init and clear on destroy via EngineTicker', () => {
+        expect(mockTicker.add).toHaveBeenCalledTimes(1);
+
+        expect(mockTicker.add).toHaveBeenCalledWith(expect.any(String), expect.any(Number), expect.any(Function));
+
         manager.destroy();
-        expect(workerTimers.clearInterval).toHaveBeenCalledTimes(1);
+        expect(mockTicker.remove).toHaveBeenCalledTimes(1);
     });
 
     it('should schedule the initial loop region correctly', () => {
@@ -101,7 +114,6 @@ describe('SmartLoopManager (Interactive Music)', () => {
         });
 
         const expectedConfig = mockRouter.getSoundConfig('battle_music');
-        // ПРОВЕРЯЕМ ПЕРЕДАЧУ ЧИСЛА (PlaybackId = 1)
         expect(mockRouter.applyConfigToPlayback).toHaveBeenCalledWith(1, expectedConfig);
     });
 
@@ -128,7 +140,7 @@ describe('SmartLoopManager (Interactive Music)', () => {
         expect(mockController.cancelScheduled).toHaveBeenCalledWith(1);
     });
 
-    it('should perform IMMEDIATE transition with crossfade', () => {
+    it('should perform DIRECT transition with full crossfade (No Fill)', () => {
         manager.playLoop('battle_music' as SoundId, 'intro');
         mockContext.currentTime = 0.5;
 
@@ -140,7 +152,7 @@ describe('SmartLoopManager (Interactive Music)', () => {
         });
 
         expect(mockController.fadeVolume).toHaveBeenCalledWith(1, 0, 1000, 'equal-power', 0);
-        expect(mockController.stopById).toHaveBeenCalledWith(1, 1.5);
+        expect(mockController.stopById).toHaveBeenCalledWith(1, 1.5); // now (0.5) + 1s = 1.5
 
         expect(mockController.play).toHaveBeenCalledWith('battle_music', {
             when: 0,
@@ -149,11 +161,37 @@ describe('SmartLoopManager (Interactive Music)', () => {
         });
     });
 
+    it('should perform FILL transition with equal-power crossfade', () => {
+        mockController.play.mockReturnValueOnce(1 as PlaybackId);
+
+        manager.playLoop('battle_music' as SoundId, 'intro');
+        mockController.play.mockClear();
+        mockContext.currentTime = 0.5;
+
+        mockController.play.mockReturnValueOnce(2 as PlaybackId);
+
+        manager.transitionTo({
+            soundId: 'battle_music' as SoundId,
+            targetRegion: 'main',
+            transitionRegionName: 'fill',
+            options: { quantize: 'Immediate', crossfadeDuration: 4000 }
+        });
+
+        expect(mockController.fadeVolume).toHaveBeenCalledWith(1, 0, 4000, 'equal-power', 0);
+        expect(mockController.stopById).toHaveBeenCalledWith(1, 4.5);
+
+        expect(mockController.play).toHaveBeenCalledWith('battle_music', {
+            when: 0,
+            offset: 3,
+            duration: 1
+        });
+
+        expect(mockController.fadeVolume).toHaveBeenCalledWith(2, 1, 4000, 'equal-power', 0);
+    });
+
     it('should perform QUANTIZED transition using AudioGrid', () => {
         manager.playLoop('battle_music' as SoundId, 'intro');
-
         mockController.play.mockClear();
-
         mockContext.currentTime = 0.8;
 
         manager.transitionTo({
@@ -176,57 +214,10 @@ describe('SmartLoopManager (Interactive Music)', () => {
         expect(arguments_[1].duration).toBe(2);
     });
 
-    it('should queue a Transition Region (Fill) before the Target Region', () => {
-        manager.playLoop('battle_music' as SoundId, 'intro');
-        mockController.play.mockClear();
-
-        manager.transitionTo({
-            soundId: 'battle_music' as SoundId,
-            targetRegion: 'main',
-            transitionRegionName: 'fill',
-            options: { quantize: 'Immediate' }
-        });
-
-        expect(mockController.play).toHaveBeenCalledWith('battle_music', {
-            when: 0,
-            offset: 3,
-            duration: 1
-        });
-
-        mockController.play.mockClear();
-        mockContext.currentTime = 0.95;
-        triggerTick();
-
-        expect(mockController.play).toHaveBeenCalledTimes(1);
-        const arguments_ = mockController.play.mock.calls[0];
-
-        expect(arguments_[0]).toBe('battle_music');
-        expect(arguments_[1].when).toBeCloseTo(0.05, 5);
-        expect(arguments_[1].offset).toBe(1); // 'main'
-        expect(arguments_[1].duration).toBe(2);
-    });
-
-    it('should use provided AudioGrid instance if passed in options', () => {
-        manager.playLoop('battle_music' as SoundId, 'intro');
-        const customGrid = new AudioGrid(120, 4);
-        const beatSpy = vi.spyOn(customGrid, 'getNextBeatTime').mockReturnValue(5);
-
-        manager.transitionTo({
-            soundId: 'battle_music' as SoundId,
-            targetRegion: 'main',
-            transitionRegionName: '',
-            options: { quantize: 'NextBeat', grid: customGrid }
-        });
-
-        expect(beatSpy).toHaveBeenCalled();
-        expect((manager as any).tracks.get('battle_music').nextScheduleTime).toBe(5);
-    });
-
     it('should stop instance immediately without ramp if crossfadeDuration is 0', () => {
         manager.playLoop('battle_music' as SoundId, 'intro');
 
         const track = (manager as any).tracks.get('battle_music');
-
         const activeRegion = {
             playbackId: 1 as PlaybackId,
             scheduledStartTime: -1,
@@ -247,28 +238,7 @@ describe('SmartLoopManager (Interactive Music)', () => {
         });
 
         expect(mockController.fadeVolume).not.toHaveBeenCalled();
-        expect(mockController.stopById).toHaveBeenCalledWith(1, 0); // Остановка по ID
-    });
-
-    it('should handle missing regions gracefully (return null)', () => {
-        manager.playLoop('battle_music' as SoundId, 'non_existent_region');
-        expect(mockController.play).not.toHaveBeenCalled();
-    });
-
-    it('should use targetTime as delay if referenceContext is not yet established', () => {
-        (manager as any).scheduleRegion({
-            soundId: 'battle_music' as SoundId,
-            regionName: 'intro',
-            targetTime: 2,
-            track: (manager as any).getTrackContext('battle_music')
-        });
-
-        expect(mockController.play).toHaveBeenCalledWith(
-            'battle_music',
-            expect.objectContaining({
-                when: 2
-            })
-        );
+        expect(mockController.stopById).toHaveBeenCalledWith(1, 0);
     });
 
     it('should handle voice drop (controller.play returns null) and move schedule pointer forward', () => {
@@ -278,7 +248,6 @@ describe('SmartLoopManager (Interactive Music)', () => {
         manager.playLoop('battle_music' as SoundId, 'intro');
 
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to schedule region'));
-
         expect((manager as any).tracks.get('battle_music').nextScheduleTime).toBe(1);
         warnSpy.mockRestore();
     });

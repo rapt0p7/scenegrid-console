@@ -13,7 +13,7 @@ import {
     MixerStateResolver,
     PRIORITY
 } from '@domain/Mixer/index.js';
-import SmartLoopManager from '@domain/Orchestration/SmartLoopManager.js';
+import Sequencer from '@domain/Orchestration/Sequencer.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 import {
@@ -42,7 +42,7 @@ import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.j
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
-import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISmartLoopManager.js';
+import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
 import type { IPluginFactory, DebuggerOptions } from '@infrastructure';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
@@ -60,7 +60,7 @@ export class AudioEngine {
     #soundController!: SoundController;
     #rtpcManager!: RTPCManager;
     #snapshotManager!: MixerSnapshotManager;
-    #smartLoopManager!: SmartLoopManager;
+    #sequencer!: Sequencer;
     #cullingRunner!: CullingRunner;
     #masterOutput!: MasterOutput;
     #dispatcher: EngineEventDispatcher = new EngineEventDispatcher();
@@ -91,9 +91,9 @@ export class AudioEngine {
     };
 
     public readonly music = {
-        playLoop: (soundId: string, region: string) => this.#smartLoopManager.playLoop(soundId as SoundId, region),
-        stopLoop: (soundId: string) => this.#smartLoopManager.stopLoop(soundId as SoundId),
-        transitionTo: (options: ITransitionToParameters) => this.#smartLoopManager.transitionTo(options)
+        playLoop: (soundId: string, region: string) => this.#sequencer.playLoop(soundId as SoundId, region),
+        stopLoop: (soundId: string) => this.#sequencer.stopLoop(soundId as SoundId),
+        transitionTo: (options: ITransitionToParameters) => this.#sequencer.transitionTo(options)
     };
 
     public readonly spatial = {
@@ -264,7 +264,7 @@ export class AudioEngine {
                 soundMap: this.config.soundMap
             });
 
-            this.#smartLoopManager = new SmartLoopManager(this.#soundController, this.#router);
+            this.#sequencer = new Sequencer(this.#soundController, this.#router, this.#engineTicker);
 
             const resolver = new MixerStateResolver({ defaultBusGain: 1 });
 

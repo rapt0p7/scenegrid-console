@@ -1,13 +1,12 @@
 // noinspection D
 
-import * as workerTimers from 'worker-timers';
-
 import AudioGrid from '@domain/Orchestration/AudioGrid.js';
-import { LoopState } from '@domain/Orchestration/Ports/ISmartLoopManager.js';
+import { LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 
-import type { ITransitionToParameters, ISmartLoopManager } from '@domain/Orchestration/Ports/ISmartLoopManager.js';
+import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController';
+import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
 
 interface ActiveRegion {
@@ -32,16 +31,17 @@ interface TrackContext {
     loopRegion: string | null;
 }
 
-export default class SmartLoopManager implements ISmartLoopManager {
+export default class Sequencer implements ISequencer {
     private readonly controller: ISoundController;
     private readonly router: IAudioRouter;
     private tracks: Map<SoundId, TrackContext> = new Map();
     private readonly scheduleIntervalMs = 25;
     private readonly lookaheadWindowSec = 0.1;
-    private timerId: number | null = null;
+    private readonly ticker: IEngineTicker;
 
-    constructor(soundController: ISoundController, audioRouter: IAudioRouter) {
+    constructor(soundController: ISoundController, audioRouter: IAudioRouter, ticker: IEngineTicker) {
         this.controller = soundController;
+        this.ticker = ticker;
         this.router = audioRouter;
         this.startScheduler();
     }
@@ -86,10 +86,7 @@ export default class SmartLoopManager implements ISmartLoopManager {
     }
 
     public destroy(): void {
-        if (this.timerId !== null) {
-            workerTimers.clearInterval(this.timerId);
-            this.timerId = null;
-        }
+        this.ticker.remove('sequencer');
     }
 
     // eslint-disable-next-line complexity
@@ -287,7 +284,7 @@ export default class SmartLoopManager implements ISmartLoopManager {
         });
 
         if (!playbackId) {
-            console.warn(`[SmartLoopManager] Failed to schedule region ${regionName} for ${soundId} (voice dropped).`);
+            console.warn(`[Sequencer] Failed to schedule region ${regionName} for ${soundId} (voice dropped).`);
             // eslint-disable-next-line no-param-reassign
             track.nextScheduleTime = targetTime + durationSec;
 
@@ -327,7 +324,6 @@ export default class SmartLoopManager implements ISmartLoopManager {
     }
 
     private startScheduler(): void {
-        if (this.timerId !== null) return;
-        this.timerId = workerTimers.setInterval(() => this.processTick(), this.scheduleIntervalMs);
+        this.ticker.add('sequencer', this.scheduleIntervalMs, () => this.processTick());
     }
 }
