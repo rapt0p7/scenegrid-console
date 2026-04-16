@@ -175,7 +175,7 @@ export class SoundInstance implements ISoundInstance {
 
         const context = this.#ctxManager.context;
         const now = context.currentTime;
-        const startTime = Math.max(now, when);
+        const startTime = when > 0 ? Math.max(now, when) : now;
 
         this.#endedByStop = false;
 
@@ -196,7 +196,7 @@ export class SoundInstance implements ISoundInstance {
 
         if (when > 0) {
             try {
-                this.#source.stop(context.currentTime + when);
+                this.#source.stop(Math.max(context.currentTime, when));
             } catch {
                 /* empty */
             }
