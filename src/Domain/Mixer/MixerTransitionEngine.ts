@@ -132,7 +132,9 @@ export default class MixerTransitionEngine {
             const nextBusConfig = target.buses[busId];
             const previousBusConfig = this.current.buses[busId];
 
-            const nextGain = isDefined(nextBusConfig?.gain) ? nextBusConfig!.gain : 0;
+            const nextGain = isDefined(nextBusConfig?.gain)
+                ? nextBusConfig!.gain
+                : this.busSystem.getDefaultGain(busId);
             const previousGain = previousBusConfig?.gain;
 
             if (nextGain !== previousGain) {
