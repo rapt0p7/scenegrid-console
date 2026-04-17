@@ -1,10 +1,10 @@
 ---
 config:
-  layout: elk
-  theme: mc
+    layout: elk
+    theme: mc
 ---
 flowchart LR
-    %% Styles
+%% Styles
     classDef voice fill:#2d3436,stroke:#74b9ff,stroke-width:2px,color:#fff
     classDef bus fill:#2d3436,stroke:#a29bfe,stroke-width:2px,color:#fff
     classDef master fill:#2d3436,stroke:#ff7675,stroke-width:2px,color:#fff
@@ -22,10 +22,10 @@ flowchart LR
     end
 
     subgraph BusStage ["2. Audio Bus (e.g. SFX, Music)"]
-        Bus_In["inputGainNode"]:::bus
-        Bus_Pre["preFilterGain"]:::bus
+        Bus_In["inputNode (inputGain)"]:::bus
+        Bus_Pre["duckerTapNode (preFilter)"]:::bus
         Bus_Filt["filterNode (Biquad/Convolver)"]:::bus
-        Bus_Post["postFilterGain"]:::bus
+        Bus_Post["analyzerTapNode (postFilter)"]:::bus
         Bus_Send["sendGains Map"]:::bus
 
         Bus_In -->|"Direct (if no Ducking)"| Bus_Pre
@@ -36,15 +36,18 @@ flowchart LR
     subgraph SidechainStage ["3. Sidechain Ducker (Lookahead)"]
         SC_Delay["DelayNode (Lookahead)"]:::sidechain
         SC_Gain["duckingGain"]:::sidechain
+        SC_Intensity["intensityGain (per source)"]:::sidechain
         SC_Merge["mergeGain (Trigger Sum)"]:::sidechain
         SC_Clipper["clipper (WaveShaper [-1, 1])"]:::sidechain
         SC_Proc["ducker-processor (Worklet)"]:::sidechain
 
+    %% Insert between Bus_In and Bus_Pre
         Bus_In -.->|"Insert (if Ducked)"| SC_Delay
         SC_Delay --> SC_Gain
         SC_Gain -.->|"Return"| Bus_Pre
 
-        SC_Merge --> SC_Clipper --> SC_Proc -- "Modulates AudioParam" --> SC_Gain
+    %% Tigger path
+        SC_Intensity --> SC_Merge --> SC_Clipper --> SC_Proc -- "Modulates AudioParam" --> SC_Gain
     end
 
     subgraph MasterStage ["4. Master Output Stage"]
@@ -67,14 +70,14 @@ flowchart LR
         Analyzer["AudioMotionAnalyzer / RMS Meters"]:::debug
     end
 
-    %% Main audio connections between blocks
+%% Main audio connections between blocks
     NC_Out ===|"routeInstance()"| Bus_In
     Bus_Send ===|"applySend()"| Bus_In
     Bus_Post ===|"Main Mix"| ABS_Master
 
-    %% Sidechain conecctions
-    NC_In -.->|"addSource() Trigger"| SC_Merge
+%% Sidechain conecctions
+    NC_In -.->|"addSource() Trigger"| SC_Intensity
 
-    %% Debug connections
-    Bus_Post -.->|"Tap"| Analyzer
+%% Debug connections
+    Bus_Post -.->|"Tap (analyzerTapNode)"| Analyzer
     ABS_Post -.->|"Tap"| Analyzer
