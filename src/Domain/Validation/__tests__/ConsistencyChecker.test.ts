@@ -2,9 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 
-// eslint-disable-next-line import/no-restricted-paths
-import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
 import type { BusId, SoundId } from '@domain/Types/Branded.js';
+import type { IConsistencyCheckerPayload } from '@domain/Validation/ConsistencyChecker.js';
 
 describe('ConsistencyChecker', () => {
     beforeEach(() => {
@@ -21,7 +20,7 @@ describe('ConsistencyChecker', () => {
     });
 
     it('should pass with a perfectly valid config and log OK', () => {
-        const validConfig: IAudioEngineConfig = {
+        const validConfig: IConsistencyCheckerPayload = {
             manifest: { shoot: { url: 'sfx/shoot.mp3' } },
             buses: {
                 master: { gain: 1 },
