@@ -2,7 +2,6 @@
 
 import { isAbsent, isDefined } from '@shared/guards.js';
 
-import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type {
     IContainerSoundConfig,
@@ -15,8 +14,15 @@ import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
 import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 
+export interface IConsistencyCheckerPayload {
+    soundMap?: ISoundMap;
+    manifest?: ISpriteSoundManifest;
+    buses?: IBuses;
+    snapshots?: ISnapshots;
+}
+
 export default class ConsistencyChecker {
-    public static validate(config: IAudioEngineConfig): boolean {
+    public static validate(config: IConsistencyCheckerPayload): boolean {
         if (isAbsent(config) || typeof config !== 'object') {
             console.error('[AudioSystem] ConsistencyChecker: config is missing or not an object');
             return false;
@@ -69,6 +75,7 @@ export default class ConsistencyChecker {
         this.checkBuses();
         this.checkSoundMap();
         this.checkSnapshots();
+        this.checkGhostDucking();
         this.checkOrphanManifestSounds();
 
         this.report();
@@ -364,6 +371,44 @@ export default class ConsistencyChecker {
                 }
 
                 this.checkRTPC(`snapshots.${snapshotId}.buses.${busId}`, busState.rtpc);
+            }
+        }
+    }
+
+    // eslint-disable-next-line complexity
+    private checkGhostDucking(): void {
+        if (isAbsent(this.snapshots) || isAbsent(this.soundMap) || isAbsent(this.buses)) return;
+
+        const validBuses = Object.keys(this.buses);
+
+        for (const [soundId, soundCfg] of Object.entries(this.soundMap)) {
+            const ducking = (soundCfg as any).ducking;
+            const parentBusId = (soundCfg as any).busId;
+
+            if (isAbsent(ducking) || isAbsent(parentBusId) || !validBuses.includes(parentBusId)) continue;
+
+            const duckingTargets = Array.isArray(ducking.target) ? ducking.target : [ducking.target];
+
+            for (const [snapshotId, snapshotCfg] of Object.entries(this.snapshots)) {
+                if (isAbsent(snapshotCfg.buses)) continue;
+
+                let logicalGain: number;
+
+                const snapshotBus = snapshotCfg.buses[parentBusId];
+                if (isDefined(snapshotBus) && isDefined(snapshotBus.gain)) {
+                    logicalGain = snapshotBus.gain;
+                } else {
+                    const defaultBus = this.buses[parentBusId];
+                    logicalGain = isDefined(defaultBus?.gain) ? defaultBus.gain : 1;
+                }
+
+                if (logicalGain === 0) {
+                    this.warnings.push(
+                        `Ghost Ducking Risk: Sound "${soundId}" on bus "${parentBusId}" triggers ducking on [${duckingTargets.join(', ')}]. ` +
+                            `However, bus "${parentBusId}" has a logical gain of 0 in snapshot "${snapshotId}". ` +
+                            `This will cause silent ducking.`
+                    );
+                }
             }
         }
     }
