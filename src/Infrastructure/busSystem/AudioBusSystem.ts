@@ -79,6 +79,14 @@ export default class AudioBusSystem implements IAudioBusSystem {
         });
     }
 
+    public getDefaultGain(busId: BusId): number {
+        if (!this.busConfig) {
+            return 0;
+        }
+
+        return this.busConfig[busId].gain ?? 0;
+    }
+
     public getAllBuses(): ReadonlyMap<BusId, AudioBus> {
         return this.buses;
     }
