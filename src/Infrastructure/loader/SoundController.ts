@@ -1,3 +1,6 @@
+/* eslint-disable unicorn/prefer-at */
+// noinspection D
+
 import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
@@ -15,12 +18,20 @@ export interface SoundDefinition {
 
 const DEFAULT_COOLDOWN_MS = 15;
 
+interface VirtualVoiceTimer {
+    playbackId: PlaybackId;
+    endTime: number;
+}
+
 export class SoundController implements ISoundController {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public static TICK_RATE_MS = 16;
     public readonly activeVoices = new Map<PlaybackId, ILogicalVoice>();
 
     private readonly lastPlayTimes = new Map<SoundId, number>();
     private nextPlaybackId = 1 as PlaybackId;
-    readonly #sidechainLinks: Array<Set<BusId>>;
+    readonly #sidechainLinks: Array<Map<BusId, number>>;
+    private readonly virtualTimers: VirtualVoiceTimer[] = [];
 
     // eslint-disable-next-line max-params
     constructor(
@@ -31,8 +42,27 @@ export class SoundController implements ISoundController {
         private readonly registry = new Map<SoundId, SoundDefinition>(),
         private readonly busSystem: AudioBusSystem
     ) {
-        this.#sidechainLinks = Array.from({ length: pool.globalVoiceLimit }, () => new Set<BusId>());
+        this.#sidechainLinks = Array.from({ length: pool.globalVoiceLimit }, () => new Map<BusId, number>());
         this.pool.events.on('released', this.#handleInstanceReleased);
+    }
+
+    public tick(): void {
+        const currentTime = this.context.currentTime;
+        const timers = this.virtualTimers;
+
+        for (let index = timers.length - 1; index >= 0; index--) {
+            if (currentTime >= timers[index].endTime) {
+                const id = timers[index].playbackId;
+
+                timers[index] = timers[timers.length - 1];
+                timers.pop();
+
+                const voice = this.activeVoices.get(id);
+                if (voice?.physicalInstance && 'forceNaturalEnd' in voice.physicalInstance) {
+                    (voice.physicalInstance as any).forceNaturalEnd();
+                }
+            }
+        }
     }
 
     // eslint-disable-next-line unicorn/no-object-as-default-parameter
@@ -130,7 +160,7 @@ export class SoundController implements ISoundController {
         if (instance && node) {
             const poolIndex = (instance as any)._poolIndex;
             this.busSystem.addSidechainSource(node, busId, intensity);
-            this.#sidechainLinks[poolIndex]?.add(busId);
+            this.#sidechainLinks[poolIndex]?.set(busId, intensity);
         }
     }
 
@@ -199,14 +229,40 @@ export class SoundController implements ISoundController {
     virtualize(id: PlaybackId): void {
         const voice = this.activeVoices.get(id);
         if (voice?.physicalInstance && 'virtualize' in voice.physicalInstance) {
-            voice.physicalInstance.virtualize();
+            const instance = voice.physicalInstance as any;
+
+            if (!instance.isLooping && instance.duration > 0) {
+                const remainingSec = Math.max(0, (instance.duration - instance.currentTime) / instance.playbackRate);
+                const endTime = this.context.currentTime + remainingSec;
+                this.virtualTimers.push({ playbackId: id, endTime });
+            }
+
+            const poolIndex = instance._poolIndex;
+            const targetBuses = this.#sidechainLinks[poolIndex];
+            if (targetBuses) {
+                for (const busId of targetBuses.keys()) {
+                    this.busSystem.removeSidechainSource(instance.instanceGain, busId);
+                }
+            }
+
+            instance.virtualize();
         }
     }
 
     devirtualize(id: PlaybackId): void {
         const voice = this.activeVoices.get(id);
         if (voice?.physicalInstance && 'devirtualize' in voice.physicalInstance) {
+            this.#removeFromVirtualQueue(id);
+
             voice.physicalInstance.devirtualize();
+
+            const poolIndex = (voice.physicalInstance as any)._poolIndex;
+            const targetBuses = this.#sidechainLinks[poolIndex];
+            if (targetBuses) {
+                for (const [busId, intensity] of targetBuses.entries()) {
+                    this.busSystem.addSidechainSource(voice.physicalInstance.instanceGain, busId, intensity);
+                }
+            }
 
             if (voice.onRevive) {
                 voice.onRevive(id);
@@ -267,6 +323,7 @@ export class SoundController implements ISoundController {
         const playbackId = (instance as any)._currentPlaybackId;
         if (playbackId) {
             this.activeVoices.delete(playbackId);
+            this.#removeFromVirtualQueue(playbackId);
         }
     };
 
@@ -275,9 +332,20 @@ export class SoundController implements ISoundController {
         if (poolIndex === undefined || poolIndex < 0) return;
 
         const targetBuses = this.#sidechainLinks[poolIndex];
-        for (const busId of targetBuses) {
+        for (const busId of targetBuses.keys()) {
             this.busSystem.removeSidechainSource(instance.instanceGain, busId);
         }
         targetBuses.clear();
     };
+
+    #removeFromVirtualQueue(playbackId: PlaybackId): void {
+        const timers = this.virtualTimers;
+        for (let index = 0; index < timers.length; index++) {
+            if (timers[index].playbackId === playbackId) {
+                timers[index] = timers[timers.length - 1];
+                timers.pop();
+                break;
+            }
+        }
+    }
 }

@@ -289,6 +289,9 @@ export class AudioEngine {
             this.#engineTicker.add('rtpc-manager', RTPCManager.TICK_RATE_MS, (_, deltaTimeMs) =>
                 this.#rtpcManager.tick(deltaTimeMs)
             );
+            this.#engineTicker.add('sound-controller', SoundController.TICK_RATE_MS, () =>
+                this.#soundController.tick()
+            );
             this.#engineTicker.add('culling-runner', CullingRunner.TICK_RATE_MS, () => this.#cullingRunner.tick());
             mixerTransitionEngine.events.on('transition:start', () => this.#cullingRunner.tick());
             this.#engineTicker.add('mixer-state-manager', MixerTransitionEngine.TICK_RATE_MS, (_, deltaTimeMs) =>

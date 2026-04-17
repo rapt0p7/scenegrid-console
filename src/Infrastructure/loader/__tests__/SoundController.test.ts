@@ -1,11 +1,14 @@
 // noinspection D
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+import { SoundInstance } from '@infrastructure';
 import { SoundController } from '@infrastructure/loader/SoundController.js';
 
 import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
-import type { PlaybackScheduler, AutomationEngine, AudioCtx } from '@infrastructure';
+import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
+import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
+import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 
 describe('SoundController', () => {
     let mockPool: any;
@@ -362,5 +365,97 @@ describe('SoundController', () => {
 
             expect(() => dummyUnsub()).not.toThrow();
         });
+    });
+});
+
+describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {
+    let controller: SoundController;
+    let mockContext: any;
+    let mockPool: any;
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.spyOn(performance, 'now').mockReturnValue(100);
+
+        mockContext = {
+            currentTime: 0,
+            createBufferSource: vi.fn().mockReturnValue({
+                start: vi.fn(),
+                stop: vi.fn(),
+                connect: vi.fn(),
+                disconnect: vi.fn(),
+                addEventListener: vi.fn(),
+                removeEventListener: vi.fn(),
+                playbackRate: { value: 1 },
+                loop: false
+            })
+        };
+
+        const mockBuffer = { duration: 2 } as AudioBuffer;
+
+        mockPool = {
+            globalVoiceLimit: 32,
+            events: { on: vi.fn(), emit: vi.fn() },
+            acquire: vi.fn().mockImplementation((id, buffer) => {
+                const instance = new SoundInstance(
+                    id,
+                    { context: mockContext } as any,
+                    {
+                        createGain: vi.fn().mockReturnValue({
+                            gain: { value: 1, setTargetAtTime: vi.fn() },
+                            connect: vi.fn(),
+                            disconnect: vi.fn()
+                        })
+                    } as any,
+                    buffer,
+                    { ramp: vi.fn() } as any
+                );
+                instance._poolIndex = 1;
+                return instance;
+            }),
+            dispose: vi.fn()
+        };
+
+        const mockScheduler = {
+            // eslint-disable-next-line max-params
+            schedulePlay: vi.fn().mockImplementation((instance, when, offset, duration) => {
+                instance.play(when, offset, duration);
+            })
+        };
+        const mockBusSystem = { removeSidechainSource: vi.fn() };
+        const mockRegistry = new Map([['test_sound' as SoundId, { buffer: mockBuffer, options: { url: 'test.wav' } }]]);
+
+        controller = new SoundController(
+            mockPool as any,
+            mockScheduler as any,
+            mockContext as any,
+            {} as any,
+            mockRegistry,
+            mockBusSystem as any
+        );
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.restoreAllMocks();
+    });
+
+    it('should remove voice from activeVoices when virtualized and its logical duration ends', () => {
+        const playbackId = controller.play('test_sound' as SoundId, {}) as PlaybackId;
+
+        expect(playbackId).not.toBeNull();
+        expect(controller.activeVoices.has(playbackId)).toBe(true);
+
+        mockContext.currentTime = 0.5;
+
+        controller.virtualize(playbackId);
+
+        expect(controller.getPlaybackState(playbackId)).toBe('virtual');
+        expect(controller.activeVoices.has(playbackId)).toBe(true);
+
+        mockContext.currentTime = 2.1;
+        controller.tick();
+
+        expect(controller.activeVoices.has(playbackId)).toBe(false);
     });
 });
