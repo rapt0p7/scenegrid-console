@@ -86,6 +86,14 @@ export class SoundInstance implements ISoundInstance {
         return this.#state;
     }
 
+    public get isLooping(): boolean {
+        return this.#loop;
+    }
+
+    public get playbackRate(): number {
+        return this.#playbackRate;
+    }
+
     public get currentTime(): number {
         if (!this.#buffer) return 0;
 
@@ -190,9 +198,18 @@ export class SoundInstance implements ISoundInstance {
     }
 
     public stop(when: number = 0): void {
-        if (!this.#source) return;
-
         const context = this.#ctxManager.context;
+
+        if (!this.#source) {
+            if (this.#state === 'virtual' || this.#state === 'paused') {
+                this.#endedByStop = true;
+                this.#pauseOffset = 0;
+                this.#setState('stopped');
+                this.#emitter.emit('stopped', this);
+                this.#emitter.emit('ended', this);
+            }
+            return;
+        }
 
         if (when > 0) {
             try {
@@ -218,6 +235,13 @@ export class SoundInstance implements ISoundInstance {
         this.#setState('stopped');
         this.#emitter.emit('stopped', this);
         this.#emitter.emit('ended', this);
+    }
+
+    public forceNaturalEnd(): void {
+        if (this.#state === 'virtual') {
+            this.#setState('idle');
+            this.#emitter.emit('ended', this);
+        }
     }
 
     public pause(): void {
@@ -271,7 +295,13 @@ export class SoundInstance implements ISoundInstance {
     }
 
     public cancelScheduled(): void {
-        if (!this.#source) return;
+        if (!this.#source) {
+            if (this.#state === 'virtual' || this.#state === 'paused') {
+                this.#endedByStop = true;
+                this.#setState('stopped');
+            }
+            return;
+        }
 
         this.#endedByStop = true;
 
@@ -338,6 +368,12 @@ export class SoundInstance implements ISoundInstance {
 
     public resetForReuse(): void {
         this.cancelScheduled();
+
+        try {
+            this.outputNode.disconnect();
+        } catch {
+            /* empty */
+        }
 
         this.automate('gain', 1, 0);
         this.automate('pitch', 1, 0);

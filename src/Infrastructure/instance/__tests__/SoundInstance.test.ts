@@ -482,12 +482,12 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         expect(stopSpy).toHaveBeenCalledWith(0);
     });
 
-    it('should NOT change state to stopped in cancelScheduled if instance was not playing (Line 241)', () => {
+    it('should change state to stopped in cancelScheduled if instance was paused', () => {
         instance.play();
         instance.pause();
 
         instance.cancelScheduled();
-        expect(instance.state).not.toBe('stopped');
+        expect(instance.state).toBe('stopped');
     });
 
     it('should early return in devirtualize if state is not virtual or buffer is missing (Line 303)', () => {
