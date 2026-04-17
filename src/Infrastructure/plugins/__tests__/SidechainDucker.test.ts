@@ -199,13 +199,19 @@ describe('SidechainDucker', () => {
 
         it('should remove an existing source and disconnect its nodes', () => {
             const source = createMockNode();
+            if (!source.disconnect) {
+                source.disconnect = vi.fn();
+            }
+
             ducker.addSource(source as any, 0.5);
 
             vi.mocked(safeDisconnect).mockClear();
+            vi.mocked(source.disconnect).mockClear();
 
             ducker.removeSource(source as any);
 
-            expect(safeDisconnect).toHaveBeenCalledTimes(2);
+            expect(safeDisconnect).toHaveBeenCalledTimes(1);
+            expect(source.disconnect).toHaveBeenCalledTimes(1);
         });
     });
 
