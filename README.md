@@ -33,8 +33,8 @@ The system enforces a strict hierarchical flow to ensure phase coherence, predic
 ### The Core Hierarchy
 **Source (Voice) → Individual Channel (NodeChain) → Group Bus → Master Output**
 
-* **Isolated Sources (Voices):** Each sound is fully isolated with its own local processing chain, preventing phase conflicts and ensuring that one voice's processing never bleeds into another.
-* **Voice Culling:** The `PlaybackScheduler` and `VoiceCullingSystem` monitor active voice limits. To maintain FPS stability and prevent Audio Thread overload, the system transparently terminates low-priority or silent sounds.
+* **Isolated Sources (Voices):** Each sound is fully isolated with its own local processing chain, preventing phase conflicts and ensuring that one voice's processing never bleeds into another. Built on a **Zero-Allocation Object Pool** (Free-list stack), ensuring `O(1)` access time and eliminating Garbage Collection (GC) spikes during heavy gameplay.
+* **Voice Culling:** The `PlaybackScheduler` and `VoiceCullingArbiter` monitor active voice limits. To maintain FPS stability and prevent Audio Thread overload, the `CullingRunner` transparently virtualizes low-priority or silent sounds.
 * **Audio Buses:** Function as group channels with a fixed channel strip structure. Routing is immutable once a sound starts, preventing "runaway" feedback or uncontrolled summing.
 
 ### Master Section
@@ -66,8 +66,8 @@ Powered by `AudioWorklet`, the system supports predictive ducking with cascade p
 3.  **Envelope Analysis:** The `ducker-processor` calculates the RMS envelope from the normalized signal.
 4.  **Predictive Attenuation:** A `DelayNode` is inserted into the target bus, allowing the gain to drop *before* the trigger peak for a pop-free, professional attack.
 
-### SmartLoopManager (Interactive Music)
-A professional-grade sequencing engine for horizontal music transitions:
+### Sequencer (Interactive Music)
+A professional-grade sequencing engine (formerly SmartLoopManager) for horizontal music transitions:
 * **Audio Sprites:** Seamlessly loops regions within a single file.
 * **Quantized Transitions:** Syncs changes to a musical grid (BPM/Bar).
 * **Clip-Level Crossfades:** Transitions happen within the `NodeChain`, keeping the main Bus automation free for global mix changes.
@@ -82,10 +82,10 @@ Parallel routing allows for shared effects (e.g., a single Reverb bus for all SF
 ### VCA-Style Snapshots & Layers
 The system supports **Total Recall** using a VCA (Voltage-Controlled Amplifier) multiplication model.
 * **Data-Driven Mixer:** The base configuration (`IBuses`) acts as the master fader. Snapshots act as modulators (`Final Gain = Base * Snapshot * RTPC`).
-* **Multi-Layer Logic:** Mix states can be safely layered (e.g., a "Combat Layer" atop an "Explore Layer"). The `MixerStateManager` calculates the final values, automatically handling "cold starts" with zero-latency protection to prevent audio bursts.
+* **Multi-Layer Logic:** Mix states can be safely layered (e.g., a "Combat Layer" atop an "Explore Layer"). The `MixerTransitionEngine` calculates the final values, automatically handling "cold starts" with zero-latency protection to prevent audio bursts.
 
-### RTPC (Real-Time Parameter Control)
-A virtual patchbay connecting game data (speed, health, distance) to audio parameters, featuring an independent ~33Hz Control Rate loop to protect the main thread.
+### RTPC (Real-Time Parameter Control) & Centralized Ticker
+A virtual patchbay connecting game data (speed, health, distance) to audio parameters, driven by a centralized `EngineTicker` to protect the main rendering thread.
 * **Global Manifest & Slew Rates:** Designers define FPS-independent inertia (`attackMs` / `releaseMs`) in a global registry, ensuring parameters transition smoothly over time (e.g., health drops instantly but regenerates slowly).
 * **Curve Presets:** Built-in mathematical evaluators for `linear`, `exponential`, `logarithmic`, and `s-curve` mappings, alongside support for custom Piecewise Linear coordinate arrays.
 * **Macro Modulation:** Patch RTPCs to VCA levels, Filter Cutoffs, Panning, or Send Levels with automatic DSP de-zippering (smoothing).
@@ -102,12 +102,11 @@ A virtual patchbay connecting game data (speed, health, distance) to audio param
 * **Event-level State Machine:** Moving from basic `play(sound)` to `trigger(event)`. Defining autonomous behaviors like `onPlay`, `onStop` (tails), and conditional playback logic.
 * **Modular Insert API:** Expanding the `FiltersPlugin` into a generalized `InsertPlugin` interface, allowing programmers to safely inject custom DSP graphs (e.g., procedural synths) into a voice's `NodeChain`.
 * **Voice Culling Hysteresis:** Adding a time buffer to the virtualization logic to prevent "voice flutter" (rapid fade-in/fade-out) when active voices hover around the hardware polyphony limit.
-* **Vite V8 Migration:** Upgrading the build pipeline to a Rolldown-powered engine for faster `AudioWorklet` compilation.
 
 ### 🟡 Phase 2: Live Bridge & Adaptive Music (v1.2)
 * **Remote Sync Adapter (The Live Bridge):** Introducing an infrastructure module powered by WebSockets. This allows the running `AudioEngine` to act as a client, receiving live property updates and hot-swapped configurations from external sources.
 * **SceneGrid CLI Bridge:** A lightweight Node.js utility that monitors your local workspace and broadcasts configuration changes directly into your running game instance, enabling true Live Tweaking for audio.
-* **Unified Music Manager (The Conductor):** A high-level facade coordinating **Horizontal** transitions (via `SmartLoopManager`) and **Vertical** intensity (via `MixerStateManager`).
+* **Unified Music Manager (The Conductor):** A high-level facade coordinating **Horizontal** transitions (via `Sequencer`) and **Vertical** intensity (via `MixerTransitionEngine`).
     * *Example:* `music.setIntensity(0.8)` smoothly ramps RTPCs and mixer layers, while `music.transitionTo('Combat')` triggers a quantized region change.
 * **Semantic Music States:** Moving from manual snapshot pushing to logic-based states (e.g., *Exploration* → *Combat*) where the engine automatically resolves the appropriate loop regions and mix layers.
 * **Internal Modulators:** Native LFOs and Envelopes for continuous parameter modulation (Pitch/Gain/Filter) to eliminate "sterile" digital playback without relying on the Game Engine's main ticker.

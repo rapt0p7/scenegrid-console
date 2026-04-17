@@ -34,14 +34,14 @@ Signals follow a strict hierarchy:
 
 **Sources (Voices)**
 Each sound:
-* Is fully isolated
-* Has its own local processing chain
-* Does not affect other voices
+* Is fully isolated with its own local processing chain.
+* Does not affect other voices.
+* Is managed by a **Zero-Allocation Object Pool** (free-list stack), ensuring $O(1)$ access time and eliminating Garbage Collection (GC) spikes during heavy gameplay.
 
 This guarantees an absence of phase conflicts, stable dynamic processing, and predictable routing.
 
 **Voice Culling (Polyphony Optimization)**
-A Voice Culling mechanism is implemented at the core level (`PlaybackScheduler`). The system automatically monitors active voice limits and prevents Audio Thread overload by seamlessly terminating the lowest-priority or quietest sounds, thus maintaining FPS stability.
+A Voice Culling mechanism is implemented at the core level. The `PlaybackScheduler` and domain-driven `VoiceCullingArbiter` continuously monitor active voice limits. To prevent Audio Thread overload, the `CullingRunner` seamlessly virtualizes the lowest-priority or quietest sounds, thus maintaining strictly deterministic CPU load and FPS stability.
 
 **Audio Buses**
 Buses function like **console group channels**.
@@ -113,31 +113,27 @@ The mixer supports **state layers**, analogous to theater console scenes or DAW 
 They allow independent management of: music, SFX, UI sounds, and various game contexts.
 
 **Mix Finalization**
-1.  Active layers are safely superimposed using the VCA multiplication model.
-2.  The `MixerStateManager` calculates the final parameters.
-3.  Values are committed to the automation engine.
+1. Active layers are safely superimposed using the VCA multiplication model.
+2. The `MixerTransitionEngine` calculates the final transition ramps and parameters.
+3. Values are committed to the automation engine for sample-accurate interpolation.
 
 ---
 
-### 6. Interactive Music and Sequencing (SmartLoopManager)
+### 6. Interactive Music: Horizontal vs. Vertical
 
-The system includes a built-in engine for interactive music management, operating on professional audio sequencer principles. It handles **horizontal sequencing** of music segments and seamless transitions.
+The system natively supports professional interactive music patterns, strictly separating horizontal sequencing from vertical intensity.
 
-**Horizontal Sequencing**
-Instead of triggering multiple separate files, the system works with audio sprites (regions) within a single media file.
+**Horizontal Sequencing (The `Sequencer`)**
+Instead of triggering multiple separate files, the `Sequencer` (formerly SmartLoopManager) works with audio sprites (regions) within a single media file to manage musical time.
 Key capabilities:
-* Artifact-free, gapless looping of specific regions.
-* Independent state tracking for different musical layers.
-* Utilization of absolute context time (`AudioContext.currentTime`) to prevent desynchronization.
+* Gapless looping of specific musical regions.
+* **Seamless Transitions:** Supports instant swaps, grid-quantized jumps (BPM/Bar), and intermediate fill/stinger playback.
+* **Local Crossfades:** Blending regions occurs strictly at the individual channel level (`NodeChain`), preserving global bus automation.
 
-**Seamless Transitions**
-Supported modes:
-* **Instant**: Immediate region swap.
-* **Musical Grid (Quantized)**: Transitions synchronized to the musical grid (BPM, time signature).
-* **Fills/Stingers**: Playback of intermediate transition regions.
-
-**Clip-Level Automation (Local Crossfades)**
-To blend regions smoothly, the system uses crossfading **strictly at the individual channel level (`NodeChain`)**. This preserves voice isolation and avoids conflicts with global bus snapshots.
+**Vertical Layering (Snapshots & RTPC)**
+Dynamic intensity (e.g., adding percussion or brass during combat) is **not** handled by the Sequencer. Vertical music is achieved entirely through the `MixerTransitionEngine` and `RTPCManager`:
+* Stems are routed to dedicated buses.
+* Game logic pushes Snapshots or drives RTPC curves to fade stem buses in and out dynamically, keeping vertical mix states completely decoupled from timeline logic.
 
 ---
 
@@ -161,8 +157,8 @@ Within the strict isolation of the graph, the Sends system maintains the core in
 
 The RTPC mechanism acts as a **virtual patchbay** for control signals (Control Voltage / Macros). It links "dry" game data (speed, distance, health) to the physical parameters of the audio path in real-time, utilizing advanced performance throttling and mathematical presets.
 
-**1. The Macro Control Hub & Throttling**
-Instead of the game engine directly manipulating Web Audio API faders at frame rate, it sends values to the `RTPCManager`. The manager operates an independent **Control Rate Loop (~33Hz)** and utilizes microtask batching (`flush`) to protect the main thread and Audio Context from event spam.
+**1. The Macro Control Hub & Centralized Ticker**
+Instead of the game engine directly manipulating Web Audio API faders at frame rate, it sends values to the `RTPCManager`. The manager is driven by a centralized `EngineTicker` and utilizes microtask batching (`flush`) to protect the main thread and Audio Context from event spam.
 
 **2. Global Manifest & Slew Rates (Inertia)**
 Designers define FPS-independent inertia (`attackMs` / `releaseMs`) and default values in a global `RTPCManifest`. This ensures parameters transition smoothly over time (e.g., health drops instantly but regenerates slowly) without requiring manual smoothing on every sound.
