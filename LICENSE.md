@@ -62,7 +62,7 @@ The first time you are notified in writing that you have violated any of these t
 
 ## No Liability
 
-***As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim.***
+**_As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim._**
 
 ## Definitions
 
