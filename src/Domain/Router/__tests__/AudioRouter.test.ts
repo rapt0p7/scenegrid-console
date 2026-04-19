@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -5,6 +6,8 @@ import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 
 import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import { type Mocked } from 'vitest';
+import { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 
 vi.mock('@domain/Managers/InstanceRTPCBinder.js', () => ({
     InstanceRTPCBinder: {
@@ -32,11 +35,12 @@ const testSoundMap: any = {
 };
 
 describe('AudioRouter (Command Dispatcher)', () => {
-    let mockController: any;
+    let mockController: Mocked<ISoundController>;
     let mockBusSystem: any;
-    let mockDuckingManager: any;
-    let mockRtpcAdapter: any;
-    let mockContainerManager: any;
+    let mockDuckingManager: Mocked<any>;
+    let mockRtpcAdapter: Mocked<any>;
+    let mockContainerPolicy: any;
+    let mockHistoryRegistry: any;
     let router: AudioRouter;
 
     beforeEach(() => {
@@ -49,14 +53,22 @@ describe('AudioRouter (Command Dispatcher)', () => {
             stopById: vi.fn(),
             stopAll: vi.fn(),
             routeToBus: vi.fn()
-        };
+        } as unknown as Mocked<ISoundController>;
 
         mockBusSystem = {};
-
         mockDuckingManager = { triggerDucking: vi.fn() };
         mockRtpcAdapter = {};
-        mockContainerManager = {
-            getNextSource: vi.fn().mockReturnValue('var2.wav')
+
+        mockContainerPolicy = {
+            evaluateNext: vi.fn().mockReturnValue({
+                soundId: 'var2.wav',
+                nextState: { lastPlayedIndex: 1 }
+            })
+        };
+
+        mockHistoryRegistry = {
+            getHistory: vi.fn().mockReturnValue({ lastPlayedIndex: -1 }),
+            updateHistory: vi.fn()
         };
 
         router = new AudioRouter({
@@ -64,7 +76,8 @@ describe('AudioRouter (Command Dispatcher)', () => {
             busSystem: mockBusSystem,
             rtpcManager: mockRtpcAdapter,
             duckingManager: mockDuckingManager,
-            containerManager: mockContainerManager,
+            containerPolicy: mockContainerPolicy,
+            historyRegistry: mockHistoryRegistry,
             soundMap: testSoundMap
         });
     });
@@ -94,14 +107,19 @@ describe('AudioRouter (Command Dispatcher)', () => {
         expect(mockController.play).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle container sounds and delegate to ContainerManager', () => {
+    it('should handle container sounds using Registry and Policy (CQS pipeline)', () => {
         const result = router.play('container_sound' as SoundId);
 
         expect(result).toBe(1);
-        expect(mockContainerManager.getNextSource).toHaveBeenCalledWith(
-            'container_sound',
-            testSoundMap['container_sound']
-        );
+
+        expect(mockHistoryRegistry.getHistory).toHaveBeenCalledWith('container_sound');
+
+        expect(mockContainerPolicy.evaluateNext).toHaveBeenCalledWith(testSoundMap['container_sound'], {
+            lastPlayedIndex: -1
+        });
+
+        expect(mockHistoryRegistry.updateHistory).toHaveBeenCalledWith('container_sound', { lastPlayedIndex: 1 });
+
         expect(mockController.play).toHaveBeenCalledWith('var2.wav', expect.any(Object));
     });
 
@@ -168,7 +186,10 @@ describe('AudioRouter (Command Dispatcher)', () => {
 
     describe('Container Sounds Edge Cases (handleContainer)', () => {
         it('should return null if soundController.play fails for a container source', () => {
-            mockContainerManager.getNextSource.mockReturnValue('some_internal_sound');
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: 'some_internal_sound',
+                nextState: { lastPlayedIndex: 0 }
+            });
             mockController.play = vi.fn().mockReturnValue(null);
 
             const result = router.play('container_sound' as SoundId);
@@ -178,7 +199,10 @@ describe('AudioRouter (Command Dispatcher)', () => {
         });
 
         it('should pass a working onRevive hook to the container instance using PlaybackId', () => {
-            mockContainerManager.getNextSource.mockReturnValue('some_internal_sound');
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: 'some_internal_sound',
+                nextState: { lastPlayedIndex: 0 }
+            });
             const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback').mockImplementation(() => {});
 
             let capturedOptions: any;
