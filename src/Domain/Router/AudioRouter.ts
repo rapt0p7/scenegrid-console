@@ -11,7 +11,8 @@ import type {
     IPlayOptions
 } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
-import type { IContainerManager } from '@domain/Managers/Ports/IContainerManager.js';
+import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
+import type { IContainerHistoryRegistry } from '@domain/Managers/Ports/IContainerHistoryRegistry.js';
 import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
@@ -23,7 +24,8 @@ export default class AudioRouter implements IAudioRouter {
     private readonly duckingManager: IDuckingManager;
     private readonly soundController: ISoundController;
     private readonly rtpcManager: IRTPCAdapter;
-    private readonly containerManager: IContainerManager;
+    private readonly containerPolicy: ContainerPlaybackPolicy;
+    private readonly historyRegistry: IContainerHistoryRegistry;
     private readonly soundMap: ISoundMap | null = null;
 
     constructor({
@@ -31,21 +33,24 @@ export default class AudioRouter implements IAudioRouter {
         busSystem,
         duckingManager,
         rtpcManager,
-        containerManager,
+        containerPolicy,
+        historyRegistry,
         soundMap
     }: {
         soundController: ISoundController;
         busSystem: IAudioBusSystem;
         duckingManager: IDuckingManager;
         rtpcManager: IRTPCAdapter;
-        containerManager: IContainerManager;
+        containerPolicy: ContainerPlaybackPolicy;
+        historyRegistry: IContainerHistoryRegistry;
         soundMap: ISoundMap;
     }) {
         this.soundController = soundController;
         this.busSystem = busSystem;
         this.duckingManager = duckingManager;
         this.rtpcManager = rtpcManager;
-        this.containerManager = containerManager;
+        this.containerPolicy = containerPolicy;
+        this.historyRegistry = historyRegistry;
         this.soundMap = soundMap;
     }
 
@@ -111,8 +116,12 @@ export default class AudioRouter implements IAudioRouter {
     }
 
     private handleContainer(name: SoundId, config: IContainerSoundConfig, options: IPlayOptions): PlaybackId | null {
-        const nextSource = this.containerManager.getNextSource(name, config);
+        const history = this.historyRegistry.getHistory(name);
+        const { soundId: nextSource, nextState } = this.containerPolicy.evaluateNext(config, history);
+
         if (!nextSource) return null;
+
+        this.historyRegistry.updateHistory(name, nextState);
 
         const finalOptions = VariationResolver.apply(config, options);
 

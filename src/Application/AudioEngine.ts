@@ -3,7 +3,7 @@
 import SoundRegistry from '@domain/Configuration/SoundRegistry.js';
 import { VoiceCullingArbiter } from '@domain/Culling/VoiceCullingArbiter.js';
 import { EngineEventDispatcher } from '@domain/Events/EngineEventDispatcher.js';
-import ContainerManager from '@domain/Managers/ContainerManager.js';
+import ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 import DuckingManager from '@domain/Managers/DuckingManager.js';
 import {
     MixerCoordinator,
@@ -22,6 +22,7 @@ import {
     AudioContextManager,
     AudioNodeFactory,
     AutomationEngine,
+    ContainerHistoryRegistry,
     CullingContextProvider,
     CullingRunner,
     EngineTicker,
@@ -253,14 +254,16 @@ export class AudioEngine {
             );
 
             const duckingManager = new DuckingManager(this.#busSystem, this.#soundController);
-            const containerManager = new ContainerManager();
+            const containerHistoryRegistry = new ContainerHistoryRegistry();
+            const containerPolicy = new ContainerPlaybackPolicy();
 
             this.#router = new AudioRouter({
                 soundController: this.#soundController,
                 busSystem: this.#busSystem,
                 duckingManager,
                 rtpcManager: this.#rtpcManager,
-                containerManager,
+                containerPolicy,
+                historyRegistry: containerHistoryRegistry,
                 soundMap: this.config.soundMap
             });
 
