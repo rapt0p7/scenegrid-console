@@ -3,7 +3,6 @@
 import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import { VariationResolver } from '@domain/Router/VariationResolver.js';
 
-import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type {
     AnySoundConfig,
     IContainerSoundConfig,
@@ -17,10 +16,9 @@ import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js'
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
 
 export default class AudioRouter implements IAudioRouter {
-    private readonly busSystem: IAudioBusSystem;
     private readonly duckingManager: IDuckingManager;
     private readonly soundController: ISoundController;
     private readonly rtpcManager: IRTPCAdapter;
@@ -30,7 +28,6 @@ export default class AudioRouter implements IAudioRouter {
 
     constructor({
         soundController,
-        busSystem,
         duckingManager,
         rtpcManager,
         containerPolicy,
@@ -38,7 +35,6 @@ export default class AudioRouter implements IAudioRouter {
         soundMap
     }: {
         soundController: ISoundController;
-        busSystem: IAudioBusSystem;
         duckingManager: IDuckingManager;
         rtpcManager: IRTPCAdapter;
         containerPolicy: ContainerPlaybackPolicy;
@@ -46,7 +42,6 @@ export default class AudioRouter implements IAudioRouter {
         soundMap: ISoundMap;
     }) {
         this.soundController = soundController;
-        this.busSystem = busSystem;
         this.duckingManager = duckingManager;
         this.rtpcManager = rtpcManager;
         this.containerPolicy = containerPolicy;
@@ -60,7 +55,7 @@ export default class AudioRouter implements IAudioRouter {
 
     public applyConfigToPlayback(playbackId: PlaybackId, config: AnySoundConfig): void {
         if (config.busId) {
-            this.soundController.routeToBus(playbackId, config.busId as BusId);
+            this.soundController.routeToBus(playbackId, config.busId);
         }
 
         if ('ducking' in config && config.ducking?.target) {
@@ -95,7 +90,9 @@ export default class AudioRouter implements IAudioRouter {
             offset: (finalOptions.seek ?? 0) / 1000,
             loop: finalOptions.isLoop,
             rate: finalOptions.rate,
-            onRevive: (id: PlaybackId) => this.applyConfigToPlayback(id, config)
+            onRevive: (id: PlaybackId) => {
+                this.applyConfigToPlayback(id, config);
+            }
         });
 
         if (!playbackId) return null;
@@ -109,7 +106,7 @@ export default class AudioRouter implements IAudioRouter {
         if (Array.isArray(id)) {
             for (const index of id) this.soundController.stopById(index);
         } else if (typeof id === 'number') {
-            this.soundController.stopById(id as PlaybackId);
+            this.soundController.stopById(id);
         } else {
             this.soundController.stopAll(id);
         }
@@ -130,7 +127,9 @@ export default class AudioRouter implements IAudioRouter {
             offset: (finalOptions.seek ?? 0) / 1000,
             loop: finalOptions.isLoop,
             rate: finalOptions.rate,
-            onRevive: (id: PlaybackId) => this.applyConfigToPlayback(id, config)
+            onRevive: (id: PlaybackId) => {
+                this.applyConfigToPlayback(id, config);
+            }
         });
 
         if (!playbackId) return null;
@@ -153,7 +152,9 @@ export default class AudioRouter implements IAudioRouter {
                 offset: ((finalOptions.seek ?? 0) || 0) / 1000,
                 loop: finalOptions.isLoop,
                 rate: finalOptions.rate,
-                onRevive: (id: PlaybackId) => this.applyConfigToPlayback(id, config)
+                onRevive: (id: PlaybackId) => {
+                    this.applyConfigToPlayback(id, config);
+                }
             });
 
             if (!playbackId) continue;

@@ -36,7 +36,6 @@ const testSoundMap: any = {
 
 describe('AudioRouter (Command Dispatcher)', () => {
     let mockController: Mocked<ISoundController>;
-    let mockBusSystem: any;
     let mockDuckingManager: Mocked<any>;
     let mockRtpcAdapter: Mocked<any>;
     let mockContainerPolicy: any;
@@ -55,7 +54,6 @@ describe('AudioRouter (Command Dispatcher)', () => {
             routeToBus: vi.fn()
         } as unknown as Mocked<ISoundController>;
 
-        mockBusSystem = {};
         mockDuckingManager = { triggerDucking: vi.fn() };
         mockRtpcAdapter = {};
 
@@ -73,7 +71,6 @@ describe('AudioRouter (Command Dispatcher)', () => {
 
         router = new AudioRouter({
             soundController: mockController,
-            busSystem: mockBusSystem,
             rtpcManager: mockRtpcAdapter,
             duckingManager: mockDuckingManager,
             containerPolicy: mockContainerPolicy,
