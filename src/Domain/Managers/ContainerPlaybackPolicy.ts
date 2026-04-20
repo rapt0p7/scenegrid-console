@@ -3,6 +3,7 @@ import type {
     IContainerEvaluationResult,
     IContainerPlaybackState
 } from '@domain/Managers/Ports/IContainerPlaybackState.js';
+import { isDefined } from '@shared/guards.js';
 
 export default class ContainerPlaybackPolicy {
     public evaluateNext(
@@ -11,7 +12,7 @@ export default class ContainerPlaybackPolicy {
     ): IContainerEvaluationResult {
         const sources = config.sources;
 
-        if (!sources || sources.length === 0) {
+        if (!isDefined(sources) || sources.length === 0) {
             return {
                 soundId: null,
                 nextState: { lastPlayedIndex: -1 }
