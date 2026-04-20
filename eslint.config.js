@@ -289,6 +289,12 @@ export default tseslint.config(
         }
     },
     {
+        files: ['src/Infrastructure/**/*.{js,ts,jsx,tsx}'],
+        rules: {
+            'no-restricted-imports': 'off'
+        }
+    },
+    {
         files: ['**/*md'],
         plugins: {
             markdownlint: markdownlintPlugin
