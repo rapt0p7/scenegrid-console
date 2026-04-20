@@ -82,10 +82,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
-            context: mockContext as any,
-            automation: mockAutomation as any,
-            routerMasterGain: mockMasterGain as any,
-            pluginFactory: mockPluginFactory as any
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockMasterGain,
+            pluginFactory: mockPluginFactory
         });
 
         bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 5);
@@ -105,10 +105,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
-            context: mockContext as any,
-            automation: mockAutomation as any,
-            routerMasterGain: mockMasterGain as any,
-            pluginFactory: mockPluginFactory as any
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockMasterGain,
+            pluginFactory: mockPluginFactory
         });
 
         const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
@@ -141,10 +141,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
-            context: mockContext as any,
-            automation: mockAutomation as any,
-            routerMasterGain: mockMasterGain as any,
-            pluginFactory: mockPluginFactory as any
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockMasterGain,
+            pluginFactory: mockPluginFactory
         });
 
         (bus as any).filterNode = { frequency: { value: 1000 } };
@@ -188,10 +188,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
-            context: mockContext as any,
-            automation: mockAutomation as any,
-            routerMasterGain: mockMasterGain as any,
-            pluginFactory: mockPluginFactory as any
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockMasterGain,
+            pluginFactory: mockPluginFactory
         });
 
         const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
@@ -234,10 +234,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
-            context: mockContext as any,
-            automation: mockAutomation as any,
-            routerMasterGain: mockMasterGain as any,
-            pluginFactory: mockPluginFactory as any
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockMasterGain,
+            pluginFactory: mockPluginFactory
         });
 
         mockRtpcManager.getValue.mockReturnValue(100);
@@ -277,10 +277,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
-            context: mockContext as any,
-            automation: mockAutomation as any,
-            routerMasterGain: mockMasterGain as any,
-            pluginFactory: mockPluginFactory as any
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockMasterGain,
+            pluginFactory: mockPluginFactory
         });
 
         (bus as any).filterNode = { frequency: { value: 1000 } };
@@ -316,10 +316,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1 },
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
             });
 
             expect(bus.duckerTapNode.connect).toHaveBeenCalledWith(expect.any(Object));
@@ -330,10 +330,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1, filter: { type: 'lowpass', frequency: 22_000 } },
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
             });
 
             const filterNode = (bus as any).filterNode;
@@ -355,10 +355,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1, filter: { type: 'lowpass', frequency: 22_000 } },
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
             });
 
             expect((bus as any).filterNode).toBeNull();
@@ -372,10 +372,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1 },
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
             });
 
             mockAutomation.ramp.mockClear();
@@ -393,10 +393,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1 },
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
             });
 
             mockAutomation.ramp.mockClear();
@@ -414,10 +414,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1 },
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
             });
 
             bus.setRtpcGainModifier(0.5, 0);
@@ -438,10 +438,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: {},
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
             });
             mockAutomation.ramp.mockClear();
         });
@@ -482,10 +482,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: {},
-                context: mockContext as any,
-                automation: mockAutomation as any,
-                routerMasterGain: mockMasterGain as any,
-                pluginFactory: mockPluginFactory as any
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
             });
 
             bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 10);
@@ -504,15 +504,15 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         const bus = new AudioBus({
             id: 'bus' as BusId,
             config: {},
-            context: mockContext as any,
-            automation: mockAutomation as any,
-            routerMasterGain: mockMasterGain as any,
-            pluginFactory: mockPluginFactory as any
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockMasterGain,
+            pluginFactory: mockPluginFactory
         });
 
         const connectSpy = vi.spyOn(bus.duckerTapNode, 'connect');
 
-        bus.safeReplaceFilter({ type: 'alien_filter' } as any, 0);
+        bus.safeReplaceFilter({ type: 'alien_filter' as any }, 0);
 
         mockContext.currentTime += 0.01;
         bus.processFrame(mockContext.currentTime);
@@ -528,10 +528,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         const bus = new AudioBus({
             id: 'bus' as BusId,
             config: {},
-            context: mockContext as any,
-            automation: mockAutomation as any,
-            routerMasterGain: mockMasterGain as any,
-            pluginFactory: mockPluginFactory as any
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockMasterGain,
+            pluginFactory: mockPluginFactory
         });
 
         bus.safeReplaceFilter(mockConvolver as any, 0);
@@ -546,10 +546,10 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
-            context: mockContext as any,
-            automation: mockAutomation as any,
-            routerMasterGain: mockMasterGain as any,
-            pluginFactory: mockPluginFactory as any
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockMasterGain,
+            pluginFactory: mockPluginFactory
         });
 
         mockAutomation.ramp.mockClear();

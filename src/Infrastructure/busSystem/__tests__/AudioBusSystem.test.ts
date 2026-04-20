@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-useless-undefined
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -54,7 +55,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
 
         mockBusConfig = {
             music: { gain: 1 },
-            sfx: { gain: 0.8, sends: { music: 0.5 } }
+            sfx: { gain: 0.8, sends: { ['music' as BusId]: 0.5 } }
         };
 
         mockPluginFactory = {

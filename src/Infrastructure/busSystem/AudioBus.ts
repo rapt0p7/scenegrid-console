@@ -1,4 +1,4 @@
-/* eslint-disable unicorn/prefer-structured-clone */
+// oxlint-disable max-lines-per-function
 // noinspection D
 
 import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
@@ -51,10 +51,11 @@ export default class AudioBus implements IAudioBus {
     private readonly automation: AutomationEngine;
     private readonly id: BusId;
     private readonly context: AudioCtx;
-    private readonly config: IBus;
+    private readonly config: Readonly<IBus>;
     private readonly defaultGain: number;
     private readonly routerMasterGain: GainNodeLike | null;
     private filterNode: BiquadFilterNodeLike | ConvolverNodeNodeLike | null = null;
+    private currentFilterConfig?: IFilter;
     private readonly sendGains: Map<BusId, GainNodeLike> = new Map();
     private readonly pluginFactory: IPluginFactory;
     private rtpcBindings: RTPCBinding[] = [];
@@ -78,10 +79,10 @@ export default class AudioBus implements IAudioBus {
 
     constructor({
         id,
-        config = {},
+        config,
         context,
         automation,
-        routerMasterGain = null,
+        routerMasterGain,
         pluginFactory
     }: {
         id: BusId;
@@ -94,8 +95,8 @@ export default class AudioBus implements IAudioBus {
         this.id = id;
         this.context = context;
         this.automation = automation;
-        this.config =
-            typeof structuredClone === 'function' ? structuredClone(config) : JSON.parse(JSON.stringify(config));
+        this.config = structuredClone(config);
+        this.currentFilterConfig = this.config.filter;
         this.defaultGain = config.gain ?? 1;
         this.routerMasterGain = routerMasterGain;
         this.pluginFactory = pluginFactory;
@@ -135,7 +136,15 @@ export default class AudioBus implements IAudioBus {
     }
 
     public getConfig(): IBus {
-        return this.config;
+        const result: Record<string, any> = { ...this.config };
+
+        if (isDefined(this.currentFilterConfig)) {
+            result.filter = this.currentFilterConfig;
+        } else {
+            delete result.filter;
+        }
+
+        return result as IBus;
     }
 
     public setLogicalGain(gain: number, durationMs: number = 0): void {
@@ -212,7 +221,7 @@ export default class AudioBus implements IAudioBus {
         targetBusId,
         targetNode,
         targetGain,
-        durationMs = 0
+        durationMs
     }: {
         targetBusId: BusId;
         targetNode: AudioNodeLike;
@@ -249,7 +258,6 @@ export default class AudioBus implements IAudioBus {
         }
     }
 
-    // eslint-disable-next-line max-params
     private applyRTPCTarget(
         target: RTPCTargetProperty,
         mappedValue: number,
@@ -293,6 +301,7 @@ export default class AudioBus implements IAudioBus {
             }
             default: {
                 const exhaustiveCheck: never = target;
+                // oxlint-disable-next-line typescript/restrict-template-expressions
                 console.warn(`[AudioBus] Unhandled RTPC target: ${exhaustiveCheck}`);
             }
         }
@@ -377,7 +386,7 @@ export default class AudioBus implements IAudioBus {
                 this.connectFilter();
 
                 if (this.isAudioNode(newFilter)) {
-                    this.config.filter = this.isBiquadFilterNode(this.filterNode)
+                    this.currentFilterConfig = this.isBiquadFilterNode(this.filterNode)
                         ? {
                               type: this.filterNode.type,
                               frequency: this.filterNode.frequency?.value,
@@ -385,16 +394,16 @@ export default class AudioBus implements IAudioBus {
                           }
                         : { type: 'reverb' };
                 } else {
-                    this.config.filter = newFilter;
+                    this.currentFilterConfig = newFilter;
                 }
             } else {
                 this.#preFilterGain.connect(this.#postFilterGain);
-                delete this.config.filter;
+                this.currentFilterConfig = undefined;
             }
         } else {
             this.filterNode = null;
             this.#preFilterGain.connect(this.#postFilterGain);
-            delete this.config.filter;
+            this.currentFilterConfig = undefined;
         }
 
         this.automation.ramp(this.#postFilterGain.gain, 1, this.swapState.durationMs, 'linear');
@@ -414,7 +423,7 @@ export default class AudioBus implements IAudioBus {
                 this.filterNode.connect(this.#postFilterGain);
 
                 if (this.isBiquadFilterNode(this.filterNode)) {
-                    this.config.filter = {
+                    this.currentFilterConfig = {
                         type: this.filterNode.type,
                         frequency: this.filterNode.frequency?.value,
                         Q: this.filterNode.Q?.value
@@ -422,11 +431,12 @@ export default class AudioBus implements IAudioBus {
                 }
             } else {
                 this.#preFilterGain.connect(this.#postFilterGain);
-                delete this.config.filter;
+                this.currentFilterConfig = undefined;
             }
         } else {
             this.filterNode = null;
             this.#preFilterGain.connect(this.#postFilterGain);
+            this.currentFilterConfig = undefined;
         }
     }
 
