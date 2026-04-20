@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-useless-undefined
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -17,7 +18,7 @@ import {
 } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
-import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId, SnapshotId, SoundId } from '@domain/Types/Branded.js';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),
@@ -39,6 +40,7 @@ const createMockAudioParameter = () => ({
     setTargetAtTime: vi.fn()
 });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const mockListener = {
     positionX: createMockAudioParameter(),
     positionY: createMockAudioParameter(),
@@ -162,7 +164,7 @@ vi.mock('@infrastructure', async importOriginal => {
             };
         }),
         // eslint-disable-next-line max-params
-        CullingRunner: vi.fn().mockImplementation(function (arbiter, controller, contextProvider, interval) {
+        CullingRunner: vi.fn().mockImplementation(function (arbiter, controller, contextProvider) {
             (globalThis as any).__mockCullingContext = contextProvider;
             return { start: vi.fn(), stop: vi.fn() };
         }),
@@ -199,6 +201,7 @@ describe('AudioEngine', () => {
 
     let playSpy: any;
     let stopSpy: any;
+    // oxlint-disable-next-line no-unused-vars
     let getLogicalVoiceSpy: any;
 
     beforeEach(async () => {
@@ -232,7 +235,7 @@ describe('AudioEngine', () => {
 
         engine = new AudioEngine({
             manifest: {
-                test_sound: { url: 'audio/test.mp3' }
+                ['test_sound' as SoundId]: { url: 'audio/test.mp3' }
             },
             buses: {
                 master: { gain: 1 },
@@ -240,8 +243,8 @@ describe('AudioEngine', () => {
             },
             snapshots: {},
             soundMap: {
-                test_sound: { busId: 'sfx', voice: { priority: 5 }, spatial: true },
-                sound_no_voice: { busId: 'master' }
+                ['test_sound' as SoundId]: { busId: 'sfx', voice: { priority: 5 }, spatial: true },
+                ['sound_no_voice' as SoundId]: { busId: 'master' }
             } as any,
             globalVoiceLimit: 32
         });
@@ -361,8 +364,8 @@ describe('AudioEngine', () => {
         it('should emit load:start, load:progress, and load:complete during init', async () => {
             const freshEngine = new AudioEngine({
                 manifest: {
-                    sound1: { url: 'audio/1.mp3' },
-                    sound2: { url: 'audio/2.mp3' }
+                    ['sound1' as SoundId]: { url: 'audio/1.mp3' },
+                    ['sound2' as SoundId]: { url: 'audio/2.mp3' }
                 },
                 buses: { master: { gain: 1 } },
                 soundMap: {},
@@ -404,8 +407,8 @@ describe('AudioEngine', () => {
         it('should emit engine:error for failed files and include them in load:complete', async () => {
             const errorEngine = new AudioEngine({
                 manifest: {
-                    good: { url: 'audio/good.mp3' },
-                    bad: { url: 'audio/fail.mp3' }
+                    ['good' as SoundId]: { url: 'audio/good.mp3' },
+                    ['bad' as SoundId]: { url: 'audio/fail.mp3' }
                 },
                 buses: { master: { gain: 1 } },
                 soundMap: {},
@@ -498,16 +501,24 @@ describe('AudioEngine', () => {
         });
 
         it('should delegate mixer.addModifier and mixer.pop to SnapshotManager', () => {
-            expect(() => engine.mixer.addModifier('pauseMenu', 'layer1', 10)).not.toThrow();
-            expect(() => engine.mixer.removeModifier('layer1')).not.toThrow();
+            expect(() => {
+                engine.mixer.addModifier('pauseMenu', 'layer1', 100);
+            }).not.toThrow();
+            expect(() => {
+                engine.mixer.removeModifier('layer1');
+            }).not.toThrow();
         });
 
         it('should delegate music loops and transitions to Sequencer', () => {
-            expect(() => engine.music.playLoop('bgm', 'verse1')).not.toThrow();
-            expect(() => engine.music.stopLoop('bgm')).not.toThrow();
-            expect(() =>
-                engine.music.transitionTo({ soundId: 'bgm' as SoundId, targetRegion: 'chorus' })
-            ).not.toThrow();
+            expect(() => {
+                engine.music.playLoop('bgm', 'verse1');
+            }).not.toThrow();
+            expect(() => {
+                engine.music.stopLoop('bgm');
+            }).not.toThrow();
+            expect(() => {
+                engine.music.transitionTo({ soundId: 'bgm' as SoundId, targetRegion: 'chorus' });
+            }).not.toThrow();
         });
 
         it('should call resume on unlock()', async () => {
@@ -525,7 +536,7 @@ describe('AudioEngine', () => {
                 .spyOn(debugObject.snapshotManager, 'activateSnapshot')
                 .mockImplementation(async () => {});
 
-            await engine.mixer.setState('main_menu');
+            engine.mixer.setState('main_menu');
 
             expect(activateSpy).toHaveBeenCalledWith('main_menu', 'scene_main', PRIORITY.BASE);
             activateSpy.mockRestore();
@@ -619,11 +630,11 @@ describe('AudioEngine', () => {
                 manifest: {},
                 soundMap: {},
                 buses: { master: { gain: 1 } },
-                snapshots: { snap1: { buses: { master: { gain: 0.5 } } } }
+                snapshots: { ['snap1' as SnapshotId]: { buses: { ['master' as BusId]: { gain: 0.5 } } } }
             });
             await layerEngine.init();
 
-            await layerEngine.mixer.addModifier('snap1', 'layer1');
+            layerEngine.mixer.addModifier('snap1', 'layer1');
 
             expect(recomputeSpy).toHaveBeenCalledWith({ durationMs: 500 });
             recomputeSpy.mockRestore();
@@ -709,8 +720,11 @@ describe('AudioEngine', () => {
     });
 
     describe('Spatial Audio Pipeline (Config -> Instance -> Facade)', () => {
+        // oxlint-disable-next-line no-shadow
         let engine: AudioEngine;
+        // oxlint-disable-next-line no-unused-vars
         let mock3DVoice: any;
+        // oxlint-disable-next-line no-unused-vars
         let mock2DVoice: any;
 
         beforeEach(async () => {
@@ -734,14 +748,14 @@ describe('AudioEngine', () => {
 
             engine = new AudioEngine({
                 manifest: {
-                    bullet_flyby: { url: 'audio/bullet.mp3' },
-                    ui_click: { url: 'audio/click.mp3' }
+                    ['bullet_flyby' as SoundId]: { url: 'audio/bullet.mp3' },
+                    ['ui_click' as SoundId]: { url: 'audio/click.mp3' }
                 },
                 buses: { master: { gain: 1 } },
                 snapshots: {},
                 soundMap: {
-                    bullet_flyby: { busId: 'master', spatial: true },
-                    ui_click: { busId: 'master' }
+                    ['bullet_flyby' as SoundId]: { busId: 'master', spatial: true },
+                    ['ui_click' as SoundId]: { busId: 'master' }
                 } as any
             });
 

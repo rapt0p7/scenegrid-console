@@ -44,13 +44,15 @@ import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { LayerId, PlaybackId, SnapshotId, SoundId } from '@domain/Types/Branded.js';
 import type { IPluginFactory, DebuggerOptions } from '@infrastructure';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { Handler } from 'mitt';
+import type { DeepReadonly } from '@shared/DeepReadonly.js';
+import { typedEntries, typedFromEntries } from '@shared/typedObjects';
 
 export interface InitParameters {
-    isStrictValidation?: boolean;
+    readonly isStrictValidation?: boolean;
 }
 
 export class AudioEngine {
@@ -68,33 +70,50 @@ export class AudioEngine {
     #isInitialized = false;
 
     public readonly events = {
-        on: <K extends keyof AudioEngineEvents>(type: K, handler: Handler<AudioEngineEvents[K]>) =>
-            this.#dispatcher.on(type, handler),
-        off: <K extends keyof AudioEngineEvents>(type: K, handler?: Handler<AudioEngineEvents[K]>) =>
-            this.#dispatcher.off(type, handler),
-        once: <K extends keyof AudioEngineEvents>(type: K, handler: Handler<AudioEngineEvents[K]>) =>
-            this.#dispatcher.once(type, handler),
-        clear: () => this.#dispatcher.clear()
+        on: <K extends keyof AudioEngineEvents>(type: K, handler: Handler<AudioEngineEvents[K]>) => {
+            this.#dispatcher.on(type, handler);
+        },
+        off: <K extends keyof AudioEngineEvents>(type: K, handler?: Handler<AudioEngineEvents[K]>) => {
+            this.#dispatcher.off(type, handler);
+        },
+        once: <K extends keyof AudioEngineEvents>(type: K, handler: Handler<AudioEngineEvents[K]>) => {
+            this.#dispatcher.once(type, handler);
+        },
+        clear: () => {
+            this.#dispatcher.clear();
+        }
     };
 
     public readonly params = {
-        set: (parameterName: string, value: number) => this.#rtpcManager.setValue(parameterName, value),
+        set: (parameterName: string, value: number) => {
+            this.#rtpcManager.setValue(parameterName, value);
+        },
         get: (parameterName: string) => this.#rtpcManager.getValue(parameterName)
     };
 
     public readonly mixer = {
-        setState: (snapshotName: string) =>
-            this.#snapshotManager.activateSnapshot(snapshotName, 'scene_main', PRIORITY.BASE),
-        addModifier: (snapshotName: string, id: string, priority = PRIORITY.OVERLAY) =>
-            this.#snapshotManager.activateSnapshot(snapshotName, id, priority),
+        setState: (snapshotName: string) => {
+            this.#snapshotManager.activateSnapshot(snapshotName as SnapshotId, 'scene_main' as LayerId, PRIORITY.BASE);
+        },
+        addModifier: (snapshotName: string, id: string, priority = PRIORITY.OVERLAY) => {
+            this.#snapshotManager.activateSnapshot(snapshotName as SnapshotId, id as LayerId, priority);
+        },
 
-        removeModifier: (id: string) => this.#snapshotManager.clearLayer(id)
+        removeModifier: (id: string) => {
+            this.#snapshotManager.clearLayer(id as LayerId);
+        }
     };
 
     public readonly music = {
-        playLoop: (soundId: string, region: string) => this.#sequencer.playLoop(soundId as SoundId, region),
-        stopLoop: (soundId: string) => this.#sequencer.stopLoop(soundId as SoundId),
-        transitionTo: (options: ITransitionToParameters) => this.#sequencer.transitionTo(options)
+        playLoop: (soundId: string, region: string) => {
+            this.#sequencer.playLoop(soundId as SoundId, region);
+        },
+        stopLoop: (soundId: string) => {
+            this.#sequencer.stopLoop(soundId as SoundId);
+        },
+        transitionTo: (options: ITransitionToParameters) => {
+            this.#sequencer.transitionTo(options);
+        }
     };
 
     public readonly spatial = {
@@ -109,14 +128,14 @@ export class AudioEngine {
             ux,
             uy,
             uz
-        }: {
+        }: DeepReadonly<{
             fx: number;
             fy: number;
             fz: number;
             ux: number;
             uy: number;
             uz: number;
-        }) => {
+        }>) => {
             this.#contextManager.setListenerOrientation(fx, fy, fz, ux, uy, uz);
         },
 
@@ -145,6 +164,7 @@ export class AudioEngine {
         this.config = deepFreeze<IAudioEngineConfig>({ ...config });
     }
 
+    // oxlint-disable-next-line max-lines-per-function
     public async init(parameters?: InitParameters): Promise<void> {
         if (this.#isInitialized) return;
 
@@ -212,7 +232,7 @@ export class AudioEngine {
                 globalVoiceLimit: this.config.globalVoiceLimit ?? 32,
                 voiceConfigResolver: (soundId: SoundId) => {
                     const cfg = this.config.soundMap[soundId];
-                    return cfg && 'voice' in cfg ? cfg.voice : undefined;
+                    return isDefined(cfg) && 'voice' in cfg ? cfg.voice : undefined;
                 }
             });
 
@@ -259,7 +279,6 @@ export class AudioEngine {
 
             this.#router = new AudioRouter({
                 soundController: this.#soundController,
-                busSystem: this.#busSystem,
                 duckingManager,
                 rtpcManager: this.#rtpcManager,
                 containerPolicy,
@@ -271,8 +290,8 @@ export class AudioEngine {
 
             const resolver = new MixerStateResolver({ defaultBusGain: 1 });
 
-            const layerStack = new MixerLayerStack(resolver, async () => {
-                await coordinator.recompute({ durationMs: 500 });
+            const layerStack = new MixerLayerStack(resolver, () => {
+                coordinator.recompute({ durationMs: 500 });
             });
 
             const mixerTransitionEngine = new MixerTransitionEngine(this.#busSystem, this.#rtpcManager);
@@ -289,17 +308,21 @@ export class AudioEngine {
 
             this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingProvider);
 
-            this.#engineTicker.add('rtpc-manager', RTPCManager.TICK_RATE_MS, (_, deltaTimeMs) =>
-                this.#rtpcManager.tick(deltaTimeMs)
-            );
-            this.#engineTicker.add('sound-controller', SoundController.TICK_RATE_MS, () =>
-                this.#soundController.tick()
-            );
-            this.#engineTicker.add('culling-runner', CullingRunner.TICK_RATE_MS, () => this.#cullingRunner.tick());
-            mixerTransitionEngine.events.on('transition:start', () => this.#cullingRunner.tick());
-            this.#engineTicker.add('mixer-state-manager', MixerTransitionEngine.TICK_RATE_MS, (_, deltaTimeMs) =>
-                mixerTransitionEngine.update(deltaTimeMs)
-            );
+            this.#engineTicker.add('rtpc-manager', RTPCManager.TICK_RATE_MS, (_, deltaTimeMs) => {
+                this.#rtpcManager.tick(deltaTimeMs);
+            });
+            this.#engineTicker.add('sound-controller', SoundController.TICK_RATE_MS, () => {
+                this.#soundController.tick();
+            });
+            this.#engineTicker.add('culling-runner', CullingRunner.TICK_RATE_MS, () => {
+                this.#cullingRunner.tick();
+            });
+            mixerTransitionEngine.events.on('transition:start', () => {
+                this.#cullingRunner.tick();
+            });
+            this.#engineTicker.add('mixer-state-manager', MixerTransitionEngine.TICK_RATE_MS, (_, deltaTimeMs) => {
+                mixerTransitionEngine.update(deltaTimeMs);
+            });
 
             this.#isInitialized = true;
 
@@ -323,7 +346,7 @@ export class AudioEngine {
         await this.#contextManager.suspend();
     }
 
-    public play(soundId: string, options?: IPlayOptions): PlaybackId | PlaybackId[] | null {
+    public play(soundId: string, options?: DeepReadonly<IPlayOptions>): PlaybackId | PlaybackId[] | null {
         return this.#router.play(soundId as SoundId, options);
     }
 
@@ -331,7 +354,7 @@ export class AudioEngine {
         this.#router.stop(playbackIdOrSoundId as PlaybackId | PlaybackId[] | SoundId);
     }
 
-    public async showDebugUI(options?: DebuggerOptions): Promise<void> {
+    public async showDebugUI(options?: DeepReadonly<DebuggerOptions>): Promise<void> {
         const { default: AudioDebugger } = await import('@infrastructure/debug/AudioDebugger.js');
         const debuggerInstance = new AudioDebugger(
             this.#contextManager.context,
@@ -356,7 +379,7 @@ export class AudioEngine {
         };
     }
 
-    private initRTPC(rtpcManifest: IRTPCManifest): void {
+    private initRTPC(rtpcManifest: DeepReadonly<IRTPCManifest>): void {
         for (const [parameterName, config] of Object.entries(rtpcManifest)) {
             if (isDefined(config.defaultValue)) {
                 this.#rtpcManager.setValue(parameterName, config.defaultValue);
@@ -366,12 +389,13 @@ export class AudioEngine {
         }
     }
 
+    // oxlint-disable-next-line max-lines-per-function
     private async loadSounds(
         manifest: ISpriteSoundManifest,
         loader: AudioBufferLoader,
         registry: SoundRegistry
     ): Promise<void> {
-        const entries = Object.entries(manifest);
+        const entries = typedEntries(manifest);
         const totalItems = entries.length;
 
         if (totalItems === 0) {
@@ -383,7 +407,7 @@ export class AudioEngine {
         const startTime = performance.now();
         const failedItems: string[] = [];
 
-        const urls = Object.fromEntries(entries.map(([k, v]) => [k, v.url]));
+        const urls = typedFromEntries(entries.map(([k, v]) => [k, v.url]));
 
         const buffers = await loader.loadBatch(
             urls,
