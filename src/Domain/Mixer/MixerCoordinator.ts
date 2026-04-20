@@ -1,6 +1,7 @@
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
 import type MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
-import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
+import type { ITransitionOptions, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
+import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export default class MixerCoordinator {
     private baseState: MixerState = { buses: {} };
@@ -10,17 +11,17 @@ export default class MixerCoordinator {
         private readonly stateManager: MixerTransitionEngine
     ) {}
 
-    recompute(options?: { durationMs?: number; interruptible?: boolean }): void {
+    recompute(options?: DeepReadonly<ITransitionOptions>): void {
         const next = this.layerStack.computeState(this.baseState);
-        return this.stateManager.applyState(next, options);
+        this.stateManager.applyState(next, options);
     }
 
     getState(): MixerState {
         return this.stateManager.getState();
     }
 
-    setBaseState(state: MixerState): void {
+    setBaseState(state: DeepReadonly<MixerState>): void {
         this.baseState = state;
-        return this.recompute();
+        this.recompute();
     }
 }
