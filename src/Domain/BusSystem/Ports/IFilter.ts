@@ -11,14 +11,14 @@ export type AudioFilterType =
 export type IFilter = IBiquadConfig | IReverbConfig;
 
 export interface IBiquadConfig {
-    type: AudioFilterType;
-    frequency: number;
-    Q?: number;
+    readonly type: AudioFilterType;
+    readonly frequency: number;
+    readonly Q?: number;
 }
 
 export interface IReverbConfig {
-    type: 'reverb';
-    reverbTime?: number;
-    reverbDecay?: number;
-    frequency?: never;
+    readonly type: 'reverb';
+    readonly reverbTime?: number;
+    readonly reverbDecay?: number;
+    readonly frequency?: never;
 }

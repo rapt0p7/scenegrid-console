@@ -5,10 +5,10 @@ import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 
 export interface IAudioEngineConfig {
-    manifest: ISpriteSoundManifest;
-    buses: IBuses;
-    snapshots: ISnapshots;
-    soundMap: ISoundMap;
-    rtpcManifest?: IRTPCManifest;
-    globalVoiceLimit?: number;
+    readonly manifest: ISpriteSoundManifest;
+    readonly buses: IBuses;
+    readonly snapshots: ISnapshots;
+    readonly soundMap: ISoundMap;
+    readonly rtpcManifest?: IRTPCManifest;
+    readonly globalVoiceLimit?: number;
 }

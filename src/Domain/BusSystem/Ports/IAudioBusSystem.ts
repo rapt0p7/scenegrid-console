@@ -1,4 +1,4 @@
-import type { IAudioBus } from '@domain/BusSystem/Ports/IAudioBus';
+import type { IAudioBus } from '@domain/BusSystem/Ports/IAudioBus.js';
 import type { BusId } from '@domain/Types/Branded.js';
 
 export interface IAudioBusSystem {

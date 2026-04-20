@@ -4,15 +4,15 @@ import type { MathCurveDefinition, MathCurvePresetDefinition } from '@shared/Mat
 export type RTPCTargetProperty = 'gain' | 'filterFrequency' | 'pan' | 'pitch' | 'sendLevel';
 
 export interface RTPCPoint {
-    x: number;
-    y: number;
+    readonly x: number;
+    readonly y: number;
 }
 
 export type RTPCCurvePreset = MathCurvePresetDefinition;
 export type RTPCCurveDefinition = MathCurveDefinition;
 export interface IRTPCConfig {
-    gameParam: string;
-    curve: RTPCCurveDefinition | RTPCCurvePreset;
-    sendTargetBus?: BusId;
-    smoothingMs?: number;
+    readonly gameParam: string;
+    readonly curve: RTPCCurveDefinition | RTPCCurvePreset;
+    readonly sendTargetBus?: BusId;
+    readonly smoothingMs?: number;
 }

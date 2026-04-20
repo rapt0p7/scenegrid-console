@@ -1,7 +1,7 @@
 export interface IGlobalRTPCParameterConfig {
-    attackMs?: number;
-    releaseMs?: number;
-    defaultValue?: number;
+    readonly attackMs?: number;
+    readonly releaseMs?: number;
+    readonly defaultValue?: number;
 }
 
 export type IRTPCManifest = Record<string, IGlobalRTPCParameterConfig>;

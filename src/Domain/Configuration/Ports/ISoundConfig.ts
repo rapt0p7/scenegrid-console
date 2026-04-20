@@ -1,82 +1,83 @@
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { BusId, SoundId } from '@domain/Types/Branded.js';
+import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export interface IBaseSoundConfig {
-    busId?: BusId;
-    variation?: IVariationConfig;
-    ducking?: IDuckingConfig;
-    rtpc?: Partial<Record<RTPCTargetProperty, IRTPCConfig>>;
+    readonly busId?: BusId;
+    readonly variation?: DeepReadonly<IVariationConfig>;
+    readonly ducking?: DeepReadonly<IDuckingConfig>;
+    readonly rtpc?: DeepReadonly<Partial<Record<RTPCTargetProperty, IRTPCConfig>>>;
 }
 
 export interface ISpatialConfig {
-    distanceModel?: DistanceModelType;
-    refDistance?: number;
-    maxDistance?: number;
-    rolloffFactor?: number;
-    panningModel?: PanningModelType;
+    readonly distanceModel?: DistanceModelType;
+    readonly refDistance?: number;
+    readonly maxDistance?: number;
+    readonly rolloffFactor?: number;
+    readonly panningModel?: PanningModelType;
 }
 
 export interface IDuckingConfig {
-    target?: BusId | BusId[];
-    intensity?: number;
+    readonly target?: DeepReadonly<BusId | BusId[]>;
+    readonly intensity?: number;
 }
 
 export interface IVariationConfig {
-    pitchVar?: number;
-    volumeVar?: number;
-    randomOffset?: number;
+    readonly pitchVar?: number;
+    readonly volumeVar?: number;
+    readonly randomOffset?: number;
 }
 
 export interface IVoiceConfig {
-    priority?: number;
-    virtualization?: 'kill' | 'virtualize';
+    readonly priority?: number;
+    readonly virtualization?: 'kill' | 'virtualize';
 }
 
 export type ContainerMode = 'random' | 'random_no_repeat' | 'sequence';
 
 export interface ISoundConfig extends IBaseSoundConfig {
-    isLoop?: boolean;
-    voice?: IVoiceConfig;
-    src?: string;
-    spatial?: ISpatialConfig | boolean;
-    hasPanner?: boolean;
+    readonly isLoop?: boolean;
+    readonly voice?: IVoiceConfig;
+    readonly src?: string;
+    readonly spatial?: ISpatialConfig | boolean;
+    readonly hasPanner?: boolean;
 }
 
 export interface ISmartLoopSoundConfig {
-    busId: BusId;
-    smartLoop: {
-        bpm?: number;
-        beatsPerBar?: number;
-        crossfade?: number;
-        regions: Record<string, [startSample: number, endSample: number]>;
+    readonly busId: BusId;
+    readonly smartLoop: {
+        readonly bpm?: number;
+        readonly beatsPerBar?: number;
+        readonly crossfade?: number;
+        readonly regions: Record<string, readonly [startSample: number, endSample: number]>;
     };
 }
 
 export interface IContainerSoundConfig extends IBaseSoundConfig {
-    isContainer: true;
-    mode: ContainerMode;
-    sources: SoundId[];
+    readonly isContainer: true;
+    readonly mode: ContainerMode;
+    readonly sources: SoundId[];
 }
 
 export interface ILayerConfig {
-    src: SoundId;
-    delayMs: number;
-    volume: number;
-    rate: number;
+    readonly src: SoundId;
+    readonly delayMs: number;
+    readonly volume: number;
+    readonly rate: number;
 }
 
 export interface ILayeredSoundConfig {
-    isLayered: true;
-    busId: BusId;
-    ducking?: IDuckingConfig;
-    layers: ILayerConfig[];
+    readonly isLayered: true;
+    readonly busId: BusId;
+    readonly ducking?: IDuckingConfig;
+    readonly layers: ILayerConfig[];
 }
 
 export interface IPlayOptions {
-    isLoop?: boolean;
-    rate?: number;
-    volume?: number;
-    seek?: number;
+    readonly isLoop?: boolean;
+    readonly rate?: number;
+    readonly volume?: number;
+    readonly seek?: number;
 }
 
 export type AnySoundConfig = ISoundConfig | ISmartLoopSoundConfig | IContainerSoundConfig | ILayeredSoundConfig;

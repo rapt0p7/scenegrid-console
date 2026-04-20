@@ -1,23 +1,31 @@
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
+import { BusId, SnapshotId } from '@domain/Types/Branded.js';
 
 export interface MixerState {
-    buses: Record<
-        string,
+    readonly buses: Record<
+        BusId,
         {
-            gain: number;
-            filter?: IFilter | null;
-            sends?: Record<string, number | null>;
-            rtpc?: Partial<Record<RTPCTargetProperty, IRTPCConfig>>;
+            readonly gain: number;
+            readonly filter?: IFilter | null;
+            readonly sends?: Sends;
+            readonly rtpc?: Partial<Record<RTPCTargetProperty, IRTPCConfig>>;
         }
     >;
-    metadata?: {
-        snapshotId?: string;
-        timestamp: number;
+    readonly metadata?: {
+        readonly snapshotId?: SnapshotId;
+        readonly timestamp: number;
     };
 }
 
+export type Sends = Record<BusId, number | null>;
+
 export type MixerSnapshot = Partial<MixerState>;
+
+export interface ITransitionOptions {
+    readonly durationMs?: number;
+    readonly interruptible?: boolean;
+}
 
 export interface MixerEvents {
     // eslint-disable-next-line @typescript-eslint/naming-convention

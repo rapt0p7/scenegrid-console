@@ -1,7 +1,7 @@
 import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 
 export interface IAudioBus {
     logicalTargetGain: number;

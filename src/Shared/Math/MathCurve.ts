@@ -1,16 +1,16 @@
 export interface Point2D {
-    x: number;
-    y: number;
+    readonly x: number;
+    readonly y: number;
 }
 
 export type MathCurveType = 'linear' | 'logarithmic' | 'exponential' | 's-curve';
 
 export interface MathCurvePresetDefinition {
-    type: MathCurveType;
-    minX: number;
-    maxX: number;
-    minY: number;
-    maxY: number;
+    readonly type: MathCurveType;
+    readonly minX: number;
+    readonly maxX: number;
+    readonly minY: number;
+    readonly maxY: number;
 }
 
-export type MathCurveDefinition = Point2D[] | MathCurvePresetDefinition;
+export type MathCurveDefinition = ReadonlyArray<Point2D> | MathCurvePresetDefinition;

@@ -11,19 +11,19 @@ export type QuantizeType = 'Immediate' | 'NextBeat' | 'NextBar';
 export type TransitionBlendMode = 'overlap' | 'crossfade';
 
 export interface ITransitionToParameters {
-    soundId: SoundId;
-    targetRegion: string;
-    transitionRegionName?: string;
-    options?: TransitionOptions;
+    readonly soundId: SoundId;
+    readonly targetRegion: string;
+    readonly transitionRegionName?: string;
+    readonly options?: TransitionOptions;
 }
 
 export interface TransitionOptions {
-    quantize?: QuantizeType;
-    quantizeInterval?: number;
-    crossfadeDuration?: number;
-    grid?: IAudioGrid;
-    blendMode?: TransitionBlendMode;
-    interruptable?: boolean;
+    readonly quantize?: QuantizeType;
+    readonly quantizeInterval?: number;
+    readonly crossfadeDuration?: number;
+    readonly grid?: IAudioGrid;
+    readonly blendMode?: TransitionBlendMode;
+    readonly interruptable?: boolean;
 }
 
 export interface ISequencer {

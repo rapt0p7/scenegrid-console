@@ -1,6 +1,8 @@
+import { SoundId } from '@domain/Types/Branded.js';
+
 export type ISpriteSoundManifest = Record<
-    string,
+    SoundId,
     {
-        url: string;
+        readonly url: string;
     }
 >;

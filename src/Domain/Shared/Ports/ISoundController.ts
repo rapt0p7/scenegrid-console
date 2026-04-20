@@ -1,12 +1,12 @@
 import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
 
 export interface IControllerPlayOptions {
-    when?: number;
-    offset?: number;
-    duration?: number;
-    loop?: boolean;
-    rate?: number;
-    onRevive?: (id: PlaybackId) => void;
+    readonly when?: number;
+    readonly offset?: number;
+    readonly duration?: number;
+    readonly loop?: boolean;
+    readonly rate?: number;
+    readonly onRevive?: (id: PlaybackId) => void;
 }
 
 export type RTPCParameterTarget = 'gain' | 'pitch' | 'pan' | 'filterFrequency';

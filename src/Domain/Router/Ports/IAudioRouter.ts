@@ -1,5 +1,5 @@
 import type { AnySoundConfig, IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { PlaybackId, SoundId } from '@domain/Types/Branded';
+import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
 
 export interface IAudioRouter {
     getSoundConfig(name: string): AnySoundConfig | null;

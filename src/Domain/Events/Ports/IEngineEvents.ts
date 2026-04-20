@@ -1,34 +1,34 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 export interface EngineReadyPayload {
-    timestamp: number;
-    sampleRate: number;
+    readonly timestamp: number;
+    readonly sampleRate: number;
 }
 
 export interface LoadProgressPayload {
-    loadedBytes?: number;
-    totalBytes?: number;
-    loadedItems: number;
-    totalItems: number;
-    progress: number;
-    lastLoadedResource?: string;
+    readonly loadedBytes?: number;
+    readonly totalBytes?: number;
+    readonly loadedItems: number;
+    readonly totalItems: number;
+    readonly progress: number;
+    readonly lastLoadedResource?: string;
 }
 
 export interface LoadCompletePayload {
-    failedItems: string[];
-    durationMs: number;
+    readonly failedItems: string[];
+    readonly durationMs: number;
 }
 
 export interface EngineErrorPayload {
-    code: 'INIT_FAILED' | 'DECODE_ERROR' | 'NETWORK_ERROR' | 'CONTEXT_LOST';
-    message: string;
-    details?: unknown;
+    readonly code: 'INIT_FAILED' | 'DECODE_ERROR' | 'NETWORK_ERROR' | 'CONTEXT_LOST';
+    readonly message: string;
+    readonly details?: unknown;
 }
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type AudioEngineEvents = {
     'engine:ready': EngineReadyPayload;
     'engine:error': EngineErrorPayload;
-    'load:start': { totalItems: number };
+    'load:start': { readonly totalItems: number };
     'load:progress': LoadProgressPayload;
     'load:complete': LoadCompletePayload;
     'state:suspended': void;
