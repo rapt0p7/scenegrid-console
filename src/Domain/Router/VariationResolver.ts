@@ -1,25 +1,31 @@
+// noinspection D
+
 import clamp from '@shared/clamp.js';
+import { isAbsent, isDefined } from '@shared/guards.js';
 
 import type { IBaseSoundConfig, IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 
+type WritablePlayOptions = { -readonly [K in keyof IPlayOptions]: IPlayOptions[K] };
+
+// oxlint-disable-next-line typescript/no-extraneous-class
 export class VariationResolver {
     public static apply(config: IBaseSoundConfig, options: IPlayOptions): IPlayOptions {
-        if (!config.variation) return { ...options };
+        if (isAbsent(config.variation)) return { ...options };
 
         const v = config.variation;
-        const final: IPlayOptions = { ...options };
+        const final: WritablePlayOptions = { ...options };
 
-        if (v.pitchVar) {
+        if (isDefined(v.pitchVar)) {
             const delta = (Math.random() * 2 - 1) * v.pitchVar;
             final.rate = clamp((final.rate ?? 1) + delta, 0.1, 4);
         }
 
-        if (v.volumeVar) {
+        if (isDefined(v.volumeVar)) {
             const delta = (Math.random() * 2 - 1) * v.volumeVar;
             final.volume = clamp((final.volume ?? 1) + delta, 0, 1);
         }
 
-        if (v.randomOffset) {
+        if (isDefined(v.randomOffset)) {
             final.seek = Math.random() * v.randomOffset;
         }
 
