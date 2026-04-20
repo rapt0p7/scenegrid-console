@@ -7,6 +7,8 @@ import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
 import type { MixerEvents } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 import type { Emitter } from 'mitt';
+import { isDefined } from '@shared/guards.js';
+import { LayerId, SnapshotId } from '@domain/Types/Branded.js';
 
 export default class MixerSnapshotManager {
     public readonly events: Emitter<MixerEvents> = mitt<MixerEvents>();
@@ -17,9 +19,9 @@ export default class MixerSnapshotManager {
         private readonly coordinator: MixerCoordinator
     ) {}
 
-    activateSnapshot(name: string, layerId: string, priority: number): void {
+    activateSnapshot(name: SnapshotId, layerId: LayerId, priority: number): void {
         const snapshot = this.snapshots[name];
-        if (!snapshot) return;
+        if (!isDefined(snapshot)) return;
 
         const durationMs = 500;
 
@@ -41,7 +43,7 @@ export default class MixerSnapshotManager {
         this.events.emit('transition:end', { layerId, snapshotName: name });
     }
 
-    async clearLayer(layerId: string): Promise<void> {
+    clearLayer(layerId: LayerId): void {
         if (!this.layerStack.hasLayer(layerId)) return;
 
         const durationMs = 500;
@@ -51,7 +53,7 @@ export default class MixerSnapshotManager {
 
         this.layerStack.removeLayer(layerId);
 
-        await this.coordinator.recompute({ durationMs });
+        this.coordinator.recompute({ durationMs });
 
         this.events.emit('transition:end', { layerId, snapshotName: 'clear' });
     }
