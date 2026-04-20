@@ -1,7 +1,7 @@
 import type { ISnapshots } from 'src/index.js';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const Snapshots: ISnapshots = {
+const Snapshots = {
     idle: {
         buses: {
             musicMain: { gain: 1 },
@@ -55,4 +55,4 @@ const Snapshots: ISnapshots = {
     }
 };
 
-export default Snapshots;
+export default Snapshots as ISnapshots;
