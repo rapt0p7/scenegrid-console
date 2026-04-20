@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import AudioGrid from '@domain/Orchestration/AudioGrid.js';
 import { LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 import Sequencer from '@domain/Orchestration/Sequencer.js';
 

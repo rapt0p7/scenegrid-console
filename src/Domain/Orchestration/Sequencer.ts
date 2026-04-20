@@ -8,6 +8,8 @@ import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import { DeepReadonly } from '@shared/DeepReadonly.js';
+import { isDefined, isAbsent } from '@shared/guards.js';
 
 interface ActiveRegion {
     playbackId: PlaybackId;
@@ -32,17 +34,15 @@ interface TrackContext {
 }
 
 export default class Sequencer implements ISequencer {
-    private readonly controller: ISoundController;
-    private readonly router: IAudioRouter;
     private tracks: Map<SoundId, TrackContext> = new Map();
     private readonly scheduleIntervalMs = 25;
     private readonly lookaheadWindowSec = 0.1;
-    private readonly ticker: IEngineTicker;
 
-    constructor(soundController: ISoundController, audioRouter: IAudioRouter, ticker: IEngineTicker) {
-        this.controller = soundController;
-        this.ticker = ticker;
-        this.router = audioRouter;
+    constructor(
+        private readonly controller: ISoundController,
+        private readonly router: IAudioRouter,
+        private readonly ticker: IEngineTicker
+    ) {
         this.startScheduler();
     }
 
@@ -61,7 +61,7 @@ export default class Sequencer implements ISequencer {
 
     stopLoop(soundId: SoundId): void {
         const track = this.tracks.get(soundId);
-        if (!track || track.state === LoopState.IDLE) return;
+        if (isAbsent(track) || track.state === LoopState.IDLE) return;
 
         track.playId++;
         track.state = LoopState.IDLE;
@@ -73,14 +73,10 @@ export default class Sequencer implements ISequencer {
         for (const active of track.activeRegions) {
             try {
                 active.unsubscribe();
-            } catch {
-                /* empty */
-            }
+            } catch {}
             try {
                 this.controller.cancelScheduled(active.playbackId);
-            } catch {
-                /* empty */
-            }
+            } catch {}
         }
         track.activeRegions.clear();
     }
@@ -89,19 +85,19 @@ export default class Sequencer implements ISequencer {
         this.ticker.remove('sequencer');
     }
 
-    // eslint-disable-next-line complexity
+    // oxlint-disable-next-line max-lines-per-function
     transitionTo({
         soundId,
         targetRegion,
         transitionRegionName,
         options = { interruptable: true, quantize: 'Immediate' }
-    }: ITransitionToParameters): void {
+    }: DeepReadonly<ITransitionToParameters>): void {
         const track = this.getTrackContext(soundId);
         if (track.state === LoopState.IDLE) return;
         if (track.state === LoopState.TRANSITIONING && !options.interruptable) return;
 
         const config = this.router.getSoundConfig(soundId);
-        if (!config || !('smartLoop' in config)) return;
+        if (isAbsent(config) || !('smartLoop' in config)) return;
 
         track.playId++;
         track.state = LoopState.TRANSITIONING;
@@ -109,9 +105,9 @@ export default class Sequencer implements ISequencer {
         const now = this.controller.getCurrentTime();
         let targetTime = now;
 
-        if (options.quantize && options.quantize !== 'Immediate') {
+        if (isDefined(options.quantize) && options.quantize !== 'Immediate') {
             const interval = options.quantizeInterval ?? 1;
-            let currentAnchorTime = track.gridStartTime || 0;
+            let currentAnchorTime = track.gridStartTime ?? 0;
 
             for (const active of track.activeRegions) {
                 if (active.scheduledStartTime <= now) {
@@ -119,15 +115,15 @@ export default class Sequencer implements ISequencer {
                 }
             }
 
-            if (options.grid) {
+            if (isDefined(options.grid)) {
                 targetTime =
                     options.quantize === 'NextBeat'
                         ? options.grid.getNextBeatTime(now, interval)
                         : options.grid.getNextBarTime(now, interval);
-            } else if (track.gridStartTime !== null) {
+            } else if (isDefined(track.gridStartTime)) {
                 const grid = new AudioGrid(
-                    config.smartLoop.bpm || 60,
-                    config.smartLoop.beatsPerBar || 4,
+                    config.smartLoop.bpm ?? 60,
+                    config.smartLoop.beatsPerBar ?? 4,
                     currentAnchorTime
                 );
                 targetTime =
@@ -148,16 +144,12 @@ export default class Sequencer implements ISequencer {
         for (const active of track.activeRegions) {
             try {
                 active.unsubscribe();
-            } catch {
-                /* empty */
-            }
+            } catch {}
 
             if (active.scheduledStartTime >= targetTime) {
                 try {
                     this.controller.cancelScheduled(active.playbackId);
-                } catch {
-                    /* empty */
-                }
+                } catch {}
                 continue;
             }
 
@@ -174,7 +166,7 @@ export default class Sequencer implements ISequencer {
         track.regionQueue = [];
         track.nextScheduleTime = targetTime;
 
-        if (transitionRegionName) {
+        if (isDefined(transitionRegionName) && transitionRegionName !== '') {
             track.regionQueue.push(
                 { name: transitionRegionName, fadeInDurationMs: crossfadeMs },
                 { name: targetRegion, fadeInDurationMs: 0 }
@@ -204,11 +196,11 @@ export default class Sequencer implements ISequencer {
                     const queued = track.regionQueue.shift()!;
                     nextRegionName = queued.name;
                     fadeInMs = queued.fadeInDurationMs;
-                } else if (track.loopRegion) {
+                } else if (isDefined(track.loopRegion)) {
                     nextRegionName = track.loopRegion;
                 }
 
-                if (!nextRegionName) break;
+                if (isAbsent(nextRegionName)) break;
 
                 const regionStartTime = track.nextScheduleTime;
                 const playbackId = this.scheduleRegion({
@@ -218,7 +210,7 @@ export default class Sequencer implements ISequencer {
                     track
                 });
 
-                if (playbackId !== null) {
+                if (isDefined(playbackId)) {
                     if (fadeInMs > 0) {
                         const delayMsToFade = Math.max(0, (regionStartTime - now) * 1000);
                         this.controller.setVolume(playbackId, 0);
@@ -249,6 +241,7 @@ export default class Sequencer implements ISequencer {
         return this.tracks.get(soundId)!;
     }
 
+    // oxlint-disable-next-line typescript/prefer-readonly-parameter-types, max-lines-per-function
     private scheduleRegion({
         soundId,
         regionName,
@@ -261,10 +254,10 @@ export default class Sequencer implements ISequencer {
         track: TrackContext;
     }): PlaybackId | null {
         const config = this.router.getSoundConfig(soundId);
-        if (!config || !('smartLoop' in config)) return null;
+        if (isAbsent(config) || !('smartLoop' in config)) return null;
 
         const region = config.smartLoop.regions[regionName];
-        if (!region) return null;
+        if (isAbsent(region)) return null;
 
         const [startSample, endSample] = region;
         const sampleRate = this.controller.getSampleRate();
@@ -283,9 +276,9 @@ export default class Sequencer implements ISequencer {
             duration: durationSec
         });
 
-        if (!playbackId) {
+        if (isAbsent(playbackId)) {
             console.warn(`[Sequencer] Failed to schedule region ${regionName} for ${soundId} (voice dropped).`);
-            // eslint-disable-next-line no-param-reassign
+
             track.nextScheduleTime = targetTime + durationSec;
 
             return null;
@@ -293,15 +286,10 @@ export default class Sequencer implements ISequencer {
 
         this.router.applyConfigToPlayback(playbackId, config);
 
-        // eslint-disable-next-line no-param-reassign
         targetTime = now + delaySec;
 
-        if (track.gridStartTime === null) {
-            // eslint-disable-next-line no-param-reassign
-            track.gridStartTime = targetTime;
-        }
+        track.gridStartTime ??= targetTime;
 
-        // eslint-disable-next-line no-param-reassign
         track.nextScheduleTime = targetTime + durationSec;
 
         const activeRegion: ActiveRegion = {
@@ -314,9 +302,7 @@ export default class Sequencer implements ISequencer {
             track.activeRegions.delete(activeRegion);
             try {
                 activeRegion.unsubscribe();
-            } catch {
-                /* empty */
-            }
+            } catch {}
         });
 
         track.activeRegions.add(activeRegion);
@@ -324,6 +310,8 @@ export default class Sequencer implements ISequencer {
     }
 
     private startScheduler(): void {
-        this.ticker.add('sequencer', this.scheduleIntervalMs, () => this.processTick());
+        this.ticker.add('sequencer', this.scheduleIntervalMs, () => {
+            this.processTick();
+        });
     }
 }
