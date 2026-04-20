@@ -5,7 +5,7 @@
         "correctness": "error",
         "suspicious": "error",
         "pedantic": "warn",
-        "perf": "warn"
+        "perf": "error"
     },
     "options": {
         "typeAware": true
@@ -13,7 +13,8 @@
     "ignorePatterns": ["node_modules/", "**/build/**", "**/dist/**", "**/*.js", "coverage/"],
     "rules": {
         "import/no-cycle": "error",
-        "unicorn/prefer-structured-clone": "warn"
+        "unicorn/prefer-structured-clone": "warn",
+        "@typescript-eslint/no-unsafe-type-assertion": "warn"
     },
     "overrides": [
         {
