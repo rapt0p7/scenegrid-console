@@ -1,17 +1,23 @@
+// noinspection D
+
+import { isAbsent } from '@shared/guards.js';
+import type { DeepReadonly } from '@shared/DeepReadonly.js';
+
 import type MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
 import type { IMixerLayer } from '@domain/Mixer/Ports/IMixerLayer.js';
 import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
+import type { LayerId } from '@domain/Types/Branded.js';
 
 export const PRIORITY = {
     BASE: 0,
     OVERLAY: 100,
     MODAL: 200,
     TRANSIENT: 300
-};
+} as const;
 
 export default class MixerLayerStack {
     private readonly resolver: MixerStateResolver;
-    private readonly layers: Map<string, IMixerLayer> = new Map();
+    private readonly layers: Map<LayerId, DeepReadonly<IMixerLayer>> = new Map();
     private readonly onChange: () => void;
 
     constructor(resolver: MixerStateResolver, onChange: () => void) {
@@ -19,20 +25,21 @@ export default class MixerLayerStack {
         this.onChange = onChange;
     }
 
-    addLayer(layer: IMixerLayer): void {
+    addLayer(layer: DeepReadonly<IMixerLayer>): void {
         this.layers.set(layer.id, layer);
         this.onChange();
     }
 
-    removeLayer(id: string): void {
+    removeLayer(id: LayerId): void {
         this.layers.delete(id);
         this.onChange();
     }
 
-    updateLayer(id: string, patch: MixerSnapshot): void {
+    updateLayer(id: LayerId, patch: DeepReadonly<MixerSnapshot>): void {
         const layer = this.layers.get(id);
-        if (!layer) return;
-        layer.snapshot = patch;
+        if (isAbsent(layer)) return;
+
+        this.layers.set(id, { ...layer, snapshot: patch });
         this.onChange();
     }
 
@@ -44,20 +51,20 @@ export default class MixerLayerStack {
         }
     }
 
-    computeState(base: MixerState): MixerState {
-        // eslint-disable-next-line unicorn/no-array-sort
+    computeState(base: DeepReadonly<MixerState>): MixerState {
+        // oxlint-disable-next-line unicorn/no-array-sort
         const ordered = [...this.layers.values()].sort((a, b) => a.priority - b.priority);
 
-        let state = base;
+        let state: DeepReadonly<MixerState> | MixerState = base;
 
         for (const layer of ordered) {
             state = this.resolver.resolve(state, layer.snapshot);
         }
 
-        return state;
+        return state as MixerState;
     }
 
-    hasLayer(id: string): boolean {
+    hasLayer(id: LayerId): boolean {
         return this.layers.has(id);
     }
 }
