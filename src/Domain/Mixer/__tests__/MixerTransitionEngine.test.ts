@@ -6,10 +6,12 @@ import { isFilterEqual } from '@domain/BusSystem/ValueObjects/filterEquals.js';
 import MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
 
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
+import { BusId } from '@domain/Types/Branded.js';
 
 describe('Value Objects: isFilterEqual', () => {
     it('should return true for identical references or both null', () => {
         expect(isFilterEqual(null, null)).toBe(true);
+        // oxlint-disable-next-line unicorn/no-useless-undefined
         expect(isFilterEqual(undefined, undefined)).toBe(true);
 
         const filter = { type: 'lowpass', frequency: 1000, Q: 1 } as IFilter;
@@ -74,7 +76,7 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
 
         expect(mockBus.setGainImmediate).toHaveBeenCalledWith(0.5);
         expect(mockBus.setLogicalGain).not.toHaveBeenCalled();
-        expect(manager.getState().buses.music.gain).toBe(0.5);
+        expect(manager.getState().buses['music' as BusId].gain).toBe(0.5);
     });
 
     describe('Normal Operations (After Cold Start)', () => {
@@ -94,19 +96,19 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
         });
 
         it('should calculate remaining time correctly when update hits late', () => {
-            manager.applyState({ buses: { music: { gain: 0.8 } } }, { durationMs: 1000 });
+            manager.applyState({ buses: { ['music' as BusId]: { gain: 0.8 } } }, { durationMs: 1000 });
 
             manager.update(300);
             expect(mockBus.setLogicalGain).toHaveBeenCalledWith(0.8, 700);
         });
 
         it('should finalize state only when duration is reached', () => {
-            manager.applyState({ buses: { music: { gain: 1 } } }, { durationMs: 1000 });
+            manager.applyState({ buses: { ['music' as BusId]: { gain: 1 } } }, { durationMs: 1000 });
             manager.update(999);
-            expect(manager.getState().buses.music).toBeUndefined();
+            expect(manager.getState().buses['music' as BusId]).toBeUndefined();
 
             manager.update(1);
-            expect(manager.getState().buses.music.gain).toBe(1);
+            expect(manager.getState().buses['music' as BusId].gain).toBe(1);
         });
     });
 
@@ -117,20 +119,23 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
         });
 
         it('should interrupt active transition if interruptible is true', () => {
-            manager.applyState({ buses: { music: { gain: 0.1 } } }, { durationMs: 1000 });
+            manager.applyState({ buses: { ['music' as BusId]: { gain: 0.1 } } }, { durationMs: 1000 });
             manager.update(100);
 
-            manager.applyState({ buses: { music: { gain: 0.9 } } }, { durationMs: 500 });
+            manager.applyState({ buses: { ['music' as BusId]: { gain: 0.9 } } }, { durationMs: 500 });
 
             manager.update(125);
             expect(mockBus.setLogicalGain).toHaveBeenCalledWith(0.9, 375);
         });
 
         it('should NOT interrupt if current transition is locked', () => {
-            manager.applyState({ buses: { music: { gain: 0.1 } } }, { durationMs: 1000, interruptible: false });
+            manager.applyState(
+                { buses: { ['music' as BusId]: { gain: 0.1 } } },
+                { durationMs: 1000, interruptible: false }
+            );
             manager.update(100);
 
-            manager.applyState({ buses: { music: { gain: 0.9 } } }, { durationMs: 500 });
+            manager.applyState({ buses: { ['music' as BusId]: { gain: 0.9 } } }, { durationMs: 500 });
 
             manager.update(200);
             expect(mockBus.setLogicalGain).toHaveBeenCalledWith(0.1, 700);
@@ -151,7 +156,7 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
         it('should handle cancelActiveTransition correctly', () => {
             manager.cancelActiveTransition();
 
-            manager.applyState({ buses: { music: { gain: 0.5 } } }, { durationMs: 1000 });
+            manager.applyState({ buses: { ['music' as BusId]: { gain: 0.5 } } }, { durationMs: 1000 });
             manager.cancelActiveTransition();
 
             manager.update(300);
@@ -159,7 +164,7 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
         });
 
         it('should ignore absent buses in startFilterPhase (continue branch)', () => {
-            manager.applyState({ buses: { missing: { gain: 1 } } }, { durationMs: 1000 });
+            manager.applyState({ buses: { ['missing' as BusId]: { gain: 1 } } }, { durationMs: 1000 });
             expect(mockBus.safeReplaceFilter).not.toHaveBeenCalled();
         });
 
@@ -168,14 +173,17 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
 
             const rtpc = { gain: { gameParam: 'tension' } } as any;
 
-            manager.applyState({ buses: { music: { gain: 1, filter, rtpc } } }, { durationMs: 1000 });
+            manager.applyState({ buses: { ['music' as BusId]: { gain: 1, filter, rtpc } } }, { durationMs: 1000 });
 
             expect(mockBus.safeReplaceFilter).toHaveBeenCalledWith(filter, 250);
             expect(mockBus.bindRTPC).toHaveBeenCalledWith(rtpc, expect.anything());
         });
 
         it('should apply sends when defined in target config', () => {
-            manager.applyState({ buses: { music: { gain: 1, sends: { reverb: 0.5 } } } }, { durationMs: 1000 });
+            manager.applyState(
+                { buses: { ['music' as BusId]: { gain: 1, sends: { ['reverb' as BusId]: 0.5 } } } },
+                { durationMs: 1000 }
+            );
 
             manager.update(250);
 
@@ -183,10 +191,13 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
         });
 
         it('should clear old sends when absent in new target config', () => {
-            manager.applyState({ buses: { music: { gain: 1, sends: { reverb: 0.5 } } } }, { durationMs: 0 });
+            manager.applyState(
+                { buses: { ['music' as BusId]: { gain: 1, sends: { ['reverb' as BusId]: 0.5 } } } },
+                { durationMs: 0 }
+            );
             mockBusSystem.applySend.mockClear();
 
-            manager.applyState({ buses: { music: { gain: 1 } } }, { durationMs: 1000 });
+            manager.applyState({ buses: { ['music' as BusId]: { gain: 1 } } }, { durationMs: 1000 });
             manager.update(250);
 
             expect(mockBusSystem.applySend).toHaveBeenCalledWith('music', 'reverb', null, 750);

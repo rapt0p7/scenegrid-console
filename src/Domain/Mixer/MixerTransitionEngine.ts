@@ -7,9 +7,10 @@ import { isAbsent, isDefined } from '@shared/guards.js';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
+import { ITransitionOptions, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { BusId } from '@domain/Types/Branded.js';
 import type { Emitter } from 'mitt';
+import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 type MixerFSMState =
     | { type: 'IDLE' }
@@ -41,7 +42,10 @@ export default class MixerTransitionEngine {
         return structuredClone(this.current);
     }
 
-    public applyState(next: MixerState, { durationMs = 500, interruptible = true } = {}): void {
+    public applyState(
+        next: DeepReadonly<MixerState>,
+        { durationMs = 500, interruptible = true }: DeepReadonly<ITransitionOptions> = {}
+    ): void {
         if (this.state.type !== 'IDLE' && !this.state.isInterruptible) {
             return;
         }
@@ -96,7 +100,7 @@ export default class MixerTransitionEngine {
         }
     }
 
-    private forceInstantTransition(target: MixerState): void {
+    private forceInstantTransition(target: DeepReadonly<MixerState>): void {
         for (const [busId, bus] of this.busSystem.getAllBuses()) {
             const busConfig = target.buses[busId];
             const targetGain = busConfig ? (busConfig.gain ?? 0) : 0;
@@ -110,10 +114,10 @@ export default class MixerTransitionEngine {
         this.isInitialized = true;
     }
 
-    private startFilterPhase(target: MixerState, filterPhaseDuration: number): void {
+    private startFilterPhase(target: DeepReadonly<MixerState>, filterPhaseDuration: number): void {
         for (const [busId, nextBus] of Object.entries(target.buses)) {
             const bus = this.busSystem.getBus(busId as BusId);
-            const previousBus = this.current.buses[busId];
+            const previousBus = this.current.buses[busId as BusId];
 
             if (isAbsent(bus)) continue;
 
@@ -127,14 +131,12 @@ export default class MixerTransitionEngine {
         }
     }
 
-    private startMainTransitionPhase(target: MixerState, remainingTime: number): void {
+    private startMainTransitionPhase(target: DeepReadonly<MixerState>, remainingTime: number): void {
         for (const [busId, bus] of this.busSystem.getAllBuses()) {
             const nextBusConfig = target.buses[busId];
             const previousBusConfig = this.current.buses[busId];
 
-            const nextGain = isDefined(nextBusConfig?.gain)
-                ? nextBusConfig!.gain
-                : this.busSystem.getDefaultGain(busId);
+            const nextGain = isDefined(nextBusConfig?.gain) ? nextBusConfig.gain : this.busSystem.getDefaultGain(busId);
             const previousGain = previousBusConfig?.gain;
 
             if (nextGain !== previousGain) {
@@ -142,18 +144,18 @@ export default class MixerTransitionEngine {
             }
 
             if (isDefined(nextBusConfig?.sends)) {
-                for (const [targetBusId, sendGain] of Object.entries(nextBusConfig!.sends!)) {
-                    this.busSystem.applySend(busId as BusId, targetBusId as BusId, sendGain, remainingTime);
+                for (const [targetBusId, sendGain] of Object.entries(nextBusConfig.sends)) {
+                    this.busSystem.applySend(busId, targetBusId as BusId, sendGain, remainingTime);
                 }
             } else if (isDefined(previousBusConfig?.sends)) {
                 for (const targetBusId of Object.keys(previousBusConfig.sends)) {
-                    this.busSystem.applySend(busId as BusId, targetBusId as BusId, null, remainingTime);
+                    this.busSystem.applySend(busId, targetBusId as BusId, null, remainingTime);
                 }
             }
         }
     }
 
-    private completeTransition(target: MixerState): void {
+    private completeTransition(target: DeepReadonly<MixerState>): void {
         this.current = target;
         this.state = { type: 'IDLE' };
         this.isInitialized = true;
