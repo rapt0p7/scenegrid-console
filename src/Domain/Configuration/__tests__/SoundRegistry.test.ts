@@ -9,22 +9,22 @@ describe('SoundRegistry', () => {
         const registry = new SoundRegistry();
         const mockDescriptor = { buffer: {} as AudioBuffer, options: { url: 'test.mp3' } };
 
-        registry.register('test_sound', mockDescriptor);
+        registry.register('test_sound' as SoundId, mockDescriptor);
 
-        expect(registry.get('test_sound')).toBe(mockDescriptor);
+        expect(registry.get('test_sound' as SoundId)).toBe(mockDescriptor);
     });
 
     it('should throw an error if retrieving an unregistered sound', () => {
         const registry = new SoundRegistry();
 
-        expect(() => registry.get('unknown')).toThrow('Sound "unknown" not registered');
+        expect(() => registry.get('unknown' as SoundId)).toThrow('Sound "unknown" not registered');
     });
 
     it('should expose the internal map via the registry getter', () => {
         const registry = new SoundRegistry();
         const mockDescriptor = { buffer: {} as AudioBuffer, options: { url: 'test.mp3' } };
 
-        registry.register('test_sound', mockDescriptor);
+        registry.register('test_sound' as SoundId, mockDescriptor);
         const map = registry.registry;
 
         expect(map).toBeInstanceOf(Map);
