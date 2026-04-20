@@ -1,21 +1,26 @@
 // noinspection D
 
-import type { MathCurveDefinition } from '@shared/Math/MathCurve.js';
+import type { MathCurveDefinition, Point2D } from '@shared/Math/MathCurve.js';
+import { isDefined } from '@shared/guards.js';
+import { DeepReadonly } from '@shared/DeepReadonly.js';
 
-// eslint-disable-next-line complexity
-export function evaluateRTPCCurve(inputValue: number, curve: MathCurveDefinition): number {
-    if (!curve) return 0;
+function isPiecewiseCurve(curve: DeepReadonly<MathCurveDefinition>): curve is DeepReadonly<Point2D[]> {
+    return Array.isArray(curve);
+}
 
-    // Поддержка массива точек (Piecewise Linear)
-    if (Array.isArray(curve)) {
+// oxlint-disable-next-line max-lines-per-function
+export function evaluateRTPCCurve(inputValue: number, curve: DeepReadonly<MathCurveDefinition>): number {
+    if (!isDefined(curve)) return 0;
+
+    if (isPiecewiseCurve(curve)) {
         if (curve.length === 0) return 0;
         if (curve.length === 1) return curve[0].y;
 
-        // eslint-disable-next-line unicorn/no-array-sort
+        // oxlint-disable-next-line unicorn/no-array-sort
         const sorted = [...curve].sort((a, b) => a.x - b.x);
 
         const firstPoint = sorted[0];
-        // eslint-disable-next-line unicorn/prefer-at
+        // oxlint-disable-next-line unicorn/prefer-at
         const lastPoint = sorted[sorted.length - 1];
 
         if (inputValue <= firstPoint.x) return firstPoint.y;
