@@ -5,6 +5,7 @@ import MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
+import { BusId } from '@domain/Types/Branded.js';
 
 describe('MixerStateResolver', () => {
     describe('Initialization', () => {
@@ -15,7 +16,7 @@ describe('MixerStateResolver', () => {
                 { buses: { master: {} } } as unknown as MixerSnapshot
             );
 
-            expect(result.buses['master'].gain).toBe(1);
+            expect(result.buses['master' as BusId].gain).toBe(1);
         });
 
         it('should initialize with custom default bus gain', () => {
@@ -25,7 +26,7 @@ describe('MixerStateResolver', () => {
                 { buses: { master: {} } } as unknown as MixerSnapshot
             );
 
-            expect(result.buses['master'].gain).toBe(0.5);
+            expect(result.buses['master' as BusId].gain).toBe(0.5);
         });
     });
 
@@ -68,7 +69,7 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: { gain: 0.2 } } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].gain).toBeCloseTo(0.16, 5);
+                expect(result.buses['master' as BusId].gain).toBeCloseTo(0.16, 5);
             });
 
             it('should fallback to base gain if patch gain is undefined', () => {
@@ -76,7 +77,7 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: {} } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].gain).toBe(0.8);
+                expect(result.buses['master' as BusId].gain).toBe(0.8);
             });
         });
 
@@ -88,7 +89,7 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: { filter: null } } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].filter).toBeNull();
+                expect(result.buses['master' as BusId].filter).toBeNull();
             });
 
             it('should return patch filter if provided', () => {
@@ -96,7 +97,7 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: { filter: dummyFilter } } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].filter).toBe(dummyFilter);
+                expect(result.buses['master' as BusId].filter).toBe(dummyFilter);
             });
 
             it('should fallback to base filter if patch filter is undefined', () => {
@@ -104,7 +105,7 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: {} } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].filter).toBe(dummyFilter);
+                expect(result.buses['master' as BusId].filter).toBe(dummyFilter);
             });
 
             it('should return null if neither base nor patch has a filter', () => {
@@ -112,7 +113,7 @@ describe('MixerStateResolver', () => {
                     { buses: { master: {} } } as unknown as MixerState,
                     { buses: { master: {} } } as unknown as MixerSnapshot
                 );
-                expect(result.buses['master'].filter).toBeNull();
+                expect(result.buses['master' as BusId].filter).toBeNull();
             });
         });
 
@@ -122,7 +123,7 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: {} } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].sends).toEqual({ reverb: 0.5 });
+                expect(result.buses['master' as BusId].sends).toEqual({ reverb: 0.5 });
             });
 
             it('should add or update sends from patch using modulation', () => {
@@ -131,9 +132,9 @@ describe('MixerStateResolver', () => {
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
 
-                expect(result.buses['master'].sends?.reverb).toBeCloseTo(0.4, 5);
-                expect(result.buses['master'].sends?.delay).toBeCloseTo(0.2, 5);
-                expect(result.buses['master'].sends?.chorus).toBeCloseTo(0.1, 5);
+                expect(result.buses['master' as BusId].sends?.['reverb' as BusId]).toBeCloseTo(0.4, 5);
+                expect(result.buses['master' as BusId].sends?.['delay' as BusId]).toBeCloseTo(0.2, 5);
+                expect(result.buses['master' as BusId].sends?.['chorus' as BusId]).toBeCloseTo(0.1, 5);
             });
 
             it('should delete a send if the patch value is strictly null', () => {
@@ -141,8 +142,8 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: { sends: { reverb: null } } } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].sends).toEqual({ delay: 0.2 });
-                expect(result.buses['master'].sends).not.toHaveProperty('reverb');
+                expect(result.buses['master' as BusId].sends).toEqual({ delay: 0.2 });
+                expect(result.buses['master' as BusId].sends).not.toHaveProperty('reverb');
             });
         });
 
@@ -159,7 +160,7 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: { rtpc: null } } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].rtpc).toEqual({});
+                expect(result.buses['master' as BusId].rtpc).toEqual({});
             });
 
             it('should return copy of base if patch rtpc is undefined', () => {
@@ -167,7 +168,7 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: {} } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].rtpc).toEqual({ volume: dummyRtpc });
+                expect(result.buses['master' as BusId].rtpc).toEqual({ volume: dummyRtpc });
             });
 
             it('should return empty object if both base and patch rtpc are undefined', () => {
@@ -175,7 +176,7 @@ describe('MixerStateResolver', () => {
                     { buses: { master: {} } } as unknown as MixerState,
                     { buses: { master: {} } } as unknown as MixerSnapshot
                 );
-                expect(result.buses['master'].rtpc).toEqual({});
+                expect(result.buses['master' as BusId].rtpc).toEqual({});
             });
 
             it('should add or update RTPC configs from patch', () => {
@@ -189,7 +190,7 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: { rtpc: { filterFreq: newRtpc } } } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].rtpc).toEqual({
+                expect(result.buses['master' as BusId].rtpc).toEqual({
                     volume: dummyRtpc,
                     filterFreq: newRtpc
                 });
@@ -200,8 +201,8 @@ describe('MixerStateResolver', () => {
                 const patch = { buses: { master: { rtpc: { filterFreq: null } } } };
 
                 const result = resolver.resolve(base as unknown as MixerState, patch as unknown as MixerSnapshot);
-                expect(result.buses['master'].rtpc).toEqual({ volume: dummyRtpc });
-                expect(result.buses['master'].rtpc).not.toHaveProperty('filterFreq');
+                expect(result.buses['master' as BusId].rtpc).toEqual({ volume: dummyRtpc });
+                expect(result.buses['master' as BusId].rtpc).not.toHaveProperty('filterFreq');
             });
         });
     });
