@@ -13,12 +13,13 @@ import type {
 import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
 import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
+import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export interface IConsistencyCheckerPayload {
-    soundMap?: ISoundMap;
-    manifest?: ISpriteSoundManifest;
-    buses?: IBuses;
-    snapshots?: ISnapshots;
+    readonly soundMap?: ISoundMap;
+    readonly manifest?: ISpriteSoundManifest;
+    readonly buses?: IBuses;
+    readonly snapshots?: ISnapshots;
 }
 
 export default class ConsistencyChecker {
@@ -29,10 +30,10 @@ export default class ConsistencyChecker {
         }
 
         const checker = new ConsistencyChecker({
-            soundMapConfig: config.soundMap || {},
-            soundManifest: config.manifest || {},
-            busSystemConfig: config.buses || {},
-            snapshotsConfig: config.snapshots || {}
+            soundMapConfig: config.soundMap ?? {},
+            soundManifest: config.manifest ?? {},
+            busSystemConfig: config.buses ?? {},
+            snapshotsConfig: config.snapshots ?? {}
         });
 
         try {
@@ -45,10 +46,10 @@ export default class ConsistencyChecker {
         return checker.errors.length === 0;
     }
 
-    private readonly soundMap: ISoundMap;
-    private readonly buses: IBuses;
-    private readonly snapshots: ISnapshots;
-    private readonly manifest: ISpriteSoundManifest;
+    private readonly soundMap: DeepReadonly<ISoundMap>;
+    private readonly buses: DeepReadonly<IBuses>;
+    private readonly snapshots: DeepReadonly<ISnapshots>;
+    private readonly manifest: DeepReadonly<ISpriteSoundManifest>;
 
     private readonly errors: string[] = [];
     private readonly warnings: string[] = [];
@@ -59,10 +60,10 @@ export default class ConsistencyChecker {
         busSystemConfig,
         snapshotsConfig
     }: {
-        soundMapConfig: ISoundMap;
-        soundManifest: ISpriteSoundManifest;
-        busSystemConfig: IBuses;
-        snapshotsConfig: ISnapshots;
+        soundMapConfig: DeepReadonly<ISoundMap>;
+        soundManifest: DeepReadonly<ISpriteSoundManifest>;
+        busSystemConfig: DeepReadonly<IBuses>;
+        snapshotsConfig: DeepReadonly<ISnapshots>;
     }) {
         this.soundMap = soundMapConfig;
         this.manifest = soundManifest;
@@ -240,7 +241,7 @@ export default class ConsistencyChecker {
         }
     }
 
-    private validateLayeredSound(soundId: string, cfg: ILayeredSoundConfig): void {
+    private validateLayeredSound(soundId: string, cfg: DeepReadonly<ILayeredSoundConfig>): void {
         if (!this.assertArray(`soundMap.${soundId}.layers`, cfg.layers, false)) return;
 
         for (const [index, layer] of cfg.layers.entries()) {
@@ -257,7 +258,7 @@ export default class ConsistencyChecker {
         }
     }
 
-    private validateContainerSound(soundId: string, cfg: IContainerSoundConfig): void {
+    private validateContainerSound(soundId: string, cfg: DeepReadonly<IContainerSoundConfig>): void {
         this.assertType(`soundMap.${soundId}.mode`, cfg.mode, 'string', false);
 
         if (!this.assertArray(`soundMap.${soundId}.sources`, cfg.sources, false)) return;
@@ -275,7 +276,7 @@ export default class ConsistencyChecker {
         }
     }
 
-    private validateSmartLoop(soundId: string, cfg: ISmartLoopSoundConfig): void {
+    private validateSmartLoop(soundId: string, cfg: DeepReadonly<ISmartLoopSoundConfig>): void {
         if (!this.assertType(`soundMap.${soundId}.smartLoop`, cfg.smartLoop, 'object', false)) return;
 
         this.assertType(`soundMap.${soundId}.smartLoop.bpm`, cfg.smartLoop.bpm, 'number');
@@ -296,7 +297,7 @@ export default class ConsistencyChecker {
         }
     }
 
-    private checkDuckingTargets(soundId: string, cfg: any): void {
+    private checkDuckingTargets(soundId: string, cfg: DeepReadonly<any>): void {
         const ducking = cfg.ducking;
         if (isAbsent(ducking)) return;
 
@@ -413,7 +414,7 @@ export default class ConsistencyChecker {
         }
     }
 
-    // eslint-disable-next-line complexity
+    // oxlint-disable-next-line max-lines-per-function
     private checkRTPC(contextPath: string, rtpcMap: any): void {
         if (isAbsent(rtpcMap)) return;
         if (!this.assertType(`${contextPath}.rtpc`, rtpcMap, 'object')) return;
@@ -468,7 +469,7 @@ export default class ConsistencyChecker {
         }
     }
 
-    private checkSpatial(soundId: string, cfg: any): void {
+    private checkSpatial(soundId: string, cfg: DeepReadonly<any>): void {
         const spatial = cfg.spatial;
         if (isAbsent(spatial)) return;
 
@@ -490,7 +491,6 @@ export default class ConsistencyChecker {
             this.assertArray(`soundMap.${soundId}.spatial.position`, spatial.position, false)
         ) {
             if (spatial.position.length === 3) {
-                // eslint-disable-next-line unicorn/no-array-for-each
                 spatial.position.forEach((value: any, index: number) => {
                     this.assertType(`soundMap.${soundId}.spatial.position[${index}]`, value, 'number', false);
                 });
@@ -518,7 +518,7 @@ export default class ConsistencyChecker {
 
         for (const [key, cfg] of Object.entries(this.soundMap || {})) {
             if (this.isLayered(cfg)) {
-                const layers = (cfg as ILayeredSoundConfig).layers;
+                const layers = cfg.layers;
 
                 if (Array.isArray(layers)) {
                     for (const layer of layers) {
@@ -526,7 +526,7 @@ export default class ConsistencyChecker {
                     }
                 }
             } else if (this.isContainer(cfg)) {
-                const sources = (cfg as IContainerSoundConfig).sources;
+                const sources = cfg.sources;
 
                 if (Array.isArray(sources)) {
                     for (const source of sources) {
@@ -535,8 +535,8 @@ export default class ConsistencyChecker {
                 }
             } else if (this.isSmartLoop(cfg)) {
                 // Smart loops generally reference their own key
-            } else if ('src' in (cfg as any) && isDefined((cfg as any).src)) {
-                referenced.add((cfg as any).src);
+            } else if ('src' in cfg && isDefined(cfg.src)) {
+                referenced.add(cfg.src);
             } else if (key in (this.manifest || {})) {
                 referenced.add(key);
             }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
@@ -21,10 +22,10 @@ describe('ConsistencyChecker', () => {
 
     it('should pass with a perfectly valid config and log OK', () => {
         const validConfig: IConsistencyCheckerPayload = {
-            manifest: { shoot: { url: 'sfx/shoot.mp3' } },
+            manifest: { ['shoot' as SoundId]: { url: 'sfx/shoot.mp3' } },
             buses: {
                 master: { gain: 1 },
-                sfx: { gain: 0.8, sends: { master: 1 } }
+                sfx: { gain: 0.8, sends: { ['master' as BusId]: 1 } }
             },
             soundMap: {
                 ['gun_fire' as SoundId]: { busId: 'sfx' as BusId, src: 'shoot' }
