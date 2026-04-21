@@ -11,7 +11,7 @@ import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { BusId } from '@domain/Types/Branded.js';
+import type { BusId, GameParamId } from '@domain/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type {
     AudioCtx,
@@ -24,7 +24,7 @@ import type {
 import type { IPluginFactory } from '@infrastructure/types/IAudioPlugins.js';
 
 interface RTPCBinding {
-    gameParam: string;
+    gameParam: GameParamId;
     handler: (value: number) => void;
 }
 

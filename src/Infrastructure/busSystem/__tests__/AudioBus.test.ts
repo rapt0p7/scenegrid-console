@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 
-import type { BusId } from '@domain/Types/Branded.js';
+import type { BusId, GameParamId } from '@domain/Types/Branded.js';
 import type { AudioCtx, AutomationEngine, GainNodeLike, IPluginFactory } from '@infrastructure';
 
 describe('AudioBus (Filters, Sends, RTPC)', () => {
@@ -160,14 +160,14 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         bus.bindRTPC(
             {
                 filterFrequency: {
-                    gameParam: 'speed',
+                    gameParam: 'speed' as GameParamId,
                     curve: [
                         { x: 0, y: 0 },
                         { x: 100, y: 500 }
                     ]
                 },
                 pan: {
-                    gameParam: 'position',
+                    gameParam: 'position' as GameParamId,
                     curve: [
                         { x: -1, y: -1 },
                         { x: 100, y: 0.5 }
@@ -211,7 +211,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             {
                 sendLevel: {
                     sendTargetBus: 'reverb_bus' as BusId,
-                    gameParam: 'cave_depth',
+                    gameParam: 'cave_depth' as GameParamId,
                     curve: [
                         { x: 0, y: 0 },
                         { x: 100, y: 0.8 }
@@ -246,7 +246,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             bus.bindRTPC(
                 {
                     sendLevel: {
-                        gameParam: 'depth',
+                        gameParam: 'depth' as GameParamId,
                         curve: [{ x: 100, y: 0.5 }]
                     }
                 },
@@ -258,7 +258,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
             {
                 sendLevel: {
                     sendTargetBus: 'ghost_bus' as BusId,
-                    gameParam: 'depth',
+                    gameParam: 'depth' as GameParamId,
                     curve: [{ x: 100, y: 0.5 }]
                 }
             },
@@ -293,7 +293,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         bus.bindRTPC(
             {
                 filterFrequency: {
-                    gameParam: 'speed',
+                    gameParam: 'speed' as GameParamId,
                     curve: {
                         type: 's-curve',
                         minX: 0,
@@ -559,7 +559,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         bus.bindRTPC(
             {
                 gain: {
-                    gameParam: 'master_volume_slider',
+                    gameParam: 'master_volume_slider' as GameParamId,
                     curve: [
                         { x: 0, y: 0 },
                         { x: 100, y: 0.5 }

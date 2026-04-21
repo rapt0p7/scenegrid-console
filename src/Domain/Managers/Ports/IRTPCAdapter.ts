@@ -1,5 +1,7 @@
+import { GameParamId } from '@domain/Types/Branded.js';
+
 export interface IRTPCAdapter {
-    getValue(parameterName: string, defaultValue?: number): number;
-    on(parameterName: string, handler: (value: number) => void): void;
-    off(parameterName: string, handler: (value: number) => void): void;
+    getValue(parameterName: GameParamId, defaultValue?: number): number;
+    on(parameterName: GameParamId, handler: (value: number) => void): void;
+    off(parameterName: GameParamId, handler: (value: number) => void): void;
 }

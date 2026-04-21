@@ -10,3 +10,5 @@ export type SnapshotId = string & { readonly __brand: unique symbol };
 export type LayerId = string & { readonly __brand: unique symbol };
 
 export type RegionId = string & { readonly __brand: unique symbol };
+
+export type GameParamId = string & { readonly __brand: unique symbol };

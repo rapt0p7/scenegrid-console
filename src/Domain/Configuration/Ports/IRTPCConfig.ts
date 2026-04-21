@@ -1,5 +1,5 @@
-import type { BusId } from '@domain/Types/Branded';
-import type { MathCurveDefinition, MathCurvePresetDefinition } from '@shared/Math/MathCurve';
+import { BusId, GameParamId } from '@domain/Types/Branded.js';
+import type { MathCurveDefinition, MathCurvePresetDefinition } from '@shared/Math/MathCurve.js';
 
 export type RTPCTargetProperty = 'gain' | 'filterFrequency' | 'pan' | 'pitch' | 'sendLevel';
 
@@ -11,7 +11,7 @@ export interface RTPCPoint {
 export type RTPCCurvePreset = MathCurvePresetDefinition;
 export type RTPCCurveDefinition = MathCurveDefinition;
 export interface IRTPCConfig {
-    readonly gameParam: string;
+    readonly gameParam: GameParamId;
     readonly curve: RTPCCurveDefinition | RTPCCurvePreset;
     readonly sendTargetBus?: BusId;
     readonly smoothingMs?: number;

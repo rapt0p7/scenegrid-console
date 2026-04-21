@@ -5,7 +5,7 @@ import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId } from '@domain/Types/Branded.js';
+import type { GameParamId, PlaybackId } from '@domain/Types/Branded.js';
 import type { Mocked } from 'vitest';
 
 describe('InstanceRTPCBinder', () => {
@@ -50,7 +50,7 @@ describe('InstanceRTPCBinder', () => {
     it('should bind RTPC config to playback ID and apply initial values via SoundController', () => {
         const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
             gain: {
-                gameParam: 'car_speed',
+                gameParam: 'car_speed' as GameParamId,
                 curve: [
                     { x: 0, y: 0.5 },
                     { x: 100, y: 1 }
@@ -71,7 +71,7 @@ describe('InstanceRTPCBinder', () => {
     it('should ignore unsupported targets like sendLevel', () => {
         const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
             sendLevel: {
-                gameParam: 'reverb_amount',
+                gameParam: 'reverb_amount' as GameParamId,
                 curve: [
                     { x: 0, y: 0 },
                     { x: 1, y: 1 }
@@ -88,7 +88,7 @@ describe('InstanceRTPCBinder', () => {
     it('should clean up RTPC subscriptions when voice ends via SoundController', () => {
         const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
             pitch: {
-                gameParam: 'engine_rpm',
+                gameParam: 'engine_rpm' as GameParamId,
                 curve: [
                     { x: 1000, y: 1 },
                     { x: 8000, y: 2 }
@@ -111,7 +111,7 @@ describe('InstanceRTPCBinder', () => {
     it('should prevent reacting to RTPC events after cleanup (Race Condition prevention)', () => {
         const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
             filterFrequency: {
-                gameParam: 'underwater',
+                gameParam: 'underwater' as GameParamId,
                 curve: [
                     { x: 0, y: 22_000 },
                     { x: 1, y: 500 }
@@ -135,7 +135,7 @@ describe('InstanceRTPCBinder', () => {
     it('should support preset curve configurations (MathCurvePresetDef)', () => {
         const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
             gain: {
-                gameParam: 'car_speed',
+                gameParam: 'car_speed' as GameParamId,
                 curve: {
                     type: 'exponential',
                     minX: 0,
@@ -167,7 +167,7 @@ describe('InstanceRTPCBinder', () => {
             const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
                 gain: undefined as any,
                 pitch: {
-                    gameParam: 'engine',
+                    gameParam: 'engine' as GameParamId,
                     curve: [
                         { x: 0, y: 0 },
                         { x: 1, y: 1 }
@@ -187,7 +187,7 @@ describe('InstanceRTPCBinder', () => {
             expect(mockSoundController.onVoiceEnded).not.toHaveBeenCalled();
 
             const unsupportedConfigs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
-                sendLevel: { gameParam: 'verb', curve: [] }
+                sendLevel: { gameParam: 'verb' as GameParamId, curve: [] }
             };
             InstanceRTPCBinder.bind(testPlaybackId, unsupportedConfigs, mockRtpcAdapter, mockSoundController);
 
@@ -196,7 +196,7 @@ describe('InstanceRTPCBinder', () => {
 
         it('should early return in cleanup if already cleaned up (Idempotency)', () => {
             const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
-                gain: { gameParam: 'speed', curve: [] }
+                gain: { gameParam: 'speed' as GameParamId, curve: [] }
             };
 
             InstanceRTPCBinder.bind(testPlaybackId, configs, mockRtpcAdapter, mockSoundController);
