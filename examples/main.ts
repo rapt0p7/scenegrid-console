@@ -3,6 +3,7 @@ import { AudioEngine } from '../src/index.js';
 import Buses from './audio-config/Buses.js';
 import Snapshots from './audio-config/Snapshots.js';
 import SoundMap from './audio-config/SoundMap.js';
+import RTPCManifest from './audio-config/RTPCManifest.js';
 import soundManifest from './soundManifest.js';
 
 async function bootstrap() {
@@ -11,6 +12,7 @@ async function bootstrap() {
         buses: Buses,
         snapshots: Snapshots,
         soundMap: SoundMap,
+        rtpcManifest: RTPCManifest,
         globalVoiceLimit: 32
     });
 
@@ -46,7 +48,7 @@ async function bootstrap() {
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error
     globalThis.AudioEngine = audio;
 
     console.log('[Demo UI] Engine ready! Waiting for user interaction...');
@@ -58,7 +60,7 @@ async function bootstrap() {
 
             void audio.showDebugUI({ wrapperSelector: '#wrapper' });
 
-            await audio.mixer.setState('idle');
+            audio.mixer.setState('idle');
 
             audio.play('backgroundMain', { isLoop: true });
             audio.play('backgroundMain2', { isLoop: true });
