@@ -1,17 +1,14 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import path from 'node:path';
-// eslint-disable-next-line unicorn/import-style
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vite';
-import checker from 'vite-plugin-checker';
+import { checker } from 'vite-plugin-checker';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 import { audioWorkletIsolator } from './scripts/vite-worklet-isolator';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __filename = import.meta.filename;
+const __dirname = import.meta.dirname;
 
 export default defineConfig(({ mode }) => ({
     root: './examples',
