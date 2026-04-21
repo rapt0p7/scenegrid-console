@@ -1,209 +1,150 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
-describe('RTPCManager (Kernel Layer)', () => {
+import type { GameParamId } from '@shared/Types/Branded.js';
+
+describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
     let manager: RTPCManager;
 
     beforeEach(() => {
-        vi.clearAllMocks();
         manager = new RTPCManager();
     });
 
-    describe('Instant Values (Backwards Compatibility)', () => {
+    describe('Instant Values & Pull Access', () => {
         it('should store and retrieve a single value', () => {
-            manager.setValue('MUSIC_VOLUME', 0.8);
-            expect(manager.getValue('MUSIC_VOLUME')).toBeCloseTo(0.8);
+            manager.setValue('MUSIC_VOLUME' as GameParamId, 0.8);
+            expect(manager.getValue('MUSIC_VOLUME' as GameParamId)).toBeCloseTo(0.8);
         });
 
         it('should return default value if parameter is not set', () => {
-            expect(manager.getValue('UNKNOWN_PARAM')).toBe(0);
-            expect(manager.getValue('UNKNOWN_PARAM', 42)).toBe(42);
+            expect(manager.getValue('UNKNOWN_PARAM' as GameParamId)).toBe(0);
+            expect(manager.getValue('UNKNOWN_PARAM' as GameParamId, 42)).toBe(42);
         });
 
-        it('should emit an event when value is changed', async () => {
-            const spy = vi.fn();
-            manager.events.on('MUSIC_VOLUME', spy);
-
-            manager.setValue('MUSIC_VOLUME', 0.5);
-
-            await Promise.resolve();
-
-            expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy).toHaveBeenCalledWith(0.5);
-        });
-
-        it('should NOT emit an event if the value has not changed (early return)', () => {
-            manager.setValue('MUSIC_VOLUME', 0.5);
-
-            const spy = vi.fn();
-            manager.events.on('MUSIC_VOLUME', spy);
-
-            manager.setValue('MUSIC_VOLUME', 0.5);
-
-            expect(spy).not.toHaveBeenCalled();
-        });
-
-        it('should set multiple values and emit events for each in one batch', async () => {
-            const spyMusic = vi.fn();
-            const spySFX = vi.fn();
-            manager.events.on('MUSIC_VOLUME', spyMusic);
-            manager.events.on('SFX_VOLUME', spySFX);
-
+        it('should set multiple values correctly', () => {
             manager.setValues({
                 MUSIC_VOLUME: 0.7,
                 SFX_VOLUME: 0.9
-            });
+            } as Record<GameParamId, number>);
 
-            await Promise.resolve();
-
-            expect(manager.getValue('MUSIC_VOLUME')).toBeCloseTo(0.7);
-            expect(manager.getValue('SFX_VOLUME')).toBeCloseTo(0.9);
-            expect(spyMusic).toHaveBeenCalledWith(Math.fround(0.7));
-            expect(spySFX).toHaveBeenCalledWith(Math.fround(0.9));
+            expect(manager.getValue('MUSIC_VOLUME' as GameParamId)).toBeCloseTo(0.7);
+            expect(manager.getValue('SFX_VOLUME' as GameParamId)).toBeCloseTo(0.9);
         });
 
-        it('should clear all values, events, and reset state on reset()', async () => {
-            const spy = vi.fn();
-            manager.events.on('MUSIC_VOLUME', spy);
-
-            manager.setValue('MUSIC_VOLUME', 1);
-            await Promise.resolve();
-            expect(spy).toHaveBeenCalledTimes(1);
-
+        it('should clear all values and reset state on reset()', () => {
+            manager.setValue('MUSIC_VOLUME' as GameParamId, 1);
             manager.reset();
-            spy.mockClear();
 
-            expect(manager.getValue('MUSIC_VOLUME', -1)).toBe(-1);
-
-            manager.setValue('MUSIC_VOLUME', 0.5);
-            expect(spy).not.toHaveBeenCalled();
+            expect(manager.getValue('MUSIC_VOLUME' as GameParamId, -1)).toBe(-1);
         });
     });
 
-    describe('Interpolation and Slew Rates (Tick based)', () => {
+    describe('Interpolation and Slew Rates (Math ticking)', () => {
         it('should correctly configure parameters without triggering immediate change', () => {
-            manager.configureParam('HP', 1000, 2000);
-            manager.setValue('HP', 100);
+            manager.configureParam('HP' as GameParamId, 1000, 2000);
+            manager.setValue('HP' as GameParamId, 100);
 
-            expect(manager.getValue('HP')).toBe(0);
+            expect(manager.getValue('HP' as GameParamId)).toBe(0);
         });
 
-        it('should apply values instantly if attack and release are <= 0', async () => {
-            manager.configureParam('HP', 0, 0);
-            manager.setValue('HP', 100);
+        it('should apply values instantly if attack and release are <= 0', () => {
+            manager.configureParam('HP' as GameParamId, 0, 0);
+            manager.setValue('HP' as GameParamId, 100);
 
-            expect(manager.getValue('HP')).toBe(100);
+            expect(manager.getValue('HP' as GameParamId)).toBe(100);
         });
 
-        it('should interpolate value over time when increasing (Attack)', async () => {
-            const spy = vi.fn();
-            manager.events.on('HP', spy);
-
-            manager.configureParam('HP', 1000, 0);
-            manager.setValue('HP', 100);
+        it('should interpolate value over time when increasing (Attack)', () => {
+            manager.configureParam('HP' as GameParamId, 1000, 0);
+            manager.setValue('HP' as GameParamId, 100);
 
             manager.tick(30);
-            await Promise.resolve();
 
-            const firstTickValue = manager.getValue('HP');
+            const firstTickValue = manager.getValue('HP' as GameParamId);
             expect(firstTickValue).toBeGreaterThan(0);
             expect(firstTickValue).toBeLessThan(100);
-            expect(spy).toHaveBeenCalledWith(firstTickValue);
 
             manager.tick(3000);
             manager.tick(30);
-            await Promise.resolve();
 
-            expect(manager.getValue('HP')).toBe(100);
+            expect(manager.getValue('HP' as GameParamId)).toBe(100);
         });
-        it('should interpolate value over time when decreasing (Release)', async () => {
-            manager.setValue('HP', 100);
-            await Promise.resolve();
 
-            manager.configureParam('HP', 0, 1000);
-            manager.setValue('HP', 0);
+        it('should interpolate value over time when decreasing (Release)', () => {
+            manager.setValue('HP' as GameParamId, 100);
+
+            manager.configureParam('HP' as GameParamId, 0, 1000);
+            manager.setValue('HP' as GameParamId, 0);
 
             manager.tick(30);
-            await Promise.resolve();
 
-            const firstTickValue = manager.getValue('HP');
+            const firstTickValue = manager.getValue('HP' as GameParamId);
             expect(firstTickValue).toBeLessThan(100);
             expect(firstTickValue).toBeGreaterThan(0);
 
             manager.tick(3000);
             manager.tick(30);
-            await Promise.resolve();
 
-            expect(manager.getValue('HP')).toBe(0);
+            expect(manager.getValue('HP' as GameParamId)).toBe(0);
         });
 
-        it('should handle multiple parameters interpolating in the same tick', async () => {
-            manager.configureParam('P1', 1000, 1000);
-            manager.configureParam('P2', 500, 500);
+        it('should handle multiple parameters interpolating in the same tick', () => {
+            manager.configureParam('P1' as GameParamId, 1000, 1000);
+            manager.configureParam('P2' as GameParamId, 500, 500);
 
-            manager.setValue('P1', 100);
-            manager.setValue('P2', 50);
-
-            manager.tick(30);
-            await Promise.resolve();
-
-            expect(manager.getValue('P1')).toBeGreaterThan(0);
-            expect(manager.getValue('P2')).toBeGreaterThan(0);
-        });
-
-        it('should snap to target if difference is very small (< 1e-4)', async () => {
-            manager.configureParam('HP', 1000, 1000);
-            manager.setValue('HP', 99.999_99);
-
-            manager.configureParam('HP', 0, 0);
-            manager.setValue('HP', 99.999_95);
-            manager.configureParam('HP', 1000, 1000);
-
-            manager.setValue('HP', 100);
-
-            manager.tick(30);
-            await Promise.resolve();
-
-            expect(manager.getValue('HP')).toBe(100);
-        });
-
-        it('should fallback to instant assignment if slewTimeMs becomes 0 mid-flight', async () => {
-            manager.configureParam('HP', 1000, 1000);
-            manager.setValue('HP', 100);
+            manager.setValue('P1' as GameParamId, 100);
+            manager.setValue('P2' as GameParamId, 50);
 
             manager.tick(30);
 
-            manager.configureParam('HP', 0, 0);
-
-            manager.tick(30);
-            await Promise.resolve();
-
-            expect(manager.getValue('HP')).toBe(100);
+            expect(manager.getValue('P1' as GameParamId)).toBeGreaterThan(0);
+            expect(manager.getValue('P2' as GameParamId)).toBeGreaterThan(0);
         });
 
-        it('should sleep automatically (isInterpolating = false) when all interpolations finish', async () => {
-            manager.configureParam('HP', 100, 100);
-            manager.setValue('HP', 10);
+        it('should snap to target if difference is very small (< 1e-4)', () => {
+            manager.configureParam('HP' as GameParamId, 1000, 1000);
+
+            manager.setValue('HP' as GameParamId, 99.999_99);
+
+            manager.configureParam('HP' as GameParamId, 0, 0);
+            manager.setValue('HP' as GameParamId, 99.999_95);
+            manager.configureParam('HP' as GameParamId, 1000, 1000);
+
+            manager.setValue('HP' as GameParamId, 100);
+
+            manager.tick(30);
+
+            expect(manager.getValue('HP' as GameParamId)).toBe(100);
+        });
+
+        it('should fallback to instant assignment if slewTimeMs becomes 0 mid-flight', () => {
+            manager.configureParam('HP' as GameParamId, 1000, 1000);
+            manager.setValue('HP' as GameParamId, 100);
+
+            manager.tick(30);
+
+            manager.configureParam('HP' as GameParamId, 0, 0);
+
+            manager.tick(30);
+
+            expect(manager.getValue('HP' as GameParamId)).toBe(100);
+        });
+
+        it('should sleep automatically (isInterpolating = false) when all interpolations finish', () => {
+            manager.configureParam('HP' as GameParamId, 100, 100);
+            manager.setValue('HP' as GameParamId, 10);
 
             expect((manager as any).isInterpolating).toBe(true);
 
             manager.tick(500);
             manager.tick(30);
-            await Promise.resolve();
 
-            expect(manager.getValue('HP')).toBe(10);
+            expect(manager.getValue('HP' as GameParamId)).toBe(10);
 
             expect((manager as any).isInterpolating).toBe(false);
-
-            const spy = vi.fn();
-            manager.events.on('HP', spy);
-
-            manager.tick(100);
-            await Promise.resolve();
-
-            expect(spy).not.toHaveBeenCalled();
         });
     });
 });

@@ -1,13 +1,11 @@
-import type { Emitter } from 'mitt';
-
-export type RTPCEvents = Record<string, number>;
+import { GameParamId } from '@shared/Types/Branded.js';
+import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export interface IRTPCManager {
-    events: Emitter<RTPCEvents>;
-    setValue(parameterName: string, value: number): void;
-    setValues(parameters: Record<string, number>): void;
-    getValue(parameterName: string, defaultValue?: number): number;
-    configureParam(parameterName: string, attackMs: number, releaseMs: number): void;
+    setValue(parameterName: GameParamId, value: number): void;
+    setValues(parameters: DeepReadonly<Record<GameParamId, number>>): void;
+    getValue(parameterName: GameParamId, defaultValue?: number): number;
+    configureParam(parameterName: GameParamId, attackMs: number, releaseMs: number): void;
     tick(deltaTimeMs: number): void;
     reset(): void;
 }
