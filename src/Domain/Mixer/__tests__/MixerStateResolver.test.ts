@@ -5,7 +5,7 @@ import MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
-import { BusId } from '@domain/Types/Branded.js';
+import { BusId } from '@shared/Types/Branded.js';
 
 describe('MixerStateResolver', () => {
     describe('Initialization', () => {

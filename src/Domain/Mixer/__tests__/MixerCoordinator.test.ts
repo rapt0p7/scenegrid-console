@@ -5,7 +5,7 @@ import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
 import type MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
 import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
-import { BusId } from '@domain/Types/Branded.js';
+import { BusId } from '@shared/Types/Branded.js';
 
 describe('MixerCoordinator', () => {
     let coordinator: MixerCoordinator;

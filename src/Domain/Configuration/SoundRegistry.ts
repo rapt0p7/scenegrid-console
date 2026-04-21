@@ -1,4 +1,4 @@
-import type { SoundId } from '@domain/Types/Branded.js';
+import type { SoundId } from '@shared/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 interface SoundDescriptor {

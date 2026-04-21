@@ -1,4 +1,4 @@
-import type { PlaybackId, SoundId, BusId } from '@domain/Types/Branded.js';
+import type { PlaybackId, SoundId, BusId } from '@shared/Types/Branded.js';
 
 export interface ICullingContext {
     readonly activePlaybacks: PlaybackId[];

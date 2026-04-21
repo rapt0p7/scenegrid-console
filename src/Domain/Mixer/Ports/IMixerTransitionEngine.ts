@@ -1,6 +1,6 @@
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import { BusId, SnapshotId } from '@domain/Types/Branded.js';
+import { BusId, SnapshotId } from '@shared/Types/Branded.js';
 
 export interface MixerState {
     readonly buses: Record<

@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SoundInstance } from '@infrastructure';
 import { SoundController } from '@infrastructure/loader/SoundController.js';
 
-import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId, SoundId } from '@shared/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
@@ -26,6 +26,7 @@ describe('SoundController', () => {
         fakeBuffer = {} as AudioBuffer;
 
         fakeInstance = {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             _poolIndex: 5,
             setLoop: vi.fn(),
             setRate: vi.fn(),
@@ -239,7 +240,9 @@ describe('SoundController', () => {
         });
 
         it('should safely ignore routeToBus if voice is missing', () => {
-            expect(() => controller.routeToBus(999 as PlaybackId, 'sfx' as BusId)).not.toThrow();
+            expect(() => {
+                controller.routeToBus(999 as PlaybackId, 'sfx' as BusId);
+            }).not.toThrow();
         });
 
         it('should delegate addSidechainTrigger using instanceGain node', () => {
@@ -290,7 +293,9 @@ describe('SoundController', () => {
         });
 
         it('should early return in setPosition if voice does not exist', () => {
-            expect(() => controller.setPosition(999 as PlaybackId, 0, 0, 0)).not.toThrow();
+            expect(() => {
+                controller.setPosition(999 as PlaybackId, 0, 0, 0);
+            }).not.toThrow();
         });
 
         it('should correctly return active playbacks and resolve sound ids', () => {
@@ -315,7 +320,9 @@ describe('SoundController', () => {
         it('should handle virtualize() safely', () => {
             controller.virtualize(playbackId);
             expect(fakeInstance.virtualize).toHaveBeenCalled();
-            expect(() => controller.virtualize(999 as PlaybackId)).not.toThrow();
+            expect(() => {
+                controller.virtualize(999 as PlaybackId);
+            }).not.toThrow();
         });
 
         it('should handle devirtualize() and trigger onRevive correctly', () => {
@@ -327,7 +334,9 @@ describe('SoundController', () => {
             expect(fakeInstance.devirtualize).toHaveBeenCalled();
             expect(reviveSpy).toHaveBeenCalledWith(revivableId);
 
-            expect(() => controller.devirtualize(999 as PlaybackId)).not.toThrow();
+            expect(() => {
+                controller.devirtualize(999 as PlaybackId);
+            }).not.toThrow();
         });
 
         it('should format arguments and delegate fadeVolume() correctly', () => {
@@ -341,7 +350,9 @@ describe('SoundController', () => {
                 100
             );
 
-            expect(() => controller.fadeVolume(999 as PlaybackId, 1, 1)).not.toThrow();
+            expect(() => {
+                controller.fadeVolume(999 as PlaybackId, 1, 1);
+            }).not.toThrow();
         });
 
         it('should delegate fadeParameter() correctly', () => {
@@ -349,7 +360,9 @@ describe('SoundController', () => {
 
             expect(fakeInstance.automate).toHaveBeenCalledWith('filterFrequency', 2000, 500);
 
-            expect(() => controller.fadeParameter(999 as PlaybackId, 'pitch', 1, 1)).not.toThrow();
+            expect(() => {
+                controller.fadeParameter(999 as PlaybackId, 'pitch', 1, 1);
+            }).not.toThrow();
         });
 
         it('should delegate cancelScheduled() correctly', () => {
@@ -357,13 +370,17 @@ describe('SoundController', () => {
 
             expect(fakeInstance.cancelScheduled).toHaveBeenCalled();
 
-            expect(() => controller.cancelScheduled(999 as PlaybackId)).not.toThrow();
+            expect(() => {
+                controller.cancelScheduled(999 as PlaybackId);
+            }).not.toThrow();
         });
 
         it('should return a dummy unsubscribe function for onVoiceEnded if voice is missing', () => {
             const dummyUnsub = controller.onVoiceEnded(999 as PlaybackId, vi.fn());
 
-            expect(() => dummyUnsub()).not.toThrow();
+            expect(() => {
+                dummyUnsub();
+            }).not.toThrow();
         });
     });
 });
@@ -426,9 +443,9 @@ describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {
         const mockRegistry = new Map([['test_sound' as SoundId, { buffer: mockBuffer, options: { url: 'test.wav' } }]]);
 
         controller = new SoundController(
-            mockPool as any,
+            mockPool,
             mockScheduler as any,
-            mockContext as any,
+            mockContext,
             {} as any,
             mockRegistry,
             mockBusSystem as any

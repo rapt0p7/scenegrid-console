@@ -6,7 +6,7 @@ import type { DeepReadonly } from '@shared/DeepReadonly.js';
 import type MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
 import type { IMixerLayer } from '@domain/Mixer/Ports/IMixerLayer.js';
 import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
-import type { LayerId } from '@domain/Types/Branded.js';
+import type { LayerId } from '@shared/Types/Branded.js';
 
 export const PRIORITY = {
     BASE: 0,

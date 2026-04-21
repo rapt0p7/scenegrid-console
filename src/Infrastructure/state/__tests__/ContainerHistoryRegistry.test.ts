@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { ContainerHistoryRegistry } from '@infrastructure/state/ContainerHistoryRegistry.js';
 
-import type { SoundId } from '@domain/Types/Branded.js';
+import type { SoundId } from '@shared/Types/Branded.js';
 
 describe('ContainerHistoryRegistry', () => {
     let registry: ContainerHistoryRegistry;

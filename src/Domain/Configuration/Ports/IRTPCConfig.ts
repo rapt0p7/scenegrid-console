@@ -1,4 +1,4 @@
-import { BusId, GameParamId } from '@domain/Types/Branded.js';
+import { BusId, GameParamId } from '@shared/Types/Branded.js';
 import type { MathCurveDefinition, MathCurvePresetDefinition } from '@shared/Math/MathCurve.js';
 
 export type RTPCTargetProperty = 'gain' | 'filterFrequency' | 'pan' | 'pitch' | 'sendLevel';

@@ -4,7 +4,7 @@ import mitt from 'mitt';
 
 import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
 
-import type { SoundId } from '@domain/Types/Branded.js';
+import type { SoundId } from '@shared/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { AudioNodeFactory, PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
@@ -419,7 +419,9 @@ export class SoundInstance implements ISoundInstance {
 
     public on(event: 'ended' | 'stopped' | 'disposed', handler: (instance: ISoundInstance) => void): () => void {
         this.#emitter.on(event, handler);
-        return () => this.#emitter.off(event, handler);
+        return () => {
+            this.#emitter.off(event, handler);
+        };
     }
 
     #onSourceEnded = (): void => {

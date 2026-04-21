@@ -1,6 +1,6 @@
 import type { IContainerHistoryRegistry } from '@domain/Managers/Ports/IContainerHistoryRegistry.js';
 import type { IContainerPlaybackState } from '@domain/Managers/Ports/IContainerPlaybackState.js';
-import type { SoundId } from '@domain/Types/Branded.js';
+import type { SoundId } from '@shared/Types/Branded.js';
 
 export class ContainerHistoryRegistry implements IContainerHistoryRegistry {
     private readonly history = new Map<SoundId, IContainerPlaybackState>();

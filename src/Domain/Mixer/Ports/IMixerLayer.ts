@@ -1,5 +1,5 @@
 import type { MixerSnapshot } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
-import { LayerId } from '@domain/Types/Branded.js';
+import { LayerId } from '@shared/Types/Branded.js';
 
 export interface IMixerLayer {
     readonly id: LayerId;

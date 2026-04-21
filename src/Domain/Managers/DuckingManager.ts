@@ -3,7 +3,7 @@
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { BusId, PlaybackId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId } from '@shared/Types/Branded.js';
 
 export default class DuckingManager implements IDuckingManager {
     constructor(

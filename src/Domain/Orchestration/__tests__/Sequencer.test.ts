@@ -7,7 +7,7 @@ import { LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 import Sequencer from '@domain/Orchestration/Sequencer.js';
 
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
-import type { PlaybackId, RegionId, SoundId } from '@domain/Types/Branded.js';
+import type { PlaybackId, RegionId, SoundId } from '@shared/Types/Branded.js';
 import type { Mocked } from 'vitest';
 
 vi.mock('../AudioGrid', () => {

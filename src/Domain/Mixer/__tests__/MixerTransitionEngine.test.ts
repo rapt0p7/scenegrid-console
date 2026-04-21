@@ -6,7 +6,7 @@ import { isFilterEqual } from '@domain/BusSystem/ValueObjects/filterEquals.js';
 import MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
 
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
-import { BusId } from '@domain/Types/Branded.js';
+import { BusId } from '@shared/Types/Branded.js';
 
 describe('Value Objects: isFilterEqual', () => {
     it('should return true for identical references or both null', () => {

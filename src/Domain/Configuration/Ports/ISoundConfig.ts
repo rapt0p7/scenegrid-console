@@ -1,5 +1,5 @@
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import { BusId, RegionId, SoundId } from '@domain/Types/Branded.js';
+import { BusId, RegionId, SoundId } from '@shared/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export interface IBaseSoundConfig {

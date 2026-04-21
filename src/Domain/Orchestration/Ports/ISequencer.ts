@@ -1,5 +1,5 @@
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
-import { RegionId, SoundId } from '@domain/Types/Branded.js';
+import { RegionId, SoundId } from '@shared/Types/Branded.js';
 
 export enum LoopState {
     IDLE = 'IDLE',

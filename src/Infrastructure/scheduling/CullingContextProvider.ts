@@ -4,7 +4,7 @@ import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js
 import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type { ICullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId, SoundId, BusId } from '@domain/Types/Branded.js';
+import type { PlaybackId, SoundId, BusId } from '@shared/Types/Branded.js';
 
 export class CullingContextProvider implements ICullingContext {
     constructor(
@@ -26,7 +26,7 @@ export class CullingContextProvider implements ICullingContext {
     }
 
     public resolveBusId(id: SoundId): BusId | undefined {
-        return this.soundMap[id as SoundId]?.busId as BusId | undefined;
+        return this.soundMap[id]?.busId;
     }
 
     public getBusVolume(busId: BusId): number {

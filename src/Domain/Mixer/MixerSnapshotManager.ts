@@ -8,7 +8,7 @@ import type { MixerEvents } from '@domain/Mixer/Ports/IMixerTransitionEngine.js'
 import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 import type { Emitter } from 'mitt';
 import { isDefined } from '@shared/guards.js';
-import { LayerId, SnapshotId } from '@domain/Types/Branded.js';
+import { LayerId, SnapshotId } from '@shared/Types/Branded.js';
 
 export default class MixerSnapshotManager {
     public readonly events: Emitter<MixerEvents> = mitt<MixerEvents>();

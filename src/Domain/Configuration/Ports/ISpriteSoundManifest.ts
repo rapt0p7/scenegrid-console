@@ -1,4 +1,4 @@
-import { SoundId } from '@domain/Types/Branded.js';
+import { SoundId } from '@shared/Types/Branded.js';
 
 export type ISpriteSoundManifest = Record<
     SoundId,

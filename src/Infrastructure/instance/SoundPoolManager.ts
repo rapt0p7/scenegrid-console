@@ -2,7 +2,7 @@
 
 import mitt from 'mitt';
 
-import type { SoundId } from '@domain/Types/Branded.js';
+import type { SoundId } from '@shared/Types/Branded.js';
 import type { ISoundInstance, ISoundConfig } from '@infrastructure/types/ISoundInstance.js';
 import type { IVoiceConfig } from '@infrastructure/types/IVoiceConfig.js';
 import type { Emitter } from 'mitt';
@@ -37,7 +37,7 @@ export default class SoundPoolManager {
             maxPolyphony: config.maxPolyphony ?? 32,
             policy: config.policy ?? 'steal_oldest',
             globalVoiceLimit: config.globalVoiceLimit ?? 32,
-            // eslint-disable-next-line unicorn/no-useless-undefined
+            // oxlint-disable-next-line unicorn/no-useless-undefined
             voiceConfigResolver: config.voiceConfigResolver ?? (() => undefined)
         };
 

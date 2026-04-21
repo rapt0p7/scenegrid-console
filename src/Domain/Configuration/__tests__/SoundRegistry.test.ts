@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import SoundRegistry from '@domain/Configuration/SoundRegistry.js';
 
-import type { SoundId } from '@domain/Types/Branded.js';
+import type { SoundId } from '@shared/Types/Branded.js';
 
 describe('SoundRegistry', () => {
     it('should register and retrieve a sound descriptor', () => {

@@ -5,7 +5,7 @@ import { CullingRunner } from '../CullingRunner.js';
 
 import type { ICullingArbiter, ICullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId } from '@domain/Types/Branded.js';
+import type { PlaybackId } from '@shared/Types/Branded.js';
 
 describe('CullingRunner (Infrastructure Adapter)', () => {
     let mockArbiter: ICullingArbiter;

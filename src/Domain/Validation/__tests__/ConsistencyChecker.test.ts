@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 
-import type { BusId, SoundId } from '@domain/Types/Branded.js';
+import type { BusId, SoundId } from '@shared/Types/Branded.js';
 import type { IConsistencyCheckerPayload } from '@domain/Validation/ConsistencyChecker.js';
 
 describe('ConsistencyChecker', () => {

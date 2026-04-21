@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+// oxlint-disable unicorn/no-useless-undefined
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import SoundPoolManager from '../SoundPoolManager.js';
 
-import type { SoundId } from '@domain/Types/Branded.js';
+import type { SoundId } from '@shared/Types/Branded.js';
 import type { ISoundInstance } from '@infrastructure';
 import type { IVoiceConfig } from '@infrastructure';
 
@@ -79,6 +81,7 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
 
     it('should pre-allocate instances in constructor', () => {
         const factory = vi.fn(id => createMockInstance(id));
+        // oxlint-disable-next-line no-new
         new SoundPoolManager(factory, {
             globalVoiceLimit: 5,
             maxPolyphony: 32,

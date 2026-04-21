@@ -4,7 +4,7 @@ import MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
 
 import type MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
-import { LayerId, SnapshotId } from '@domain/Types/Branded.js';
+import { LayerId, SnapshotId } from '@shared/Types/Branded.js';
 
 describe('MixerSnapshotManager', () => {
     let manager: MixerSnapshotManager;

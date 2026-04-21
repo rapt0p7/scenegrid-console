@@ -1,8 +1,7 @@
-/* eslint-disable unicorn/prefer-at */
 // noinspection D
 
 import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId, SoundId } from '@shared/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
@@ -65,7 +64,7 @@ export class SoundController implements ISoundController {
         }
     }
 
-    // eslint-disable-next-line unicorn/no-object-as-default-parameter
+    // oxlint-disable-next-line unicorn/no-object-as-default-parameter
     register(soundId: SoundId, buffer: AudioBuffer, options: ISoundOptions = { url: '' }): void {
         if (this.registry.has(soundId)) return;
         this.registry.set(soundId, { buffer, options });
@@ -84,7 +83,7 @@ export class SoundController implements ISoundController {
         if (!this.registry.has(soundId)) return null;
 
         const now = performance.now();
-        const lastPlay = this.lastPlayTimes.get(soundId) || 0;
+        const lastPlay = this.lastPlayTimes.get(soundId) ?? 0;
         const definition = this.registry.get(soundId)!;
 
         const cooldownMs = definition.options.cooldownMs ?? DEFAULT_COOLDOWN_MS;
@@ -108,7 +107,11 @@ export class SoundController implements ISoundController {
             startedAtContextTime: this.context.currentTime,
             startOffset: offset || 0,
             physicalInstance: instance,
-            onRevive: onRevive ? () => onRevive(playbackId) : undefined
+            onRevive: onRevive
+                ? () => {
+                      onRevive(playbackId);
+                  }
+                : undefined
         };
 
         (instance as any)._currentPlaybackId = playbackId;
@@ -315,12 +318,12 @@ export class SoundController implements ISoundController {
         if (voice?.physicalInstance) {
             return voice.physicalInstance.on('ended', callback);
         }
-        // eslint-disable-next-line unicorn/consistent-function-scoping
+
         return () => void 0;
     }
 
     #handleVoiceEnded = (instance: any): void => {
-        const playbackId = (instance as any)._currentPlaybackId;
+        const playbackId = instance._currentPlaybackId;
         if (playbackId) {
             this.activeVoices.delete(playbackId);
             this.#removeFromVirtualQueue(playbackId);
@@ -328,7 +331,7 @@ export class SoundController implements ISoundController {
     };
 
     #handleInstanceReleased = (instance: any): void => {
-        const poolIndex = (instance as any)._poolIndex;
+        const poolIndex = instance._poolIndex;
         if (poolIndex === undefined || poolIndex < 0) return;
 
         const targetBuses = this.#sidechainLinks[poolIndex];

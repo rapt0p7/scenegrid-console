@@ -1,4 +1,4 @@
-import type { SoundId } from '@domain/Types/Branded.js';
+import type { SoundId } from '@shared/Types/Branded.js';
 import type { PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
 import type {
     AudioNodeLike,

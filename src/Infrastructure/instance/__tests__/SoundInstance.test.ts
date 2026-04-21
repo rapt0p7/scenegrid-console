@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -8,7 +9,7 @@ import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
 import { SoundInstance } from '../SoundInstance.js';
 
 import type AudioContextManager from '../../context/AudioContextManager.js';
-import type { SoundId } from '@domain/Types/Branded';
+import type { SoundId } from '@shared/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 
 function createMockAudioContext() {
@@ -329,7 +330,9 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         expect(noBufferInstance.duration).toBe(0);
         expect(noBufferInstance.currentTime).toBe(0); // !this.#buffer return 0
 
-        expect(() => noBufferInstance.play()).not.toThrow(); // !this.#buffer early return
+        expect(() => {
+            noBufferInstance.play();
+        }).not.toThrow(); // !this.#buffer early return
     });
 
     it('should cover all branch cases in automate()', () => {
@@ -372,17 +375,23 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         mockContext._mockSourceNode.stop.mockImplementationOnce(() => {
             throw new Error('WebAudio Error');
         });
-        expect(() => instance.stop(5)).not.toThrow();
+        expect(() => {
+            instance.stop(5);
+        }).not.toThrow();
 
         instance.play();
         mockContext._mockSourceNode.stop.mockImplementationOnce(() => {
             throw new Error('WebAudio Error');
         });
-        expect(() => instance.stop()).not.toThrow();
+        expect(() => {
+            instance.stop();
+        }).not.toThrow();
     });
 
     it('should handle cancelScheduled() edge cases', () => {
-        expect(() => instance.cancelScheduled()).not.toThrow();
+        expect(() => {
+            instance.cancelScheduled();
+        }).not.toThrow();
 
         instance.play();
         instance.cancelScheduled();
@@ -398,7 +407,9 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
             throw new Error('Gain Error');
         });
 
-        expect(() => instance.cancelScheduled()).not.toThrow();
+        expect(() => {
+            instance.cancelScheduled();
+        }).not.toThrow();
     });
 
     it('should support pre-allocation with null buffer and subsequent rebind', () => {
@@ -537,11 +548,15 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
     it('should safely ignore automate targets if specific nodes lack properties (Line 387)', () => {
         const pannerSpy = vi.spyOn(NodeChain.prototype, 'pannerNode', 'get').mockReturnValue({} as any);
-        expect(() => instance.automate('pan', 1)).not.toThrow();
+        expect(() => {
+            instance.automate('pan', 1);
+        }).not.toThrow();
         pannerSpy.mockRestore();
 
         const filterSpy = vi.spyOn(NodeChain.prototype, 'mainFilterNode', 'get').mockReturnValue({} as any);
-        expect(() => instance.automate('filterFrequency', 2000)).not.toThrow();
+        expect(() => {
+            instance.automate('filterFrequency', 2000);
+        }).not.toThrow();
         filterSpy.mockRestore();
     });
 
@@ -569,6 +584,7 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
     describe('SoundInstance - Spatial Audio (setPosition)', () => {
         let mockPanner: any;
+        // oxlint-disable-next-line no-shadow
         let mockContextManager: any;
         let mockNodeFactory: any;
         let soundInstance: SoundInstance;
@@ -628,7 +644,9 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
                 {}
             );
 
-            expect(() => soundInstance2D.setPosition(10, 20, 30)).not.toThrow();
+            expect(() => {
+                soundInstance2D.setPosition(10, 20, 30);
+            }).not.toThrow();
         });
 
         describe('Ticker Spam Protection (Low-Pass Filter)', () => {
@@ -718,7 +736,7 @@ describe('SoundInstance Rebinding Lifecycle', () => {
             }
         };
 
-        nodeFactory = new AudioNodeFactory(mockContextManager as any);
+        nodeFactory = new AudioNodeFactory(mockContextManager);
         automation = { ramp: vi.fn() } as unknown as AutomationEngine;
         mockBuffer = {} as AudioBuffer;
     });

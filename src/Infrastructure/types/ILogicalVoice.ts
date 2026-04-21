@@ -1,4 +1,4 @@
-import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { PlaybackId, SoundId } from '@shared/Types/Branded.js';
 import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
 
 export interface ILogicalVoice {

@@ -1,4 +1,4 @@
-import type { BusId, PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId, SoundId } from '@shared/Types/Branded.js';
 
 export interface IControllerPlayOptions {
     readonly when?: number;

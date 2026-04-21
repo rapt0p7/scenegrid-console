@@ -8,7 +8,7 @@ import { isAbsent, isDefined } from '@shared/guards.js';
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import { ITransitionOptions, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
-import type { BusId } from '@domain/Types/Branded.js';
+import type { BusId } from '@shared/Types/Branded.js';
 import type { Emitter } from 'mitt';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 

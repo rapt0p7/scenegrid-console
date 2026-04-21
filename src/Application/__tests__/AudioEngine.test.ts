@@ -18,7 +18,7 @@ import {
 } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
-import type { BusId, PlaybackId, RegionId, SnapshotId, SoundId } from '@domain/Types/Branded.js';
+import type { BusId, GameParamId, PlaybackId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),
@@ -163,7 +163,7 @@ vi.mock('@infrastructure', async importOriginal => {
                 globalVoiceLimit: 32
             };
         }),
-        // eslint-disable-next-line max-params
+
         CullingRunner: vi.fn().mockImplementation(function (arbiter, controller, contextProvider) {
             (globalThis as any).__mockCullingContext = contextProvider;
             return { start: vi.fn(), stop: vi.fn() };
@@ -302,8 +302,8 @@ describe('AudioEngine', () => {
                 snapshots: {},
                 soundMap: {},
                 rtpcManifest: {
-                    health: { attackMs: 100, releaseMs: 200, defaultValue: 100 },
-                    speed: { attackMs: 50 }
+                    ['health' as GameParamId]: { attackMs: 100, releaseMs: 200, defaultValue: 100 },
+                    ['speed' as GameParamId]: { attackMs: 50 }
                 }
             });
             await rtpcEngine.init();

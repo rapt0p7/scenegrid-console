@@ -1,4 +1,4 @@
-import type { BusId, PlaybackId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId } from '@shared/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export interface IDuckingManager {

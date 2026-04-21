@@ -5,7 +5,7 @@ import DuckingManager from '@domain/Managers/DuckingManager.js';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { BusId, PlaybackId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId } from '@shared/Types/Branded.js';
 import type { Mocked } from 'vitest';
 
 describe('DuckingManager', () => {

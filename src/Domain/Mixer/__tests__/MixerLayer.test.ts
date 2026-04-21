@@ -5,7 +5,7 @@ import MixerLayerStack, { PRIORITY } from '@domain/Mixer/MixerLayer.js';
 import type MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
 import type { IMixerLayer } from '@domain/Mixer/Ports/IMixerLayer.js';
 import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
-import { BusId, LayerId } from '@domain/Types/Branded.js';
+import { BusId, LayerId } from '@shared/Types/Branded.js';
 
 describe('MixerLayerStack', () => {
     let layerStack: MixerLayerStack;
