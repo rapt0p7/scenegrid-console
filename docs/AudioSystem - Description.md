@@ -213,12 +213,15 @@ The system supports RMS meters, spectrum analyzers, and DSP detectors. These are
 
 The following are **strictly prohibited**:
 
-- Direct source connection to the Master.
-- Bypassing automation.
-- Manual parameter management outside the system.
-- **Domain Isolation:** Domain components must never import anything from the `Infrastructure` or `Application` directories. Communication with external systems must occur through **Ports** (interfaces).
-- **Inward Dependency:** Dependencies must always point towards the Domain. The Domain is the most stable part of the system and is agnostic of the Web Audio API or the browser environment.
-- **Kernel Purity:** The Kernel layer should have zero dependencies on external state, acting as a pure mathematical engine for the engine's modulation needs.
-- **Synchronous Parameter Spam**: High-frequency game ticks must pass through the `RTPCManager`'s batching system; direct, unthrottled manipulation of AudioParams is prevented by design.
+- **Direct Source Connection**: Connecting any audio source directly to the Master node. All signals must follow the strict hierarchy: Source → Bus → Master.
+- **Bypassing Automation**: Any direct manipulation of `AudioParam` values. All changes must be scheduled via the `AutomationEngine`.
+- **Manual Parameter Management**: Modifying bus or instance parameters from outside the dedicated managers.
+- **Domain Isolation**: Domain components importing anything from the `Infrastructure` or `Application` directories. Communication with external systems must occur exclusively through **Ports** (interfaces).
+- **Inward Dependency**: Dependencies pointing away from the Domain. The Domain is the most stable part of the system and must remain agnostic of the Web Audio API or browser-specific implementations.
+- **Kernel Purity**: The Kernel layer depending on external state. It must act as a pure mathematical engine for modulation and logic calculations.
+- **Synchronous Parameter Spam**: Direct, unthrottled manipulation of `AudioParams`. High-frequency game ticks must pass through the `RTPCManager` batching system.
+- **Domain Mutation (Zero Side-Effects)**: Implicit mutation of engine configurations (manifests, buses, sound dictionaries) or mixer snapshots (`ISnapshots`). These must be treated as **DeepReadonly** structures. Any change in logical state must be computed via pure functions to protect the **Control Plane** from side-effects.
+- **Primitive Identity (Stringly-Typed)**: Using raw `string` or `number` types for business-critical identifiers. Identification of domain entities (Sounds, Buses, Layers, Snapshots) must use semantic **Branded Types** (`SoundId`, `BusId`, etc.) to make illegal states unrepresentable.
 
-This ensures mix predictability, prevents automation conflicts, protects CPU resources, and maintains DSP stability.
+**Performance Invariant (The Mutation Exemption):**
+The principle of immutability **does not apply** to the dynamic runtime state (**Data Plane**) within the `Infrastructure` and `Orchestration` layers (e.g., active hardware voices, sequencer event queues). To comply with **Data-Oriented Design** and prevent Garbage Collection (GC) spikes, the infrastructure is mandated to perform **In-Place mutations** of pre-allocated object pools and stable data structures.
