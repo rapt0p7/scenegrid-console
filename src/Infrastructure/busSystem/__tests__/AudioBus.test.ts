@@ -3,10 +3,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 
-import type { BusId, GameParamId } from '@domain/Types/Branded.js';
+import type { BusId, GameParamId } from '@shared/Types/Branded.js';
 import type { AudioCtx, AutomationEngine, GainNodeLike, IPluginFactory } from '@infrastructure';
 
-describe('AudioBus (Filters, Sends, RTPC)', () => {
+describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
     let mockContext: any;
     let mockAutomation: any;
     let mockPluginFactory: any;
@@ -45,9 +45,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         mockMasterGain = { gain: { value: 1 }, connect: vi.fn() };
 
         mockRtpcManager = {
-            getValue: vi.fn().mockReturnValue(0),
-            on: vi.fn(),
-            off: vi.fn()
+            getValue: vi.fn().mockReturnValue(0)
         };
     });
 
@@ -137,7 +135,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         expect(sendGainsMap.has('reverb_bus')).toBe(false);
     });
 
-    it('should bind RTPC for filterFrequency and pan and calculate additive math correctly', () => {
+    it('should calculate additive math correctly using Pull Model (tickRTPC)', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -157,34 +155,33 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         mockRtpcManager.getValue.mockReturnValue(100);
 
-        bus.bindRTPC(
-            {
-                filterFrequency: {
-                    gameParam: 'speed' as GameParamId,
-                    curve: [
-                        { x: 0, y: 0 },
-                        { x: 100, y: 500 }
-                    ]
-                },
-                pan: {
-                    gameParam: 'position' as GameParamId,
-                    curve: [
-                        { x: -1, y: -1 },
-                        { x: 100, y: 0.5 }
-                    ]
-                }
+        bus.bindRTPC({
+            filterFrequency: {
+                gameParam: 'speed' as GameParamId,
+                curve: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 500 }
+                ]
             },
-            mockRtpcManager
-        );
+            pan: {
+                gameParam: 'position' as GameParamId,
+                curve: [
+                    { x: -1, y: -1 },
+                    { x: 100, y: 0.5 }
+                ]
+            }
+        });
 
+        bus.tickRTPC(mockRtpcManager);
         bus.processFrame(mockContext.currentTime);
 
-        expect(mockRtpcManager.on).toHaveBeenCalledTimes(2);
+        expect(mockRtpcManager.getValue).toHaveBeenCalledWith('speed');
+        expect(mockRtpcManager.getValue).toHaveBeenCalledWith('position');
         expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 1500, 50, 'exponential');
         expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).pannerNode.pan, 0.5, 50, 'linear');
     });
 
-    it('should bind RTPC to sendLevel and automate send gain when gameParam changes', () => {
+    it('should pull RTPC for sendLevel and automate send gain when gameParam changes', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -207,26 +204,25 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         mockAutomation.ramp.mockClear();
         mockRtpcManager.getValue.mockReturnValue(100);
 
-        bus.bindRTPC(
-            {
-                sendLevel: {
-                    sendTargetBus: 'reverb_bus' as BusId,
-                    gameParam: 'cave_depth' as GameParamId,
-                    curve: [
-                        { x: 0, y: 0 },
-                        { x: 100, y: 0.8 }
-                    ],
-                    smoothingMs: 200
-                }
-            },
-            mockRtpcManager
-        );
+        bus.bindRTPC({
+            sendLevel: {
+                sendTargetBus: 'reverb_bus' as BusId,
+                gameParam: 'cave_depth' as GameParamId,
+                curve: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 0.8 }
+                ],
+                smoothingMs: 200
+            }
+        });
 
+        bus.tickRTPC(mockRtpcManager);
         bus.processFrame(mockContext.currentTime);
 
         const sendGainsMap = (bus as any).sendGains as Map<string, any>;
         const reverbSendGainNode = sendGainsMap.get('reverb_bus');
 
+        expect(mockRtpcManager.getValue).toHaveBeenCalledWith('cave_depth');
         expect(mockAutomation.ramp).toHaveBeenCalledWith(reverbSendGainNode.gain, 0.8, 200, 'linear');
     });
 
@@ -243,28 +239,24 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         mockRtpcManager.getValue.mockReturnValue(100);
 
         expect(() => {
-            bus.bindRTPC(
-                {
-                    sendLevel: {
-                        gameParam: 'depth' as GameParamId,
-                        curve: [{ x: 100, y: 0.5 }]
-                    }
-                },
-                mockRtpcManager
-            );
-        }).not.toThrow();
-
-        bus.bindRTPC(
-            {
+            bus.bindRTPC({
                 sendLevel: {
-                    sendTargetBus: 'ghost_bus' as BusId,
                     gameParam: 'depth' as GameParamId,
                     curve: [{ x: 100, y: 0.5 }]
                 }
-            },
-            mockRtpcManager
-        );
+            });
+            bus.tickRTPC(mockRtpcManager);
+        }).not.toThrow();
 
+        bus.bindRTPC({
+            sendLevel: {
+                sendTargetBus: 'ghost_bus' as BusId,
+                gameParam: 'depth' as GameParamId,
+                curve: [{ x: 100, y: 0.5 }]
+            }
+        });
+
+        bus.tickRTPC(mockRtpcManager);
         bus.processFrame(mockContext.currentTime);
 
         const ghostBusState = (bus as any).targetParams.sends.get('ghost_bus');
@@ -273,7 +265,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         expect(ghostBusState.rtpc).toBe(0.5);
     });
 
-    it('should bind RTPC using preset curves and calculate math correctly', () => {
+    it('should bind RTPC using preset curves and calculate math correctly on pull', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -290,24 +282,23 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         mockRtpcManager.getValue.mockReturnValue(50);
 
-        bus.bindRTPC(
-            {
-                filterFrequency: {
-                    gameParam: 'speed' as GameParamId,
-                    curve: {
-                        type: 's-curve',
-                        minX: 0,
-                        maxX: 100,
-                        minY: 0,
-                        maxY: 2000
-                    }
+        bus.bindRTPC({
+            filterFrequency: {
+                gameParam: 'speed' as GameParamId,
+                curve: {
+                    type: 's-curve',
+                    minX: 0,
+                    maxX: 100,
+                    minY: 0,
+                    maxY: 2000
                 }
-            },
-            mockRtpcManager
-        );
+            }
+        });
 
+        bus.tickRTPC(mockRtpcManager);
         bus.processFrame(mockContext.currentTime);
 
+        expect(mockRtpcManager.getValue).toHaveBeenCalledWith('speed');
         expect(mockAutomation.ramp).toHaveBeenCalledWith((bus as any).filterNode.frequency, 2000, 50, 'exponential');
     });
 
@@ -542,7 +533,7 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
         expect(bus.getConfig().filter).toEqual({ type: 'reverb' });
     });
 
-    it('should bind RTPC to gain and automate inputGainNode when gameParam changes', () => {
+    it('should pull RTPC for gain and automate inputGainNode when gameParam changes', () => {
         const bus = new AudioBus({
             id: 'sfx_bus' as BusId,
             config: { gain: 1 },
@@ -556,23 +547,21 @@ describe('AudioBus (Filters, Sends, RTPC)', () => {
 
         mockRtpcManager.getValue.mockReturnValue(100);
 
-        bus.bindRTPC(
-            {
-                gain: {
-                    gameParam: 'master_volume_slider' as GameParamId,
-                    curve: [
-                        { x: 0, y: 0 },
-                        { x: 100, y: 0.5 }
-                    ],
-                    smoothingMs: 120
-                }
-            },
-            mockRtpcManager
-        );
+        bus.bindRTPC({
+            gain: {
+                gameParam: 'master_volume_slider' as GameParamId,
+                curve: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 0.5 }
+                ],
+                smoothingMs: 120
+            }
+        });
 
+        bus.tickRTPC(mockRtpcManager);
         bus.processFrame(mockContext.currentTime);
 
-        expect(mockRtpcManager.on).toHaveBeenCalledWith('master_volume_slider', expect.any(Function));
+        expect(mockRtpcManager.getValue).toHaveBeenCalledWith('master_volume_slider');
         expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputNode.gain, 0.5, 120, 'linear');
         expect((bus as any).targetParams.gain.rtpc).toBe(0.5);
     });

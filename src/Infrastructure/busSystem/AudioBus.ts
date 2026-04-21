@@ -11,7 +11,7 @@ import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { BusId, GameParamId } from '@domain/Types/Branded.js';
+import type { BusId } from '@shared/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type {
     AudioCtx,
@@ -22,11 +22,7 @@ import type {
     StereoPannerNodeLike
 } from '@infrastructure/types/IAudioContext.js';
 import type { IPluginFactory } from '@infrastructure/types/IAudioPlugins.js';
-
-interface RTPCBinding {
-    gameParam: GameParamId;
-    handler: (value: number) => void;
-}
+import { typedEntries } from '@shared/typedObjects.js';
 
 export default class AudioBus implements IAudioBus {
     public logicalTargetGain: number = 1;
@@ -58,7 +54,7 @@ export default class AudioBus implements IAudioBus {
     private currentFilterConfig?: IFilter;
     private readonly sendGains: Map<BusId, GainNodeLike> = new Map();
     private readonly pluginFactory: IPluginFactory;
-    private rtpcBindings: RTPCBinding[] = [];
+    private activeRTPCConfigs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | null = null;
     private isDirty = false;
     private swapState = {
         active: false,
@@ -184,36 +180,24 @@ export default class AudioBus implements IAudioBus {
         this.swapState.newFilterConfigOrNode = newFilterConfigOrNode;
     }
 
-    public bindRTPC(
-        configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | undefined,
-        rtpcAdapter: IRTPCAdapter
-    ): void {
-        for (const binding of this.rtpcBindings) {
-            rtpcAdapter.off(binding.gameParam, binding.handler);
-        }
-        this.rtpcBindings.length = 0;
+    public bindRTPC(configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | undefined): void {
+        this.activeRTPCConfigs = configs ?? null;
+    }
 
-        if (isAbsent(configs)) return;
+    public tickRTPC(rtpcAdapter: IRTPCAdapter): void {
+        if (isAbsent(this.activeRTPCConfigs)) return;
 
-        for (const [targetName, config] of Object.entries(configs)) {
+        for (const [targetName, config] of typedEntries(this.activeRTPCConfigs)) {
             if (isAbsent(config)) continue;
 
-            const target = targetName as RTPCTargetProperty;
+            const target = targetName;
             const smoothing = config.smoothingMs ?? 50;
             const targetBusId = config.sendTargetBus;
 
-            const handler = (gameValue: number): void => {
-                const mappedValue = evaluateRTPCCurve(gameValue, config.curve);
-                this.applyRTPCTarget(target, mappedValue, smoothing, targetBusId);
-            };
+            const gameValue = rtpcAdapter.getValue(config.gameParam);
+            const mappedValue = evaluateRTPCCurve(gameValue, config.curve);
 
-            this.rtpcBindings.push({
-                gameParam: config.gameParam,
-                handler
-            });
-
-            rtpcAdapter.on(config.gameParam, handler);
-            handler(rtpcAdapter.getValue(config.gameParam));
+            this.applyRTPCTarget(target, mappedValue, smoothing, targetBusId);
         }
     }
 

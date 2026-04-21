@@ -4,12 +4,13 @@ import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IDuckingConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { BusId } from '@domain/Types/Branded.js';
+import type { BusId } from '@shared/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { AudioCtx, AudioNodeLike, GainNodeLike } from '@infrastructure/types/IAudioContext.js';
 import type { ILimiterNode, IPluginFactory, ISidechain } from '@infrastructure/types/IAudioPlugins.js';
 import type { IMasterOutput } from '@infrastructure/types/IMasterOutput.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 
 export default class AudioBusSystem implements IAudioBusSystem {
     private readonly context: AudioCtx;
@@ -77,6 +78,13 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 this.hotPathBuses[index].processFrame(currentTime);
             }
         });
+    }
+
+    public tickRTPC(rtpcAdapter: IRTPCAdapter): void {
+        const length = this.hotPathBuses.length;
+        for (let index = 0; index < length; index++) {
+            this.hotPathBuses[index].tickRTPC(rtpcAdapter);
+        }
     }
 
     public getDefaultGain(busId: BusId): number {
@@ -286,6 +294,8 @@ export default class AudioBusSystem implements IAudioBusSystem {
             this.hotPathBuses.push(bus);
         }
 
+        const promises = [];
+
         for (const [busId, busConfig] of Object.entries(this.busConfig!)) {
             if (busConfig.sends) {
                 for (const [targetBusId, sendGain] of Object.entries(busConfig.sends)) {
@@ -293,8 +303,10 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 }
             }
             if (busConfig.sidechain?.enabled) {
-                await this.createSidechain(busId as BusId);
+                promises.push(this.createSidechain(busId as BusId));
             }
         }
+
+        await Promise.all(promises);
     }
 }

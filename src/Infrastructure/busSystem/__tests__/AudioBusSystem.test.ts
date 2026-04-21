@@ -7,7 +7,7 @@ import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 import AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
-import type { BusId } from '@domain/Types/Branded.js';
+import type { BusId } from '@shared/Types/Branded.js';
 import type { IPluginFactory } from '@infrastructure';
 import type { AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
 
