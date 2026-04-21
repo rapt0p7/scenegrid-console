@@ -225,3 +225,19 @@ The following are **strictly prohibited**:
 
 **Performance Invariant (The Mutation Exemption):**
 The principle of immutability **does not apply** to the dynamic runtime state (**Data Plane**) within the `Infrastructure` and `Orchestration` layers (e.g., active hardware voices, sequencer event queues). To comply with **Data-Oriented Design** and prevent Garbage Collection (GC) spikes, the infrastructure is mandated to perform **In-Place mutations** of pre-allocated object pools and stable data structures.
+
+---
+
+### 11. Architectural Gotcha: The Multiplicative Veto
+
+Due to the transition to a multiplicative parameter resolution model (`Final Gain = Base Gain × RTPC Modifier`), the engine enforces a strict separation of orchestrator responsibilities.
+
+Attempting to control the volume of the same bus simultaneously via global Snapshots and game metrics (RTPC) leads to a **mathematical veto**:
+* If a Snapshot sets `gain: 0` (muting the bus), no RTPC modifier can bring it back to life, as `0 × 1.0 = 0`.
+* Conversely, if an RTPC curve hits `0`, activating a Snapshot with `gain: 1` will not enable the sound (`1.0 × 0 = 0`).
+
+**The Golden Orchestration Rule:**
+Each bus must have only one primary "driver" for its gain parameter.
+
+1.  **RTPC-Driven Buses (Dynamic Music / Engine Sounds):** If a bus relies on RTPC for crossfades or dynamic volume changes, its base gain in all Snapshots **must always remain 1.0** (or be omitted so the `MixerStateResolver` applies the default value). Snapshots must never attempt to mute these buses.
+2.  **Snapshot-Driven Buses (UI / Menu States):** If a bus volume is strictly controlled by game states (e.g., ducking all SFX when the pause menu opens), it should not have RTPC bindings that manipulate its gain based on gameplay metrics.
