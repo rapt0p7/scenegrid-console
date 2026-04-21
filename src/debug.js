@@ -231,22 +231,44 @@ function setupRTPCSection(pane) {
     const fRTPC = pane.addFolder({ title: 'RTPC (Real-Time Parameters)', expanded: false });
     applyIcon(fRTPC, 'fad-slider-round-2', 'RTPC (Real-Time Parameters)');
 
-    rtpcsKeys.forEach(key => {
+    const activeBindings = [];
+
+    let isSyncingUI = false;
+
+    for (let i = 0; i < rtpcsKeys.length; i++) {
+        const key = rtpcsKeys[i];
         PARAMS.rtpc[key] = rtpcManager.getValue(key);
 
         const binding = fRTPC.addBinding(PARAMS.rtpc, key, { label: key, step: 0.01 });
 
         binding.on('change', ev => {
+            if (isSyncingUI) return;
+
             rtpcManager.setValue(key, ev.value);
         });
 
-        rtpcManager.on(key, newValue => {
-            if (PARAMS.rtpc[key] !== newValue) {
-                PARAMS.rtpc[key] = newValue;
+        activeBindings.push({ key, binding });
+    }
+
+    const pollAndUpdateUI = () => {
+        isSyncingUI = true;
+
+        for (let i = 0; i < activeBindings.length; i++) {
+            const { key, binding } = activeBindings[i];
+            const engineValue = rtpcManager.getValue(key);
+
+            if (Math.abs(PARAMS.rtpc[key] - engineValue) > 1e-4) {
+                PARAMS.rtpc[key] = engineValue;
                 binding.refresh();
             }
-        });
-    });
+        }
+
+        isSyncingUI = false;
+
+        requestAnimationFrame(pollAndUpdateUI);
+    };
+
+    requestAnimationFrame(pollAndUpdateUI);
 }
 
 function setupSpatialSection(pane) {
