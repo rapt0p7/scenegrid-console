@@ -3,27 +3,30 @@
 import { isAbsent } from '@shared/guards.js';
 import { evaluateRTPCCurve } from '@shared/Math/rtpcMath.js';
 
+import type { GameParamId, PlaybackId } from '@shared/Types/Branded.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISoundController, RTPCParameterTarget } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId } from '@domain/Types/Branded.js';
 
-interface ICleanupState {
-    isCleanedUp: boolean;
+interface RTPCBinding {
+    readonly playbackId: PlaybackId;
+    readonly paramId: GameParamId;
+    readonly target: RTPCParameterTarget;
+    readonly config: IRTPCConfig;
 }
 
-// oxlint-disable-next-line typescript/no-extraneous-class
 export class InstanceRTPCBinder {
-    public static bind(
-        playbackId: PlaybackId,
-        configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | undefined,
-        rtpcAdapter: IRTPCAdapter,
-        soundController: ISoundController
-    ): void {
+    private readonly bindings: RTPCBinding[] = [];
+
+    constructor(
+        private readonly rtpcAdapter: IRTPCAdapter,
+        private readonly soundController: ISoundController
+    ) {}
+
+    public bind(playbackId: PlaybackId, configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | undefined): void {
         if (isAbsent(configs)) return;
 
-        const rtpcUnsubs: Array<() => void> = [];
-        const state: ICleanupState = { isCleanedUp: false };
+        let hasBindings = false;
 
         for (const [targetName, config] of Object.entries(configs)) {
             if (isAbsent(config)) continue;
@@ -34,41 +37,47 @@ export class InstanceRTPCBinder {
                 continue;
             }
 
-            const handler = this.createHandler(playbackId, target, config, soundController, state);
-
-            rtpcAdapter.on(config.gameParam, handler);
-            rtpcUnsubs.push(() => {
-                rtpcAdapter.off(config.gameParam, handler);
+            this.bindings.push({
+                playbackId,
+                paramId: config.gameParam,
+                target,
+                config
             });
 
-            handler(rtpcAdapter.getValue(config.gameParam));
+            hasBindings = true;
+
+            // oxlint-disable-next-line unicorn/prefer-at
+            this.applySingle(this.bindings[this.bindings.length - 1]);
         }
 
-        if (rtpcUnsubs.length === 0) return;
-
-        const cleanup = (): void => {
-            if (state.isCleanedUp) return;
-            state.isCleanedUp = true;
-            for (const unsub of rtpcUnsubs) unsub();
-        };
-
-        soundController.onVoiceEnded(playbackId, cleanup);
+        if (hasBindings) {
+            this.soundController.onVoiceEnded(playbackId, () => {
+                this.unbind(playbackId);
+            });
+        }
     }
 
-    private static createHandler(
-        playbackId: PlaybackId,
-        target: RTPCParameterTarget,
-        config: IRTPCConfig,
-        soundController: ISoundController,
-        state: ICleanupState
-    ): (gameValue: number) => void {
-        return (gameValue: number): void => {
-            if (state.isCleanedUp) return;
+    public tickRTPC(): void {
+        for (let i = 0; i < this.bindings.length; i++) {
+            this.applySingle(this.bindings[i]);
+        }
+    }
 
-            const mappedValue = evaluateRTPCCurve(gameValue, config.curve);
-            const smoothing = config.smoothingMs ?? 50;
+    private applySingle(binding: RTPCBinding): void {
+        const gameValue = this.rtpcAdapter.getValue(binding.paramId);
 
-            soundController.fadeParameter(playbackId, target, mappedValue, smoothing);
-        };
+        const mappedValue = evaluateRTPCCurve(gameValue, binding.config.curve);
+        const smoothing = binding.config.smoothingMs ?? 50;
+
+        this.soundController.fadeParameter(binding.playbackId, binding.target, mappedValue, smoothing);
+    }
+
+    private unbind(playbackId: PlaybackId): void {
+        for (let i = this.bindings.length - 1; i >= 0; i--) {
+            if (this.bindings[i].playbackId === playbackId) {
+                this.bindings[i] = this.bindings[this.bindings.length - 1];
+                this.bindings.pop();
+            }
+        }
     }
 }
