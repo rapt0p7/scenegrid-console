@@ -78,6 +78,7 @@ export default class ConsistencyChecker {
         this.checkSnapshots();
         this.checkGhostDucking();
         this.checkOrphanManifestSounds();
+        this.checkMultiplicativeVetoes();
 
         this.report();
     }
@@ -545,6 +546,35 @@ export default class ConsistencyChecker {
         for (const key of Object.keys(this.manifest || {})) {
             if (!referenced.has(key)) {
                 this.warnings.push(`Manifest sound "${key}" is not referenced in SoundMap`);
+            }
+        }
+    }
+
+    private checkMultiplicativeVetoes(): void {
+        const rtpcGainBuses = new Set<string>();
+
+        for (const [busId, busCfg] of Object.entries(this.buses || {})) {
+            if (busCfg.rtpc?.gain) {
+                rtpcGainBuses.add(busId);
+
+                if (busCfg.gain !== undefined && busCfg.gain < 1) {
+                    this.warnings.push(
+                        `[Orchestration Rule] Bus "${busId}" is RTPC-driven for gain, but its base gain is ${busCfg.gain}. RTPC values will be scaled down. Consider setting base gain to 1.0.`
+                    );
+                }
+            }
+        }
+
+        for (const [snapshotId, snapshot] of Object.entries(this.snapshots || {})) {
+            if (!snapshot.buses) continue;
+
+            for (const [busId, busState] of Object.entries(snapshot.buses)) {
+                if (rtpcGainBuses.has(busId) && busState.gain !== undefined && busState.gain !== 1) {
+                    const action = busState.gain === 0 ? 'MUTES' : 'SCALES';
+                    this.warnings.push(
+                        `[Multiplicative Veto] Snapshot "${snapshotId}" explicitly ${action} gain (${busState.gain}) for bus "${busId}", which is RTPC-driven. This overrides the RTPC curve (Final = ${busState.gain} * RTPC).`
+                    );
+                }
             }
         }
     }
