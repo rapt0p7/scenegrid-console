@@ -11,6 +11,7 @@ import type { AudioCtx, AudioNodeLike, GainNodeLike } from '@infrastructure/type
 import type { ILimiterNode, IPluginFactory, ISidechain } from '@infrastructure/types/IAudioPlugins.js';
 import type { IMasterOutput } from '@infrastructure/types/IMasterOutput.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import { typedEntries } from '@shared/typedObjects.js';
 
 export default class AudioBusSystem implements IAudioBusSystem {
     private readonly context: AudioCtx;
@@ -281,7 +282,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
     }
 
     private async initBuses(): Promise<void> {
-        for (const [busId, busConfig] of Object.entries(this.busConfig!)) {
+        for (const [busId, busConfig] of typedEntries(this.busConfig!)) {
             const bus = new AudioBus({
                 id: busId as BusId,
                 config: busConfig,
@@ -290,16 +291,21 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 routerMasterGain: this.masterBus,
                 pluginFactory: this.pluginFactory
             });
+
+            if (busConfig.rtpc) {
+                bus.bindRTPC(busConfig.rtpc);
+            }
+
             this.buses.set(busId as BusId, bus);
             this.hotPathBuses.push(bus);
         }
 
         const promises = [];
 
-        for (const [busId, busConfig] of Object.entries(this.busConfig!)) {
+        for (const [busId, busConfig] of typedEntries(this.busConfig!)) {
             if (busConfig.sends) {
-                for (const [targetBusId, sendGain] of Object.entries(busConfig.sends)) {
-                    this.applySend(busId as BusId, targetBusId as BusId, sendGain, 0);
+                for (const [targetBusId, sendGain] of typedEntries(busConfig.sends)) {
+                    this.applySend(busId as BusId, targetBusId, sendGain, 0);
                 }
             }
             if (busConfig.sidechain?.enabled) {

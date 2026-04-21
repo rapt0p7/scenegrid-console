@@ -322,6 +322,41 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
 
         warnSpy.mockRestore();
     });
+
+    it('should bind RTPC config to the bus during initialization if defined in config', async () => {
+        const bindRtpcSpy = vi.spyOn(AudioBus.prototype, 'bindRTPC').mockImplementation(() => {});
+
+        const configWithRtpc = {
+            ...mockBusConfig,
+            music: {
+                gain: 1,
+                rtpc: {
+                    filterFrequency: {
+                        gameParam: 'underwater_state' as any,
+                        curve: [
+                            { x: 0, y: 20000 },
+                            { x: 1, y: 500 }
+                        ]
+                    }
+                }
+            }
+        };
+
+        const busSystem = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: configWithRtpc,
+            pluginFactory: mockPluginFactory
+        });
+
+        await busSystem.initialize(mockTicker);
+
+        expect(bindRtpcSpy).toHaveBeenCalled();
+        expect(bindRtpcSpy).toHaveBeenCalledWith(configWithRtpc.music.rtpc);
+
+        bindRtpcSpy.mockRestore();
+    });
 });
 
 describe('AudioBusSystem (Sidechain Triggers via AudioNode)', () => {
@@ -444,5 +479,60 @@ describe('AudioBusSystem (Getters & Gain Calculations)', () => {
         expect(scTransition).toEqual({ from: 0.5, to: 0.4 });
 
         expect(system.computeOfflineGainTransition('ghost' as any, 1)).toEqual({ from: 0, to: 1 });
+    });
+});
+
+describe('AudioBusSystem (RTPC Pull Model)', () => {
+    let system: AudioBusSystem;
+    let mockTicker: any;
+
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        const mockContext = createMockContext();
+
+        const mockPluginFactory = {
+            createLimiter: vi.fn().mockReturnValue({
+                load: vi.fn(),
+                inputNode: { connect: vi.fn() },
+                outputNode: { connect: vi.fn() }
+            }),
+            createSidechain: vi.fn().mockReturnValue({
+                insertLookahead: vi.fn(),
+                start: vi.fn().mockResolvedValue(undefined),
+                activeEnvelope: 0.5,
+                dispose: vi.fn()
+            })
+        };
+
+        mockTicker = { add: vi.fn(), remove: vi.fn() };
+
+        system = new AudioBusSystem({
+            context: mockContext,
+            automation: { set: vi.fn(), ramp: vi.fn() } as any,
+            masterOutput: { input: {} } as any,
+            busConfig: {
+                sfx: { gain: 1 },
+                music: { gain: 1 }
+            },
+            pluginFactory: mockPluginFactory as any
+        });
+
+        await system.initialize(mockTicker);
+    });
+
+    it('should propagate tickRTPC to all active hot path buses in a flat loop', () => {
+        const tickRtpcSpy = vi.spyOn(AudioBus.prototype, 'tickRTPC').mockImplementation(() => {});
+
+        const mockRtpcAdapter = {
+            getValue: vi.fn().mockReturnValue(50)
+        } as any;
+
+        system.tickRTPC(mockRtpcAdapter);
+
+        expect(tickRtpcSpy).toHaveBeenCalledTimes(2);
+
+        expect(tickRtpcSpy).toHaveBeenCalledWith(mockRtpcAdapter);
+
+        tickRtpcSpy.mockRestore();
     });
 });
