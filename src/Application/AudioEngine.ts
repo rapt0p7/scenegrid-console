@@ -44,12 +44,13 @@ import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { LayerId, PlaybackId, RegionId, SnapshotId, SoundId } from '@domain/Types/Branded.js';
+import type { GameParamId, LayerId, PlaybackId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
 import type { IPluginFactory, DebuggerOptions } from '@infrastructure';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { Handler } from 'mitt';
 import type { DeepReadonly } from '@shared/DeepReadonly.js';
-import { typedEntries, typedFromEntries } from '@shared/typedObjects';
+import { typedEntries, typedFromEntries } from '@shared/typedObjects.js';
+import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 
 export interface InitParameters {
     readonly isStrictValidation?: boolean;
@@ -67,6 +68,7 @@ export class AudioEngine {
     #cullingRunner!: CullingRunner;
     #masterOutput!: MasterOutput;
     #dispatcher: EngineEventDispatcher = new EngineEventDispatcher();
+    #instanceRTPCBinder!: InstanceRTPCBinder;
     #isInitialized = false;
 
     public readonly events = {
@@ -86,9 +88,9 @@ export class AudioEngine {
 
     public readonly params = {
         set: (parameterName: string, value: number) => {
-            this.#rtpcManager.setValue(parameterName, value);
+            this.#rtpcManager.setValue(parameterName as GameParamId, value);
         },
-        get: (parameterName: string) => this.#rtpcManager.getValue(parameterName)
+        get: (parameterName: string) => this.#rtpcManager.getValue(parameterName as GameParamId)
     };
 
     public readonly mixer = {
@@ -273,6 +275,8 @@ export class AudioEngine {
                 this.#busSystem
             );
 
+            this.#instanceRTPCBinder = new InstanceRTPCBinder(this.#rtpcManager, this.#soundController);
+
             const duckingManager = new DuckingManager(this.#busSystem, this.#soundController);
             const containerHistoryRegistry = new ContainerHistoryRegistry();
             const containerPolicy = new ContainerPlaybackPolicy();
@@ -280,10 +284,10 @@ export class AudioEngine {
             this.#router = new AudioRouter({
                 soundController: this.#soundController,
                 duckingManager,
-                rtpcManager: this.#rtpcManager,
                 containerPolicy,
                 historyRegistry: containerHistoryRegistry,
-                soundMap: this.config.soundMap
+                soundMap: this.config.soundMap,
+                instanceRTPCBinder: this.#instanceRTPCBinder
             });
 
             this.#sequencer = new Sequencer(this.#soundController, this.#router, this.#engineTicker);
@@ -311,6 +315,15 @@ export class AudioEngine {
             this.#engineTicker.add('rtpc-manager', RTPCManager.TICK_RATE_MS, (_, deltaTimeMs) => {
                 this.#rtpcManager.tick(deltaTimeMs);
             });
+
+            this.#engineTicker.add('bus-system', RTPCManager.TICK_RATE_MS, () => {
+                this.#busSystem.tickRTPC(this.#rtpcManager);
+            });
+
+            this.#engineTicker.add('instance-rtpc', RTPCManager.TICK_RATE_MS, () => {
+                this.#instanceRTPCBinder.tickRTPC();
+            });
+
             this.#engineTicker.add('sound-controller', SoundController.TICK_RATE_MS, () => {
                 this.#soundController.tick();
             });
@@ -382,10 +395,10 @@ export class AudioEngine {
     private initRTPC(rtpcManifest: DeepReadonly<IRTPCManifest>): void {
         for (const [parameterName, config] of Object.entries(rtpcManifest)) {
             if (isDefined(config.defaultValue)) {
-                this.#rtpcManager.setValue(parameterName, config.defaultValue);
+                this.#rtpcManager.setValue(parameterName as GameParamId, config.defaultValue);
             }
 
-            this.#rtpcManager.configureParam(parameterName, config.attackMs ?? 0, config.releaseMs ?? 0);
+            this.#rtpcManager.configureParam(parameterName as GameParamId, config.attackMs ?? 0, config.releaseMs ?? 0);
         }
     }
 
