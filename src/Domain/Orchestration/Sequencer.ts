@@ -7,7 +7,7 @@ import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import { PlaybackId, RegionId, SoundId } from '@domain/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 import { isDefined, isAbsent } from '@shared/guards.js';
 
@@ -18,7 +18,7 @@ interface ActiveRegion {
 }
 
 interface QueuedRegion {
-    name: string;
+    name: RegionId;
     fadeInDurationMs: number;
 }
 
@@ -30,7 +30,7 @@ interface TrackContext {
     activeRegions: Set<ActiveRegion>;
     gridStartTime: number | null;
     regionQueue: QueuedRegion[];
-    loopRegion: string | null;
+    loopRegion: RegionId | null;
 }
 
 export default class Sequencer implements ISequencer {
@@ -46,7 +46,7 @@ export default class Sequencer implements ISequencer {
         this.startScheduler();
     }
 
-    playLoop(soundId: SoundId, regionName: string): void {
+    playLoop(soundId: SoundId, regionName: RegionId): void {
         this.stopLoop(soundId);
         const track = this.getTrackContext(soundId);
         track.playId++;
@@ -189,7 +189,7 @@ export default class Sequencer implements ISequencer {
             const scheduleHorizon = now + this.lookaheadWindowSec;
 
             while (track.nextScheduleTime < scheduleHorizon) {
-                let nextRegionName: string | null = null;
+                let nextRegionName: RegionId | null = null;
                 let fadeInMs = 0;
 
                 if (track.regionQueue.length > 0) {
@@ -249,7 +249,7 @@ export default class Sequencer implements ISequencer {
         track
     }: {
         soundId: SoundId;
-        regionName: string;
+        regionName: RegionId;
         targetTime: number;
         track: TrackContext;
     }): PlaybackId | null {

@@ -1,5 +1,5 @@
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
-import type { SoundId } from '@domain/Types/Branded';
+import { RegionId, SoundId } from '@domain/Types/Branded.js';
 
 export enum LoopState {
     IDLE = 'IDLE',
@@ -12,8 +12,8 @@ export type TransitionBlendMode = 'overlap' | 'crossfade';
 
 export interface ITransitionToParameters {
     readonly soundId: SoundId;
-    readonly targetRegion: string;
-    readonly transitionRegionName?: string;
+    readonly targetRegion: RegionId;
+    readonly transitionRegionName?: RegionId;
     readonly options?: TransitionOptions;
 }
 
@@ -27,7 +27,7 @@ export interface TransitionOptions {
 }
 
 export interface ISequencer {
-    playLoop(soundId: SoundId, regionName: string): void;
+    playLoop(soundId: SoundId, regionName: RegionId): void;
     stopLoop(soundId: SoundId): void;
     transitionTo(parameters: ITransitionToParameters): void;
     destroy(): void;

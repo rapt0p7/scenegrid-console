@@ -1,5 +1,5 @@
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import type { BusId, SoundId } from '@domain/Types/Branded.js';
+import { BusId, RegionId, SoundId } from '@domain/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export interface IBaseSoundConfig {
@@ -49,7 +49,7 @@ export interface ISmartLoopSoundConfig {
         readonly bpm?: number;
         readonly beatsPerBar?: number;
         readonly crossfade?: number;
-        readonly regions: Record<string, readonly [startSample: number, endSample: number]>;
+        readonly regions: Record<RegionId, readonly [startSample: number, endSample: number]>;
     };
 }
 

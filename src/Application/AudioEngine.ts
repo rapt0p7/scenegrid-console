@@ -44,7 +44,7 @@ import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { LayerId, PlaybackId, SnapshotId, SoundId } from '@domain/Types/Branded.js';
+import type { LayerId, PlaybackId, RegionId, SnapshotId, SoundId } from '@domain/Types/Branded.js';
 import type { IPluginFactory, DebuggerOptions } from '@infrastructure';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { Handler } from 'mitt';
@@ -106,7 +106,7 @@ export class AudioEngine {
 
     public readonly music = {
         playLoop: (soundId: string, region: string) => {
-            this.#sequencer.playLoop(soundId as SoundId, region);
+            this.#sequencer.playLoop(soundId as SoundId, region as RegionId);
         },
         stopLoop: (soundId: string) => {
             this.#sequencer.stopLoop(soundId as SoundId);

@@ -7,7 +7,7 @@ import { LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 import Sequencer from '@domain/Orchestration/Sequencer.js';
 
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
-import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { PlaybackId, RegionId, SoundId } from '@domain/Types/Branded.js';
 import type { Mocked } from 'vitest';
 
 vi.mock('../AudioGrid', () => {
@@ -103,7 +103,7 @@ describe('Sequencer (Interactive Music)', () => {
     });
 
     it('should schedule the initial loop region correctly', () => {
-        manager.playLoop('battle_music' as SoundId, 'intro');
+        manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         expect(mockController.play).toHaveBeenCalledWith('battle_music', {
             when: 0,
             offset: 0,
@@ -114,7 +114,7 @@ describe('Sequencer (Interactive Music)', () => {
     });
 
     it('should pre-schedule the next iteration via Lookahead Window', () => {
-        manager.playLoop('battle_music' as SoundId, 'intro');
+        manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         mockController.play.mockClear();
 
         mockContext.currentTime = 0.95;
@@ -130,19 +130,19 @@ describe('Sequencer (Interactive Music)', () => {
     });
 
     it('should stop loop and cancel scheduled regions', () => {
-        manager.playLoop('battle_music' as SoundId, 'intro');
+        manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         manager.stopLoop('battle_music' as SoundId);
         expect(mockController.cancelScheduled).toHaveBeenCalledWith(1);
     });
 
     it('should perform DIRECT transition with full crossfade (No Fill)', () => {
-        manager.playLoop('battle_music' as SoundId, 'intro');
+        manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         mockContext.currentTime = 0.5;
 
         manager.transitionTo({
             soundId: 'battle_music' as SoundId,
-            targetRegion: 'main',
-            transitionRegionName: '',
+            targetRegion: 'main' as RegionId,
+            transitionRegionName: '' as RegionId,
             options: { quantize: 'Immediate', crossfadeDuration: 1000 }
         });
 
@@ -159,7 +159,7 @@ describe('Sequencer (Interactive Music)', () => {
     it('should perform FILL transition with equal-power crossfade', () => {
         mockController.play.mockReturnValueOnce(1 as PlaybackId);
 
-        manager.playLoop('battle_music' as SoundId, 'intro');
+        manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         mockController.play.mockClear();
         mockContext.currentTime = 0.5;
 
@@ -167,8 +167,8 @@ describe('Sequencer (Interactive Music)', () => {
 
         manager.transitionTo({
             soundId: 'battle_music' as SoundId,
-            targetRegion: 'main',
-            transitionRegionName: 'fill',
+            targetRegion: 'main' as RegionId,
+            transitionRegionName: 'fill' as RegionId,
             options: { quantize: 'Immediate', crossfadeDuration: 4000 }
         });
 
@@ -185,14 +185,14 @@ describe('Sequencer (Interactive Music)', () => {
     });
 
     it('should perform QUANTIZED transition using AudioGrid', () => {
-        manager.playLoop('battle_music' as SoundId, 'intro');
+        manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         mockController.play.mockClear();
         mockContext.currentTime = 0.8;
 
         manager.transitionTo({
             soundId: 'battle_music' as SoundId,
-            targetRegion: 'main',
-            transitionRegionName: '',
+            targetRegion: 'main' as RegionId,
+            transitionRegionName: '' as RegionId,
             options: { quantize: 'NextBar' }
         });
 
@@ -210,7 +210,7 @@ describe('Sequencer (Interactive Music)', () => {
     });
 
     it('should stop instance immediately without ramp if crossfadeDuration is 0', () => {
-        manager.playLoop('battle_music' as SoundId, 'intro');
+        manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
 
         const track = (manager as any).tracks.get('battle_music');
         const activeRegion = {
@@ -224,8 +224,8 @@ describe('Sequencer (Interactive Music)', () => {
 
         manager.transitionTo({
             soundId: 'battle_music' as SoundId,
-            targetRegion: 'main',
-            transitionRegionName: '',
+            targetRegion: 'main' as RegionId,
+            transitionRegionName: '' as RegionId,
             options: {
                 quantize: 'Immediate',
                 crossfadeDuration: 0
@@ -240,7 +240,7 @@ describe('Sequencer (Interactive Music)', () => {
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         mockController.play.mockReturnValueOnce(null);
 
-        manager.playLoop('battle_music' as SoundId, 'intro');
+        manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
 
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to schedule region'));
         expect((manager as any).tracks.get('battle_music').nextScheduleTime).toBe(1);
@@ -248,7 +248,7 @@ describe('Sequencer (Interactive Music)', () => {
     });
 
     it('should cleanup active regions and unsubscribe on "ended" event', () => {
-        manager.playLoop('battle_music' as SoundId, 'intro');
+        manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
 
         const track = (manager as any).tracks.get('battle_music');
         expect(track.activeRegions.size).toBe(1);
@@ -261,7 +261,7 @@ describe('Sequencer (Interactive Music)', () => {
 
     describe('Coverage Edge Cases & Branches', () => {
         it('should ignore transition if track is TRANSITIONING and not interruptable', () => {
-            manager.playLoop('battle_music' as SoundId, 'intro');
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
 
             const track = (manager as any).getTrackContext('battle_music');
             track.state = LoopState.TRANSITIONING;
@@ -270,7 +270,7 @@ describe('Sequencer (Interactive Music)', () => {
 
             manager.transitionTo({
                 soundId: 'battle_music' as SoundId,
-                targetRegion: 'main',
+                targetRegion: 'main' as RegionId,
                 options: { quantize: 'Immediate', interruptable: false }
             });
 
@@ -278,7 +278,7 @@ describe('Sequencer (Interactive Music)', () => {
         });
 
         it('should return early from transitionTo if config has no smartLoop', () => {
-            manager.playLoop('battle_music' as SoundId, 'intro');
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
 
             mockRouter.getSoundConfig.mockReturnValueOnce({ busId: 'music' });
 
@@ -287,7 +287,7 @@ describe('Sequencer (Interactive Music)', () => {
 
             manager.transitionTo({
                 soundId: 'battle_music' as SoundId,
-                targetRegion: 'main',
+                targetRegion: 'main' as RegionId,
                 options: { quantize: 'Immediate' }
             });
 
@@ -295,7 +295,7 @@ describe('Sequencer (Interactive Music)', () => {
         });
 
         it('should correctly process NextBeat and NextBar with explicit grid', () => {
-            manager.playLoop('battle_music' as SoundId, 'intro');
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
 
             const customGrid = {
                 getNextBeatTime: vi.fn().mockReturnValue(5),
@@ -304,25 +304,25 @@ describe('Sequencer (Interactive Music)', () => {
 
             manager.transitionTo({
                 soundId: 'battle_music' as SoundId,
-                targetRegion: 'main',
+                targetRegion: 'main' as RegionId,
                 options: { quantize: 'NextBeat', grid: customGrid }
             });
             expect(customGrid.getNextBeatTime).toHaveBeenCalled();
 
             manager.transitionTo({
                 soundId: 'battle_music' as SoundId,
-                targetRegion: 'main',
+                targetRegion: 'main' as RegionId,
                 options: { quantize: 'NextBar', grid: customGrid }
             });
             expect(customGrid.getNextBarTime).toHaveBeenCalled();
         });
 
         it('should use internal grid for NextBeat when explicit grid is not provided', () => {
-            manager.playLoop('battle_music' as SoundId, 'intro');
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
 
             manager.transitionTo({
                 soundId: 'battle_music' as SoundId,
-                targetRegion: 'main',
+                targetRegion: 'main' as RegionId,
                 options: { quantize: 'NextBeat' }
             });
 
@@ -331,7 +331,7 @@ describe('Sequencer (Interactive Music)', () => {
         });
 
         it('should skip processing tick for tracks that are not LOOPING', () => {
-            manager.playLoop('battle_music' as SoundId, 'intro');
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
             manager.stopLoop('battle_music' as SoundId);
 
             mockController.play.mockClear();
@@ -341,7 +341,7 @@ describe('Sequencer (Interactive Music)', () => {
         });
 
         it('should break processing loop if nextRegionName is null', () => {
-            manager.playLoop('battle_music' as SoundId, 'intro');
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
 
             const track = (manager as any).getTrackContext('battle_music');
             track.loopRegion = null;
@@ -354,13 +354,13 @@ describe('Sequencer (Interactive Music)', () => {
         });
 
         it('should return null in scheduleRegion if region does not exist in config', () => {
-            manager.playLoop('battle_music' as SoundId, 'invalid_region_name');
+            manager.playLoop('battle_music' as SoundId, 'invalid_region_name' as RegionId);
 
             expect(mockController.play).not.toHaveBeenCalledWith('battle_music', expect.anything());
         });
 
         it('should return null in scheduleRegion if smartLoop config is missing', () => {
-            manager.playLoop('battle_music' as SoundId, 'intro');
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
 
             mockRouter.getSoundConfig.mockReturnValueOnce({ busId: 'music' });
 

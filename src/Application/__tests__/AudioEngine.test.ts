@@ -18,7 +18,7 @@ import {
 } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
-import type { BusId, PlaybackId, SnapshotId, SoundId } from '@domain/Types/Branded.js';
+import type { BusId, PlaybackId, RegionId, SnapshotId, SoundId } from '@domain/Types/Branded.js';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn(),
@@ -517,7 +517,7 @@ describe('AudioEngine', () => {
                 engine.music.stopLoop('bgm');
             }).not.toThrow();
             expect(() => {
-                engine.music.transitionTo({ soundId: 'bgm' as SoundId, targetRegion: 'chorus' });
+                engine.music.transitionTo({ soundId: 'bgm' as SoundId, targetRegion: 'chorus' as RegionId });
             }).not.toThrow();
         });
 
@@ -530,11 +530,9 @@ describe('AudioEngine', () => {
             expect(AudioDebugger).toHaveBeenCalledTimes(1);
         });
 
-        it('should delegate mixer.setState to SnapshotManager with scene_main and BASE priority', async () => {
+        it('should delegate mixer.setState to SnapshotManager with scene_main and BASE priority', () => {
             const debugObject = engine._debug;
-            const activateSpy = vi
-                .spyOn(debugObject.snapshotManager, 'activateSnapshot')
-                .mockImplementation(async () => {});
+            const activateSpy = vi.spyOn(debugObject.snapshotManager, 'activateSnapshot').mockImplementation(() => {});
 
             engine.mixer.setState('main_menu');
 
