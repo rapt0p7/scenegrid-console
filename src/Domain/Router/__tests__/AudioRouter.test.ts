@@ -2,18 +2,12 @@
 // noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 
-import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
-import { type Mocked } from 'vitest';
-import { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-
-vi.mock('@domain/Managers/InstanceRTPCBinder.js', () => ({
-    InstanceRTPCBinder: {
-        bind: vi.fn()
-    }
-}));
+import type { PlaybackId, SoundId } from '@shared/Types/Branded.js';
+import type { Mocked } from 'vitest';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 
 const testSoundMap: any = {
     simple_sound: { busId: 'sfx' },
@@ -37,7 +31,7 @@ const testSoundMap: any = {
 describe('AudioRouter (Command Dispatcher)', () => {
     let mockController: Mocked<ISoundController>;
     let mockDuckingManager: Mocked<any>;
-    let mockRtpcAdapter: Mocked<any>;
+    let mockInstanceRTPCBinder: Mocked<InstanceRTPCBinder>;
     let mockContainerPolicy: any;
     let mockHistoryRegistry: any;
     let router: AudioRouter;
@@ -55,7 +49,11 @@ describe('AudioRouter (Command Dispatcher)', () => {
         } as unknown as Mocked<ISoundController>;
 
         mockDuckingManager = { triggerDucking: vi.fn() };
-        mockRtpcAdapter = {};
+
+        mockInstanceRTPCBinder = {
+            bind: vi.fn(),
+            tickRTPC: vi.fn()
+        } as unknown as Mocked<InstanceRTPCBinder>;
 
         mockContainerPolicy = {
             evaluateNext: vi.fn().mockReturnValue({
@@ -71,11 +69,11 @@ describe('AudioRouter (Command Dispatcher)', () => {
 
         router = new AudioRouter({
             soundController: mockController,
-            rtpcManager: mockRtpcAdapter,
             duckingManager: mockDuckingManager,
             containerPolicy: mockContainerPolicy,
             historyRegistry: mockHistoryRegistry,
-            soundMap: testSoundMap
+            soundMap: testSoundMap,
+            instanceRTPCBinder: mockInstanceRTPCBinder
         });
     });
 
@@ -271,12 +269,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
 
             expect(mockDuckingManager.triggerDucking).toHaveBeenCalledWith(testId, 'music', 0.8);
 
-            expect(InstanceRTPCBinder.bind).toHaveBeenCalledWith(
-                testId,
-                complexConfig.rtpc,
-                mockRtpcAdapter,
-                mockController
-            );
+            expect(mockInstanceRTPCBinder.bind).toHaveBeenCalledWith(testId, complexConfig.rtpc);
         });
 
         it('should use default ducking intensity (1) if not provided', () => {

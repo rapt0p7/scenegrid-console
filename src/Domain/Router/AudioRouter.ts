@@ -13,40 +13,39 @@ import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 import type { IContainerHistoryRegistry } from '@domain/Managers/Ports/IContainerHistoryRegistry.js';
 import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId, SoundId } from '@domain/Types/Branded.js';
+import type { PlaybackId, SoundId } from '@shared/Types/Branded.js';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly duckingManager: IDuckingManager;
     private readonly soundController: ISoundController;
-    private readonly rtpcManager: IRTPCAdapter;
     private readonly containerPolicy: ContainerPlaybackPolicy;
     private readonly historyRegistry: IContainerHistoryRegistry;
     private readonly soundMap: ISoundMap | null = null;
+    private readonly instanceRTPCBinder: InstanceRTPCBinder;
 
     constructor({
         soundController,
         duckingManager,
-        rtpcManager,
         containerPolicy,
         historyRegistry,
-        soundMap
+        soundMap,
+        instanceRTPCBinder
     }: {
         soundController: ISoundController;
         duckingManager: IDuckingManager;
-        rtpcManager: IRTPCAdapter;
         containerPolicy: ContainerPlaybackPolicy;
         historyRegistry: IContainerHistoryRegistry;
         soundMap: ISoundMap;
+        instanceRTPCBinder: InstanceRTPCBinder;
     }) {
         this.soundController = soundController;
         this.duckingManager = duckingManager;
-        this.rtpcManager = rtpcManager;
         this.containerPolicy = containerPolicy;
         this.historyRegistry = historyRegistry;
         this.soundMap = soundMap;
+        this.instanceRTPCBinder = instanceRTPCBinder;
     }
 
     getSoundConfig(name: SoundId): AnySoundConfig | null {
@@ -63,7 +62,7 @@ export default class AudioRouter implements IAudioRouter {
         }
 
         if ('rtpc' in config && config.rtpc) {
-            InstanceRTPCBinder.bind(playbackId, config.rtpc, this.rtpcManager, this.soundController);
+            this.instanceRTPCBinder.bind(playbackId, config.rtpc);
         }
     }
 
