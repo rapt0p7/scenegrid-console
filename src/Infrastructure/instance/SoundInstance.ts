@@ -12,7 +12,7 @@ import type { INodeChainOptions } from '@infrastructure/nodes/NodeChain.js';
 import type {
     AudioBufferSourceNodeLike,
     AudioNodeLike,
-    GainNodeLike,
+    AudioParamLike,
     PannerNodeLike,
     StereoPannerNodeLike
 } from '@infrastructure/types/IAudioContext.js';
@@ -20,7 +20,6 @@ import type { PlaybackState } from '@infrastructure/types/IPlaybackController.js
 import type { InstanceParameterTarget, ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
 import type { Emitter } from 'mitt';
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type SoundInstanceEvents = {
     ended: ISoundInstance;
     stopped: ISoundInstance;
@@ -74,12 +73,12 @@ export class SoundInstance implements ISoundInstance {
         });
     }
 
-    public get outputNode(): AudioNodeLike {
-        return this.#chain.outputNode;
+    public get gainParam(): AudioParamLike {
+        return this.#chain.gainParam;
     }
 
-    public get instanceGain(): GainNodeLike {
-        return this.#chain.instanceGain;
+    public get sidechainTriggerNode(): AudioNodeLike {
+        return this.#chain.sidechainTriggerNode;
     }
 
     public get state(): PlaybackState {
@@ -114,6 +113,14 @@ export class SoundInstance implements ISoundInstance {
         return this.#buffer?.duration ?? 0;
     }
 
+    public connectTo(destination: AudioNodeLike): void {
+        this.#chain.connectTo(destination);
+    }
+
+    public disconnectRoute(): void {
+        this.#chain.disconnect();
+    }
+
     public rebind(
         newId: SoundId,
         buffer: AudioBuffer,
@@ -139,7 +146,7 @@ export class SoundInstance implements ISoundInstance {
     public automate(target: InstanceParameterTarget, value: number, smoothingMs: number = 50): void {
         switch (target) {
             case 'gain': {
-                this.#automation.ramp(this.#chain.instanceGain.gain, value, smoothingMs, 'exponential');
+                this.#automation.ramp(this.#chain.gainParam, value, smoothingMs, 'exponential');
                 break;
             }
 
@@ -313,10 +320,10 @@ export class SoundInstance implements ISoundInstance {
             /* empty */
         }
 
-        const gain = this.#chain.instanceGain?.gain;
-        if (gain) {
+        const gainParam = this.#chain.gainParam;
+        if (gainParam) {
             try {
-                gain.cancelScheduledValues(0);
+                gainParam.cancelScheduledValues(0);
             } catch {
                 /* empty */
             }
@@ -370,7 +377,7 @@ export class SoundInstance implements ISoundInstance {
         this.cancelScheduled();
 
         try {
-            this.outputNode.disconnect();
+            this.#chain.disconnect();
         } catch {
             /* empty */
         }
@@ -378,7 +385,7 @@ export class SoundInstance implements ISoundInstance {
         this.automate('gain', 1, 0);
         this.automate('pitch', 1, 0);
         this.automate('pan', 0, 0);
-        // this.automate('filterFrequency', 22000, 0);
+        this.automate('filterFrequency', 22000, 0);
 
         if (this.#chain.pannerNode) {
             this.setPosition(0, 0, 0);
@@ -446,7 +453,7 @@ export class SoundInstance implements ISoundInstance {
         source.playbackRate.value = this.#playbackRate;
         source.loop = this.#loop;
 
-        source.connect(this.#chain.inputNode);
+        this.#chain.connectSource(source);
 
         source.addEventListener('ended', this.#onSourceEnded);
 

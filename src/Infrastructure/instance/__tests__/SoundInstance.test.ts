@@ -108,6 +108,8 @@ describe('SoundInstance (Playback & Virtualization Math)', () => {
         expect(mockContext.createBufferSource).toHaveBeenCalled();
         expect(mockContext._mockSourceNode.start).toHaveBeenCalledWith(0, 0, undefined);
         expect(instance.state).toBe('playing');
+
+        expect(mockContext._mockSourceNode.connect).toHaveBeenCalled();
     });
 
     it('should correctly stop and emit events', () => {
@@ -309,9 +311,25 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         });
     });
 
-    it('should handle getters correctly', () => {
-        expect(instance.outputNode).toBeDefined();
-        expect(instance.instanceGain).toBeDefined();
+    it('should handle routing delegation to NodeChain correctly', () => {
+        const connectSpy = vi.spyOn(NodeChain.prototype, 'connectTo').mockImplementation(() => {});
+        const disconnectSpy = vi.spyOn(NodeChain.prototype, 'disconnect').mockImplementation(() => {});
+
+        const mockDestination = {} as any;
+
+        instance.connectTo(mockDestination);
+        expect(connectSpy).toHaveBeenCalledWith(mockDestination);
+
+        instance.disconnectRoute();
+        expect(disconnectSpy).toHaveBeenCalled();
+
+        connectSpy.mockRestore();
+        disconnectSpy.mockRestore();
+    });
+
+    it('should handle getters correctly (gainParam, sidechainTriggerNode)', () => {
+        expect(instance.gainParam).toBeDefined();
+        expect(instance.sidechainTriggerNode).toBeDefined();
         expect(instance.duration).toBe(10);
         expect(instance.pannerNode).toBeDefined();
 
@@ -403,6 +421,7 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         mockContext._mockSourceNode.stop.mockImplementationOnce(() => {
             throw new Error('Stop Error');
         });
+
         mockContext._mockGainNode.gain.cancelScheduledValues.mockImplementationOnce(() => {
             throw new Error('Gain Error');
         });

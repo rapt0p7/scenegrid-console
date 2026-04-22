@@ -1,8 +1,8 @@
 import type { SoundId } from '@shared/Types/Branded.js';
 import type { PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
-import type {
-    AudioNodeLike,
-    GainNodeLike,
+import {
+    type AudioNodeLike,
+    AudioParamLike,
     PannerNodeLike,
     StereoPannerNodeLike
 } from '@infrastructure/types/IAudioContext.js';
@@ -17,11 +17,14 @@ export interface ISoundConfig {
 
 export interface ISoundInstance extends IPlaybackController {
     readonly id: SoundId;
-    readonly outputNode: AudioNodeLike;
-    readonly instanceGain: GainNodeLike;
+    readonly gainParam: AudioParamLike;
     readonly pannerNode: PannerNodeLike | StereoPannerNodeLike | null;
+    readonly sidechainTriggerNode: AudioNodeLike;
     dispose(): void;
     cancelScheduled(): void;
+    connectTo(destination: AudioNodeLike): void;
+    forceNaturalEnd(): void;
+    disconnectRoute(): void;
     rebind(id: SoundId, buffer: AudioBuffer, config?: ISoundConfig): void;
     resetForReuse(): void;
     virtualize(): void;

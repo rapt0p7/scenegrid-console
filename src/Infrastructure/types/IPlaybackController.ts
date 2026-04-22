@@ -4,6 +4,8 @@ export interface IPlaybackController {
     readonly state: PlaybackState;
     readonly currentTime: number;
     readonly duration: number;
+    readonly isLooping: boolean;
+    readonly playbackRate: number;
 
     play(when?: number, offset?: number, duration?: number): void;
     stop(when?: number): void;
