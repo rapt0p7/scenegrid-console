@@ -1,5 +1,4 @@
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
-import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
@@ -145,18 +144,6 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
     getBus(id: BusId): AudioBus | undefined {
         return this.buses.get(id);
-    }
-
-    public connectNodeToBus(node: AudioNodeLike, busId: BusId): void {
-        const bus = this.getBus(busId);
-        if (!bus || this.context.state !== 'running') return;
-
-        try {
-            safeDisconnect(node);
-            node.connect(bus.inputNode);
-        } catch (error) {
-            console.warn(`[AudioBusSystem] Routing failed.`, error);
-        }
     }
 
     public addSidechainSource(node: AudioNodeLike, busId: BusId, intensity: number): void {

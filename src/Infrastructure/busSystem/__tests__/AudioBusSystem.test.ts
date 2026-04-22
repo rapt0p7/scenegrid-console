@@ -192,60 +192,6 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
         warnSpy.mockRestore();
     });
 
-    it('should correctly route a physical AudioNode to a requested bus', async () => {
-        const busSystem = new AudioBusSystem({
-            context: mockContext,
-            automation: mockAutomation,
-            masterOutput: mockMasterOutput,
-            busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory
-        });
-        await busSystem.initialize(mockTicker);
-
-        const mockConnect = vi.fn();
-
-        const mockNode = { connect: mockConnect, disconnect: vi.fn() } as unknown as AudioNodeLike;
-
-        busSystem.connectNodeToBus(mockNode, 'music' as BusId);
-        expect(mockNode.connect).toHaveBeenCalled();
-
-        mockConnect.mockClear();
-
-        busSystem.connectNodeToBus(mockNode, 'fake_bus' as any);
-        expect(mockNode.connect).not.toHaveBeenCalled();
-    });
-
-    it('should handle routing edge cases (suspended context, connect error)', async () => {
-        const system = new AudioBusSystem({
-            context: mockContext,
-            automation: mockAutomation,
-            masterOutput: mockMasterOutput,
-            busConfig: mockBusConfig,
-            pluginFactory: mockPluginFactory
-        });
-        await system.initialize(mockTicker);
-        const mockConnect = vi.fn();
-        const mockNode = { connect: mockConnect, disconnect: vi.fn() } as unknown as AudioNodeLike;
-
-        mockContext.state = 'suspended';
-        system.connectNodeToBus(mockNode, 'sfx' as BusId);
-        expect(mockNode.connect).not.toHaveBeenCalled();
-        mockContext.state = 'running';
-
-        mockConnect.mockClear();
-
-        mockConnect.mockImplementationOnce(() => {
-            throw new Error('Connect Error');
-        });
-
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-        system.connectNodeToBus(mockNode, 'sfx' as BusId);
-
-        expect(warnSpy).toHaveBeenCalled();
-        warnSpy.mockRestore();
-    });
-
     it('should route without limiter if isUseLimiter is false', async () => {
         const system = new AudioBusSystem(
             {
