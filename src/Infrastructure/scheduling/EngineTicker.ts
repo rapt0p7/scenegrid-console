@@ -1,10 +1,12 @@
 import * as workerTimers from 'worker-timers';
 
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
+import { TickerTaskId } from '@shared/Types/Branded.js';
+import { ITickable } from '@domain/Shared/Ports/ITickable.js';
 
 interface TickerTask {
-    id: string;
-    callback: (currentTime: number, deltaTimeMs: number) => void;
+    id: TickerTaskId;
+    target: ITickable;
     intervalMs: number;
     accumulator: number;
 }
@@ -12,7 +14,7 @@ interface TickerTask {
 export class EngineTicker implements IEngineTicker {
     private tickerId: number | null = null;
     private lastTickTime: number = 0;
-    private readonly tasks: Map<string, TickerTask> = new Map();
+    private readonly tasks: TickerTask[] = [];
     private readonly BASE_TICK_RATE = 15;
 
     constructor(private readonly getContextTime: () => number) {}
@@ -21,7 +23,9 @@ export class EngineTicker implements IEngineTicker {
         if (this.tickerId !== null) return;
 
         this.lastTickTime = performance.now();
-        this.tickerId = workerTimers.setInterval(() => this.tick(), this.BASE_TICK_RATE);
+        this.tickerId = workerTimers.setInterval(() => {
+            this.tick();
+        }, this.BASE_TICK_RATE);
     }
 
     public stop(): void {
@@ -31,12 +35,19 @@ export class EngineTicker implements IEngineTicker {
         }
     }
 
-    public add(id: string, intervalMs: number, callback: (currentTime: number, deltaTimeMs: number) => void): void {
-        this.tasks.set(id, { id, callback, intervalMs, accumulator: 0 });
+    public add(id: TickerTaskId, intervalMs: number, target: ITickable): void {
+        if (this.tasks.some(t => t.id === id)) return;
+
+        this.tasks.push({ id, target, intervalMs, accumulator: 0 });
     }
 
-    public remove(id: string): void {
-        this.tasks.delete(id);
+    public remove(id: TickerTaskId): void {
+        const index = this.tasks.findIndex(t => t.id === id);
+
+        if (index !== -1) {
+            this.tasks[index] = this.tasks[this.tasks.length - 1];
+            this.tasks.pop();
+        }
     }
 
     private tick(): void {
@@ -46,12 +57,15 @@ export class EngineTicker implements IEngineTicker {
 
         const audioCurrentTime = this.getContextTime();
 
-        for (const task of this.tasks.values()) {
+        const length = this.tasks.length;
+
+        for (let i = 0; i < length; i++) {
+            const task = this.tasks[i];
             task.accumulator += deltaTimeMs;
 
             if (task.accumulator >= task.intervalMs) {
                 task.accumulator -= task.intervalMs;
-                task.callback(audioCurrentTime, deltaTimeMs);
+                task.target.tick(audioCurrentTime, deltaTimeMs);
             }
         }
     }

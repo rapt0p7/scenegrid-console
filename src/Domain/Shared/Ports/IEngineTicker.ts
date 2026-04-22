@@ -1,5 +1,8 @@
+import { TickerTaskId } from '@shared/Types/Branded.js';
+import { ITickable } from '@domain/Shared/Ports/ITickable.js';
+
 export interface IEngineTicker {
-    add(id: string, intervalMs: number, callback: (currentTime: number, deltaTimeMs: number) => void): void;
+    add(id: TickerTaskId, intervalMs: number, target: ITickable): void;
     remove(id: string): void;
     start(): void;
     stop(): void;
