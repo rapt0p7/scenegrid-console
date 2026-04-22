@@ -64,7 +64,7 @@ export class EngineTicker implements IEngineTicker {
             task.accumulator += deltaTimeMs;
 
             if (task.accumulator >= task.intervalMs) {
-                task.accumulator -= task.intervalMs;
+                task.accumulator %= task.intervalMs;
                 task.target.tick(audioCurrentTime, deltaTimeMs);
             }
         }
