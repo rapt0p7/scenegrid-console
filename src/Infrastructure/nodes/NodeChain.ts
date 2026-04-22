@@ -1,6 +1,7 @@
 import type { AudioNodeFactory, PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
-import type {
+import {
     AudioNodeLike,
+    AudioParamLike,
     BiquadFilterNodeLike,
     GainNodeLike,
     PannerNodeLike,
@@ -16,22 +17,20 @@ export interface INodeChainOptions {
 }
 
 export class NodeChain implements INodeChain {
-    public readonly inputNode: GainNodeLike;
-    public readonly outputNode: GainNodeLike;
-    public readonly instanceGain: GainNodeLike;
-
+    readonly #inputNode: GainNodeLike;
+    readonly #outputNode: GainNodeLike;
     readonly #factory: AudioNodeFactory;
     #panner: AudioNodeLike | null = null;
-    #filters: BiquadFilterNodeLike[] = [];
+    readonly #filterPool: BiquadFilterNodeLike[] = [];
+    #activeFilterCount: number = 0;
+
     #externalDestination: AudioNodeLike | null = null;
 
     constructor(factory: AudioNodeFactory, options: INodeChainOptions = {}) {
         this.#factory = factory;
 
-        this.inputNode = this.#factory.createGain(1);
-        this.instanceGain = this.inputNode;
-
-        this.outputNode = this.#factory.createGain(1);
+        this.#inputNode = this.#factory.createGain(1);
+        this.#outputNode = this.#factory.createGain(1);
 
         if (options.spatial) {
             this.#panner = this.#factory.create3DPanner(options.spatial);
@@ -40,10 +39,18 @@ export class NodeChain implements INodeChain {
         }
 
         if (options.initialFilters) {
-            this.#filters = options.initialFilters.map(cfg => this.#factory.createFilter(cfg));
+            this.setFilters(options.initialFilters);
+        } else {
+            this.#rebuildInternalGraph();
         }
+    }
 
-        this.#rebuildInternalGraph();
+    public get gainParam(): AudioParamLike {
+        return this.#inputNode.gain;
+    }
+
+    public get sidechainTriggerNode(): AudioNodeLike {
+        return this.#inputNode;
     }
 
     public get pannerNode(): StereoPannerNodeLike | PannerNodeLike | null {
@@ -51,37 +58,49 @@ export class NodeChain implements INodeChain {
     }
 
     public get mainFilterNode(): BiquadFilterNodeLike | null {
-        return this.#filters.length > 0 ? this.#filters[0] : null;
+        return this.#activeFilterCount > 0 ? this.#filterPool[0] : null;
     }
 
     public setFilters(configs: IFilterConfig[]): void {
-        for (const f of this.#filters) f.disconnect();
-        this.#filters = configs.map(cfg => this.#factory.createFilter(cfg));
+        while (this.#filterPool.length < configs.length) {
+            this.#filterPool.push(this.#factory.createFilter({ type: 'lowpass', frequency: 22000 }));
+        }
+
+        for (let i = 0; i < configs.length; i++) {
+            const cfg = configs[i];
+            const filter = this.#filterPool[i];
+
+            filter.type = cfg.type;
+            if (cfg.frequency !== undefined) filter.frequency.value = cfg.frequency;
+            if (cfg.Q !== undefined) filter.Q.value = cfg.Q;
+        }
+
+        this.#activeFilterCount = configs.length;
         this.#rebuildInternalGraph();
     }
 
     public connectTo(destination: AudioNodeLike): void {
         if (this.#externalDestination) {
-            this.outputNode.disconnect(this.#externalDestination);
+            this.#outputNode.disconnect(this.#externalDestination);
         }
 
         this.#externalDestination = destination;
-        this.outputNode.connect(destination);
+        this.#outputNode.connect(destination);
     }
 
     public disconnect(): void {
         if (this.#externalDestination) {
-            this.outputNode.disconnect(this.#externalDestination);
+            this.#outputNode.disconnect(this.#externalDestination);
             this.#externalDestination = null;
         }
     }
 
     public dispose(): void {
         this.disconnect();
-        this.inputNode.disconnect();
-        for (const f of this.#filters) f.disconnect();
+        this.#inputNode.disconnect();
+        for (const f of this.#filterPool) f.disconnect();
         if (this.#panner) this.#panner.disconnect();
-        this.outputNode.disconnect();
+        this.#outputNode.disconnect();
     }
 
     public setPannerMode(options: { hasPanner?: boolean; spatial?: PannerConfig | boolean }): void {
@@ -101,14 +120,21 @@ export class NodeChain implements INodeChain {
         this.#rebuildInternalGraph();
     }
 
+    public connectSource(source: AudioNodeLike): void {
+        source.connect(this.#inputNode);
+    }
+
     #rebuildInternalGraph(): void {
-        this.inputNode.disconnect();
-        for (const f of this.#filters) f.disconnect();
+        this.#inputNode.disconnect();
+        for (let i = 0; i < this.#activeFilterCount; i++) {
+            this.#filterPool[i].disconnect();
+        }
         if (this.#panner) this.#panner.disconnect();
 
-        let lastNode: AudioNodeLike = this.inputNode;
+        let lastNode: AudioNodeLike = this.#inputNode;
 
-        for (const filter of this.#filters) {
+        for (let i = 0; i < this.#activeFilterCount; i++) {
+            const filter = this.#filterPool[i];
             lastNode.connect(filter);
             lastNode = filter;
         }
@@ -118,6 +144,6 @@ export class NodeChain implements INodeChain {
             lastNode = this.#panner;
         }
 
-        lastNode.connect(this.outputNode);
+        lastNode.connect(this.#outputNode);
     }
 }

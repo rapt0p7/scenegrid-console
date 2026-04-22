@@ -1,149 +1,238 @@
+// noinspection D
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { NodeChain } from '../NodeChain.js';
 
-import type { AudioNodeFactory } from '@infrastructure';
+import type { AudioNodeFactory } from '@infrastructure/nodes/AudioNodeFactory.js';
 
-describe('NodeChain', () => {
+describe('NodeChain (Deep Module & Zero-Allocation)', () => {
     let mockFactory: any;
-    let createdNodes: any[];
+    let createdGains: any[];
+    let createdFilters: any[];
+    let createdPanners: any[];
 
     beforeEach(() => {
         vi.clearAllMocks();
-        createdNodes = [];
-
-        const mockPanner = {
-            connect: vi.fn(),
-            disconnect: vi.fn(),
-            positionX: { value: 0 },
-            positionY: { value: 0 },
-            positionZ: { value: 0 },
-            setPosition: vi.fn()
-        };
+        createdGains = [];
+        createdFilters = [];
+        createdPanners = [];
 
         mockFactory = {
-            createGain: vi.fn().mockImplementation(value => {
-                return { type: 'gain', connect: vi.fn(), disconnect: vi.fn() };
+            createGain: vi.fn().mockImplementation(() => {
+                const node = { type: 'gain', gain: {}, connect: vi.fn(), disconnect: vi.fn() };
+                createdGains.push(node);
+                return node;
             }),
-            createFilter: vi.fn().mockImplementation(() => {
-                const node = { type: 'filter', connect: vi.fn(), disconnect: vi.fn() };
-                createdNodes.push(node);
+            createFilter: vi.fn().mockImplementation(cfg => {
+                const node = {
+                    type: cfg?.type ?? 'lowpass',
+                    frequency: { value: cfg?.frequency ?? 22000 },
+                    Q: { value: cfg?.Q ?? 1 },
+                    connect: vi.fn(),
+                    disconnect: vi.fn()
+                };
+                createdFilters.push(node);
                 return node;
             }),
             createStereoPanner: vi.fn().mockImplementation(() => {
-                return { type: 'panner', connect: vi.fn(), disconnect: vi.fn() };
+                const node = { type: 'stereo_panner', connect: vi.fn(), disconnect: vi.fn() };
+                createdPanners.push(node);
+                return node;
             }),
-            create3DPanner: vi.fn().mockReturnValue(mockPanner)
+            create3DPanner: vi.fn().mockImplementation(() => {
+                const node = {
+                    type: '3d_panner',
+                    positionX: { value: 0 },
+                    positionY: { value: 0 },
+                    positionZ: { value: 0 },
+                    setPosition: vi.fn(),
+                    connect: vi.fn(),
+                    disconnect: vi.fn()
+                };
+                createdPanners.push(node);
+                return node;
+            })
         } as unknown as AudioNodeFactory;
     });
 
-    it('should initialize with filters and connect them sequentially', () => {
-        const chain = new NodeChain(mockFactory, {
-            initialFilters: [
-                { type: 'lowpass', frequency: 1000 },
-                { type: 'highpass', frequency: 500 }
-            ]
+    describe('Initialization & Internal Graph', () => {
+        it('should initialize input and output gain nodes', () => {
+            const chain = new NodeChain(mockFactory);
+
+            expect(mockFactory.createGain).toHaveBeenCalledTimes(2);
+            expect(createdGains.length).toBe(2);
+
+            expect(chain.gainParam).toBe(createdGains[0].gain);
         });
 
-        expect(chain.inputNode.connect).toHaveBeenCalledWith(createdNodes[0]);
-        expect(createdNodes[0].connect).toHaveBeenCalledWith(createdNodes[1]);
-        expect(createdNodes[1].connect).toHaveBeenCalledWith(chain.outputNode);
+        it('should connect nodes sequentially (Input -> Filter 1 -> Filter 2 -> Output)', () => {
+            // oxlint-disable-next-line no-new
+            new NodeChain(mockFactory, {
+                initialFilters: [
+                    { type: 'lowpass', frequency: 1000 },
+                    { type: 'highpass', frequency: 500 }
+                ]
+            });
+
+            const inputNode = createdGains[0];
+            const outputNode = createdGains[1];
+            const filter1 = createdFilters[0];
+            const filter2 = createdFilters[1];
+
+            expect(inputNode.connect).toHaveBeenCalledWith(filter1);
+            expect(filter1.connect).toHaveBeenCalledWith(filter2);
+            expect(filter2.connect).toHaveBeenCalledWith(outputNode);
+        });
     });
 
-    it('should disconnect old filters and rebuild graph when setFilters is called', () => {
-        const chain = new NodeChain(mockFactory, {
-            initialFilters: [{ type: 'lowpass', frequency: 1000 }]
+    describe('Zero-Allocation Object Pool (Filters)', () => {
+        it('should mutate existing filters instead of creating new ones on setFilters', () => {
+            const chain = new NodeChain(mockFactory, {
+                initialFilters: [{ type: 'lowpass', frequency: 1000, Q: 1 }]
+            });
+
+            expect(mockFactory.createFilter).toHaveBeenCalledTimes(1);
+            const pooledFilter = createdFilters[0];
+
+            pooledFilter.connect.mockClear();
+            pooledFilter.disconnect.mockClear();
+
+            chain.setFilters([{ type: 'highpass', frequency: 500, Q: 2 }]);
+
+            expect(mockFactory.createFilter).toHaveBeenCalledTimes(1);
+
+            expect(pooledFilter.type).toBe('highpass');
+            expect(pooledFilter.frequency.value).toBe(500);
+            expect(pooledFilter.Q.value).toBe(2);
+
+            expect(pooledFilter.disconnect).toHaveBeenCalled();
+            expect(pooledFilter.connect).toHaveBeenCalledWith(createdGains[1]);
         });
 
-        const oldFilter = createdNodes[0];
+        it('should dynamically expand the pool ONLY if needed', () => {
+            const chain = new NodeChain(mockFactory, {
+                initialFilters: [{ type: 'lowpass', frequency: 500 }]
+            });
 
-        chain.setFilters([{ type: 'bandpass', frequency: 2000 }]);
-        const newFilter = createdNodes[1];
+            expect(mockFactory.createFilter).toHaveBeenCalledTimes(1);
 
-        expect(oldFilter.disconnect).toHaveBeenCalled();
+            chain.setFilters([
+                { type: 'lowpass', frequency: 500 },
+                { type: 'highpass', frequency: 500 },
+                { type: 'bandpass', frequency: 500 }
+            ]);
 
-        expect(chain.inputNode.connect).toHaveBeenCalledWith(newFilter);
-        expect(newFilter.connect).toHaveBeenCalledWith(chain.outputNode);
+            expect(mockFactory.createFilter).toHaveBeenCalledTimes(3);
+            expect(createdFilters.length).toBe(3);
+        });
+
+        it('should bypass unused filters when setting fewer configs than pool size', () => {
+            const chain = new NodeChain(mockFactory, {
+                initialFilters: [
+                    { type: 'lowpass', frequency: 500 },
+                    { type: 'highpass', frequency: 500 }
+                ]
+            });
+
+            chain.setFilters([{ type: 'bandpass', frequency: 500 }]);
+
+            const inputNode = createdGains[0];
+            const outputNode = createdGains[1];
+            const activeFilter = createdFilters[0];
+            const unusedFilter = createdFilters[1];
+
+            expect(unusedFilter.disconnect).toHaveBeenCalled();
+
+            expect(inputNode.connect).toHaveBeenCalledWith(activeFilter);
+            expect(activeFilter.connect).toHaveBeenCalledWith(outputNode);
+
+            expect(chain.mainFilterNode).toBe(activeFilter);
+        });
     });
 
     describe('Panner Configuration', () => {
         it('should build graph WITH 3D PannerNode if spatial option is provided', () => {
             const chain = new NodeChain(mockFactory, { spatial: true });
+
             expect(mockFactory.create3DPanner).toHaveBeenCalledWith(true);
             expect(chain.pannerNode).toBeDefined();
             expect(mockFactory.createStereoPanner).not.toHaveBeenCalled();
+
+            const inputNode = createdGains[0];
+            const outputNode = createdGains[1];
+            const panner = createdPanners[0];
+
+            expect(inputNode.connect).toHaveBeenCalledWith(panner);
+            expect(panner.connect).toHaveBeenCalledWith(outputNode);
         });
 
         it('should build graph WITH StereoPannerNode if hasPanner is true and spatial is undefined', () => {
-            const chain = new NodeChain(mockFactory, { hasPanner: true });
-            expect(mockFactory.createStereoPanner).toHaveBeenCalled();
+            // oxlint-disable-next-line no-new
+            new NodeChain(mockFactory, { hasPanner: true });
+
+            expect(mockFactory.createStereoPanner).toHaveBeenCalledWith(0);
             expect(mockFactory.create3DPanner).not.toHaveBeenCalled();
         });
-    });
 
-    it('should correctly return mainFilterNode or null if empty', () => {
-        const chainWithoutFilters = new NodeChain(mockFactory);
-        expect(chainWithoutFilters.mainFilterNode).toBeNull();
+        it('should hot-swap panner mode and rebuild graph without leaking', () => {
+            const chain = new NodeChain(mockFactory, { hasPanner: true });
+            const stereoPanner = createdPanners[0];
 
-        const chainWithFilters = new NodeChain(mockFactory, {
-            initialFilters: [{ type: 'lowpass', frequency: 1000 }]
+            chain.setPannerMode({ spatial: true });
+            const spatialPanner = createdPanners[1];
+
+            expect(stereoPanner.disconnect).toHaveBeenCalled();
+            expect(spatialPanner.connect).toHaveBeenCalledWith(createdGains[1]);
+            expect(chain.pannerNode).toBe(spatialPanner);
         });
-        expect(chainWithFilters.mainFilterNode).toBe(createdNodes[0]);
     });
 
-    describe('External Connections', () => {
-        it('should connect outputNode to destination and store it', () => {
+    describe('External Connections & Lifecycle', () => {
+        it('should connect outputNode to external destination', () => {
             const chain = new NodeChain(mockFactory);
             const mockDestination = { connect: vi.fn(), disconnect: vi.fn() };
+            const outputNode = createdGains[1];
 
             chain.connectTo(mockDestination as any);
-            expect(chain.outputNode.connect).toHaveBeenCalledWith(mockDestination);
+            expect(outputNode.connect).toHaveBeenCalledWith(mockDestination);
         });
 
-        it('should disconnect from previous destination when connecting to a new one', () => {
+        it('should properly route disconnect logic for external destinations', () => {
             const chain = new NodeChain(mockFactory);
             const destinationA = { connect: vi.fn(), disconnect: vi.fn() };
             const destinationB = { connect: vi.fn(), disconnect: vi.fn() };
+            const outputNode = createdGains[1];
 
             chain.connectTo(destinationA as any);
             chain.connectTo(destinationB as any);
 
-            expect(chain.outputNode.disconnect).toHaveBeenCalledWith(destinationA);
-            expect(chain.outputNode.connect).toHaveBeenCalledWith(destinationB);
+            expect(outputNode.disconnect).toHaveBeenCalledWith(destinationA);
+            expect(outputNode.connect).toHaveBeenCalledWith(destinationB);
+
+            chain.disconnect();
+            expect(outputNode.disconnect).toHaveBeenCalledWith(destinationB);
         });
 
-        it('should clear external destination on disconnect()', () => {
-            const chain = new NodeChain(mockFactory);
+        it('should gracefully handle dispose() and tear down the entire chain', () => {
+            const chain = new NodeChain(mockFactory, {
+                hasPanner: true,
+                initialFilters: [{ type: 'lowpass', frequency: 1000 }]
+            });
+
             const mockDestination = { connect: vi.fn(), disconnect: vi.fn() };
-
             chain.connectTo(mockDestination as any);
-            chain.disconnect();
 
-            expect(chain.outputNode.disconnect).toHaveBeenCalledWith(mockDestination);
+            chain.dispose();
 
-            const disconnectSpy = vi.mocked(chain.outputNode.disconnect);
+            const inputNode = createdGains[0];
+            const outputNode = createdGains[1];
+            const filter = createdFilters[0];
+            const panner = createdPanners[0];
 
-            disconnectSpy.mockClear();
-
-            chain.disconnect();
-            expect(disconnectSpy).not.toHaveBeenCalled();
+            expect(inputNode.disconnect).toHaveBeenCalled();
+            expect(filter.disconnect).toHaveBeenCalled();
+            expect(panner.disconnect).toHaveBeenCalled();
+            expect(outputNode.disconnect).toHaveBeenCalled();
         });
-    });
-
-    it('should correctly handle dispose()', () => {
-        const chain = new NodeChain(mockFactory, {
-            hasPanner: true,
-            initialFilters: [{ type: 'lowpass', frequency: 1000 }]
-        });
-
-        const mockDestination = { connect: vi.fn(), disconnect: vi.fn() };
-        chain.connectTo(mockDestination as any);
-
-        chain.dispose();
-
-        expect(chain.inputNode.disconnect).toHaveBeenCalled();
-        expect(createdNodes[0].disconnect).toHaveBeenCalled();
-        expect(chain.pannerNode?.disconnect).toHaveBeenCalled();
-        expect(chain.outputNode.disconnect).toHaveBeenCalled();
     });
 });
