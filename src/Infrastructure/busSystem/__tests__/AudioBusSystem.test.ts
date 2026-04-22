@@ -10,6 +10,7 @@ import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type { BusId } from '@shared/Types/Branded.js';
 import type { IPluginFactory } from '@infrastructure';
 import type { AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
+import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 
 vi.mock('@infrastructure', () => ({
     safeDisconnect: vi.fn((node: any) => {
@@ -43,11 +44,12 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
     let mockBusConfig: IBuses;
     let mockPluginFactory: IPluginFactory;
     let mockTicker: any;
-    let capturedTickCallback: ((time: number) => void) | null;
+
+    let capturedTickTarget: ITickable | null;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        capturedTickCallback = null;
+        capturedTickTarget = null;
 
         mockContext = createMockContext();
         mockAutomation = { ramp: vi.fn(), set: vi.fn() };
@@ -82,8 +84,8 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
         };
 
         mockTicker = {
-            add: vi.fn().mockImplementation((id, rate, callback) => {
-                capturedTickCallback = callback;
+            add: vi.fn().mockImplementation((id: string, rate: number, target: ITickable) => {
+                capturedTickTarget = target;
             }),
             remove: vi.fn()
         };
@@ -116,12 +118,12 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
 
         await busSystem.initialize(mockTicker);
 
-        expect(mockTicker.add).toHaveBeenCalledWith('audio-bus-system', 20, expect.any(Function));
-        expect(capturedTickCallback).toBeDefined();
+        expect(mockTicker.add).toHaveBeenCalledWith('audio-bus-system', 20, expect.any(Object));
+        expect(capturedTickTarget).toBeDefined();
 
         const processFrameSpy = vi.spyOn(AudioBus.prototype, 'processFrame').mockImplementation(() => {});
 
-        capturedTickCallback!(123.45);
+        capturedTickTarget!.tick(123.45, 20);
 
         expect(processFrameSpy).toHaveBeenCalledTimes(2);
         expect(processFrameSpy).toHaveBeenCalledWith(123.45);

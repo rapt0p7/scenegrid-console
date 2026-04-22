@@ -83,7 +83,7 @@ export default class MixerTransitionEngine {
         this.state = { type: 'IDLE' };
     }
 
-    public update(dt: number): void {
+    public tick(currentTime: number, dt: number): void {
         if (this.state.type === 'IDLE') return;
 
         const s = this.state;

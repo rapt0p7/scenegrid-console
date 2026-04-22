@@ -61,14 +61,14 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
             manager.configureParam('HP' as GameParamId, 1000, 0);
             manager.setValue('HP' as GameParamId, 100);
 
-            manager.tick(30);
+            manager.tick(0, 30);
 
             const firstTickValue = manager.getValue('HP' as GameParamId);
             expect(firstTickValue).toBeGreaterThan(0);
             expect(firstTickValue).toBeLessThan(100);
 
-            manager.tick(3000);
-            manager.tick(30);
+            manager.tick(0, 3000);
+            manager.tick(0, 30);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(100);
         });
@@ -79,14 +79,14 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
             manager.configureParam('HP' as GameParamId, 0, 1000);
             manager.setValue('HP' as GameParamId, 0);
 
-            manager.tick(30);
+            manager.tick(0, 30);
 
             const firstTickValue = manager.getValue('HP' as GameParamId);
             expect(firstTickValue).toBeLessThan(100);
             expect(firstTickValue).toBeGreaterThan(0);
 
-            manager.tick(3000);
-            manager.tick(30);
+            manager.tick(0, 3000);
+            manager.tick(0, 30);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(0);
         });
@@ -98,7 +98,7 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
             manager.setValue('P1' as GameParamId, 100);
             manager.setValue('P2' as GameParamId, 50);
 
-            manager.tick(30);
+            manager.tick(0, 30);
 
             expect(manager.getValue('P1' as GameParamId)).toBeGreaterThan(0);
             expect(manager.getValue('P2' as GameParamId)).toBeGreaterThan(0);
@@ -115,7 +115,7 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
 
             manager.setValue('HP' as GameParamId, 100);
 
-            manager.tick(30);
+            manager.tick(0, 30);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(100);
         });
@@ -124,11 +124,11 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
             manager.configureParam('HP' as GameParamId, 1000, 1000);
             manager.setValue('HP' as GameParamId, 100);
 
-            manager.tick(30);
+            manager.tick(0, 30);
 
             manager.configureParam('HP' as GameParamId, 0, 0);
 
-            manager.tick(30);
+            manager.tick(0, 30);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(100);
         });
@@ -139,8 +139,8 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
 
             expect((manager as any).isInterpolating).toBe(true);
 
-            manager.tick(500);
-            manager.tick(30);
+            manager.tick(0, 500);
+            manager.tick(0, 30);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(10);
 

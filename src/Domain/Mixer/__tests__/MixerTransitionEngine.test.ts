@@ -91,23 +91,23 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
 
             expect(mockBus.setLogicalGain).not.toHaveBeenCalled();
 
-            manager.update(250);
+            manager.tick(0, 250);
             expect(mockBus.setLogicalGain).toHaveBeenCalledWith(0.5, 750);
         });
 
         it('should calculate remaining time correctly when update hits late', () => {
             manager.applyState({ buses: { ['music' as BusId]: { gain: 0.8 } } }, { durationMs: 1000 });
 
-            manager.update(300);
+            manager.tick(0, 300);
             expect(mockBus.setLogicalGain).toHaveBeenCalledWith(0.8, 700);
         });
 
         it('should finalize state only when duration is reached', () => {
             manager.applyState({ buses: { ['music' as BusId]: { gain: 1 } } }, { durationMs: 1000 });
-            manager.update(999);
+            manager.tick(0, 999);
             expect(manager.getState().buses['music' as BusId]).toBeUndefined();
 
-            manager.update(1);
+            manager.tick(0, 1);
             expect(manager.getState().buses['music' as BusId].gain).toBe(1);
         });
     });
@@ -120,11 +120,11 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
 
         it('should interrupt active transition if interruptible is true', () => {
             manager.applyState({ buses: { ['music' as BusId]: { gain: 0.1 } } }, { durationMs: 1000 });
-            manager.update(100);
+            manager.tick(0, 100);
 
             manager.applyState({ buses: { ['music' as BusId]: { gain: 0.9 } } }, { durationMs: 500 });
 
-            manager.update(125);
+            manager.tick(0, 125);
             expect(mockBus.setLogicalGain).toHaveBeenCalledWith(0.9, 375);
         });
 
@@ -133,11 +133,11 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
                 { buses: { ['music' as BusId]: { gain: 0.1 } } },
                 { durationMs: 1000, interruptible: false }
             );
-            manager.update(100);
+            manager.tick(0, 100);
 
             manager.applyState({ buses: { ['music' as BusId]: { gain: 0.9 } } }, { durationMs: 500 });
 
-            manager.update(200);
+            manager.tick(0, 200);
             expect(mockBus.setLogicalGain).toHaveBeenCalledWith(0.1, 700);
         });
     });
@@ -149,7 +149,7 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
         });
 
         it('should return early on update if IDLE', () => {
-            manager.update(100);
+            manager.tick(0, 100);
             expect(mockBus.setLogicalGain).not.toHaveBeenCalled();
         });
 
@@ -159,7 +159,7 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
             manager.applyState({ buses: { ['music' as BusId]: { gain: 0.5 } } }, { durationMs: 1000 });
             manager.cancelActiveTransition();
 
-            manager.update(300);
+            manager.tick(0, 300);
             expect(mockBus.setLogicalGain).not.toHaveBeenCalled();
         });
 
@@ -185,7 +185,7 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
                 { durationMs: 1000 }
             );
 
-            manager.update(250);
+            manager.tick(0, 250);
 
             expect(mockBusSystem.applySend).toHaveBeenCalledWith('music', 'reverb', 0.5, 750);
         });
@@ -198,7 +198,7 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
             mockBusSystem.applySend.mockClear();
 
             manager.applyState({ buses: { ['music' as BusId]: { gain: 1 } } }, { durationMs: 1000 });
-            manager.update(250);
+            manager.tick(0, 250);
 
             expect(mockBusSystem.applySend).toHaveBeenCalledWith('music', 'reverb', null, 750);
         });

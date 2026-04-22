@@ -7,7 +7,7 @@ import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import { PlaybackId, RegionId, SoundId } from '@shared/Types/Branded.js';
+import { PlaybackId, RegionId, SoundId, TickerTaskId } from '@shared/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 import { isDefined, isAbsent } from '@shared/guards.js';
 
@@ -56,7 +56,7 @@ export default class Sequencer implements ISequencer {
         track.regionQueue = [];
         track.loopRegion = regionName;
 
-        this.processTick();
+        this.tick();
     }
 
     stopLoop(soundId: SoundId): void {
@@ -86,7 +86,7 @@ export default class Sequencer implements ISequencer {
     }
 
     // oxlint-disable-next-line max-lines-per-function
-    transitionTo({
+    public transitionTo({
         soundId,
         targetRegion,
         transitionRegionName,
@@ -178,10 +178,10 @@ export default class Sequencer implements ISequencer {
         track.loopRegion = targetRegion;
         track.state = LoopState.LOOPING;
 
-        this.processTick();
+        this.tick();
     }
 
-    private processTick(): void {
+    public tick(): void {
         for (const [soundId, track] of this.tracks.entries()) {
             if (track.state !== LoopState.LOOPING) continue;
 
@@ -310,8 +310,6 @@ export default class Sequencer implements ISequencer {
     }
 
     private startScheduler(): void {
-        this.ticker.add('sequencer', this.scheduleIntervalMs, () => {
-            this.processTick();
-        });
+        this.ticker.add('sequencer' as TickerTaskId, this.scheduleIntervalMs, this);
     }
 }

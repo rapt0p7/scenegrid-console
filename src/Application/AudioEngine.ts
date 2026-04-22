@@ -44,7 +44,15 @@ import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { GameParamId, LayerId, PlaybackId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
+import {
+    GameParamId,
+    LayerId,
+    PlaybackId,
+    RegionId,
+    SnapshotId,
+    SoundId,
+    TickerTaskId
+} from '@shared/Types/Branded.js';
 import type { IPluginFactory, DebuggerOptions } from '@infrastructure';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { Handler } from 'mitt';
@@ -312,30 +320,34 @@ export class AudioEngine {
 
             this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingProvider);
 
-            this.#engineTicker.add('rtpc-manager', RTPCManager.TICK_RATE_MS, (_, deltaTimeMs) => {
-                this.#rtpcManager.tick(deltaTimeMs);
+            this.#engineTicker.add('rtpc-manager' as TickerTaskId, RTPCManager.TICK_RATE_MS, this.#rtpcManager);
+
+            this.#engineTicker.add('bus-system' as TickerTaskId, RTPCManager.TICK_RATE_MS, {
+                tick: () => {
+                    this.#busSystem.tickRTPC(this.#rtpcManager);
+                }
             });
 
-            this.#engineTicker.add('bus-system', RTPCManager.TICK_RATE_MS, () => {
-                this.#busSystem.tickRTPC(this.#rtpcManager);
+            this.#engineTicker.add('instance-rtpc' as TickerTaskId, RTPCManager.TICK_RATE_MS, {
+                tick: () => {
+                    this.#instanceRTPCBinder.tickRTPC();
+                }
             });
 
-            this.#engineTicker.add('instance-rtpc', RTPCManager.TICK_RATE_MS, () => {
-                this.#instanceRTPCBinder.tickRTPC();
-            });
-
-            this.#engineTicker.add('sound-controller', SoundController.TICK_RATE_MS, () => {
-                this.#soundController.tick();
-            });
-            this.#engineTicker.add('culling-runner', CullingRunner.TICK_RATE_MS, () => {
-                this.#cullingRunner.tick();
-            });
+            this.#engineTicker.add(
+                'sound-controller' as TickerTaskId,
+                SoundController.TICK_RATE_MS,
+                this.#soundController
+            );
+            this.#engineTicker.add('culling-runner' as TickerTaskId, CullingRunner.TICK_RATE_MS, this.#cullingRunner);
             mixerTransitionEngine.events.on('transition:start', () => {
                 this.#cullingRunner.tick();
             });
-            this.#engineTicker.add('mixer-state-manager', MixerTransitionEngine.TICK_RATE_MS, (_, deltaTimeMs) => {
-                mixerTransitionEngine.update(deltaTimeMs);
-            });
+            this.#engineTicker.add(
+                'mixer-state-manager' as TickerTaskId,
+                MixerTransitionEngine.TICK_RATE_MS,
+                mixerTransitionEngine
+            );
 
             this.#isInitialized = true;
 

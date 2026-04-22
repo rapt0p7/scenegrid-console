@@ -7,6 +7,7 @@ import { LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 import Sequencer from '@domain/Orchestration/Sequencer.js';
 
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
+import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type { PlaybackId, RegionId, SoundId } from '@shared/Types/Branded.js';
 import type { Mocked } from 'vitest';
 
@@ -25,18 +26,18 @@ describe('Sequencer (Interactive Music)', () => {
     let manager: Sequencer;
 
     let capturedOnVoiceEnded: (() => void) | null;
-    let capturedTickCallback: ((currentTime: number, deltaTimeMs: number) => void) | null;
+    let capturedTickTarget: ITickable | null;
 
     beforeEach(() => {
         vi.clearAllMocks();
         capturedOnVoiceEnded = null;
-        capturedTickCallback = null;
+        capturedTickTarget = null;
 
         mockContext = { currentTime: 0, sampleRate: 44_100 };
 
         mockTicker = {
-            add: vi.fn().mockImplementation((id, interval, callback) => {
-                capturedTickCallback = callback;
+            add: vi.fn().mockImplementation((id, interval, target: ITickable) => {
+                capturedTickTarget = target;
             }),
             remove: vi.fn(),
             start: vi.fn(),
@@ -90,14 +91,14 @@ describe('Sequencer (Interactive Music)', () => {
     });
 
     function triggerTick(deltaTimeMs: number = 25) {
-        if (capturedTickCallback) {
-            capturedTickCallback(mockContext.currentTime, deltaTimeMs);
+        if (capturedTickTarget) {
+            capturedTickTarget.tick(mockContext.currentTime, deltaTimeMs);
         }
     }
 
     it('should start timer on init and clear on destroy via EngineTicker', () => {
         expect(mockTicker.add).toHaveBeenCalledTimes(1);
-        expect(mockTicker.add).toHaveBeenCalledWith(expect.any(String), expect.any(Number), expect.any(Function));
+        expect(mockTicker.add).toHaveBeenCalledWith(expect.any(String), expect.any(Number), expect.any(Object));
         manager.destroy();
         expect(mockTicker.remove).toHaveBeenCalledTimes(1);
     });

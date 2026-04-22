@@ -4,7 +4,7 @@ import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IDuckingConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { BusId } from '@shared/Types/Branded.js';
+import type { BusId, TickerTaskId } from '@shared/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { AudioCtx, AudioNodeLike, GainNodeLike } from '@infrastructure/types/IAudioContext.js';
@@ -73,12 +73,14 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
         await this.initBuses();
 
-        ticker.add('audio-bus-system', this.TICK_RATE_MS, currentTime => {
-            const length = this.hotPathBuses.length;
-            for (let index = 0; index < length; index++) {
-                this.hotPathBuses[index].processFrame(currentTime);
-            }
-        });
+        ticker.add('audio-bus-system' as TickerTaskId, this.TICK_RATE_MS, this);
+    }
+
+    public tick(currentTime: number) {
+        const length = this.hotPathBuses.length;
+        for (let index = 0; index < length; index++) {
+            this.hotPathBuses[index].processFrame(currentTime);
+        }
     }
 
     public tickRTPC(rtpcAdapter: IRTPCAdapter): void {

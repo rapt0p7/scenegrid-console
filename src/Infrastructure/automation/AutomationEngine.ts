@@ -2,10 +2,13 @@
 
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { AudioCtx, AudioParamLike } from '@infrastructure/types/IAudioContext.js';
+import { TickerTaskId } from '@shared/Types/Branded.js';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const isChromeAndroid =
-    typeof navigator !== 'undefined' && /Chrome/.test(navigator.userAgent) && /Android/.test(navigator.userAgent);
+    typeof navigator !== 'undefined' &&
+    navigator.userAgent.includes('Chrome') &&
+    navigator.userAgent.includes('Android');
 
 type RampType = 'linear' | 'exponential' | 'equal-power';
 
@@ -31,11 +34,11 @@ export default class AutomationEngine {
     constructor(context: AudioCtx, ticker: EngineTicker) {
         this.#ctx = context;
 
-        ticker.add('automation-engine', AutomationEngine.TICK_RATE_MS, () => this.flush());
+        ticker.add('automation-engine' as TickerTaskId, AutomationEngine.TICK_RATE_MS, this);
     }
 
     set(parameter: AudioParamLike, value: number): void {
-        const target = Number(value);
+        const target = value;
         if (!Number.isFinite(target)) {
             console.warn('[AutomationEngine] Invalid value:', value);
             return;
@@ -59,7 +62,7 @@ export default class AutomationEngine {
         type: RampType = 'linear',
         delayMs: number = 0
     ): void {
-        const target = Number(value);
+        const target = value;
         if (!Number.isFinite(target)) {
             console.warn('[AutomationEngine] Invalid target:', value);
             return;
@@ -108,13 +111,12 @@ export default class AutomationEngine {
         }
     }
 
-    private flush(): void {
+    public tick(): void {
         if (this.#pending.length === 0) return;
 
         const batch = this.#pending;
         this.#pending = [];
 
-        // eslint-disable-next-line unicorn/no-for-loop
         for (let index = 0; index < batch.length; index++) {
             this.applyRamp(batch[index]);
         }

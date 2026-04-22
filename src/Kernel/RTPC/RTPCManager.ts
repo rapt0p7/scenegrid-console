@@ -57,7 +57,7 @@ export default class RTPCManager implements IRTPCManager {
         this.isInterpolating = false;
     }
 
-    public tick(deltaTimeMs: number): void {
+    public tick(currentTime: number, deltaTimeMs: number): void {
         if (!this.isInterpolating) return;
 
         const deltaTimeSec = deltaTimeMs / 1000;
