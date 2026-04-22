@@ -34,10 +34,11 @@ describe('SoundController', () => {
             setPosition: vi.fn(),
             cancelScheduled: vi.fn(),
             on: vi.fn().mockReturnValue(() => 'unsubscribed'),
-            instanceGain: {
-                gain: {}
-            },
-            outputNode: {},
+            gainParam: {},
+            sidechainTriggerNode: {},
+            connectTo: vi.fn(),
+            disconnectRoute: vi.fn(),
+
             state: 'playing'
         };
 
@@ -63,7 +64,7 @@ describe('SoundController', () => {
         } as unknown as AutomationEngine;
 
         mockBusSystem = {
-            connectNodeToBus: vi.fn(),
+            getBus: vi.fn().mockReturnValue({ inputNode: {} }),
             addSidechainSource: vi.fn(),
             removeSidechainSource: vi.fn()
         };
@@ -191,9 +192,9 @@ describe('SoundController', () => {
             playbackId = controller.play('test_sound' as SoundId, {}) as PlaybackId;
         });
 
-        it('should delegate setVolume to AutomationEngine', () => {
+        it('should delegate setVolume to AutomationEngine using gainParam', () => {
             controller.setVolume(playbackId, 0.75);
-            expect(mockAutomation.set).toHaveBeenCalledWith(fakeInstance.instanceGain.gain, 0.75);
+            expect(mockAutomation.set).toHaveBeenCalledWith(fakeInstance.gainParam, 0.75);
         });
 
         it('should return context time and sample rate', () => {
@@ -225,7 +226,7 @@ describe('SoundController', () => {
         });
     });
 
-    describe('Routing & Bus Integration', () => {
+    describe('Routing & Bus Integration (Inversion of Control)', () => {
         let playbackId: PlaybackId;
 
         beforeEach(() => {
@@ -233,28 +234,45 @@ describe('SoundController', () => {
             playbackId = controller.play('route_sound' as SoundId, {}) as PlaybackId;
         });
 
-        it('should delegate routeToBus using physical outputNode', () => {
+        it('should instruct instance to connectTo the requested bus inputNode', () => {
+            const mockBusInput = {};
+            mockBusSystem.getBus.mockReturnValueOnce({ inputNode: mockBusInput });
+
             controller.routeToBus(playbackId, 'music' as BusId);
 
-            expect(mockBusSystem.connectNodeToBus).toHaveBeenCalledWith(fakeInstance.outputNode, 'music');
+            expect(mockBusSystem.getBus).toHaveBeenCalledWith('music');
+            expect(fakeInstance.connectTo).toHaveBeenCalledWith(mockBusInput);
         });
 
-        it('should safely ignore routeToBus if voice is missing', () => {
+        it('should safely ignore routeToBus if voice or bus is missing', () => {
+            // oxlint-disable-next-line unicorn/no-useless-undefined
+            mockBusSystem.getBus.mockReturnValueOnce(undefined);
+            expect(() => {
+                controller.routeToBus(playbackId, 'missing_bus' as BusId);
+            }).not.toThrow();
+
             expect(() => {
                 controller.routeToBus(999 as PlaybackId, 'sfx' as BusId);
             }).not.toThrow();
         });
 
-        it('should delegate addSidechainTrigger using instanceGain node', () => {
+        it('should delegate addSidechainTrigger using sidechainTriggerNode', () => {
             controller.addSidechainTrigger(playbackId, 'ducked' as BusId, 0.8);
 
-            expect(mockBusSystem.addSidechainSource).toHaveBeenCalledWith(fakeInstance.instanceGain, 'ducked', 0.8);
+            expect(mockBusSystem.addSidechainSource).toHaveBeenCalledWith(
+                fakeInstance.sidechainTriggerNode,
+                'ducked',
+                0.8
+            );
         });
 
-        it('should delegate removeSidechainTrigger using instanceGain node', () => {
+        it('should delegate removeSidechainTrigger using sidechainTriggerNode', () => {
             controller.removeSidechainTrigger(playbackId, 'ducked' as BusId);
 
-            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(fakeInstance.instanceGain, 'ducked');
+            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(
+                fakeInstance.sidechainTriggerNode,
+                'ducked'
+            );
         });
 
         it('should automatically clear ALL sidechain triggers when instance is released back to pool', () => {
@@ -266,8 +284,14 @@ describe('SoundController', () => {
 
             releasedHandler(fakeInstance);
 
-            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(fakeInstance.instanceGain, 'ducked');
-            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(fakeInstance.instanceGain, 'ambience');
+            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(
+                fakeInstance.sidechainTriggerNode,
+                'ducked'
+            );
+            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(
+                fakeInstance.sidechainTriggerNode,
+                'ambience'
+            );
         });
     });
 
@@ -339,16 +363,10 @@ describe('SoundController', () => {
             }).not.toThrow();
         });
 
-        it('should format arguments and delegate fadeVolume() correctly', () => {
+        it('should format arguments and delegate fadeVolume() correctly using gainParam', () => {
             controller.fadeVolume(playbackId, 0.5, 1000, 'equal-power', 100);
 
-            expect(mockAutomation.ramp).toHaveBeenCalledWith(
-                fakeInstance.instanceGain.gain,
-                0.5,
-                1000,
-                'equal-power',
-                100
-            );
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(fakeInstance.gainParam, 0.5, 1000, 'equal-power', 100);
 
             expect(() => {
                 controller.fadeVolume(999 as PlaybackId, 1, 1);
@@ -434,7 +452,6 @@ describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {
         };
 
         const mockScheduler = {
-            // eslint-disable-next-line max-params
             schedulePlay: vi.fn().mockImplementation((instance, when, offset, duration) => {
                 instance.play(when, offset, duration);
             })

@@ -58,7 +58,7 @@ export class SoundController implements ISoundController {
 
                 const voice = this.activeVoices.get(id);
                 if (voice?.physicalInstance && 'forceNaturalEnd' in voice.physicalInstance) {
-                    (voice.physicalInstance as any).forceNaturalEnd();
+                    voice.physicalInstance.forceNaturalEnd();
                 }
             }
         }
@@ -76,6 +76,7 @@ export class SoundController implements ISoundController {
         this.lastPlayTimes.delete(soundId);
     }
 
+    // oxlint-disable-next-line max-lines-per-function
     play(
         soundId: SoundId,
         { when = 0, offset = 0, duration, loop = false, rate = 1, onRevive }: IControllerPlayOptions
@@ -128,7 +129,6 @@ export class SoundController implements ISoundController {
         return playbackId;
     }
 
-    // eslint-disable-next-line max-params
     public setPosition(playbackId: PlaybackId, x: number, y: number, z: number): void {
         const voice = this.activeVoices.get(playbackId);
         if (!voice) return;
@@ -148,21 +148,25 @@ export class SoundController implements ISoundController {
 
     public routeToBus(playbackId: PlaybackId, busId: BusId): void {
         const voice = this.getLogicalVoice(playbackId);
-        const node = voice?.physicalInstance?.outputNode;
+        const instance = voice?.physicalInstance;
 
-        if (node) {
-            this.busSystem.connectNodeToBus(node, busId);
+        if (instance) {
+            const bus = this.busSystem.getBus(busId);
+            if (bus) {
+                instance.connectTo(bus.inputNode);
+            }
         }
     }
 
     public addSidechainTrigger(playbackId: PlaybackId, busId: BusId, intensity: number): void {
         const voice = this.getLogicalVoice(playbackId);
         const instance = voice?.physicalInstance;
-        const node = instance?.instanceGain;
 
-        if (instance && node) {
+        const triggerNode = instance?.sidechainTriggerNode;
+
+        if (instance && triggerNode) {
             const poolIndex = (instance as any)._poolIndex;
-            this.busSystem.addSidechainSource(node, busId, intensity);
+            this.busSystem.addSidechainSource(triggerNode, busId, intensity);
             this.#sidechainLinks[poolIndex]?.set(busId, intensity);
         }
     }
@@ -170,11 +174,11 @@ export class SoundController implements ISoundController {
     public removeSidechainTrigger(playbackId: PlaybackId, busId: BusId): void {
         const voice = this.getLogicalVoice(playbackId);
         const instance = voice?.physicalInstance;
-        const node = instance?.instanceGain;
+        const triggerNode = instance?.sidechainTriggerNode;
 
-        if (node) {
+        if (triggerNode) {
             const poolIndex = (instance as any)._poolIndex;
-            this.busSystem.removeSidechainSource(node, busId);
+            this.busSystem.removeSidechainSource(triggerNode, busId);
             this.#sidechainLinks[poolIndex]?.delete(busId);
         }
     }
@@ -210,8 +214,8 @@ export class SoundController implements ISoundController {
 
     setVolume(id: PlaybackId, targetVolume: number): void {
         const voice = this.activeVoices.get(id);
-        if (voice?.physicalInstance?.instanceGain) {
-            this.automation.set(voice.physicalInstance.instanceGain.gain, targetVolume);
+        if (voice?.physicalInstance?.gainParam) {
+            this.automation.set(voice.physicalInstance.gainParam, targetVolume);
         }
     }
 
@@ -232,7 +236,7 @@ export class SoundController implements ISoundController {
     virtualize(id: PlaybackId): void {
         const voice = this.activeVoices.get(id);
         if (voice?.physicalInstance && 'virtualize' in voice.physicalInstance) {
-            const instance = voice.physicalInstance as any;
+            const instance = voice.physicalInstance;
 
             if (!instance.isLooping && instance.duration > 0) {
                 const remainingSec = Math.max(0, (instance.duration - instance.currentTime) / instance.playbackRate);
@@ -240,11 +244,12 @@ export class SoundController implements ISoundController {
                 this.virtualTimers.push({ playbackId: id, endTime });
             }
 
-            const poolIndex = instance._poolIndex;
+            const poolIndex = (instance as any)._poolIndex;
             const targetBuses = this.#sidechainLinks[poolIndex];
-            if (targetBuses) {
+
+            if (targetBuses && instance.sidechainTriggerNode) {
                 for (const busId of targetBuses.keys()) {
-                    this.busSystem.removeSidechainSource(instance.instanceGain, busId);
+                    this.busSystem.removeSidechainSource(instance.sidechainTriggerNode, busId);
                 }
             }
 
@@ -257,13 +262,15 @@ export class SoundController implements ISoundController {
         if (voice?.physicalInstance && 'devirtualize' in voice.physicalInstance) {
             this.#removeFromVirtualQueue(id);
 
-            voice.physicalInstance.devirtualize();
+            const instance = voice.physicalInstance;
+            instance.devirtualize();
 
-            const poolIndex = (voice.physicalInstance as any)._poolIndex;
+            const poolIndex = (instance as any)._poolIndex;
             const targetBuses = this.#sidechainLinks[poolIndex];
-            if (targetBuses) {
+
+            if (targetBuses && instance.sidechainTriggerNode) {
                 for (const [busId, intensity] of targetBuses.entries()) {
-                    this.busSystem.addSidechainSource(voice.physicalInstance.instanceGain, busId, intensity);
+                    this.busSystem.addSidechainSource(instance.sidechainTriggerNode, busId, intensity);
                 }
             }
 
@@ -273,7 +280,6 @@ export class SoundController implements ISoundController {
         }
     }
 
-    // eslint-disable-next-line max-params
     fadeVolume(
         id: PlaybackId,
         targetVolume: number,
@@ -282,18 +288,11 @@ export class SoundController implements ISoundController {
         delayMs: number = 0
     ): void {
         const voice = this.activeVoices.get(id);
-        if (voice?.physicalInstance?.instanceGain) {
-            this.automation.ramp(
-                voice.physicalInstance.instanceGain.gain,
-                targetVolume,
-                durationMs,
-                curveType,
-                delayMs
-            );
+        if (voice?.physicalInstance?.gainParam) {
+            this.automation.ramp(voice.physicalInstance.gainParam, targetVolume, durationMs, curveType, delayMs);
         }
     }
 
-    // eslint-disable-next-line max-params
     fadeParameter(
         id: PlaybackId,
         target: 'gain' | 'pitch' | 'pan' | 'filterFrequency',
@@ -335,8 +334,11 @@ export class SoundController implements ISoundController {
         if (poolIndex === undefined || poolIndex < 0) return;
 
         const targetBuses = this.#sidechainLinks[poolIndex];
-        for (const busId of targetBuses.keys()) {
-            this.busSystem.removeSidechainSource(instance.instanceGain, busId);
+
+        if (instance.sidechainTriggerNode) {
+            for (const busId of targetBuses.keys()) {
+                this.busSystem.removeSidechainSource(instance.sidechainTriggerNode, busId);
+            }
         }
         targetBuses.clear();
     };
