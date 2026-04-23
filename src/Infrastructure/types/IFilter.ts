@@ -1,6 +1,6 @@
 export interface IFilterConfig {
     type: BiquadFilterType;
-    frequency: number;
+    frequency?: number;
     Q?: number;
     gain?: number;
 }

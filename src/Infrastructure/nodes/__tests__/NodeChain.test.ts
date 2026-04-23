@@ -23,17 +23,18 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
                 createdGains.push(node);
                 return node;
             }),
-            createFilter: vi.fn().mockImplementation(cfg => {
+            createFilter: vi.fn().mockImplementation(() => {
                 const node = {
-                    type: cfg?.type ?? 'lowpass',
-                    frequency: { value: cfg?.frequency ?? 22000 },
-                    Q: { value: cfg?.Q ?? 1 },
+                    type: 'lowpass',
+                    frequency: { value: 22000 },
+                    Q: { value: 1 },
                     connect: vi.fn(),
                     disconnect: vi.fn()
                 };
                 createdFilters.push(node);
                 return node;
             }),
+            mutateFilter: vi.fn(),
             createStereoPanner: vi.fn().mockImplementation(() => {
                 const node = { type: 'stereo_panner', connect: vi.fn(), disconnect: vi.fn() };
                 createdPanners.push(node);
@@ -51,7 +52,8 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
                 };
                 createdPanners.push(node);
                 return node;
-            })
+            }),
+            mutate3DPanner: vi.fn()
         } as unknown as AudioNodeFactory;
     });
 
@@ -86,24 +88,26 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
     });
 
     describe('Zero-Allocation Object Pool (Filters)', () => {
-        it('should mutate existing filters instead of creating new ones on setFilters', () => {
+        it('should delegate mutation to AudioNodeFactory instead of creating new filters', () => {
             const chain = new NodeChain(mockFactory, {
                 initialFilters: [{ type: 'lowpass', frequency: 1000, Q: 1 }]
             });
 
             expect(mockFactory.createFilter).toHaveBeenCalledTimes(1);
+            expect(mockFactory.mutateFilter).toHaveBeenCalledTimes(1);
+
             const pooledFilter = createdFilters[0];
 
             pooledFilter.connect.mockClear();
             pooledFilter.disconnect.mockClear();
+            mockFactory.mutateFilter.mockClear();
 
-            chain.setFilters([{ type: 'highpass', frequency: 500, Q: 2 }]);
+            const newConfig = { type: 'highpass', frequency: 500, Q: 2 };
+            chain.setFilters([newConfig as any]);
 
             expect(mockFactory.createFilter).toHaveBeenCalledTimes(1);
-
-            expect(pooledFilter.type).toBe('highpass');
-            expect(pooledFilter.frequency.value).toBe(500);
-            expect(pooledFilter.Q.value).toBe(2);
+            expect(mockFactory.mutateFilter).toHaveBeenCalledTimes(1);
+            expect(mockFactory.mutateFilter).toHaveBeenCalledWith(pooledFilter, newConfig);
 
             expect(pooledFilter.disconnect).toHaveBeenCalled();
             expect(pooledFilter.connect).toHaveBeenCalledWith(createdGains[1]);
@@ -123,6 +127,7 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
             ]);
 
             expect(mockFactory.createFilter).toHaveBeenCalledTimes(3);
+            expect(mockFactory.mutateFilter).toHaveBeenCalledTimes(4);
             expect(createdFilters.length).toBe(3);
         });
 
@@ -150,7 +155,7 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
         });
     });
 
-    describe('Panner Configuration', () => {
+    describe('Panner Configuration & Caching', () => {
         it('should build graph WITH 3D PannerNode if spatial option is provided', () => {
             const chain = new NodeChain(mockFactory, { spatial: true });
 
@@ -174,16 +179,25 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
             expect(mockFactory.create3DPanner).not.toHaveBeenCalled();
         });
 
-        it('should hot-swap panner mode and rebuild graph without leaking', () => {
-            const chain = new NodeChain(mockFactory, { hasPanner: true });
-            const stereoPanner = createdPanners[0];
+        it('should safely cache panners and use mutate3DPanner on reuse (Zero-Allocation)', () => {
+            const spatialConfigA = { panningModel: 'HRTF' as const };
+            const spatialConfigB = { panningModel: 'equalpower' as const };
 
-            chain.setPannerMode({ spatial: true });
-            const spatialPanner = createdPanners[1];
+            const chain = new NodeChain(mockFactory, { spatial: spatialConfigA });
+            expect(mockFactory.create3DPanner).toHaveBeenCalledTimes(1);
 
-            expect(stereoPanner.disconnect).toHaveBeenCalled();
-            expect(spatialPanner.connect).toHaveBeenCalledWith(createdGains[1]);
-            expect(chain.pannerNode).toBe(spatialPanner);
+            chain.setPannerMode({ hasPanner: true });
+            expect(mockFactory.createStereoPanner).toHaveBeenCalledTimes(1);
+
+            chain.setPannerMode({ spatial: spatialConfigB });
+
+            expect(mockFactory.create3DPanner).toHaveBeenCalledTimes(1);
+            expect(mockFactory.createStereoPanner).toHaveBeenCalledTimes(1);
+
+            expect(mockFactory.mutate3DPanner).toHaveBeenCalledWith(createdPanners[0], spatialConfigB);
+
+            chain.setPannerMode({});
+            expect(chain.pannerNode).toBeNull();
         });
     });
 
@@ -213,11 +227,13 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
             expect(outputNode.disconnect).toHaveBeenCalledWith(destinationB);
         });
 
-        it('should gracefully handle dispose() and tear down the entire chain', () => {
+        it('should gracefully handle dispose() and tear down the entire chain including caches', () => {
             const chain = new NodeChain(mockFactory, {
                 hasPanner: true,
                 initialFilters: [{ type: 'lowpass', frequency: 1000 }]
             });
+
+            chain.setPannerMode({ spatial: true });
 
             const mockDestination = { connect: vi.fn(), disconnect: vi.fn() };
             chain.connectTo(mockDestination as any);
@@ -227,11 +243,15 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
             const inputNode = createdGains[0];
             const outputNode = createdGains[1];
             const filter = createdFilters[0];
-            const panner = createdPanners[0];
+            const stereoPanner = createdPanners[0];
+            const spatialPanner = createdPanners[1];
 
             expect(inputNode.disconnect).toHaveBeenCalled();
             expect(filter.disconnect).toHaveBeenCalled();
-            expect(panner.disconnect).toHaveBeenCalled();
+
+            expect(stereoPanner.disconnect).toHaveBeenCalled();
+            expect(spatialPanner.disconnect).toHaveBeenCalled();
+
             expect(outputNode.disconnect).toHaveBeenCalled();
         });
     });

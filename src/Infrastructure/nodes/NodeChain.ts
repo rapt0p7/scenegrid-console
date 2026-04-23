@@ -1,5 +1,5 @@
 import type { AudioNodeFactory, PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
-import {
+import type {
     AudioNodeLike,
     AudioParamLike,
     BiquadFilterNodeLike,
@@ -20,6 +20,8 @@ export class NodeChain implements INodeChain {
     readonly #inputNode: GainNodeLike;
     readonly #outputNode: GainNodeLike;
     readonly #factory: AudioNodeFactory;
+    #cachedStereoPanner: StereoPannerNodeLike | AudioNodeLike | null = null;
+    #cached3DPanner: PannerNodeLike | null = null;
     #panner: AudioNodeLike | null = null;
     readonly #filterPool: BiquadFilterNodeLike[] = [];
     #activeFilterCount: number = 0;
@@ -33,9 +35,11 @@ export class NodeChain implements INodeChain {
         this.#outputNode = this.#factory.createGain(1);
 
         if (options.spatial) {
-            this.#panner = this.#factory.create3DPanner(options.spatial);
+            this.#cached3DPanner = this.#factory.create3DPanner(options.spatial);
+            this.#panner = this.#cached3DPanner;
         } else if (options.hasPanner) {
-            this.#panner = this.#factory.createStereoPanner(0);
+            this.#cachedStereoPanner = this.#factory.createStereoPanner(0);
+            this.#panner = this.#cachedStereoPanner;
         }
 
         if (options.initialFilters) {
@@ -67,12 +71,7 @@ export class NodeChain implements INodeChain {
         }
 
         for (let i = 0; i < configs.length; i++) {
-            const cfg = configs[i];
-            const filter = this.#filterPool[i];
-
-            filter.type = cfg.type;
-            if (cfg.frequency !== undefined) filter.frequency.value = cfg.frequency;
-            if (cfg.Q !== undefined) filter.Q.value = cfg.Q;
+            this.#factory.mutateFilter(this.#filterPool[i], configs[i]);
         }
 
         this.#activeFilterCount = configs.length;
@@ -100,6 +99,8 @@ export class NodeChain implements INodeChain {
         this.#inputNode.disconnect();
         for (const f of this.#filterPool) f.disconnect();
         if (this.#panner) this.#panner.disconnect();
+        if (this.#cachedStereoPanner) this.#cachedStereoPanner.disconnect();
+        if (this.#cached3DPanner) this.#cached3DPanner.disconnect();
         this.#outputNode.disconnect();
     }
 
@@ -109,10 +110,15 @@ export class NodeChain implements INodeChain {
         }
 
         if (options.spatial) {
-            const spatialConfig = typeof options.spatial === 'object' ? options.spatial : {};
-            this.#panner = this.#factory.create3DPanner(spatialConfig);
+            if (!this.#cached3DPanner) {
+                this.#cached3DPanner = this.#factory.create3DPanner(options.spatial);
+            } else {
+                this.#factory.mutate3DPanner(this.#cached3DPanner, options.spatial);
+            }
+            this.#panner = this.#cached3DPanner;
         } else if (options.hasPanner) {
-            this.#panner = this.#factory.createStereoPanner(0);
+            this.#cachedStereoPanner ??= this.#factory.createStereoPanner(0);
+            this.#panner = this.#cachedStereoPanner;
         } else {
             this.#panner = null;
         }
