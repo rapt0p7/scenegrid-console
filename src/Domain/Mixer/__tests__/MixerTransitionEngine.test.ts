@@ -204,3 +204,73 @@ describe('MixerTransitionEngine (Tick-based FSM)', () => {
         });
     });
 });
+
+describe('Bug repro: Sends and Reverb retention across snapshots', () => {
+    let mockBusSystem: any;
+    let manager: MixerTransitionEngine;
+    let mockSfxBus: any;
+    let mockReverbBus: any;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+
+        const baseConfig = {
+            ['FX_REVERB' as BusId]: { gain: 1, filter: { type: 'reverb' as any, reverbTime: 2.5 } },
+            ['SFX_COINS' as BusId]: { gain: 1, sends: { ['FX_REVERB' as BusId]: 0.5 } }
+        };
+
+        mockSfxBus = {
+            safeReplaceFilter: vi.fn(),
+            setGainImmediate: vi.fn(),
+            setLogicalGain: vi.fn(),
+            config: baseConfig.SFX_COINS
+        };
+        mockReverbBus = {
+            safeReplaceFilter: vi.fn(),
+            setGainImmediate: vi.fn(),
+            setLogicalGain: vi.fn(),
+            config: baseConfig.FX_REVERB
+        };
+
+        mockBusSystem = {
+            getBus: vi.fn(id => (id === 'SFX_COINS' ? mockSfxBus : id === 'FX_REVERB' ? mockReverbBus : undefined)),
+            getAllBuses: vi.fn().mockReturnValue(
+                new Map([
+                    ['SFX_COINS', mockSfxBus],
+                    ['FX_REVERB', mockReverbBus]
+                ])
+            ),
+            applySend: vi.fn(),
+            getBaseBusConfig: vi.fn(id => baseConfig[id])
+        };
+
+        manager = new MixerTransitionEngine(mockBusSystem, { getValue: vi.fn() } as any);
+    });
+
+    it('should NOT drop base filters and sends when snapshot omits them (idle -> explore -> idle)', () => {
+        const idleSnapshot = {
+            buses: { ['SFX_COINS' as BusId]: { gain: 1 } }
+        };
+
+        manager.applyState(idleSnapshot, { durationMs: 1000 });
+        manager.tick(0, 250);
+
+        expect(mockReverbBus.safeReplaceFilter).not.toHaveBeenCalledWith(null, expect.anything());
+        expect(mockReverbBus.safeReplaceFilter).not.toHaveBeenCalledWith(undefined, expect.anything());
+
+        expect(mockBusSystem.applySend).not.toHaveBeenCalledWith('SFX_COINS', 'FX_REVERB', null, expect.anything());
+        expect(mockBusSystem.applySend).not.toHaveBeenCalledWith(
+            'SFX_COINS',
+            'FX_REVERB',
+            undefined,
+            expect.anything()
+        );
+
+        const exploreSnapshot = { buses: {} };
+        manager.applyState(exploreSnapshot, { durationMs: 1000 });
+        manager.tick(0, 500);
+
+        expect(mockReverbBus.safeReplaceFilter).not.toHaveBeenCalledWith(null, expect.anything());
+        expect(mockBusSystem.applySend).not.toHaveBeenCalledWith('SFX_COINS', 'FX_REVERB', null, expect.anything());
+    });
+});

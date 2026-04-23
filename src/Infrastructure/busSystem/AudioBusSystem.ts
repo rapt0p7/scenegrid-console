@@ -1,7 +1,7 @@
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
-import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
+import type { IBus, IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IDuckingConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { BusId, TickerTaskId } from '@shared/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
@@ -95,6 +95,11 @@ export default class AudioBusSystem implements IAudioBusSystem {
         }
 
         return this.busConfig[busId].gain ?? 0;
+    }
+
+    public getBaseBusConfig(busId: BusId): IBus | undefined {
+        if (!this.busConfig) return undefined;
+        return this.busConfig[busId];
     }
 
     public getAllBuses(): ReadonlyMap<BusId, AudioBus> {

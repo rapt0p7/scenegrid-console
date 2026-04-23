@@ -484,3 +484,49 @@ describe('AudioBusSystem (RTPC Pull Model)', () => {
         tickRtpcSpy.mockRestore();
     });
 });
+
+describe('Bug repro: Base Config Routing & FX Retention', () => {
+    it('should correctly initialize base sends and filters before any snapshots are applied', async () => {
+        const mockContext = createMockContext();
+        const mockPluginFactory = {
+            createLimiter: vi.fn().mockReturnValue({
+                load: vi.fn(),
+                inputNode: { connect: vi.fn() },
+                outputNode: { connect: vi.fn() }
+            }),
+            getFiltersPlugin: vi.fn().mockReturnValue({
+                inputNode: { connect: vi.fn() },
+                outputNode: { connect: vi.fn() },
+                dispose: vi.fn(),
+                createNode: vi.fn().mockReturnValue({ connect: vi.fn(), disconnect: vi.fn() })
+            })
+        } as any;
+
+        const baseConfig: IBuses = {
+            ['FX_REVERB' as BusId]: { gain: 1, filter: { type: 'reverb' as any, reverbTime: 2.5 } },
+            ['SFX_COINS' as BusId]: { gain: 1, sends: { ['FX_REVERB' as BusId]: 0.5 } }
+        };
+
+        const applySendSpy = vi.spyOn(AudioBusSystem.prototype, 'applySend');
+
+        const system = new AudioBusSystem({
+            context: mockContext,
+            automation: { set: vi.fn(), ramp: vi.fn() } as any,
+            masterOutput: { input: {} } as any,
+            busConfig: baseConfig,
+            pluginFactory: mockPluginFactory
+        });
+
+        await system.initialize({ add: vi.fn(), remove: vi.fn() } as any);
+
+        const fxBus = system.getBus('FX_REVERB' as BusId);
+        const sfxBus = system.getBus('SFX_COINS' as BusId);
+
+        expect(fxBus).toBeDefined();
+        expect(sfxBus).toBeDefined();
+
+        expect(applySendSpy).toHaveBeenCalledWith('SFX_COINS', 'FX_REVERB', 0.5, 0);
+
+        applySendSpy.mockRestore();
+    });
+});
