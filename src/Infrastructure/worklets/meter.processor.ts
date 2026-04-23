@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention,no-param-reassign */
+/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import type { IAudioWorkletProcessor } from '@infrastructure/types/IAudioWorkletProcessor.js';
@@ -16,6 +16,8 @@ interface HighpassFilter extends FilterCoeffs {
     z2_L: number;
     z1_R: number;
     z2_R: number;
+    outL: number;
+    outR: number;
 }
 
 interface HighshelfFilter extends FilterCoeffs {
@@ -23,6 +25,8 @@ interface HighshelfFilter extends FilterCoeffs {
     z2_L: number;
     z1_R: number;
     z2_R: number;
+    outL: number;
+    outR: number;
 }
 
 class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProcessor {
@@ -36,6 +40,7 @@ class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProce
     private readonly energyBuffer: Float32Array<ArrayBuffer>;
     private energyIndex: number;
     private energySum: number;
+
     constructor() {
         super();
 
@@ -63,7 +68,9 @@ class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProce
             z1_L: 0,
             z2_L: 0,
             z1_R: 0,
-            z2_R: 0
+            z2_R: 0,
+            outL: 0,
+            outR: 0
         };
     }
 
@@ -87,30 +94,24 @@ class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProce
         };
     }
 
-    runBiquad(f: HighpassFilter | HighshelfFilter, inL: number, inR: number) {
-        // Left
-        const outL = f.b0 * inL + f.z1_L;
-        f.z1_L = f.b1 * inL + f.z2_L - f.a1 * outL;
-        f.z2_L = f.b2 * inL - f.a2 * outL;
+    runBiquad(f: HighpassFilter | HighshelfFilter, inL: number, inR: number): void {
+        f.outL = f.b0 * inL + f.z1_L;
+        f.z1_L = f.b1 * inL + f.z2_L - f.a1 * f.outL;
+        f.z2_L = f.b2 * inL - f.a2 * f.outL;
 
-        // Right
-        const outR = f.b0 * inR + f.z1_R;
-        f.z1_R = f.b1 * inR + f.z2_R - f.a1 * outR;
-        f.z2_R = f.b2 * inR - f.a2 * outR;
-
-        return { outL, outR };
+        f.outR = f.b0 * inR + f.z1_R;
+        f.z1_R = f.b1 * inR + f.z2_R - f.a1 * f.outR;
+        f.z2_R = f.b2 * inR - f.a2 * f.outR;
     }
 
-    process(
-        inputs: Float32Array[][],
-        outputs: Float32Array[][],
-        parameters: { [name: string]: Float32Array }
-    ): boolean {
+    // oxlint-disable-next-line max-lines-per-function
+    process(inputs: Float32Array[][]): boolean {
         const input = inputs[0];
 
         if (!input || input.length === 0 || input[0].length === 0) {
             this.energySum = 0;
             this.energyBuffer.fill(0);
+            // oxlint-disable-next-line unicorn/require-post-message-target-origin
             this.port.postMessage({ rms: 0, peak: 0, lufs: Number.NEGATIVE_INFINITY });
             return true;
         }
@@ -120,10 +121,11 @@ class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProce
 
         let sum = 0;
         let peak = 0;
+        const len = L.length;
 
-        // eslint-disable-next-line prefer-const
-        for (let [index, l] of L.entries()) {
-            let r = R[index];
+        for (let i = 0; i < len; i++) {
+            let l = L[i];
+            let r = R[i];
 
             if (Math.abs(l) < 1e-7) l = 0;
             if (Math.abs(r) < 1e-7) r = 0;
@@ -132,10 +134,10 @@ class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProce
             if (Math.abs(l) > peak) peak = Math.abs(l);
             if (Math.abs(r) > peak) peak = Math.abs(r);
 
-            const hp = this.runBiquad(this.hpFilter, l, r);
-            const hs = this.runBiquad(this.hsFilter, hp.outL, hp.outR);
+            this.runBiquad(this.hpFilter, l, r);
+            this.runBiquad(this.hsFilter, this.hpFilter.outL, this.hpFilter.outR);
 
-            const energy = (hs.outL * hs.outL + hs.outR * hs.outR) * 0.5;
+            const energy = (this.hsFilter.outL * this.hsFilter.outL + this.hsFilter.outR * this.hsFilter.outR) * 0.5;
 
             this.energySum -= this.energyBuffer[this.energyIndex];
             this.energyBuffer[this.energyIndex] = energy;
@@ -146,8 +148,8 @@ class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProce
             if (this.energyIndex >= this.windowSize) {
                 this.energyIndex = 0;
                 let freshSum = 0;
-                for (let index = 0; index < this.windowSize; index++) {
-                    freshSum += this.energyBuffer[index];
+                for (let k = 0; k < this.windowSize; k++) {
+                    freshSum += this.energyBuffer[k];
                 }
                 this.energySum = freshSum;
             }
@@ -167,6 +169,7 @@ class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProce
             rms: this.rms,
             peak: this.peak,
             lufs
+            // oxlint-disable-next-line unicorn/require-post-message-target-origin
         });
 
         return true;

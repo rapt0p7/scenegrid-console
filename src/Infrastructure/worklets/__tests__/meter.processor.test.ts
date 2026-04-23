@@ -35,20 +35,20 @@ describe('MeterProcessor', () => {
         it('should initialize properties and calculate correct window size', () => {
             const processor = new capturedMeterClass();
 
-            expect((processor as any).windowSize).toBe(4);
-            expect((processor as any).energyBuffer.length).toBe(4);
-            expect((processor as any).rms).toBe(0);
-            expect((processor as any).peak).toBe(0);
+            expect(processor.windowSize).toBe(4);
+            expect(processor.energyBuffer.length).toBe(4);
+            expect(processor.rms).toBe(0);
+            expect(processor.peak).toBe(0);
         });
 
         it('should initialize K-weighting filters with correct hardcoded coefficients', () => {
             const processor = new capturedMeterClass();
 
-            const hp = (processor as any).hpFilter;
+            const hp = processor.hpFilter;
             expect(hp.b0).toBeCloseTo(0.978_03);
             expect(hp.a1).toBeCloseTo(-1.955_58);
 
-            const hs = (processor as any).hsFilter;
+            const hs = processor.hsFilter;
             expect(hs.b0).toBeCloseTo(1.535_124);
         });
     });

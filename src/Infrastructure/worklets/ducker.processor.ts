@@ -2,7 +2,7 @@
 
 import type { IAudioWorkletProcessor } from '../types/IAudioWorkletProcessor.js';
 
-export interface DuckerProcessorOptions {
+interface DuckerProcessorOptions {
     processorOptions?: {
         attack?: number;
         release?: number;
@@ -28,11 +28,8 @@ class DuckerProcessor extends AudioWorkletProcessor implements IAudioWorkletProc
         this.releaseCoeff = Math.exp(-1 / (this.release * sampleRate));
     }
 
-    process(
-        inputs: Float32Array[][],
-        outputs: Float32Array[][],
-        parameters: { [name: string]: Float32Array }
-    ): boolean {
+    // oxlint-disable-next-line max-lines-per-function
+    process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
         const input = inputs[0];
         const output = outputs[0];
 
@@ -42,10 +39,11 @@ class DuckerProcessor extends AudioWorkletProcessor implements IAudioWorkletProc
             const inL = input[0];
             const inR = input[1] || inL;
             const outChannel = output[0];
+            const length = inL.length;
 
-            // eslint-disable-next-line prefer-const
-            for (let [index, l] of inL.entries()) {
-                let r = inR[index];
+            for (let i = 0; i < length; i++) {
+                let l = inL[i];
+                let r = inR[i];
 
                 if (Math.abs(l) < 1e-7) l = 0;
                 if (Math.abs(r) < 1e-7) r = 0;
@@ -63,21 +61,25 @@ class DuckerProcessor extends AudioWorkletProcessor implements IAudioWorkletProc
 
                 const clampedEnvironment = Math.max(0, Math.min(1, this.activeEnvelope));
 
-                outChannel[index] = 1 - clampedEnvironment;
+                outChannel[i] = 1 - clampedEnvironment;
             }
 
-            for (let c = 1; c < output.length; c++) {
+            const outLen = output.length;
+            for (let c = 1; c < outLen; c++) {
                 output[c].set(outChannel);
             }
         } else {
-            for (const element of output) {
-                if (element) element.fill(1);
+            const outLen = output.length;
+            for (let i = 0; i < outLen; i++) {
+                const channel = output[i];
+                if (channel) channel.fill(1);
             }
             this.activeEnvelope = 0;
         }
 
         this.frameCounter++;
         if (this.frameCounter >= 6) {
+            // oxlint-disable-next-line unicorn/require-post-message-target-origin
             this.port.postMessage({ envelope: this.activeEnvelope });
             this.frameCounter = 0;
         }
@@ -89,8 +91,6 @@ class DuckerProcessor extends AudioWorkletProcessor implements IAudioWorkletProc
 try {
     registerProcessor('ducker-processor', DuckerProcessor);
 } catch (error) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    if (error.name !== 'NotSupportedError') throw error;
-    console.warn('ducker-processor уже зарегистрирован');
+    if ((error as any).name !== 'NotSupportedError') throw error;
+    console.warn('ducker-processor already registered', error);
 }

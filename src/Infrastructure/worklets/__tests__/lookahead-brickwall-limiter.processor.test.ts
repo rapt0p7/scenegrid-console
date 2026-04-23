@@ -32,11 +32,11 @@ describe('TinyLimiter (lookahead-brickwall-limiter.processor)', () => {
         it('should initialize with default parameters', () => {
             const processor = new capturedLimiterClass({ processorOptions: {} });
 
-            expect((processor as any).lookahead).toBe(0.005);
-            expect((processor as any).ceiling).toBe(0.99);
-            expect((processor as any).releaseTime).toBe(0.1);
-            expect((processor as any).delaySamples).toBe(220);
-            expect((processor as any).bufferSize).toBe(44_100);
+            expect(processor.lookahead).toBe(0.005);
+            expect(processor.ceiling).toBe(0.99);
+            expect(processor.releaseTime).toBe(0.1);
+            expect(processor.delaySamples).toBe(220);
+            expect(processor.bufferSize).toBe(44_100);
         });
 
         it('should respect custom processorOptions', () => {
@@ -44,9 +44,9 @@ describe('TinyLimiter (lookahead-brickwall-limiter.processor)', () => {
                 processorOptions: { lookahead: 0.01, ceiling: 0.8, release: 0.5 }
             });
 
-            expect((processor as any).lookahead).toBe(0.01);
-            expect((processor as any).ceiling).toBe(0.8);
-            expect((processor as any).delaySamples).toBe(441);
+            expect(processor.lookahead).toBe(0.01);
+            expect(processor.ceiling).toBe(0.8);
+            expect(processor.delaySamples).toBe(441);
         });
     });
 

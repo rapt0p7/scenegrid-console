@@ -28,17 +28,17 @@ describe('DuckerProcessor', () => {
     describe('Initialization', () => {
         it('should initialize with default options', () => {
             const processor = new capturedDuckerClass({});
-            expect((processor as any).attack).toBe(0.03);
-            expect((processor as any).release).toBe(0.25);
-            expect((processor as any).activeEnvelope).toBe(0);
+            expect(processor.attack).toBe(0.03);
+            expect(processor.release).toBe(0.25);
+            expect(processor.activeEnvelope).toBe(0);
         });
 
         it('should initialize with provided processorOptions', () => {
             const processor = new capturedDuckerClass({
                 processorOptions: { attack: 0.1, release: 0.5 }
             });
-            expect((processor as any).attack).toBe(0.1);
-            expect((processor as any).release).toBe(0.5);
+            expect(processor.attack).toBe(0.1);
+            expect(processor.release).toBe(0.5);
         });
     });
 
@@ -144,7 +144,7 @@ describe('DuckerProcessor', () => {
             vi.resetModules();
             await import('../ducker.processor.js');
 
-            expect(warnSpy).toHaveBeenCalledWith('ducker-processor уже зарегистрирован');
+            expect(warnSpy).toHaveBeenCalledWith('ducker-processor already registered', expect.any(Error));
             warnSpy.mockRestore();
         });
 
