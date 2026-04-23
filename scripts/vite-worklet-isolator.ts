@@ -1,7 +1,5 @@
 import fs from 'node:fs';
-
 import { transformWithOxc } from 'vite';
-
 import type { Plugin } from 'vite';
 
 export function audioWorkletIsolator(): Plugin {

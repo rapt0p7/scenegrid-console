@@ -4,6 +4,7 @@
         "module": "ESNext",
         "jsx": "react",
         "moduleResolution": "bundler",
+        "moduleDetection": "force",
         "isolatedModules": true,
         "forceConsistentCasingInFileNames": true,
         "skipLibCheck": true,
