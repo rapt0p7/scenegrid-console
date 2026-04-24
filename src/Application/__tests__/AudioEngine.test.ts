@@ -8,14 +8,7 @@ import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 import { PRIORITY } from '@domain/Mixer/MixerLayer.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
-import {
-    SoundController,
-    SoundPoolManager,
-    SoundInstance,
-    AudioContextManager,
-    FiltersPlugin,
-    AudioDebugger
-} from '@infrastructure';
+import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager, FiltersPlugin } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
 import type { BusId, GameParamId, PlaybackId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
@@ -177,14 +170,6 @@ vi.mock('@infrastructure', async importOriginal => {
                 inputNode: { connect: vi.fn() },
                 outputNode: { connect: vi.fn() }
             };
-        })
-    };
-});
-
-vi.mock('@infrastructure/debug/AudioDebugger.js', () => {
-    return {
-        default: vi.fn().mockImplementation(function () {
-            return { init: vi.fn() };
         })
     };
 });
@@ -523,11 +508,6 @@ describe('AudioEngine', () => {
 
         it('should call resume on unlock()', async () => {
             await expect(engine.unlock()).resolves.not.toThrow();
-        });
-
-        it('should initialize AudioDebugger on showDebugUI', async () => {
-            await engine.showDebugUI();
-            expect(AudioDebugger).toHaveBeenCalledTimes(1);
         });
 
         it('should delegate mixer.setState to SnapshotManager with scene_main and BASE priority', () => {

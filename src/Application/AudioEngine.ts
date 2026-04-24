@@ -53,7 +53,7 @@ import {
     SoundId,
     TickerTaskId
 } from '@shared/Types/Branded.js';
-import type { IPluginFactory, DebuggerOptions } from '@infrastructure';
+import type { IPluginFactory } from '@infrastructure';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { Handler } from 'mitt';
 import type { DeepReadonly } from '@shared/DeepReadonly.js';
@@ -377,16 +377,6 @@ export class AudioEngine {
 
     public stop(playbackIdOrSoundId: PlaybackId | PlaybackId[] | string): void {
         this.#router.stop(playbackIdOrSoundId as PlaybackId | PlaybackId[] | SoundId);
-    }
-
-    public async showDebugUI(options?: DeepReadonly<DebuggerOptions>): Promise<void> {
-        const { default: AudioDebugger } = await import('@infrastructure/debug/AudioDebugger.js');
-        const debuggerInstance = new AudioDebugger(
-            this.#contextManager.context,
-            this.#busSystem,
-            this.#busSystem.getMasterNode()
-        );
-        debuggerInstance.init(options);
     }
 
     // eslint-disable-next-line @typescript-eslint/naming-convention

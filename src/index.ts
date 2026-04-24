@@ -1,6 +1,5 @@
 export { AudioEngine } from './Application/AudioEngine.js';
 export { PRIORITY } from './Domain/Mixer/MixerLayer.js';
-export { AudioDebugger } from './Infrastructure/index.js';
 export { LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 
 export type { IAudioEngineConfig } from './Application/Ports/IAudioEngineConfig.js';

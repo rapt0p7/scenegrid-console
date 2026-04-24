@@ -1,4 +1,4 @@
-import { AudioEngine } from '../src/index.js';
+import { AudioEngine } from 'scenegrid-console';
 
 import Buses from './audio-config/Buses.js';
 import Snapshots from './audio-config/Snapshots.js';
@@ -6,6 +6,7 @@ import SoundMap from './audio-config/SoundMap.js';
 import RTPCManifest from './audio-config/RTPCManifest.js';
 import soundManifest from './soundManifest.js';
 
+// oxlint-disable-next-line max-lines-per-function
 async function bootstrap() {
     const audio = new AudioEngine({
         manifest: soundManifest,
@@ -55,10 +56,9 @@ async function bootstrap() {
 
     globalThis.addEventListener(
         'pointerup',
+        // oxlint-disable-next-line typescript/strict-void-return, typescript/no-misused-promises
         async () => {
             await audio.unlock();
-
-            void audio.showDebugUI({ wrapperSelector: '#wrapper' });
 
             audio.mixer.setState('idle');
 
@@ -66,9 +66,12 @@ async function bootstrap() {
             audio.play('backgroundMain2', { isLoop: true });
             audio.play('backgroundMain3', { isLoop: true });
 
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            await import('../src/debug.js');
+            if (process.env.NODE_ENV !== 'production') {
+                void import('scenegrid-console/debug').then(({ attachDebugUI, initAudioDebugPanel }) => {
+                    void attachDebugUI(audio, { wrapperSelector: '#wrapper' });
+                    initAudioDebugPanel(audio);
+                });
+            }
         },
         { once: true }
     );

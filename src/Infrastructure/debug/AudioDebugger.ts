@@ -20,7 +20,8 @@ export default class AudioDebugger {
         this.masterNode = masterNode;
     }
 
-    public init(options: DebuggerOptions = {}): void {
+    // oxlint-disable-next-line max-lines-per-function
+    public async init(options: DebuggerOptions = {}): Promise<void> {
         const { wrapperSelector = '#wrapper' } = options;
 
         const wrapper = document.querySelector(wrapperSelector);
@@ -66,22 +67,23 @@ export default class AudioDebugger {
             })
             .filter(Boolean);
 
-        requestAnimationFrame(async () => {
-            for (const item of uiColumns) {
-                if (!item) continue;
+        const promises = [];
+        for (const item of uiColumns) {
+            if (!item) continue;
 
-                await createFrequencyCurveWithRMS(
-                    item.specContainer as any,
-                    item.node as any,
+            promises.push(
+                createFrequencyCurveWithRMS(
+                    item.specContainer,
+                    item.node,
                     window.screen.availWidth / uiColumns.length - 4
-                );
+                )
+            );
 
-                await createMeters(
-                    item.meterContainer as any,
-                    item.node as any,
-                    window.screen.availWidth / uiColumns.length - 4
-                );
-            }
-        });
+            promises.push(
+                createMeters(item.meterContainer, item.node, window.screen.availWidth / uiColumns.length - 4)
+            );
+        }
+
+        await Promise.all(promises);
     }
 }
