@@ -17,14 +17,17 @@
         "LICENSE.md"
     ],
     "type": "module",
-    "main": "./dist/scenegrid-audio.umd.js",
-    "module": "./dist/scenegrid-audio.es.js",
+    "main": "./dist/scenegrid-audio.index.es.js",
+    "module": "./dist/scenegrid-audio.index.es.js",
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/scenegrid-audio.es.js",
-            "require": "./dist/scenegrid-audio.umd.js"
+            "import": "./dist/scenegrid-audio.index.es.js"
+        },
+        "./debug": {
+            "types": "./dist/debug.d.ts",
+            "import": "./dist/scenegrid-audio.debug.es.js"
         }
     },
     "scripts": {
@@ -51,7 +54,6 @@
         "lint": "npm run lint:fast && npm run lint:arch"
     },
     "dependencies": {
-        "@tweakpane/plugin-essentials": "0.2.1",
         "globalthis": "1.0.4"
     },
     "devDependencies": {
@@ -94,6 +96,8 @@
         "vitest": "4.1.0"
     },
     "peerDependencies": {
+        "@tweakpane/core": "2.0.5",
+        "@tweakpane/plugin-essentials": "0.2.1",
         "mitt": "3.0.1",
         "standardized-audio-context": "25.3.77",
         "tweakpane": "4.0.5",

@@ -41,7 +41,9 @@ export default defineConfig(({ mode }) => ({
             '@shared': path.resolve(__dirname, 'src/Shared'),
             '@infrastructure': path.resolve(__dirname, 'src/Infrastructure'),
             '@kernel': path.resolve(__dirname, 'src/Kernel'),
-            '@application': path.resolve(__dirname, 'src/Application')
+            '@application': path.resolve(__dirname, 'src/Application'),
+            'scenegrid-console/debug': path.resolve(__dirname, 'src/debug.ts'),
+            'scenegrid-console': path.resolve(__dirname, 'src/index.ts')
         }
     },
     define: {

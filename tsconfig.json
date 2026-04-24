@@ -19,10 +19,12 @@
             "@infrastructure": ["./src/Infrastructure/index.ts"],
             "@kernel/*": ["./src/Kernel/*"],
             "@application/*": ["./src/Application/*"],
-            "*": ["./*"]
+            "*": ["./*"],
+            "scenegrid-console": ["./src/index.ts"],
+            "scenegrid-console/debug": ["./src/debug.ts"]
         },
         "lib": ["ESNext", "DOM", "WebWorker"],
-        "types": ["./src/audio-worklet-global-scope"]
+        "types": ["./src/audio-worklet-global-scope", "vite/client"]
     },
     "include": [
         "src/**/*.ts",

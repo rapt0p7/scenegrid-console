@@ -1,17 +1,15 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import path from 'node:path';
-// eslint-disable-next-line unicorn/import-style
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
 import { audioWorkletIsolator } from './scripts/vite-worklet-isolator';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __filename = import.meta.filename;
+const __dirname = import.meta.dirname;
 
+// oxlint-disable-next-line max-lines-per-function, no-unused-vars, typescript/prefer-readonly-parameter-types
 export default defineConfig(({ mode }) => ({
     root: './',
 
@@ -42,14 +40,23 @@ export default defineConfig(({ mode }) => ({
         sourcemap: true,
 
         lib: {
-            entry: path.resolve(__dirname, 'src/index.ts'),
+            entry: {
+                index: path.resolve(__dirname, 'src/index.ts'),
+                debug: path.resolve(__dirname, 'src/debug.ts')
+            },
             name: 'SceneGridAudioEngine',
-            formats: ['es', 'umd'],
-            fileName: format => `scenegrid-audio.${format}.js`
+            formats: ['es'],
+            fileName: (format, entryName) => `scenegrid-audio.${entryName}.${format}.js`
         },
 
         rolldownOptions: {
-            external: ['mitt', 'worker-timers', 'standardized-audio-context', 'tweakpane'],
+            external: [
+                'mitt',
+                'worker-timers',
+                'standardized-audio-context',
+                'tweakpane',
+                '@tweakpane/plugin-essentials'
+            ],
             output: {
                 globals: {
                     'mitt': 'mitt',
