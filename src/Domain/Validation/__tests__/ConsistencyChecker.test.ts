@@ -441,7 +441,8 @@ describe('ConsistencyChecker', () => {
                 soundMapConfig: config.soundMap,
                 soundManifest: {},
                 busSystemConfig: config.buses,
-                snapshotsConfig: {}
+                snapshotsConfig: {},
+                rtpcManifest: {}
             });
 
             (checker as any).run();
@@ -471,7 +472,8 @@ describe('ConsistencyChecker', () => {
                 soundMapConfig: config.soundMap,
                 soundManifest: {},
                 busSystemConfig: config.buses,
-                snapshotsConfig: {}
+                snapshotsConfig: {},
+                rtpcManifest: {}
             });
 
             (checker as any).run();
@@ -510,12 +512,245 @@ describe('ConsistencyChecker', () => {
                 soundMapConfig: config.soundMap,
                 soundManifest: {},
                 busSystemConfig: config.buses,
-                snapshotsConfig: {}
+                snapshotsConfig: {},
+                rtpcManifest: {}
             });
 
             (checker as any).run();
             expect((checker as any).errors.some((error: string) => error.includes('invalid type "magic-curve"'))).toBe(
                 true
+            );
+        });
+    });
+
+    describe('100% Coverage Edge Cases', () => {
+        it('should handle absent base properties in early returns (checkRoutingCycles, etc.)', () => {
+            const checker = new (ConsistencyChecker as any)({
+                soundMapConfig: null,
+                soundManifest: null,
+                busSystemConfig: null,
+                snapshotsConfig: null,
+                rtpcManifest: null
+            });
+            expect(() => checker['run']()).not.toThrow();
+            expect(checker['errors'].length).toBeGreaterThan(0);
+        });
+
+        it('should fail if missing required array (Container sources)', () => {
+            const config: any = {
+                buses: { master: { gain: 1 } },
+                soundMap: {
+                    bad_cont: { isContainer: true, mode: 'random' }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required array at "soundMap.bad_cont.sources"')
+            );
+        });
+
+        it('should catch invalid objects in soundMap, smartLoop, ducking, and spatial', () => {
+            const config: any = {
+                buses: { master: { gain: 1 } },
+                soundMap: {
+                    s1: 'not an object',
+                    s2: { smartLoop: 'not an object' },
+                    s3: { smartLoop: { regions: 'not an object' } },
+                    s4: { busId: 'master', ducking: 'not an object' },
+                    s5: { busId: 'master', spatial: 'not an object' }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "soundMap.s1"'));
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "soundMap.s2.smartLoop"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "soundMap.s3.smartLoop.regions"')
+            );
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "soundMap.s4.ducking"'));
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "soundMap.s5.spatial"'));
+        });
+
+        it('should catch invalid objects in snapshots', () => {
+            const config: any = {
+                buses: { master: { gain: 1 } },
+                snapshots: {
+                    snap1: 'not an object',
+                    snap2: { buses: 'not an object' },
+                    snap3: { buses: { master: 'not an object' } },
+                    snap4: {}
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "snapshots.snap1"'));
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "snapshots.snap2.buses"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "snapshots.snap3.buses.master"')
+            );
+        });
+
+        it('should trigger Ghost Ducking warnings', () => {
+            const config: any = {
+                buses: {
+                    master: { gain: 1, sidechain: { enabled: true } },
+                    sfx: { gain: 0 }
+                },
+                soundMap: {
+                    hit: { busId: 'sfx', ducking: { target: 'master' } }
+                },
+                snapshots: {
+                    snap1: { buses: {} },
+                    snap2: { buses: { sfx: { gain: 0 } } }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Ghost Ducking Risk: Sound "hit"'));
+            expect(console.warn).toHaveBeenCalledTimes(2);
+        });
+
+        it('should trigger Multiplicative Vetoes rules (Base Gain < 1 & Snapshot Overrides)', () => {
+            const config: any = {
+                buses: {
+                    master: {
+                        gain: 0.5,
+                        rtpc: {
+                            gain: {
+                                gameParam: 'tension',
+                                curve: [
+                                    { x: 0, y: 0 },
+                                    { x: 1, y: 1 }
+                                ]
+                            }
+                        }
+                    }
+                },
+                snapshots: {
+                    snap1: {},
+                    snap2: { buses: { master: { gain: 0 } } },
+                    snap3: { buses: { master: { gain: 0.8 } } }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    '[Orchestration Rule] Bus "master" is RTPC-driven for gain, but its base gain is 0.5.'
+                )
+            );
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining('[Multiplicative Veto] Snapshot "snap2" explicitly MUTES gain')
+            );
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining('[Multiplicative Veto] Snapshot "snap3" explicitly SCALES gain')
+            );
+        });
+
+        it('should catch deep RTPC type errors', () => {
+            const config: any = {
+                buses: {
+                    master: {
+                        rtpc: {
+                            gain: null,
+                            pitch: {
+                                gameParam: 'tension',
+                                smoothingMs: 'not a number',
+                                curve: null
+                            },
+                            pan: {
+                                gameParam: 'tension',
+                                curve: 123
+                            },
+                            filterFrequency: {
+                                gameParam: 'tension',
+                                sendTargetBus: 'master',
+                                curve: [
+                                    { x: 0, y: 0 },
+                                    { x: 1, y: 1 }
+                                ]
+                            }
+                        }
+                    },
+                    sfx: { rtpc: 'not an object' }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "buses.sfx.rtpc"'));
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "buses.master.rtpc.pitch.smoothingMs"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "buses.master.rtpc.pitch.curve"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "buses.master.rtpc.pan.curve"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining("specifies 'sendTargetBus', but target property is not 'sendLevel'")
+            );
+        });
+
+        it('should catch RTPCManifest type errors', () => {
+            const config: any = {
+                buses: { master: { gain: 1 } },
+                rtpcManifest: {
+                    param1: 'not an object',
+                    param2: {
+                        attackMs: 'str',
+                        releaseMs: 'str',
+                        defaultValue: 'str'
+                    }
+                } as any
+            };
+
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "rtpcManifest.param1"'));
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "rtpcManifest.param2.attackMs"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "rtpcManifest.param2.releaseMs"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "rtpcManifest.param2.defaultValue"')
+            );
+
+            const configInvalidManifest: any = {
+                buses: { master: { gain: 1 } },
+                rtpcManifest: 'not an object'
+            };
+            ConsistencyChecker.validate(configInvalidManifest);
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "rtpcManifest"'));
+        });
+
+        it('should catch unknown send targets in base bus config (checkBuses)', () => {
+            const config: any = {
+                buses: {
+                    sfx: { gain: 1, sends: { ghost_bus: 1 } }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Bus "sfx" sends to unknown bus "ghost_bus"')
+            );
+        });
+
+        it('should catch RTPC curves with less than 2 points', () => {
+            const config: any = {
+                buses: { master: { gain: 1 } },
+                soundMap: {
+                    s1: {
+                        busId: 'master',
+                        rtpc: {
+                            gain: { gameParam: 'hp', curve: [{ x: 0, y: 0 }] }
+                        }
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('has invalid curve (needs >= 2 points)')
             );
         });
     });
