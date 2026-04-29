@@ -530,3 +530,197 @@ describe('Bug repro: Base Config Routing & FX Retention', () => {
         applySendSpy.mockRestore();
     });
 });
+
+describe('AudioBusSystem (Internal Edge Cases & 100% Coverage)', () => {
+    let mockContext: any;
+    let mockAutomation: any;
+    let mockMasterOutput: any;
+    let mockBusConfig: any;
+    let mockPluginFactory: any;
+    let mockTicker: any;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockContext = createMockContext();
+        mockAutomation = { ramp: vi.fn(), set: vi.fn() };
+        mockMasterOutput = { input: {} };
+        mockTicker = { add: vi.fn(), remove: vi.fn() };
+        mockBusConfig = { sfx: { gain: 1, sidechain: { enabled: true } } };
+
+        mockPluginFactory = {
+            createLimiter: vi.fn().mockReturnValue({
+                inputNode: { connect: vi.fn() },
+                outputNode: { connect: vi.fn() },
+                load: vi.fn().mockResolvedValue(undefined),
+                dispose: vi.fn()
+            }),
+            createSidechain: vi.fn().mockReturnValue({
+                insertLookahead: vi.fn(),
+                start: vi.fn().mockResolvedValue(undefined),
+                activeEnvelope: 0.5,
+                addSource: vi.fn(),
+                removeSource: vi.fn(),
+                removeAllSources: vi.fn(),
+                dispose: vi.fn()
+            }),
+            getFiltersPlugin: vi.fn().mockReturnValue({ createNode: vi.fn() })
+        };
+    });
+
+    it('should return 0 in getDefaultGain if config or gain is missing', () => {
+        const systemNoConfig = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: null as any,
+            pluginFactory: mockPluginFactory
+        });
+        expect(systemNoConfig.getDefaultGain('sfx' as BusId)).toBe(0);
+
+        const systemNoGain = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: { sfx: {} } as any,
+            pluginFactory: mockPluginFactory
+        });
+        expect(systemNoGain.getDefaultGain('sfx' as BusId)).toBe(0);
+    });
+
+    it('should fallback if sidechain disappears between get calls in computeOfflineGainTransition', async () => {
+        const system = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: mockBusConfig,
+            pluginFactory: mockPluginFactory
+        });
+        await system.initialize(mockTicker);
+
+        let getCount = 0;
+        const mockMap = new Map();
+        mockMap.get = vi.fn(() => {
+            getCount++;
+            return getCount === 1 ? {} : undefined;
+        });
+        (system as any).sidechains = mockMap;
+
+        const result = system.computeOfflineGainTransition('sfx' as BusId, 0.8);
+        expect(result.to).toBe(0.8);
+    });
+
+    it('should catch and warn on sidechain addSource and removeAllSources errors', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const throwSidechain = {
+            addSource: vi.fn(() => {
+                throw new Error('AddError');
+            }),
+            removeAllSources: vi.fn(() => {
+                throw new Error('ClearError');
+            }),
+            insertLookahead: vi.fn(),
+            start: vi.fn(),
+            dispose: vi.fn(),
+            activeEnvelope: 0
+        };
+        mockPluginFactory.createSidechain.mockReturnValue(throwSidechain);
+
+        const system = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: mockBusConfig,
+            pluginFactory: mockPluginFactory
+        });
+        await system.initialize(mockTicker);
+
+        system.addSidechainSource({} as any, 'sfx' as BusId, 1);
+        expect(warnSpy).toHaveBeenCalledWith(
+            expect.stringContaining('Failed to add source to sidechain'),
+            expect.any(Error)
+        );
+
+        system.clearAllSidechainTriggers();
+        expect(warnSpy).toHaveBeenCalledWith(
+            expect.stringContaining('Failed to clear sidechain sources'),
+            expect.any(Error)
+        );
+
+        warnSpy.mockRestore();
+    });
+
+    it('should handle missing bus, existing instances, and start errors in createSidechain', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        const system = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: { sfx: { gain: 1 } },
+            pluginFactory: mockPluginFactory
+        });
+        await system.initialize(mockTicker);
+
+        await (system as any).createSidechain('ghost_bus');
+        expect(warnSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Cannot create sidechain: Bus 'ghost_bus' not found.")
+        );
+
+        const mockDucker = { start: vi.fn().mockResolvedValue(undefined), insertLookahead: vi.fn(), dispose: vi.fn() };
+        mockPluginFactory.createSidechain.mockReturnValue(mockDucker);
+
+        await (system as any).createSidechain('sfx');
+        await (system as any).createSidechain('sfx');
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('already exists. Disposing old instance'));
+        expect(mockDucker.dispose).toHaveBeenCalled();
+
+        const throwDucker = { start: vi.fn().mockRejectedValue(new Error('Start Crash')), dispose: vi.fn() };
+        mockPluginFactory.createSidechain.mockReturnValue(throwDucker);
+        await (system as any).createSidechain('sfx');
+        expect(errorSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Failed to start sidechain for bus 'sfx'"),
+            expect.any(Error)
+        );
+        expect(throwDucker.dispose).toHaveBeenCalled();
+
+        warnSpy.mockRestore();
+        errorSpy.mockRestore();
+    });
+
+    it('should catch errors silently inside fallback limiter dispose', async () => {
+        const mockFallbackNode = {
+            threshold: { value: 0 },
+            knee: { value: 0 },
+            ratio: { value: 0 },
+            attack: { value: 0 },
+            release: { value: 0 },
+            connect: vi.fn(),
+            disconnect: vi.fn(() => {
+                throw new Error('Disconnect failed');
+            })
+        };
+        mockContext.createDynamicsCompressor.mockReturnValue(mockFallbackNode);
+
+        mockPluginFactory.createLimiter.mockImplementation(() => {
+            throw new Error('Force Fallback');
+        });
+
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const system = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation,
+            masterOutput: mockMasterOutput,
+            busConfig: { master: { gain: 1 } },
+            pluginFactory: mockPluginFactory
+        });
+        await system.initialize(mockTicker);
+
+        const fallbackLimiter = (system as any).masterLimiter;
+
+        expect(() => fallbackLimiter.dispose()).not.toThrow();
+
+        warnSpy.mockRestore();
+    });
+});

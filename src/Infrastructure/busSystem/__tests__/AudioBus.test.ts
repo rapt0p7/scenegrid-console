@@ -1,10 +1,30 @@
 // noinspection D
+/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 
 import type { BusId, GameParamId } from '@shared/Types/Branded.js';
 import type { AudioCtx, AutomationEngine, GainNodeLike, IPluginFactory } from '@infrastructure';
+
+function createMockContext() {
+    const mockNode = {
+        connect: vi.fn(),
+        disconnect: vi.fn(),
+        gain: { value: 1, setTargetAtTime: vi.fn(), cancelScheduledValues: vi.fn() },
+        threshold: { value: 0 },
+        knee: { value: 0 },
+        ratio: { value: 0 },
+        attack: { value: 0 },
+        release: { value: 0 }
+    };
+
+    return {
+        createGain: vi.fn().mockReturnValue({ ...mockNode }),
+        createDynamicsCompressor: vi.fn().mockReturnValue({ ...mockNode, isNativeFallback: true }),
+        state: 'running'
+    } as any;
+}
 
 describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
     let mockContext: any;
@@ -564,5 +584,166 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
         expect(mockRtpcManager.getValue).toHaveBeenCalledWith('master_volume_slider');
         expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputNode.gain, 0.5, 120, 'linear');
         expect((bus as any).targetParams.gain.rtpc).toBe(0.5);
+    });
+});
+
+describe('AudioBus (Internal Branch Coverage & Edge Cases)', () => {
+    let mockContext: any;
+    let mockAutomation: any;
+    let mockPluginFactory: any;
+    let mockFiltersPlugin: any;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockContext = createMockContext();
+        mockAutomation = { ramp: vi.fn(), set: vi.fn() };
+
+        mockFiltersPlugin = {
+            createNode: vi.fn().mockReturnValue({ connect: vi.fn(), disconnect: vi.fn() }),
+            dispose: vi.fn()
+        };
+
+        mockPluginFactory = {
+            getFiltersPlugin: vi.fn().mockReturnValue(mockFiltersPlugin)
+        };
+    });
+
+    it('should expose analyzerTapNode for metering/debugging', () => {
+        const bus = new AudioBus({
+            id: 'sfx' as BusId,
+            config: { gain: 1 },
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockContext.createGain(),
+            pluginFactory: mockPluginFactory
+        });
+
+        expect(bus.analyzerTapNode).toBeDefined();
+    });
+
+    it('should safely ignore tickRTPC if configs are absent or empty', () => {
+        const bus = new AudioBus({
+            id: 'sfx' as BusId,
+            config: { gain: 1 },
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockContext.createGain(),
+            pluginFactory: mockPluginFactory
+        });
+
+        const mockAdapter = { getValue: vi.fn().mockReturnValue(1) } as any;
+
+        expect(() => {
+            bus.tickRTPC(mockAdapter);
+        }).not.toThrow();
+
+        bus.bindRTPC({ gain: undefined } as any);
+        expect(() => {
+            bus.tickRTPC(mockAdapter);
+        }).not.toThrow();
+    });
+
+    it('should handle reverb specific branching and catch createFilter errors', () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        // oxlint-disable-next-line no-unused-vars
+        const reverbBus = new AudioBus({
+            id: 'sfx_reverb' as BusId,
+            config: { gain: 1, filter: { type: 'reverb' as any, reverbTime: 2 } },
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockContext.createGain(),
+            pluginFactory: mockPluginFactory
+        });
+
+        expect(mockFiltersPlugin.createNode).toHaveBeenCalledWith(
+            mockContext,
+            mockAutomation,
+            expect.objectContaining({ type: 'reverb' })
+        );
+
+        mockFiltersPlugin.createNode.mockImplementationOnce(() => {
+            throw new Error('Filter Creation Crash');
+        });
+
+        // oxlint-disable-next-line no-unused-vars
+        const errorBus = new AudioBus({
+            id: 'sfx_error' as BusId,
+            config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockContext.createGain(),
+            pluginFactory: mockPluginFactory
+        });
+
+        const hasLogged = warnSpy.mock.calls.length > 0 || errorSpy.mock.calls.length > 0;
+        expect(hasLogged).toBe(true);
+
+        warnSpy.mockRestore();
+        errorSpy.mockRestore();
+    });
+
+    it('should safely ignore unsupported RTPC targets like pitch on a bus', () => {
+        const bus = new AudioBus({
+            id: 'sfx' as BusId,
+            config: { gain: 1 },
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockContext.createGain(),
+            pluginFactory: mockPluginFactory
+        });
+
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        bus.bindRTPC({
+            pitch: { gameParam: 'speed', curve: [] },
+            magic_unknown: { gameParam: 'speed', curve: [] }
+        } as any);
+
+        const mockAdapter = { getValue: vi.fn().mockReturnValue(1) } as any;
+
+        expect(() => {
+            bus.tickRTPC(mockAdapter);
+        }).not.toThrow();
+
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Unhandled RTPC target: magic_unknown'));
+
+        warnSpy.mockRestore();
+    });
+
+    it('should handle missing filterNode and catch topology connection errors', () => {
+        mockContext.currentTime = 0;
+
+        const bus = new AudioBus({
+            id: 'sfx' as BusId,
+            config: { gain: 1 },
+            context: mockContext,
+            automation: mockAutomation,
+            routerMasterGain: mockContext.createGain(),
+            pluginFactory: mockPluginFactory
+        });
+
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        mockFiltersPlugin.createNode.mockReturnValue({
+            connect: vi.fn(() => {
+                throw new Error('Connect Exception');
+            }),
+            disconnect: vi.fn()
+        });
+
+        bus.safeReplaceFilter({ type: 'highpass', frequency: 1000 }, 0);
+
+        bus.processFrame(10);
+
+        expect(warnSpy).toHaveBeenCalledWith('[AudioBus] Failed to connect filterNode', expect.any(Error));
+
+        bus.safeReplaceFilter(null, 0);
+        expect(() => {
+            bus.processFrame(20);
+        }).not.toThrow();
+
+        warnSpy.mockRestore();
     });
 });
