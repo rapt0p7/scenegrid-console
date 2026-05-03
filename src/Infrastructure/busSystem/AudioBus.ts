@@ -331,13 +331,22 @@ export default class AudioBus implements IAudioBus {
             if (isRemoving) {
                 if (isDefined(sendGainNode)) {
                     this.automation.ramp(sendGainNode.gain, 0, state.durationMs, 'linear');
+
                     setTimeout(() => {
+                        const currentState = this.targetParams.sends.get(targetBusId);
+                        if (isDefined(currentState) && currentState.logical !== null) {
+                            return;
+                        }
+
                         safeDisconnect(this.#postFilterGain, sendGainNode);
                         if (isDefined(state.targetNode)) safeDisconnect(sendGainNode, state.targetNode);
                         this.sendGains.delete(targetBusId);
+
+                        this.targetParams.sends.delete(targetBusId);
                     }, state.durationMs + 50);
+                } else {
+                    this.targetParams.sends.delete(targetBusId);
                 }
-                this.targetParams.sends.delete(targetBusId);
             } else {
                 const finalSendGain = clamp(logicalValue * state.rtpc, 0, 4);
 

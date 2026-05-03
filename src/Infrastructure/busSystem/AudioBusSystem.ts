@@ -1,3 +1,5 @@
+// noinspection D
+
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
@@ -10,7 +12,8 @@ import type { AudioCtx, AudioNodeLike, GainNodeLike } from '@infrastructure/type
 import type { ILimiterNode, IPluginFactory, ISidechain } from '@infrastructure/types/IAudioPlugins.js';
 import type { IMasterOutput } from '@infrastructure/types/IMasterOutput.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import { typedEntries } from '@shared/typedObjects.js';
+import { typedEntries, typedKeys } from '@shared/typedObjects.js';
+import { isDefined } from '@shared/guards.js';
 
 export default class AudioBusSystem implements IAudioBusSystem {
     private readonly context: AudioCtx;
@@ -205,6 +208,68 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 durationMs
             });
         }
+    }
+
+    /**
+     * @internal Hot Module Replacement API
+     * Soft-reloads the bus system configuration without stopping the audio context.
+     */
+    // oxlint-disable-next-line max-lines-per-function
+    public async updateConfig(newConfig: IBuses): Promise<void> {
+        const previousBusesConfig = this.busConfig;
+
+        (this as any).busConfig = newConfig;
+
+        for (const [busId, busConfig] of typedEntries(newConfig)) {
+            let bus = this.buses.get(busId as BusId);
+
+            if (!bus) {
+                bus = new AudioBus({
+                    id: busId as BusId,
+                    config: busConfig,
+                    context: this.context,
+                    automation: this.automation!,
+                    routerMasterGain: this.masterBus,
+                    pluginFactory: this.pluginFactory
+                });
+                this.buses.set(busId as BusId, bus);
+                this.hotPathBuses.push(bus);
+            }
+
+            bus.bindRTPC(busConfig.rtpc);
+            bus.safeReplaceFilter(busConfig.filter ?? null, 100);
+        }
+
+        const promises = [];
+        for (const [busId, busConfig] of typedEntries(newConfig)) {
+            const oldBusConfig = previousBusesConfig?.[busId];
+
+            if (busConfig.sends) {
+                for (const [targetBusId, sendGain] of typedEntries(busConfig.sends)) {
+                    this.applySend(busId as BusId, targetBusId, sendGain, 100);
+                }
+            }
+
+            if (oldBusConfig?.sends) {
+                for (const targetBusId of typedKeys(oldBusConfig.sends)) {
+                    const isStillExists = busConfig.sends && isDefined(busConfig.sends[targetBusId]);
+
+                    if (!isStillExists) {
+                        this.applySend(busId as BusId, targetBusId, null, 100);
+                    }
+                }
+            }
+
+            if (busConfig.sidechain?.enabled && !this.sidechains.has(busId as string)) {
+                promises.push(this.createSidechain(busId as BusId));
+            } else if (!busConfig.sidechain?.enabled && this.sidechains.has(busId as string)) {
+                const ducker = this.sidechains.get(busId as string);
+                ducker?.dispose();
+                this.sidechains.delete(busId as string);
+            }
+        }
+
+        await Promise.all(promises);
     }
 
     private async createSidechain(busId: BusId, options: IDuckingConfig = {}): Promise<void> {

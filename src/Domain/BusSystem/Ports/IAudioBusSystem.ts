@@ -1,7 +1,7 @@
 import type { IAudioBus } from '@domain/BusSystem/Ports/IAudioBus.js';
 import type { BusId } from '@shared/Types/Branded.js';
 import { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { IBus } from '@domain/BusSystem/Ports/IBuses';
+import type { IBus, IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 
 export interface IAudioBusSystem {
     clearAllSidechainTriggers(): void;
@@ -12,4 +12,5 @@ export interface IAudioBusSystem {
     getDefaultGain(busId: BusId): number;
     getBaseBusConfig(busId: BusId): IBus | undefined;
     tickRTPC(rtpcAdapter: IRTPCAdapter): void;
+    updateConfig(newConfig: IBuses): Promise<void>;
 }

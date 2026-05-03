@@ -394,6 +394,40 @@ export class AudioEngine {
         };
     }
 
+    /**
+     * @internal Hot Module Replacement API
+     * Soft-reloads the engine configuration without stopping the audio context.
+     */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public async _hotReloadConfig(newConfig: DeepReadonly<IAudioEngineConfig>): Promise<void> {
+        if (!this.#isInitialized) return;
+
+        console.log('[AudioEngine] 🔥 Initiating Hot Reload...');
+
+        const isValid = ConsistencyChecker.validate(newConfig);
+        if (!isValid) {
+            console.error('[AudioEngine] 🔥 Hot Reload aborted: Config validation failed.');
+            return;
+        }
+
+        try {
+            (this as any).config = deepFreeze({ ...newConfig });
+
+            if (newConfig.rtpcManifest) {
+                this.initRTPC(newConfig.rtpcManifest);
+            }
+
+            await this.#busSystem.updateConfig(newConfig.buses);
+
+            this.#snapshotManager.updateSnapshotsConfig(newConfig.snapshots);
+            (this.#router as any).soundMap = newConfig.soundMap;
+
+            console.log('[AudioEngine] 🔥 Hot Reload complete!');
+        } catch (error) {
+            console.error('[AudioEngine] 🔥 Hot Reload failed during apply phase.', error);
+        }
+    }
+
     private initRTPC(rtpcManifest: DeepReadonly<IRTPCManifest>): void {
         for (const [parameterName, config] of Object.entries(rtpcManifest)) {
             if (isDefined(config.defaultValue)) {

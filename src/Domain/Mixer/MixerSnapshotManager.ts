@@ -61,4 +61,25 @@ export default class MixerSnapshotManager {
     public get debugLayerStack(): MixerLayerStack {
         return this.layerStack;
     }
+
+    /**
+     * @internal Hot Module Replacement API
+     * Soft-reloads the snapshots configuration without stopping the audio context.
+     */
+    public updateSnapshotsConfig(newSnapshots: ISnapshots): void {
+        (this as any).snapshots = newSnapshots;
+
+        for (const layer of this.layerStack.getLayers()) {
+            const snapshotId = layer.snapshot.metadata?.snapshotId;
+
+            if (isDefined(snapshotId) && isDefined(this.snapshots[snapshotId])) {
+                const freshSnapshot = this.snapshots[snapshotId];
+
+                this.layerStack.updateLayer(layer.id, {
+                    ...freshSnapshot,
+                    metadata: layer.snapshot.metadata
+                });
+            }
+        }
+    }
 }

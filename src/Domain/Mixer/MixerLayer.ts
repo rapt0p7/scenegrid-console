@@ -64,6 +64,10 @@ export default class MixerLayerStack {
         return state as MixerState;
     }
 
+    public getLayers(): DeepReadonly<IMixerLayer>[] {
+        return Array.from(this.layers.values());
+    }
+
     hasLayer(id: LayerId): boolean {
         return this.layers.has(id);
     }

@@ -724,3 +724,106 @@ describe('AudioBusSystem (Internal Edge Cases & 100% Coverage)', () => {
         warnSpy.mockRestore();
     });
 });
+
+describe('AudioBusSystem - HMR (updateConfig)', () => {
+    it('should dynamically add buses, update properties, and diff sends/sidechains', async () => {
+        const mockContext = createMockContext();
+        const mockAutomation = { ramp: vi.fn(), set: vi.fn() };
+        const mockTicker = { add: vi.fn(), remove: vi.fn() };
+        const mockPluginFactory = {
+            createLimiter: vi.fn().mockReturnValue({
+                inputNode: { connect: vi.fn(), disconnect: vi.fn() },
+                outputNode: { connect: vi.fn(), disconnect: vi.fn() },
+                load: vi.fn().mockResolvedValue(undefined),
+                dispose: vi.fn()
+            }),
+            createSidechain: vi.fn().mockReturnValue({ start: vi.fn(), insertLookahead: vi.fn(), dispose: vi.fn() }),
+            getFiltersPlugin: vi.fn().mockReturnValue({ createNode: vi.fn() })
+        };
+
+        const initialConfig = {
+            master: { gain: 1 },
+            sfx: { gain: 1, sends: { master: 1 }, sidechain: { enabled: true } }
+        };
+
+        const system = new AudioBusSystem({
+            context: mockContext,
+            automation: mockAutomation as any,
+            masterOutput: { input: {} } as any,
+            busConfig: initialConfig as any,
+            pluginFactory: mockPluginFactory as any
+        });
+        await system.initialize(mockTicker as any);
+
+        const applySendSpy = vi.spyOn(system, 'applySend').mockImplementation(() => {});
+        const createSidechainSpy = vi.spyOn(system as any, 'createSidechain').mockResolvedValue(undefined);
+        const sfxBus = system.getBus('sfx' as any);
+        const replaceFilterSpy = vi.spyOn(sfxBus!, 'safeReplaceFilter');
+
+        const newConfig = {
+            master: { gain: 1 },
+            sfx: { gain: 0.5, filter: { type: 'lowpass', frequency: 500 } },
+            music: { gain: 1, rtpc: { gain: { gameParam: 'vol', curve: [] } }, sidechain: { enabled: true } }
+        };
+
+        await system.updateConfig(newConfig as any);
+
+        expect(system.getBus('music' as any)).toBeDefined();
+
+        expect(replaceFilterSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'lowpass' }), 100);
+
+        expect(applySendSpy).toHaveBeenCalledWith('sfx', 'master', null, 100);
+
+        expect(createSidechainSpy).toHaveBeenCalledWith('music');
+
+        expect((system as any).sidechains.has('sfx')).toBe(false);
+    });
+
+    it('should correctly diff and apply sends (add, update, remove) during HMR', async () => {
+        const mockContext = createMockContext();
+        const mockPluginFactory = {
+            createLimiter: vi.fn().mockReturnValue({
+                inputNode: { connect: vi.fn(), disconnect: vi.fn() },
+                outputNode: { connect: vi.fn(), disconnect: vi.fn() },
+                load: vi.fn().mockResolvedValue(undefined),
+                dispose: vi.fn()
+            }),
+            createSidechain: vi.fn(),
+            getFiltersPlugin: vi.fn().mockReturnValue({ createNode: vi.fn() })
+        };
+
+        const initialConfig = {
+            sfx: { gain: 1, sends: { verb: 0.5, delay: 0.8 } }, // У sfx есть два посыла
+            verb: { gain: 1 },
+            delay: { gain: 1 },
+            master: { gain: 1 }
+        };
+
+        const system = new AudioBusSystem({
+            context: mockContext,
+            automation: { ramp: vi.fn(), set: vi.fn() } as any,
+            masterOutput: { input: {} } as any,
+            busConfig: initialConfig as any,
+            pluginFactory: mockPluginFactory as any
+        });
+
+        await system.initialize({ add: vi.fn(), remove: vi.fn() } as any);
+
+        const applySendSpy = vi.spyOn(system, 'applySend').mockImplementation(() => {});
+
+        const newConfig = {
+            sfx: { gain: 1, sends: { verb: 1.0, master: 0.2 } },
+            verb: { gain: 1 },
+            delay: { gain: 1 },
+            master: { gain: 1 }
+        };
+
+        await system.updateConfig(newConfig as any);
+
+        expect(applySendSpy).toHaveBeenCalledWith('sfx', 'verb', 1.0, 100);
+
+        expect(applySendSpy).toHaveBeenCalledWith('sfx', 'master', 0.2, 100);
+
+        expect(applySendSpy).toHaveBeenCalledWith('sfx', 'delay', null, 100);
+    });
+});

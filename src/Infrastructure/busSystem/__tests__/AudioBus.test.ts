@@ -747,3 +747,67 @@ describe('AudioBus (Internal Branch Coverage & Edge Cases)', () => {
         warnSpy.mockRestore();
     });
 });
+
+describe('AudioBus - HMR & Race Conditions (recalculateAndApply)', () => {
+    beforeEach(() => {
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('should cancel delayed disconnect if send is re-added before timeout (HMR Race Condition)', () => {
+        const bus = new AudioBus({
+            id: 'sfx' as any,
+            config: { gain: 1 },
+            context: createMockContext(),
+            automation: { set: vi.fn(), ramp: vi.fn() } as any,
+            routerMasterGain: null,
+            pluginFactory: {} as any
+        });
+
+        const mockTargetNode = { disconnect: vi.fn(), connect: vi.fn() };
+
+        bus.updateSend({ targetBusId: 'verb' as any, targetNode: mockTargetNode as any, targetGain: 1, durationMs: 0 });
+        bus.processFrame(0);
+
+        const sendNode = (bus as any).sendGains.get('verb');
+        const disconnectSpy = vi.spyOn(sendNode, 'disconnect');
+
+        bus.updateSend({
+            targetBusId: 'verb' as any,
+            targetNode: mockTargetNode as any,
+            targetGain: null,
+            durationMs: 100
+        });
+        bus.processFrame(1);
+
+        vi.advanceTimersByTime(50);
+        bus.updateSend({ targetBusId: 'verb' as any, targetNode: mockTargetNode as any, targetGain: 1, durationMs: 0 });
+
+        vi.advanceTimersByTime(200);
+
+        expect(disconnectSpy).not.toHaveBeenCalled();
+        expect((bus as any).targetParams.sends.get('verb').logical).toBe(1);
+    });
+
+    it('should silently clean up send state if physical node never existed', () => {
+        const bus = new AudioBus({
+            id: 'sfx' as any,
+            config: { gain: 1 },
+            context: createMockContext(),
+            automation: { set: vi.fn(), ramp: vi.fn() } as any,
+            routerMasterGain: null,
+            pluginFactory: {} as any
+        });
+
+        (bus as any).targetParams.sends.set('ghost', { logical: null, durationMs: 0 });
+
+        (bus as any).isDirty = true;
+
+        bus.processFrame(0);
+
+        expect((bus as any).targetParams.sends.has('ghost')).toBe(false);
+    });
+});

@@ -1,9 +1,8 @@
+// noinspection D
+
 import { AudioEngine } from 'scenegrid-console';
 
-import Buses from './audio-config/Buses.js';
-import Snapshots from './audio-config/Snapshots.js';
-import SoundMap from './audio-config/SoundMap.js';
-import RTPCManifest from './audio-config/RTPCManifest.js';
+import { Buses, Snapshots, SoundMap, RTPCManifest } from './audio-config/index.js';
 import soundManifest from './soundManifest.js';
 
 // oxlint-disable-next-line max-lines-per-function
@@ -91,6 +90,25 @@ async function bootstrap() {
             audio.unlock().catch(console.error);
         }
     });
+
+    if (import.meta.hot) {
+        // oxlint-disable-next-line typescript/strict-void-return, typescript/no-misused-promises
+        import.meta.hot.accept('./audio-config/index.js', async newModule => {
+            if (newModule) {
+                console.log('[HMR] Caught audio config updates!', newModule);
+
+                const updatedConfig = {
+                    ...audio.config,
+                    buses: newModule.Buses,
+                    snapshots: newModule.Snapshots,
+                    soundMap: newModule.SoundMap,
+                    rtpcManifest: newModule.RTPCManifest
+                };
+
+                await audio._hotReloadConfig(updatedConfig);
+            }
+        });
+    }
 }
 
 try {

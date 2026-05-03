@@ -768,3 +768,68 @@ describe('AudioEngine', () => {
         });
     });
 });
+
+describe('AudioEngine - HMR (_hotReloadConfig)', () => {
+    // oxlint-disable-next-line no-unused-vars
+    let logSpy: any;
+    // oxlint-disable-next-line no-unused-vars
+    let warnSpy: any;
+    let errorSpy: any;
+
+    beforeEach(() => {
+        logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('should abort if engine is not initialized or config is invalid', async () => {
+        const engine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {} } as any);
+
+        await engine._hotReloadConfig({} as any);
+        expect(errorSpy).not.toHaveBeenCalled();
+
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        vi.spyOn(engine as any, 'loadSounds').mockResolvedValue(undefined);
+        await engine.init();
+
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValueOnce(false);
+        await engine._hotReloadConfig({} as any);
+
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Hot Reload aborted'));
+    });
+
+    it('should correctly orchestrate the update across all subsystems', async () => {
+        const engine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {} } as any);
+
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        vi.spyOn(engine as any, 'loadSounds').mockResolvedValue(undefined);
+        await engine.init();
+
+        const busSystem = engine._debug.busSystem;
+        const snapshotManager = engine._debug.snapshotManager;
+        const router = engine._debug.router;
+
+        const updateConfigSpy = vi.spyOn(busSystem, 'updateConfig').mockResolvedValue(undefined);
+        const updateSnapshotsSpy = vi.spyOn(snapshotManager, 'updateSnapshotsConfig').mockImplementation(() => {});
+        const initRTPCSpy = vi.spyOn(engine as any, 'initRTPC').mockImplementation(() => {});
+
+        const newConfig = {
+            buses: { sfx: {} },
+            snapshots: { combat: {} },
+            soundMap: { hit: {} },
+            rtpcManifest: { hp: { defaultValue: 100 } }
+        };
+
+        await engine._hotReloadConfig(newConfig as any);
+
+        expect(initRTPCSpy).toHaveBeenCalledWith(newConfig.rtpcManifest);
+        expect(updateConfigSpy).toHaveBeenCalledWith(newConfig.buses);
+        expect(updateSnapshotsSpy).toHaveBeenCalledWith(newConfig.snapshots);
+        expect((router as any).soundMap).toBe(newConfig.soundMap);
+        expect(engine.config).toEqual(newConfig);
+    });
+});

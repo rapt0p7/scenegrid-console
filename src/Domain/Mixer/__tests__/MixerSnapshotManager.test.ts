@@ -112,3 +112,49 @@ describe('MixerSnapshotManager', () => {
         });
     });
 });
+
+describe('MixerSnapshotManager - HMR (updateSnapshotsConfig)', () => {
+    it('should inject fresh snapshot data into active layers matching by snapshotId', () => {
+        const mockLayerStack = {
+            getLayers: vi.fn(),
+            updateLayer: vi.fn(),
+            addLayer: vi.fn(),
+            hasLayer: vi.fn(),
+            removeLayer: vi.fn()
+        };
+        const mockCoordinator = { recompute: vi.fn() };
+
+        const initialSnapshots = { combat: { buses: { sfx: { gain: 2 } } } };
+        const manager = new MixerSnapshotManager(
+            mockLayerStack as any,
+            initialSnapshots as any,
+            mockCoordinator as any
+        );
+
+        mockLayerStack.getLayers.mockReturnValue([
+            { id: 'layer_1', snapshot: { metadata: { snapshotId: 'combat' } } },
+            {
+                id: 'layer_2',
+                snapshot: {
+                    metadata: {
+                        /* no snapshotId */
+                    }
+                }
+            }
+        ]);
+
+        const newSnapshots = {
+            combat: { buses: { sfx: { gain: 5, filter: { type: 'lowpass' } } } }
+        };
+
+        manager.updateSnapshotsConfig(newSnapshots as any);
+
+        expect(mockLayerStack.updateLayer).toHaveBeenCalledTimes(1);
+        expect(mockLayerStack.updateLayer).toHaveBeenCalledWith('layer_1', {
+            buses: { sfx: { gain: 5, filter: { type: 'lowpass' } } },
+            metadata: { snapshotId: 'combat' }
+        });
+
+        expect((manager as any).snapshots).toBe(newSnapshots);
+    });
+});
