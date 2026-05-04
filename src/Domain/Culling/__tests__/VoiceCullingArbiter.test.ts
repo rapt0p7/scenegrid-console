@@ -11,7 +11,8 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
     let mockContext: ICullingContext;
 
     let activePlaybacks: PlaybackId[];
-    let playbackStates: Record<number, 'playing' | 'virtual' | 'stopped'>;
+    let playbackStates: Record<number, 'playing' | 'virtual' | 'stopped' | 'paused'>;
+    let logicalStates: Record<number, 'playing' | 'paused'>;
     let soundIds: Record<number, SoundId>;
     let soundRouting: Record<string, BusId>;
     let busVolumes: Record<string, number>;
@@ -21,6 +22,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
 
         activePlaybacks = [];
         playbackStates = {};
+        logicalStates = {};
         soundIds = {};
         soundRouting = {};
         busVolumes = {};
@@ -31,13 +33,21 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
             },
             getSoundId: id => soundIds[id as number],
             getPlaybackState: id => playbackStates[id as number] || 'stopped',
-            resolveBusId: id => soundRouting[id],
-            getBusVolume: id => busVolumes[id] ?? 1
+            getLogicalState: id => logicalStates[id as number],
+            resolveBusId: id => soundRouting[id as string],
+            getBusVolume: id => busVolumes[id as string] ?? 1
         };
     });
 
     // eslint-disable-next-line max-params
-    function addMockPlayback(id: number, soundId: string, busId: string, state: 'playing' | 'virtual', volume: number) {
+    function addMockPlayback(
+        id: number,
+        soundId: string,
+        busId: string,
+        physicalState: 'playing' | 'virtual' | 'paused',
+        logicalState: 'playing' | 'paused',
+        volume: number
+    ) {
         const pId = id as PlaybackId;
         const sId = soundId as SoundId;
         const bId = busId as BusId;
@@ -45,7 +55,8 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
         activePlaybacks.push(pId);
         soundIds[id] = sId;
         soundRouting[soundId] = bId;
-        playbackStates[id] = state;
+        playbackStates[id] = physicalState;
+        logicalStates[id] = logicalState;
         busVolumes[busId] = volume;
 
         return pId;
@@ -58,7 +69,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
     });
 
     it('should recommend to VIRTUALIZE a playing sound when its bus volume drops below threshold', () => {
-        const pId = addMockPlayback(1, 'violins', 'music', 'playing', 0.005);
+        const pId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0.005);
 
         const decisions = arbiter.evaluate(mockContext);
 
@@ -67,7 +78,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
     });
 
     it('should recommend to DEVIRTUALIZE a sleeping sound when its bus volume rises above threshold', () => {
-        const pId = addMockPlayback(1, 'violins', 'music', 'virtual', 1);
+        const pId = addMockPlayback(1, 'violins', 'music', 'virtual', 'playing', 1);
 
         const decisions = arbiter.evaluate(mockContext);
 
@@ -75,8 +86,26 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
         expect(decisions.toVirtualize).toHaveLength(0);
     });
 
+    it('should VIRTUALIZE a paused sound if its bus volume drops below threshold (to free up pool slots)', () => {
+        const pId = addMockPlayback(1, 'ambient', 'bg', 'paused', 'paused', 0);
+
+        const decisions = arbiter.evaluate(mockContext);
+
+        expect(decisions.toVirtualize).toContain(pId);
+        expect(decisions.toDevirtualize).toHaveLength(0);
+    });
+
+    it('should NOT DEVIRTUALIZE a sleeping sound if its bus volume rises BUT its logical state is paused', () => {
+        addMockPlayback(1, 'ambient', 'bg', 'virtual', 'paused', 1);
+
+        const decisions = arbiter.evaluate(mockContext);
+
+        expect(decisions.toDevirtualize).toHaveLength(0);
+        expect(decisions.toVirtualize).toHaveLength(0);
+    });
+
     it('should DO NOTHING if state and volume already match (e.g., loud and playing)', () => {
-        addMockPlayback(1, 'explosion', 'sfx', 'playing', 0.8);
+        addMockPlayback(1, 'explosion', 'sfx', 'playing', 'playing', 0.8);
 
         const decisions = arbiter.evaluate(mockContext);
 
@@ -85,7 +114,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
     });
 
     it('should DO NOTHING if state and volume already match (e.g., muted and virtual)', () => {
-        addMockPlayback(1, 'ambient', 'bg', 'virtual', 0);
+        addMockPlayback(1, 'ambient', 'bg', 'virtual', 'playing', 0);
 
         const decisions = arbiter.evaluate(mockContext);
 
@@ -94,8 +123,8 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
     });
 
     it('should NOT affect sounds on other buses that are still loud', () => {
-        const quietId = addMockPlayback(1, 'violins', 'music', 'playing', 0);
-        addMockPlayback(2, 'explosion', 'sfx', 'playing', 1);
+        const quietId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0);
+        addMockPlayback(2, 'explosion', 'sfx', 'playing', 'playing', 1);
 
         const decisions = arbiter.evaluate(mockContext);
 
@@ -113,7 +142,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
     });
 
     it('should safely ignore playbacks with a valid SoundId but an unknown BusId', () => {
-        addMockPlayback(3, 'orphan_sound', 'unknown_bus', 'playing', 1);
+        addMockPlayback(3, 'orphan_sound', 'unknown_bus', 'playing', 'playing', 1);
 
         delete soundRouting['orphan_sound'];
 

@@ -15,11 +15,13 @@ export class VoiceCullingArbiter implements ICullingArbiter {
 
             const currentVolume = context.getBusVolume(busId);
             const isMuted = currentVolume <= this.cullingThreshold;
-            const state = context.getPlaybackState(playbackId);
 
-            if (isMuted && state === 'playing') {
+            const physicalState = context.getPlaybackState(playbackId);
+            const logicalState = context.getLogicalState(playbackId);
+
+            if (isMuted && physicalState !== 'virtual' && physicalState !== 'stopped') {
                 decisions.toVirtualize.push(playbackId);
-            } else if (!isMuted && state === 'virtual') {
+            } else if (!isMuted && physicalState === 'virtual' && logicalState === 'playing') {
                 decisions.toDevirtualize.push(playbackId);
             }
         }

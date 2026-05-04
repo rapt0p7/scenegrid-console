@@ -21,8 +21,12 @@ export class CullingContextProvider implements ICullingContext {
         return this.soundController.getSoundId(id);
     }
 
-    public getPlaybackState(id: PlaybackId): 'playing' | 'virtual' | 'stopped' {
+    public getPlaybackState(id: PlaybackId): 'playing' | 'virtual' | 'stopped' | 'paused' {
         return this.soundController.getPlaybackState(id);
+    }
+
+    public getLogicalState(id: PlaybackId): 'playing' | 'paused' | undefined {
+        return this.soundController.getLogicalState(id);
     }
 
     public resolveBusId(id: SoundId): BusId | undefined {

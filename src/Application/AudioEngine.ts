@@ -379,6 +379,14 @@ export class AudioEngine {
         this.#router.stop(playbackIdOrSoundId as PlaybackId | PlaybackId[] | SoundId);
     }
 
+    public pause(playbackIdOrSoundId: PlaybackId | PlaybackId[] | SoundId): void {
+        this.#router.pause(playbackIdOrSoundId);
+    }
+
+    public resume(playbackIdOrSoundId: PlaybackId | PlaybackId[] | SoundId): void {
+        this.#router.resume(playbackIdOrSoundId);
+    }
+
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public get _debug() {
         return {

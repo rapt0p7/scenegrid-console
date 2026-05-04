@@ -104,6 +104,7 @@ export class SoundController implements ISoundController {
         const logicalVoice: ILogicalVoice = {
             playbackId,
             soundId,
+            logicalState: 'playing',
             position: { x: 0, y: 0, z: 0 },
             startedAtContextTime: this.context.currentTime,
             startOffset: offset || 0,
@@ -204,6 +205,53 @@ export class SoundController implements ISoundController {
         }
     }
 
+    pauseById(playbackId: PlaybackId): void {
+        const voice = this.activeVoices.get(playbackId);
+        if (voice) {
+            voice.logicalState = 'paused';
+
+            if (voice.physicalInstance) {
+                this.#removeFromVirtualQueue(playbackId);
+                if ('pause' in voice.physicalInstance) {
+                    (voice.physicalInstance as any).pause();
+                }
+            }
+        }
+    }
+
+    pauseAll(soundId?: SoundId): void {
+        if (soundId) {
+            for (const [id, voice] of this.activeVoices.entries()) {
+                if (voice.soundId === soundId) this.pauseById(id);
+            }
+        } else {
+            for (const id of this.activeVoices.keys()) this.pauseById(id);
+        }
+    }
+
+    resumeById(playbackId: PlaybackId): void {
+        const voice = this.activeVoices.get(playbackId);
+        if (voice) {
+            voice.logicalState = 'playing';
+
+            if (voice.physicalInstance) {
+                if ('resume' in voice.physicalInstance) {
+                    (voice.physicalInstance as any).resume();
+                }
+            }
+        }
+    }
+
+    resumeAll(soundId?: SoundId): void {
+        if (soundId) {
+            for (const [id, voice] of this.activeVoices.entries()) {
+                if (voice.soundId === soundId) this.resumeById(id);
+            }
+        } else {
+            for (const id of this.activeVoices.keys()) this.resumeById(id);
+        }
+    }
+
     getCurrentTime(): number {
         return this.context.currentTime;
     }
@@ -233,8 +281,13 @@ export class SoundController implements ISoundController {
         return voice.physicalInstance.state as 'playing' | 'virtual' | 'stopped';
     }
 
+    getLogicalState(id: PlaybackId): 'playing' | 'paused' | undefined {
+        return this.activeVoices.get(id)?.logicalState;
+    }
+
     virtualize(id: PlaybackId): void {
         const voice = this.activeVoices.get(id);
+        if (voice?.logicalState === 'paused') return;
         if (voice?.physicalInstance && 'virtualize' in voice.physicalInstance) {
             const instance = voice.physicalInstance;
 
@@ -259,6 +312,7 @@ export class SoundController implements ISoundController {
 
     devirtualize(id: PlaybackId): void {
         const voice = this.activeVoices.get(id);
+        if (voice?.logicalState === 'paused') return;
         if (voice?.physicalInstance && 'devirtualize' in voice.physicalInstance) {
             this.#removeFromVirtualQueue(id);
 

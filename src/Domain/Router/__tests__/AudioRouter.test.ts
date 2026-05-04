@@ -45,7 +45,11 @@ describe('AudioRouter (Command Dispatcher)', () => {
             play: vi.fn().mockReturnValue(1 as PlaybackId),
             stopById: vi.fn(),
             stopAll: vi.fn(),
-            routeToBus: vi.fn()
+            routeToBus: vi.fn(),
+            pauseById: vi.fn(),
+            pauseAll: vi.fn(),
+            resumeById: vi.fn(),
+            resumeAll: vi.fn()
         } as unknown as Mocked<ISoundController>;
 
         mockDuckingManager = { triggerDucking: vi.fn() };
@@ -143,6 +147,44 @@ describe('AudioRouter (Command Dispatcher)', () => {
             expect(mockController.stopById).toHaveBeenCalledTimes(3);
             expect(mockController.stopById).toHaveBeenNthCalledWith(1, 10);
             expect(mockController.stopById).toHaveBeenNthCalledWith(3, 12);
+        });
+    });
+
+    describe('Playback Control (pause & resume)', () => {
+        it('should delegate pause to SoundController by string (soundId)', () => {
+            router.pause('bg_music' as SoundId);
+            expect(mockController.pauseAll).toHaveBeenCalledWith('bg_music');
+        });
+
+        it('should delegate pause to SoundController by number (playbackId)', () => {
+            router.pause(42 as PlaybackId);
+            expect(mockController.pauseById).toHaveBeenCalledWith(42);
+            expect(mockController.pauseAll).not.toHaveBeenCalled();
+        });
+
+        it('should delegate pause to SoundController by array of numbers (playbackIds)', () => {
+            router.pause([10, 11, 12] as PlaybackId[]);
+            expect(mockController.pauseById).toHaveBeenCalledTimes(3);
+            expect(mockController.pauseById).toHaveBeenNthCalledWith(1, 10);
+            expect(mockController.pauseById).toHaveBeenNthCalledWith(3, 12);
+        });
+
+        it('should delegate resume to SoundController by string (soundId)', () => {
+            router.resume('bg_music' as SoundId);
+            expect(mockController.resumeAll).toHaveBeenCalledWith('bg_music');
+        });
+
+        it('should delegate resume to SoundController by number (playbackId)', () => {
+            router.resume(42 as PlaybackId);
+            expect(mockController.resumeById).toHaveBeenCalledWith(42);
+            expect(mockController.resumeAll).not.toHaveBeenCalled();
+        });
+
+        it('should delegate resume to SoundController by array of numbers (playbackIds)', () => {
+            router.resume([10, 11, 12] as PlaybackId[]);
+            expect(mockController.resumeById).toHaveBeenCalledTimes(3);
+            expect(mockController.resumeById).toHaveBeenNthCalledWith(1, 10);
+            expect(mockController.resumeById).toHaveBeenNthCalledWith(3, 12);
         });
     });
 

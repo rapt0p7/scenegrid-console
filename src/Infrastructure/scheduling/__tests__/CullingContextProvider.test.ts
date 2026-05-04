@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
+// noinspection D
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { CullingContextProvider } from '../CullingContextProvider.js';
@@ -21,7 +23,13 @@ describe('CullingContextProvider (Infrastructure Adapter)', () => {
         mockController = {
             getActivePlaybacks: vi.fn().mockReturnValue([101, 102]),
             getSoundId: vi.fn().mockImplementation(id => (id === 101 ? 'test_sound' : undefined)),
-            getPlaybackState: vi.fn().mockImplementation(id => (id === 101 ? 'playing' : 'stopped'))
+            getPlaybackState: vi.fn().mockImplementation(id => (id === 101 ? 'playing' : 'stopped')),
+            getLogicalState: vi.fn().mockImplementation(id => {
+                if (id === 101) return 'playing';
+                if (id === 102) return 'paused';
+                // oxlint-disable-next-line unicorn/no-useless-undefined
+                return undefined;
+            })
         };
 
         mockBusSystem = {
@@ -54,6 +62,14 @@ describe('CullingContextProvider (Infrastructure Adapter)', () => {
     it('should delegate getPlaybackState to SoundController', () => {
         expect(provider.getPlaybackState(101 as PlaybackId)).toBe('playing');
         expect(provider.getPlaybackState(999 as PlaybackId)).toBe('stopped');
+    });
+
+    it('should delegate getLogicalState to SoundController', () => {
+        expect(provider.getLogicalState(101 as PlaybackId)).toBe('playing');
+        expect(provider.getLogicalState(102 as PlaybackId)).toBe('paused');
+        expect(provider.getLogicalState(999 as PlaybackId)).toBeUndefined();
+
+        expect(mockController.getLogicalState).toHaveBeenCalledWith(101);
     });
 
     it('should correctly resolve BusId from SoundMap', () => {

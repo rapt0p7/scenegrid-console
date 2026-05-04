@@ -17,6 +17,10 @@ export interface ISoundController {
     play(soundId: SoundId, options: IControllerPlayOptions): PlaybackId | null;
     stopById(id: PlaybackId, timeToStop?: number): void;
     stopAll(soundId?: SoundId): void;
+    pauseById(id: PlaybackId): void;
+    pauseAll(soundId?: SoundId): void;
+    resumeById(id: PlaybackId): void;
+    resumeAll(soundId?: SoundId): void;
     setVolume(id: PlaybackId, targetVolume: number): void;
     fadeVolume(
         id: PlaybackId,
@@ -34,6 +38,7 @@ export interface ISoundController {
     getActivePlaybacks(): PlaybackId[];
     getSoundId(id: PlaybackId): SoundId | undefined;
     getPlaybackState(id: PlaybackId): PlaybackState;
+    getLogicalState(id: PlaybackId): 'playing' | 'paused' | undefined;
     routeToBus(playbackId: PlaybackId, busId: BusId): void;
     addSidechainTrigger(playbackId: PlaybackId, busId: BusId, intensity: number): void;
     removeSidechainTrigger(playbackId: PlaybackId, busId: BusId): void;

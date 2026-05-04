@@ -186,6 +186,8 @@ describe('AudioEngine', () => {
 
     let playSpy: any;
     let stopSpy: any;
+    let pauseSpy: any;
+    let resumeSoundSpy: any;
     // oxlint-disable-next-line no-unused-vars
     let getLogicalVoiceSpy: any;
 
@@ -204,6 +206,8 @@ describe('AudioEngine', () => {
 
         playSpy = vi.spyOn(AudioRouter.prototype, 'play').mockReturnValue(42 as PlaybackId);
         stopSpy = vi.spyOn(AudioRouter.prototype, 'stop').mockImplementation(() => {});
+        pauseSpy = vi.spyOn(AudioRouter.prototype, 'pause').mockReturnValue();
+        resumeSoundSpy = vi.spyOn(AudioRouter.prototype, 'resume').mockImplementation(() => {});
 
         mockVoice = {
             position: { x: 0, y: 0, z: 0 },
@@ -629,6 +633,16 @@ describe('AudioEngine', () => {
         it('should delegate stop to AudioRouter for single or multiple IDs', () => {
             engine.stop([1 as PlaybackId, 2 as PlaybackId]);
             expect(stopSpy).toHaveBeenCalledWith([1 as PlaybackId, 2 as PlaybackId]);
+        });
+    });
+
+    describe('Playback Control (Pause/Resume)', () => {
+        it('should delegate pause and resume calls to the router', () => {
+            engine.pause('play_123' as SoundId);
+            expect(pauseSpy).toHaveBeenCalledWith('play_123');
+
+            engine.resume('play_456' as SoundId);
+            expect(resumeSoundSpy).toHaveBeenCalledWith('play_456');
         });
     });
 

@@ -150,6 +150,130 @@ describe('SoundController', () => {
         });
     });
 
+    describe('Playback Control (pause/resume)', () => {
+        let nowSpy: any;
+        let time = 0;
+        let acquireSpy: any;
+
+        beforeEach(() => {
+            nowSpy = vi.spyOn(performance, 'now').mockImplementation(() => {
+                time += 100;
+                return time;
+            });
+
+            controller.register('test_sound' as any, {} as any, { url: 'dummy.wav', cooldownMs: 0 });
+            controller.register('other_sound' as any, {} as any, { url: 'dummy2.wav', cooldownMs: 0 });
+
+            acquireSpy = vi.spyOn(controller.debugPool, 'acquire').mockImplementation(() => {
+                const instance = {
+                    state: 'playing',
+                    pause: vi.fn(function (this: any) {
+                        this.state = 'paused';
+                    }),
+                    resume: vi.fn(function (this: any) {
+                        this.state = 'playing';
+                    }),
+                    virtualize: vi.fn(function (this: any) {
+                        this.state = 'virtual';
+                    }),
+                    devirtualize: vi.fn(function (this: any) {
+                        this.state = 'playing';
+                    }),
+                    stop: vi.fn(function (this: any) {
+                        this.state = 'stopped';
+                    }),
+                    setLoop: vi.fn(),
+                    setRate: vi.fn(),
+                    on: vi.fn(),
+                    off: vi.fn()
+                };
+                return instance as any;
+            });
+        });
+
+        afterEach(() => {
+            nowSpy.mockRestore();
+            acquireSpy.mockRestore();
+            time = 0;
+        });
+
+        it('should pause a specific instance by ID and handle virtual timer correctly', () => {
+            const id = controller.play('test_sound' as SoundId, {})!;
+            expect(id).not.toBeNull();
+
+            const voice = controller.getLogicalVoice(id)!;
+            const pauseSpy = vi.spyOn(voice.physicalInstance!, 'pause');
+
+            controller.pauseById(id);
+            expect(pauseSpy).toHaveBeenCalled();
+
+            expect((controller as any).virtualTimers.find((t: any) => t.playbackId === id)).toBeUndefined();
+        });
+
+        it('should resume a specific instance by ID', () => {
+            const id = controller.play('test_sound' as SoundId, {})!;
+            const voice = controller.getLogicalVoice(id)!;
+            const resumeSpy = vi.spyOn(voice.physicalInstance!, 'resume');
+
+            controller.resumeById(id);
+            expect(resumeSpy).toHaveBeenCalled();
+        });
+
+        it('should pause and resume all instances of a specific sound', () => {
+            const id1 = controller.play('test_sound' as SoundId, {})!;
+            const id2 = controller.play('test_sound' as SoundId, {})!;
+            const id3 = controller.play('other_sound' as SoundId, {})!;
+
+            const pauseSpy1 = vi.spyOn(controller.getLogicalVoice(id1)!.physicalInstance!, 'pause');
+            const pauseSpy2 = vi.spyOn(controller.getLogicalVoice(id2)!.physicalInstance!, 'pause');
+            const pauseSpy3 = vi.spyOn(controller.getLogicalVoice(id3)!.physicalInstance!, 'pause');
+
+            controller.pauseAll('test_sound' as any);
+
+            expect(pauseSpy1).toHaveBeenCalled();
+            expect(pauseSpy2).toHaveBeenCalled();
+            expect(pauseSpy3).not.toHaveBeenCalled();
+
+            const resumeSpy1 = vi.spyOn(controller.getLogicalVoice(id1)!.physicalInstance!, 'resume');
+            controller.resumeAll('test_sound' as any);
+            expect(resumeSpy1).toHaveBeenCalled();
+        });
+
+        it('should pause and resume ALL instances if soundId is not provided', () => {
+            const id1 = controller.play('test_sound' as SoundId, {})!;
+            const id2 = controller.play('other_sound' as SoundId, {})!;
+
+            const pauseSpy1 = vi.spyOn(controller.getLogicalVoice(id1)!.physicalInstance!, 'pause');
+            const pauseSpy2 = vi.spyOn(controller.getLogicalVoice(id2)!.physicalInstance!, 'pause');
+
+            controller.pauseAll();
+
+            expect(pauseSpy1).toHaveBeenCalled();
+            expect(pauseSpy2).toHaveBeenCalled();
+        });
+
+        it('should maintain paused state even if VoiceCullingArbiter attempts to virtualize/devirtualize (Ghost Play fix)', () => {
+            const id = controller.play('test_sound' as SoundId, {})!;
+            const voice = controller.getLogicalVoice(id)!;
+
+            expect(voice.logicalState).toBe('playing');
+
+            controller.pauseById(id);
+            expect(voice.logicalState).toBe('paused');
+            expect(voice.physicalInstance?.state).toBe('paused');
+
+            controller.virtualize(id);
+
+            expect(voice.logicalState).toBe('paused');
+            expect(voice.physicalInstance?.state).toBe('paused');
+
+            controller.devirtualize(id);
+
+            expect(voice.logicalState).toBe('paused');
+            expect(voice.physicalInstance?.state).toBe('paused');
+        });
+    });
+
     describe('Stopping & Resource Management', () => {
         beforeEach(() => {
             controller.register('test_sound' as SoundId, fakeBuffer);

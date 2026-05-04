@@ -111,6 +111,26 @@ export default class AudioRouter implements IAudioRouter {
         }
     }
 
+    public pause(id: PlaybackId | PlaybackId[] | SoundId): void {
+        if (Array.isArray(id)) {
+            for (const index of id) this.soundController.pauseById(index);
+        } else if (typeof id === 'number') {
+            this.soundController.pauseById(id);
+        } else {
+            this.soundController.pauseAll(id);
+        }
+    }
+
+    public resume(id: PlaybackId | PlaybackId[] | SoundId): void {
+        if (Array.isArray(id)) {
+            for (const index of id) this.soundController.resumeById(index);
+        } else if (typeof id === 'number') {
+            this.soundController.resumeById(id);
+        } else {
+            this.soundController.resumeAll(id);
+        }
+    }
+
     private handleContainer(name: SoundId, config: IContainerSoundConfig, options: IPlayOptions): PlaybackId | null {
         const history = this.historyRegistry.getHistory(name);
         const { soundId: nextSource, nextState } = this.containerPolicy.evaluateNext(config, history);
