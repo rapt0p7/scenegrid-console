@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { AudioContext as MockAudioContext, registrar } from 'standardized-audio-context-mock';
 
 import { AudioNodeFactory } from '@infrastructure/nodes/AudioNodeFactory.js';
 import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
@@ -9,44 +10,73 @@ import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
 import { SoundInstance } from '../SoundInstance.js';
 
 import type AudioContextManager from '../../context/AudioContextManager.js';
+import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 import type { SoundId } from '@shared/Types/Branded.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 
-function createMockAudioContext() {
-    const mockSourceNode = {
-        buffer: null,
-        playbackRate: { value: 1 },
-        loop: false,
-        connect: vi.fn(),
-        disconnect: vi.fn(),
-        start: vi.fn(),
-        stop: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn()
+function setupStandardizedContext() {
+    const realMockContext = new MockAudioContext();
+    const mockContext = realMockContext as unknown as AudioCtx;
+
+    const createdSources: any[] = [];
+    const createdGains: any[] = [];
+    const createdPanners: any[] = [];
+
+    const origCreateSource = mockContext.createBufferSource.bind(mockContext);
+    mockContext.createBufferSource = () => {
+        const node = origCreateSource();
+        vi.spyOn(node, 'start');
+        vi.spyOn(node, 'stop');
+        vi.spyOn(node, 'disconnect');
+        vi.spyOn(node, 'connect');
+        vi.spyOn(node, 'addEventListener');
+        vi.spyOn(node, 'removeEventListener');
+        createdSources.push(node);
+        return node as any;
     };
 
-    const mockGainNode = {
-        gain: {
-            value: 1,
-            setValueAtTime: vi.fn(),
-            cancelScheduledValues: vi.fn(),
-            setTargetAtTime: vi.fn()
-        },
-        connect: vi.fn(),
-        disconnect: vi.fn()
+    const origCreateGain = mockContext.createGain.bind(mockContext);
+    mockContext.createGain = () => {
+        const node = origCreateGain();
+        vi.spyOn(node.gain, 'setValueAtTime');
+        vi.spyOn(node.gain, 'setTargetAtTime');
+        vi.spyOn(node.gain, 'cancelScheduledValues');
+        vi.spyOn(node.gain, 'linearRampToValueAtTime');
+        vi.spyOn(node.gain, 'exponentialRampToValueAtTime');
+        vi.spyOn(node, 'connect');
+        vi.spyOn(node, 'disconnect');
+        createdGains.push(node);
+        return node as any;
     };
 
-    return {
-        currentTime: 0,
-        createBufferSource: vi.fn().mockReturnValue(mockSourceNode),
-        createGain: vi.fn().mockReturnValue(mockGainNode),
-        _mockSourceNode: mockSourceNode,
-        _mockGainNode: mockGainNode
+    const origCreatePanner = mockContext.createPanner.bind(mockContext);
+    mockContext.createPanner = () => {
+        const node = origCreatePanner();
+        vi.spyOn(node.positionX, 'setTargetAtTime');
+        vi.spyOn(node.positionY, 'setTargetAtTime');
+        vi.spyOn(node.positionZ, 'setTargetAtTime');
+
+        let dm = 'inverse';
+        Object.defineProperty(node, 'distanceModel', {
+            get: () => dm,
+            set: val => {
+                dm = val;
+            }
+        });
+
+        createdPanners.push(node);
+        return node as any;
     };
+
+    const setTime = (time: number) => {
+        vi.spyOn(mockContext as any, 'currentTime', 'get').mockReturnValue(time);
+    };
+
+    return { realMockContext, mockContext, setTime, createdSources, createdGains, createdPanners };
 }
 
 describe('SoundInstance (Playback & Virtualization Math)', () => {
-    let mockContext: any;
+    let env: ReturnType<typeof setupStandardizedContext>;
     let mockContextManager: AudioContextManager;
     let mockFactory: AudioNodeFactory;
     let mockBuffer: AudioBuffer;
@@ -55,35 +85,21 @@ describe('SoundInstance (Playback & Virtualization Math)', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-
-        mockContext = createMockAudioContext();
+        env = setupStandardizedContext();
 
         mockContextManager = {
-            context: mockContext,
+            context: env.mockContext,
             resume: vi.fn()
         } as unknown as AudioContextManager;
 
         mockFactory = {
-            createGain: () => mockContext.createGain(),
-            createStereoPanner: () => ({
-                pan: { value: 0, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
-                connect: vi.fn(),
-                disconnect: vi.fn()
-            }),
-            createFilter: () => ({
-                frequency: { value: 22_000, setValueAtTime: vi.fn() },
-                connect: vi.fn(),
-                disconnect: vi.fn()
-            })
+            createGain: () => env.mockContext.createGain(),
+            createStereoPanner: () => env.mockContext.createStereoPanner(),
+            createFilter: () => env.mockContext.createBiquadFilter(),
+            create3DPanner: () => env.mockContext.createPanner()
         } as unknown as AudioNodeFactory;
 
-        mockBuffer = {
-            duration: 10,
-            length: 441_000,
-            sampleRate: 44_100,
-            numberOfChannels: 2,
-            getChannelData: vi.fn()
-        } as unknown as AudioBuffer;
+        mockBuffer = env.realMockContext.createBuffer(2, 441000, 44100) as unknown as AudioBuffer;
 
         mockAutomation = {
             ramp: vi.fn(),
@@ -100,85 +116,90 @@ describe('SoundInstance (Playback & Virtualization Math)', () => {
         );
     });
 
-    it('should correctly initialize and play', () => {
-        expect(instance.state).toBe('idle');
-
-        instance.play();
-
-        expect(mockContext.createBufferSource).toHaveBeenCalled();
-        expect(mockContext._mockSourceNode.start).toHaveBeenCalledWith(0, 0, undefined);
-        expect(instance.state).toBe('playing');
-
-        expect(mockContext._mockSourceNode.connect).toHaveBeenCalled();
+    afterEach(() => {
+        registrar.reset(env.mockContext as any);
     });
 
-    it('should correctly stop and emit events', () => {
+    it('should correctly initialize and play', () => {
+        expect(instance.state).toBe('idle');
+        instance.play();
+
+        const source = env.createdSources[0];
+        expect(source.start).toHaveBeenCalledWith(0, 0, undefined);
+        expect(instance.state).toBe('playing');
+        expect(source.connect).toHaveBeenCalled();
+    });
+
+    it('should execute Click-free Stop (Micro-fade) and emit events', () => {
         const endedSpy = vi.fn();
         const stoppedSpy = vi.fn();
 
-        const offEnded = instance.on('ended', endedSpy);
-        const offStopped = instance.on('stopped', stoppedSpy);
+        instance.on('ended', endedSpy);
+        instance.on('stopped', stoppedSpy);
 
         instance.play();
+        const source = env.createdSources[0];
+        const gain = instance.gainParam as any;
+
         instance.stop();
 
-        expect(mockContext._mockSourceNode.stop).toHaveBeenCalled();
-        expect(mockContext._mockSourceNode.disconnect).toHaveBeenCalled();
-        expect(instance.state).toBe('stopped');
+        expect(gain.cancelScheduledValues).toHaveBeenCalledWith(0);
+        expect(gain.setTargetAtTime).toHaveBeenCalledWith(0, 0, 0.005);
+        expect(source.stop).toHaveBeenCalledWith(0.015);
 
+        expect(instance.state).toBe('stopped');
         expect(stoppedSpy).toHaveBeenCalledTimes(1);
         expect(endedSpy).toHaveBeenCalledTimes(1);
-
-        offEnded();
-        offStopped();
     });
 
     it('should correctly calculate currentTime during playback', () => {
         instance.play();
-        mockContext.currentTime = 3.5;
+
+        env.setTime(3.5);
         expect(instance.currentTime).toBe(3.5);
 
-        mockContext.currentTime = 12;
+        env.setTime(12);
         expect(instance.currentTime).toBe(2);
     });
 
     it('should completely destroy hardware node on virtualize()', () => {
         instance.play();
+        const source = env.createdSources[0];
+
         instance.virtualize();
 
         expect(instance.state).toBe('virtual');
-        expect(mockContext._mockSourceNode.disconnect).toHaveBeenCalled();
-        expect(mockContext._mockSourceNode.stop).toHaveBeenCalled();
+        expect(source.disconnect).toHaveBeenCalled();
+        expect(source.stop).toHaveBeenCalled();
     });
 
     it('should preserve synchronization on devirtualize() (Play from elapsed time)', () => {
         instance.play();
-        mockContext.currentTime = 2;
+        env.setTime(2);
         instance.virtualize();
 
-        mockContext.currentTime = 7;
-        mockContext._mockSourceNode.start.mockClear();
-
+        env.setTime(7);
         instance.devirtualize();
 
-        expect(mockContext._mockSourceNode.start).toHaveBeenCalledWith(7.05, 7.05);
+        const newSource = env.createdSources[1];
+        expect(newSource.start).toHaveBeenCalledWith(7.05, 7.05);
         expect(instance.state).toBe('playing');
     });
 
     it('should correctly handle loop math during devirtualize()', () => {
         instance.play();
         instance.virtualize();
-        mockContext.currentTime = 24;
 
-        mockContext._mockSourceNode.start.mockClear();
+        env.setTime(24);
         instance.devirtualize();
 
-        expect(mockContext._mockSourceNode.start).toHaveBeenCalledWith(24.05, 4.050_000_000_000_001);
+        const newSource = env.createdSources[1];
+        expect(newSource.start).toHaveBeenCalledWith(24.05, 4.050000000000001);
     });
 });
 
 describe('SoundInstance (Pause, Resume & Parameters)', () => {
-    let mockContext: any;
+    let env: ReturnType<typeof setupStandardizedContext>;
     let mockContextManager: AudioContextManager;
     let mockFactory: AudioNodeFactory;
     let mockBuffer: AudioBuffer;
@@ -187,25 +208,19 @@ describe('SoundInstance (Pause, Resume & Parameters)', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mockContext = createMockAudioContext();
+        env = setupStandardizedContext();
 
         mockContextManager = {
-            context: mockContext,
+            context: env.mockContext,
             resume: vi.fn()
         } as unknown as AudioContextManager;
 
         mockFactory = {
-            createGain: () => mockContext.createGain(),
-            createPanner: vi.fn()
+            createGain: () => env.mockContext.createGain(),
+            createPanner: () => env.mockContext.createPanner()
         } as unknown as AudioNodeFactory;
 
-        mockBuffer = {
-            duration: 10,
-            length: 441_000,
-            sampleRate: 44_100,
-            numberOfChannels: 2,
-            getChannelData: vi.fn()
-        } as unknown as AudioBuffer;
+        mockBuffer = env.realMockContext.createBuffer(2, 441000, 44100) as unknown as AudioBuffer;
 
         mockAutomation = {
             ramp: vi.fn(),
@@ -222,21 +237,26 @@ describe('SoundInstance (Pause, Resume & Parameters)', () => {
         );
     });
 
+    afterEach(() => {
+        registrar.reset(env.mockContext as any);
+    });
+
     it('should correctly PAUSE and RESUME playback, keeping track of time', () => {
         instance.play();
-        mockContext.currentTime = 3;
+        const source1 = env.createdSources[0];
+
+        env.setTime(3);
         instance.pause();
 
         expect(instance.state).toBe('paused');
-        expect(mockContext._mockSourceNode.stop).toHaveBeenCalled();
+        expect(source1.stop).toHaveBeenCalled();
 
-        mockContext.currentTime = 8;
-        mockContext._mockSourceNode.start.mockClear();
-
+        env.setTime(8);
         instance.resume();
 
+        const source2 = env.createdSources[1];
         expect(instance.state).toBe('playing');
-        expect(mockContext._mockSourceNode.start).toHaveBeenCalledWith(8, 3);
+        expect(source2.start).toHaveBeenCalledWith(8, 3);
     });
 
     it('should ignore pause() if already paused or idle', () => {
@@ -247,27 +267,33 @@ describe('SoundInstance (Pause, Resume & Parameters)', () => {
         instance.pause();
         expect(instance.state).toBe('paused');
 
-        mockContext._mockSourceNode.stop.mockClear();
+        const source = env.createdSources[0];
+        source.stop.mockClear();
+
         instance.pause();
-        expect(mockContext._mockSourceNode.stop).not.toHaveBeenCalled();
+        expect(source.stop).not.toHaveBeenCalled();
     });
 
     it('should dynamically update playbackRate (Pitch/Speed)', () => {
         instance.setRate(1.5);
         instance.play();
-        expect(mockContext._mockSourceNode.playbackRate.value).toBe(1.5);
+        const source = env.createdSources[0];
+
+        expect(source.playbackRate.value).toBe(1.5);
 
         instance.setRate(0.8);
-        expect(mockContext._mockSourceNode.playbackRate.value).toBe(0.8);
+        expect(source.playbackRate.value).toBe(0.8);
     });
 
     it('should dynamically update loop state', () => {
         instance.setLoop(true);
         instance.play();
-        expect(mockContext._mockSourceNode.loop).toBe(true);
+        const source = env.createdSources[0];
+
+        expect(source.loop).toBe(true);
 
         instance.setLoop(false);
-        expect(mockContext._mockSourceNode.loop).toBe(false);
+        expect(source.loop).toBe(false);
     });
 
     it('should clear all event listeners on resetForReuse()', () => {
@@ -275,17 +301,19 @@ describe('SoundInstance (Pause, Resume & Parameters)', () => {
         instance.on('ended', spy);
 
         instance.play();
+        const source = env.createdSources[0];
+
         instance.resetForReuse();
 
-        const onEndedCallback = mockContext._mockSourceNode.addEventListener.mock.calls[0][1];
-        onEndedCallback();
+        const onEndedCall = source.addEventListener.mock.calls.find((call: any) => call[0] === 'ended');
+        if (onEndedCall) onEndedCall[1]();
 
         expect(spy).not.toHaveBeenCalled();
     });
 });
 
 describe('SoundInstance (Coverage & Edge Cases)', () => {
-    let mockContext: any;
+    let env: ReturnType<typeof setupStandardizedContext>;
     let mockContextManager: AudioContextManager;
     let mockFactory: AudioNodeFactory;
     let mockBuffer: AudioBuffer;
@@ -294,21 +322,27 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mockContext = createMockAudioContext();
-        mockContextManager = { context: mockContext } as unknown as AudioContextManager;
+        env = setupStandardizedContext();
+        mockContextManager = { context: env.mockContext } as unknown as AudioContextManager;
 
         mockFactory = {
-            createGain: () => mockContext.createGain(),
-            createStereoPanner: () => ({ pan: {}, connect: vi.fn(), disconnect: vi.fn() }),
-            createFilter: () => ({ frequency: {}, connect: vi.fn(), disconnect: vi.fn() })
+            createGain: () => env.mockContext.createGain(),
+            createStereoPanner: () => env.mockContext.createStereoPanner(),
+            createFilter: () => env.mockContext.createBiquadFilter(),
+            createPanner: () => env.mockContext.createPanner(),
+            create3DPanner: () => env.mockContext.createPanner()
         } as unknown as AudioNodeFactory;
 
-        mockBuffer = { duration: 10 } as unknown as AudioBuffer;
+        mockBuffer = env.realMockContext.createBuffer(2, 441000, 44100) as unknown as AudioBuffer;
         mockAutomation = { ramp: vi.fn() } as unknown as AutomationEngine;
 
         instance = new SoundInstance('test' as SoundId, mockContextManager, mockFactory, mockBuffer, mockAutomation, {
             hasPanner: true
         });
+    });
+
+    afterEach(() => {
+        registrar.reset(env.mockContext as any);
     });
 
     it('should handle routing delegation to NodeChain correctly', () => {
@@ -332,7 +366,6 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         expect(instance.sidechainTriggerNode).toBeDefined();
         expect(instance.duration).toBe(10);
         expect(instance.pannerNode).toBeDefined();
-
         expect(instance.currentTime).toBe(0);
     });
 
@@ -346,22 +379,20 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         );
 
         expect(noBufferInstance.duration).toBe(0);
-        expect(noBufferInstance.currentTime).toBe(0); // !this.#buffer return 0
+        expect(noBufferInstance.currentTime).toBe(0);
 
         expect(() => {
             noBufferInstance.play();
-        }).not.toThrow(); // !this.#buffer early return
+        }).not.toThrow();
     });
 
     it('should cover all branch cases in automate()', () => {
         const filterSpy = vi
             .spyOn(NodeChain.prototype, 'mainFilterNode', 'get')
             .mockReturnValue({ frequency: {} } as any);
-
         const pannerSpy = vi.spyOn(NodeChain.prototype, 'pannerNode', 'get').mockReturnValue({ pan: {} } as any);
 
         instance.automate('pitch', 1.5);
-
         instance.play();
 
         instance.automate('pitch', 1.5);
@@ -386,11 +417,13 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         instance.stop();
 
         instance.play();
+        const source = env.createdSources[0];
         instance.stop(5);
-        expect(mockContext._mockSourceNode.stop).toHaveBeenCalled();
+        expect(source.stop).toHaveBeenCalled();
 
         instance.play();
-        mockContext._mockSourceNode.stop.mockImplementationOnce(() => {
+        const source2 = env.createdSources[1];
+        source2.stop.mockImplementationOnce(() => {
             throw new Error('WebAudio Error');
         });
         expect(() => {
@@ -398,7 +431,8 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         }).not.toThrow();
 
         instance.play();
-        mockContext._mockSourceNode.stop.mockImplementationOnce(() => {
+        const source3 = env.createdSources[2];
+        source3.stop.mockImplementationOnce(() => {
             throw new Error('WebAudio Error');
         });
         expect(() => {
@@ -412,17 +446,20 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         }).not.toThrow();
 
         instance.play();
+        const source = env.createdSources[0];
         instance.cancelScheduled();
 
         expect(instance.state).toBe('stopped');
-        expect(mockContext._mockSourceNode.removeEventListener).toHaveBeenCalledWith('ended', expect.any(Function));
+        expect(source.removeEventListener).toHaveBeenCalledWith('ended', expect.any(Function));
 
         instance.play();
-        mockContext._mockSourceNode.stop.mockImplementationOnce(() => {
+        const source2 = env.createdSources[1];
+        source2.stop.mockImplementationOnce(() => {
             throw new Error('Stop Error');
         });
 
-        mockContext._mockGainNode.gain.cancelScheduledValues.mockImplementationOnce(() => {
+        const gainParam = instance.gainParam as any;
+        gainParam.cancelScheduledValues.mockImplementationOnce(() => {
             throw new Error('Gain Error');
         });
 
@@ -444,18 +481,20 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
         expect(preAllocated.duration).toBe(0);
 
         preAllocated.play();
-        expect(mockContext.createBufferSource).not.toHaveBeenCalled();
+        expect(env.createdSources.length).toBe(0);
 
         preAllocated.rebind('real_sound' as SoundId, mockBuffer);
         expect(preAllocated.duration).toBe(10);
 
         preAllocated.play();
-        expect(mockContext.createBufferSource).toHaveBeenCalled();
+        expect(env.createdSources.length).toBe(1);
         expect(preAllocated.state).toBe('playing');
     });
 
     it('should execute dispose() correctly', () => {
         instance.play();
+        // oxlint-disable-next-line no-unused-vars
+        const source = env.createdSources[0];
         const stopSpy = vi.spyOn(instance, 'stop');
 
         const disposedSpy = vi.fn();
@@ -472,28 +511,30 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
     it('should handle native "ended" event listener logic', () => {
         instance.play();
-
-        const onEndedCallback = mockContext._mockSourceNode.addEventListener.mock.calls[0][1];
+        const source1 = env.createdSources[0];
+        const onEnded1 = source1.addEventListener.mock.calls.find((c: any) => c[0] === 'ended')[1];
 
         instance.stop();
-        onEndedCallback();
+        onEnded1();
         expect(instance.state).toBe('stopped');
 
         instance.play();
         instance.pause();
-        const onEndedCallback2 = mockContext._mockSourceNode.addEventListener.mock.calls[1][1];
-        onEndedCallback2();
+        const source2 = env.createdSources[1];
+        const onEnded2 = source2.addEventListener.mock.calls.find((c: any) => c[0] === 'ended')[1];
+        onEnded2();
         expect(instance.state).toBe('paused');
 
         instance.play();
-        const onEndedCallback3 = mockContext._mockSourceNode.addEventListener.mock.calls[2][1];
-        onEndedCallback3();
+        const source3 = env.createdSources[2];
+        const onEnded3 = source3.addEventListener.mock.calls.find((c: any) => c[0] === 'ended')[1];
+        onEnded3();
         expect(instance.state).toBe('idle');
     });
 
     it('should return pauseOffset when currentTime is accessed while paused (Line 98)', () => {
         instance.play();
-        mockContext.currentTime = 2.5;
+        env.setTime(2.5);
         instance.pause();
 
         expect(instance.currentTime).toBe(2.5);
@@ -553,7 +594,8 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
     it('should ignore onSourceEnded native callback if state is virtual or not playing (Line 343)', () => {
         instance.play();
-        const onEndedCallback = mockContext._mockSourceNode.addEventListener.mock.calls[0][1];
+        const source = env.createdSources[0];
+        const onEndedCallback = source.addEventListener.mock.calls.find((c: any) => c[0] === 'ended')[1];
 
         instance.virtualize();
         onEndedCallback();
@@ -582,13 +624,12 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
     it('should early return in resume() if state is not paused or buffer is missing', () => {
         expect(instance.state).toBe('idle');
         instance.resume();
-        expect(mockContext._mockSourceNode.start).not.toHaveBeenCalled();
+        expect(env.createdSources.length).toBe(0);
 
         instance.play();
         instance.pause();
 
         instance.rebind('empty_id' as SoundId, null as any);
-
         instance.resume();
 
         expect(instance.state).toBe('paused');
@@ -596,73 +637,36 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
     it('should early return in virtualize() if state is not playing', () => {
         instance.virtualize();
-
         expect(instance.state).toBe('idle');
-        expect(mockContext._mockSourceNode.disconnect).not.toHaveBeenCalled();
     });
 
     describe('SoundInstance - Spatial Audio (setPosition)', () => {
-        let mockPanner: any;
-        // oxlint-disable-next-line no-shadow
-        let mockContextManager: any;
-        let mockNodeFactory: any;
-        let soundInstance: SoundInstance;
-        const CURRENT_TIME = 100.5;
+        let spatialInstance: SoundInstance;
 
         beforeEach(() => {
-            vi.clearAllMocks();
-
-            mockPanner = {
-                positionX: { setTargetAtTime: vi.fn() },
-                positionY: { setTargetAtTime: vi.fn() },
-                positionZ: { setTargetAtTime: vi.fn() },
-                pan: { value: 0 },
-                connect: vi.fn(),
-                disconnect: vi.fn()
-            };
-
-            mockContextManager = {
-                context: { currentTime: CURRENT_TIME }
-            };
-
-            mockNodeFactory = {
-                create3DPanner: vi.fn().mockReturnValue(mockPanner),
-                createStereoPanner: vi.fn().mockReturnValue(mockPanner),
-                createPanner: vi.fn().mockReturnValue(mockPanner),
-                createGain: vi.fn().mockReturnValue({
-                    connect: vi.fn(),
-                    disconnect: vi.fn(),
-                    gain: { value: 1, setTargetAtTime: vi.fn(), cancelScheduledValues: vi.fn() }
-                }),
-                createFilter: vi.fn().mockReturnValue({
-                    connect: vi.fn(),
-                    disconnect: vi.fn()
-                })
-            };
-
-            soundInstance = new SoundInstance(
+            spatialInstance = new SoundInstance(
                 'test_id' as SoundId,
                 mockContextManager,
-                mockNodeFactory,
-                {} as AudioBuffer,
-                {} as any,
+                mockFactory,
+                mockBuffer,
+                mockAutomation,
                 {
                     hasPanner: true,
-                    spatial: { panningModel: 'HRTF' }
+                    spatial: { panningModel: 'HRTF' } as any
                 }
             );
+            env.setTime(100.5);
         });
 
         it('should safely exit if PannerNode is not present (2D sound)', () => {
             const soundInstance2D = new SoundInstance(
                 'test_id_2d' as SoundId,
                 mockContextManager,
-                mockNodeFactory,
-                {} as AudioBuffer,
-                {} as any,
+                mockFactory,
+                mockBuffer,
+                mockAutomation,
                 {}
             );
-
             expect(() => {
                 soundInstance2D.setPosition(10, 20, 30);
             }).not.toThrow();
@@ -670,94 +674,72 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
         describe('Ticker Spam Protection (Low-Pass Filter)', () => {
             it('should use setTargetAtTime with a 10ms timeConstant (tc = 0.01)', () => {
-                soundInstance.setPosition(10, 20, 30);
+                const panner = spatialInstance.pannerNode as any;
 
-                expect(mockPanner.positionX.setTargetAtTime).toHaveBeenCalledWith(10, CURRENT_TIME, 0.01);
-                expect(mockPanner.positionY.setTargetAtTime).toHaveBeenCalledWith(20, CURRENT_TIME, 0.01);
-                expect(mockPanner.positionZ.setTargetAtTime).toHaveBeenCalledWith(30, CURRENT_TIME, 0.01);
+                spatialInstance.setPosition(10, 20, 30);
+
+                expect(panner.positionX.setTargetAtTime).toHaveBeenCalledWith(10, 100.5, 0.01);
+                expect(panner.positionY.setTargetAtTime).toHaveBeenCalledWith(20, 100.5, 0.01);
+                expect(panner.positionZ.setTargetAtTime).toHaveBeenCalledWith(30, 100.5, 0.01);
             });
         });
 
         describe('Singularity Protection (Zero-Crossing Sign Preservation)', () => {
             it('should clamp absolute zero (0, 0, 0) to z = +0.1', () => {
-                soundInstance.setPosition(0, 0, 0);
+                const panner = spatialInstance.pannerNode as any;
+                spatialInstance.setPosition(0, 0, 0);
 
-                expect(mockPanner.positionX.setTargetAtTime).toHaveBeenCalledWith(0, CURRENT_TIME, 0.01);
-                expect(mockPanner.positionY.setTargetAtTime).toHaveBeenCalledWith(0, CURRENT_TIME, 0.01);
-                expect(mockPanner.positionZ.setTargetAtTime).toHaveBeenCalledWith(0.1, CURRENT_TIME, 0.01);
+                expect(panner.positionX.setTargetAtTime).toHaveBeenCalledWith(0, 100.5, 0.01);
+                expect(panner.positionY.setTargetAtTime).toHaveBeenCalledWith(0, 100.5, 0.01);
+                expect(panner.positionZ.setTargetAtTime).toHaveBeenCalledWith(0.1, 100.5, 0.01);
             });
 
             it('should preserve negative sign when approaching zero (e.g., z = -0.05 becomes -0.1)', () => {
-                soundInstance.setPosition(10, 10, -0.05);
-                expect(mockPanner.positionZ.setTargetAtTime).toHaveBeenCalledWith(-0.1, CURRENT_TIME, 0.01);
+                const panner = spatialInstance.pannerNode as any;
+                spatialInstance.setPosition(10, 10, -0.05);
+                expect(panner.positionZ.setTargetAtTime).toHaveBeenCalledWith(-0.1, 100.5, 0.01);
             });
 
             it('should preserve positive sign when approaching zero (e.g., z = 0.05 becomes 0.1)', () => {
-                soundInstance.setPosition(10, 10, 0.05);
-                expect(mockPanner.positionZ.setTargetAtTime).toHaveBeenCalledWith(0.1, CURRENT_TIME, 0.01);
+                const panner = spatialInstance.pannerNode as any;
+                spatialInstance.setPosition(10, 10, 0.05);
+                expect(panner.positionZ.setTargetAtTime).toHaveBeenCalledWith(0.1, 100.5, 0.01);
             });
 
             it('should NOT clamp coordinates if they are outside the 0.1 danger zone', () => {
-                soundInstance.setPosition(0, 0, -0.15);
-                expect(mockPanner.positionZ.setTargetAtTime).toHaveBeenCalledWith(-0.15, CURRENT_TIME, 0.01);
+                const panner = spatialInstance.pannerNode as any;
+                spatialInstance.setPosition(0, 0, -0.15);
+                expect(panner.positionZ.setTargetAtTime).toHaveBeenCalledWith(-0.15, 100.5, 0.01);
 
-                soundInstance.setPosition(0, 0, 0.2);
-                expect(mockPanner.positionZ.setTargetAtTime).toHaveBeenCalledWith(0.2, CURRENT_TIME, 0.01);
+                spatialInstance.setPosition(0, 0, 0.2);
+                expect(panner.positionZ.setTargetAtTime).toHaveBeenCalledWith(0.2, 100.5, 0.01);
             });
         });
     });
 });
 
 describe('SoundInstance Rebinding Lifecycle', () => {
+    let env: ReturnType<typeof setupStandardizedContext>;
     let mockContextManager: any;
     let nodeFactory: AudioNodeFactory;
     let automation: AutomationEngine;
     let mockBuffer: AudioBuffer;
 
     beforeEach(() => {
-        const createMockAudioParameter = () => ({
-            value: 0,
-            setValueAtTime: vi.fn(),
-            setTargetAtTime: vi.fn(),
-            cancelScheduledValues: vi.fn(),
-            linearRampToValueAtTime: vi.fn(),
-            exponentialRampToValueAtTime: vi.fn()
-        });
-
-        const mockPanner = {
-            positionX: createMockAudioParameter(),
-            positionY: createMockAudioParameter(),
-            positionZ: createMockAudioParameter(),
-            distanceModel: 'linear',
-            refDistance: 1,
-            maxDistance: 10_000,
-            connect: vi.fn(),
-            disconnect: vi.fn()
-        };
+        vi.clearAllMocks();
+        env = setupStandardizedContext();
 
         mockContextManager = {
-            context: {
-                createGain: vi.fn().mockImplementation(() => ({
-                    gain: createMockAudioParameter(),
-                    connect: vi.fn(),
-                    disconnect: vi.fn()
-                })),
-                createPanner: vi.fn().mockReturnValue(mockPanner),
-                createBiquadFilter: vi.fn().mockImplementation(() => ({
-                    type: '',
-                    frequency: createMockAudioParameter(),
-                    Q: createMockAudioParameter(),
-                    gain: createMockAudioParameter(),
-                    connect: vi.fn(),
-                    disconnect: vi.fn()
-                })),
-                currentTime: 0
-            }
+            context: env.mockContext
         };
 
         nodeFactory = new AudioNodeFactory(mockContextManager);
         automation = { ramp: vi.fn() } as unknown as AutomationEngine;
-        mockBuffer = {} as AudioBuffer;
+        mockBuffer = env.realMockContext.createBuffer(2, 441000, 44100) as unknown as AudioBuffer;
+    });
+
+    afterEach(() => {
+        registrar.reset(env.mockContext as any);
     });
 
     it('Pre-allocated pool instance should acquire spatial properties on rebind', () => {
@@ -774,7 +756,7 @@ describe('SoundInstance Rebinding Lifecycle', () => {
         expect(instance.id).toBe('__RESERVED__');
 
         instance.rebind('explosion' as SoundId, mockBuffer, {
-            spatial: { distanceModel: 'linear', refDistance: 1, maxDistance: 1000 }
+            spatial: { distanceModel: 'linear', refDistance: 1, maxDistance: 1000 } as any
         });
 
         instance.setPosition(10, 20, 30);

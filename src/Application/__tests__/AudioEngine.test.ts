@@ -2,6 +2,7 @@
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { AudioContext, registrar } from 'standardized-audio-context-mock';
 
 import { AudioEngine } from '@application/AudioEngine.js';
 import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
@@ -14,39 +15,15 @@ import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 import type { BusId, GameParamId, PlaybackId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
 
 vi.mock('worker-timers', () => ({
-    setInterval: vi.fn(),
-    clearInterval: vi.fn()
-}));
-
-vi.mock('standardized-audio-context', () => ({
-    AudioWorkletNode: vi.fn().mockImplementation(function () {
-        return { port: { onmessage: null }, connect: vi.fn() };
+    setInterval: vi.fn((cb: Function, ms: number) => globalThis.setInterval(cb, ms)),
+    clearInterval: vi.fn((id: number) => {
+        globalThis.clearInterval(id);
+    }),
+    setTimeout: vi.fn((cb: Function, ms: number) => globalThis.setTimeout(cb, ms)),
+    clearTimeout: vi.fn((id: number) => {
+        globalThis.clearTimeout(id);
     })
 }));
-
-const createMockAudioParameter = () => ({
-    value: 0,
-    setValueAtTime: vi.fn(),
-    cancelScheduledValues: vi.fn(),
-    linearRampToValueAtTime: vi.fn(),
-    exponentialRampToValueAtTime: vi.fn(),
-    setTargetAtTime: vi.fn()
-});
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const mockListener = {
-    positionX: createMockAudioParameter(),
-    positionY: createMockAudioParameter(),
-    positionZ: createMockAudioParameter(),
-    forwardX: createMockAudioParameter(),
-    forwardY: createMockAudioParameter(),
-    forwardZ: createMockAudioParameter(),
-    upX: createMockAudioParameter(),
-    upY: createMockAudioParameter(),
-    upZ: createMockAudioParameter(),
-    setPosition: vi.fn(),
-    setOrientation: vi.fn()
-};
 
 vi.mock('@domain/Culling/VoiceCullingArbiter.js', () => ({
     VoiceCullingArbiter: vi.fn().mockImplementation(function () {
@@ -56,63 +33,14 @@ vi.mock('@domain/Culling/VoiceCullingArbiter.js', () => ({
 
 vi.mock('@infrastructure', async importOriginal => {
     const actual = await importOriginal<any>();
+    // oxlint-disable-next-line typescript/no-unsafe-return
     return {
         ...actual,
         AudioContextManager: vi.fn().mockImplementation(function () {
-            const mockNode = {
-                gain: createMockAudioParameter(),
-                connect: vi.fn(),
-                disconnect: vi.fn(),
-                delayTime: createMockAudioParameter(),
-                setGainImmediate: vi.fn(),
-                safeReplaceFilter: vi.fn()
-            };
-            const pannerMock = {
-                panningModel: '',
-                distanceModel: '',
-                refDistance: 0,
-                maxDistance: 0,
-                rolloffFactor: 0,
-                positionX: { value: 100 },
-                positionY: { value: 100 },
-                positionZ: { value: 100 }
-            };
+            const mockContext = new AudioContext();
+
             return {
-                context: {
-                    listener: mockListener,
-                    createGain: vi.fn().mockReturnValue(mockNode),
-                    createDynamicsCompressor: vi.fn().mockReturnValue({
-                        threshold: createMockAudioParameter(),
-                        knee: createMockAudioParameter(),
-                        ratio: createMockAudioParameter(),
-                        attack: createMockAudioParameter(),
-                        release: createMockAudioParameter(),
-                        connect: vi.fn(),
-                        disconnect: vi.fn()
-                    }),
-                    createPanner: vi.fn().mockReturnValue(pannerMock),
-                    createDelay: vi.fn().mockReturnValue(mockNode),
-                    createBiquadFilter: vi.fn().mockReturnValue({
-                        type: '',
-                        frequency: createMockAudioParameter(),
-                        Q: createMockAudioParameter(),
-                        gain: createMockAudioParameter(),
-                        connect: vi.fn(),
-                        disconnect: vi.fn()
-                    }),
-                    createBufferSource: vi.fn().mockReturnValue({
-                        connect: vi.fn(),
-                        start: vi.fn(),
-                        stop: vi.fn(),
-                        playbackRate: createMockAudioParameter()
-                    }),
-                    currentTime: 0,
-                    state: 'running',
-                    sampleRate: 44_100,
-                    resume: vi.fn().mockResolvedValue(undefined),
-                    suspend: vi.fn().mockResolvedValue(undefined),
-                    addEventListener: vi.fn()
-                },
+                context: mockContext,
                 resume: vi.fn().mockResolvedValue(undefined),
                 initSpatial: vi.fn(),
                 setListenerPosition: vi.fn(),
@@ -125,6 +53,7 @@ vi.mock('@infrastructure', async importOriginal => {
         AudioBufferLoader: vi.fn().mockImplementation(function () {
             return {
                 load: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+                // oxlint-disable-next-line require-await
                 loadBatch: vi.fn().mockImplementation(async (urls, onProgress, onError) => {
                     const results: any = {};
                     let loaded = 0;
@@ -197,13 +126,6 @@ describe('AudioEngine', () => {
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
 
-        mockListener.positionX.value = 0;
-        mockListener.positionY.value = 0;
-        mockListener.positionZ.value = 0;
-        mockListener.forwardX.value = 0;
-        mockListener.forwardY.value = 0;
-        mockListener.forwardZ.value = 0;
-
         playSpy = vi.spyOn(AudioRouter.prototype, 'play').mockReturnValue(42 as PlaybackId);
         stopSpy = vi.spyOn(AudioRouter.prototype, 'stop').mockImplementation(() => {});
         pauseSpy = vi.spyOn(AudioRouter.prototype, 'pause').mockReturnValue();
@@ -243,6 +165,9 @@ describe('AudioEngine', () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
+        if (engine?.['_debug']?.contextManager?.context) {
+            registrar.reset(engine['_debug'].contextManager.context as any);
+        }
         delete (globalThis as any).__mockSoundPoolConfig;
         delete (globalThis as any).__mockSoundPoolFactory;
         delete (globalThis as any).__mockCullingContext;

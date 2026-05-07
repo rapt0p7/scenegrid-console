@@ -1,15 +1,16 @@
 // noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { AudioContext as MockAudioContext, registrar } from 'standardized-audio-context-mock';
 
 import AutomationEngine from '../AutomationEngine.js';
 
-import type { AudioCtx as AudioContext_ } from '../../types/IAudioContext.js';
+import type { AudioCtx } from '../../types/IAudioContext.js';
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type { TickerTaskId } from '@shared/Types/Branded.js';
 
 describe('AutomationEngine', () => {
-    let mockContext: AudioContext_;
+    let mockContext: AudioCtx;
     let mockParameter: any;
     let mockTicker: any;
     let capturedTickTarget: ITickable | null;
@@ -19,19 +20,21 @@ describe('AutomationEngine', () => {
         vi.clearAllMocks();
         capturedTickTarget = null;
 
-        mockContext = {
-            state: 'running',
-            currentTime: 1
-        } as unknown as AudioContext_;
+        const realMockContext = new MockAudioContext();
+        mockContext = realMockContext as unknown as AudioCtx;
 
-        mockParameter = {
-            value: 0.5,
-            cancelScheduledValues: vi.fn(),
-            setValueAtTime: vi.fn(),
-            linearRampToValueAtTime: vi.fn(),
-            exponentialRampToValueAtTime: vi.fn(),
-            setValueCurveAtTime: vi.fn()
-        };
+        vi.spyOn(mockContext, 'currentTime', 'get').mockReturnValue(1);
+        vi.spyOn(mockContext, 'state', 'get').mockReturnValue('running');
+
+        const gainNode = realMockContext.createGain();
+        mockParameter = gainNode.gain;
+        mockParameter.value = 0.5;
+
+        vi.spyOn(mockParameter, 'cancelScheduledValues');
+        vi.spyOn(mockParameter, 'setValueAtTime');
+        vi.spyOn(mockParameter, 'linearRampToValueAtTime');
+        vi.spyOn(mockParameter, 'exponentialRampToValueAtTime');
+        vi.spyOn(mockParameter, 'setValueCurveAtTime');
 
         mockTicker = {
             add: vi.fn().mockImplementation((id: TickerTaskId, rate: number, target: ITickable) => {
@@ -45,6 +48,8 @@ describe('AutomationEngine', () => {
 
     afterEach(() => {
         vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+        registrar.reset(mockContext as any);
     });
 
     function triggerTick() {
@@ -108,7 +113,8 @@ describe('AutomationEngine', () => {
         });
 
         it('should set immediately if context is not running', () => {
-            (mockContext as any).state = 'suspended';
+            vi.spyOn(mockContext, 'state', 'get').mockReturnValue('suspended');
+
             engine.ramp(mockParameter, 1, 500);
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(1, 1);
@@ -206,7 +212,7 @@ describe('AutomationEngine', () => {
         it('should immediately set value if remaining duration <= 0 during delayed flush', () => {
             engine.ramp(mockParameter, 0.8, 1000);
 
-            (mockContext as any).currentTime = 3;
+            vi.spyOn(mockContext, 'currentTime', 'get').mockReturnValue(3);
 
             triggerTick();
 
@@ -220,6 +226,7 @@ describe('AutomationEngine - Chrome Android Fallback', () => {
     afterEach(() => {
         vi.unstubAllGlobals();
         vi.resetModules();
+        vi.restoreAllMocks();
     });
 
     it('should use applyCurveFallback instead of native ramps on Chrome Android', async () => {
@@ -231,14 +238,17 @@ describe('AutomationEngine - Chrome Android Fallback', () => {
 
         const { default: AndroidAutomationEngine } = await import('../AutomationEngine.js');
 
-        const mContext = { state: 'running', currentTime: 1 } as unknown as AudioContext_;
-        const mParameter = {
-            value: 0.5,
-            cancelScheduledValues: vi.fn(),
-            setValueAtTime: vi.fn(),
-            linearRampToValueAtTime: vi.fn(),
-            setValueCurveAtTime: vi.fn()
-        };
+        const realMockContext = new MockAudioContext();
+        const mContext = realMockContext as unknown as AudioCtx;
+
+        vi.spyOn(mContext, 'currentTime', 'get').mockReturnValue(1);
+        vi.spyOn(mContext, 'state', 'get').mockReturnValue('running');
+
+        const mParameter = realMockContext.createGain().gain;
+        mParameter.value = 0.5;
+
+        vi.spyOn(mParameter, 'linearRampToValueAtTime');
+        vi.spyOn(mParameter, 'setValueCurveAtTime');
 
         let capturedTickTargetFallback: ITickable | null = null;
         const mTicker = {
