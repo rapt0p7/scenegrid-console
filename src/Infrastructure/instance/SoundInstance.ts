@@ -51,6 +51,7 @@ export class SoundInstance implements ISoundInstance {
     #loop: boolean = false;
     #endedByStop: boolean = false;
     private readonly SCHEDULE_DELAY = 0.05;
+    private readonly MICRO_FADE_SEC = 0.015;
 
     // eslint-disable-next-line max-params
     constructor(
@@ -218,25 +219,24 @@ export class SoundInstance implements ISoundInstance {
             return;
         }
 
-        if (when > 0) {
-            try {
-                this.#source.stop(Math.max(context.currentTime, when));
-            } catch {
-                /* empty */
-            }
-            return;
-        }
+        const now = context.currentTime;
+        const stopTime = when > 0 ? Math.max(now, when) : now;
+        const actualStopTime = stopTime + this.MICRO_FADE_SEC;
 
         this.#endedByStop = true;
+        const sourceToStop = this.#source;
+        this.#source = null;
 
         try {
-            this.#source.stop(context.currentTime);
+            const gainParam = this.#chain.gainParam;
+            if (gainParam) {
+                gainParam.cancelScheduledValues(stopTime);
+                gainParam.setTargetAtTime(0, stopTime, 0.005);
+            }
+            sourceToStop.stop(actualStopTime);
         } catch {
-            /* empty */
+            /* empty fallback */
         }
-
-        this.#source.disconnect();
-        this.#source = null;
 
         this.#pauseOffset = 0;
         this.#setState('stopped');
