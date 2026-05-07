@@ -4,7 +4,8 @@
 
 import { Pane, FolderApi } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
-import { AudioProfiler } from './AudioProfiler';
+import { AudioProfiler } from './AudioProfiler.js';
+import { VoiceMeterWidget } from '@infrastructure/debug/ui/VoiceMeterWidget.js';
 
 interface IDebuggableEngine {
     play(soundId: string): any;
@@ -111,10 +112,18 @@ export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
     const fProfile = pane.addFolder({ title: 'PERFORMANCE PROFILER', expanded: true });
     applyIcon(fProfile, 'fad-tachometer-alt', 'PERFORMANCE PROFILER');
 
-    fProfile.addBinding(profiler.metrics.voices, 'totalTracked', { readonly: true, label: 'Total Voices' });
-    fProfile.addBinding(profiler.metrics.voices, 'hardwareActive', { readonly: true, label: 'Hardware (Playing)' });
-    fProfile.addBinding(profiler.metrics.voices, 'virtualCulled', { readonly: true, label: 'Virtual (Culled)' });
-    fProfile.addBlade({ view: 'separator' });
+    const fVoice = fProfile.addFolder({ title: 'VOICE MONITOR', expanded: true });
+
+    const voiceContainer = fVoice.element.querySelector('.tp-fldv_c') ?? fVoice.element;
+    const globalVoiceLimit = audio._debug?.config?.globalVoiceLimit ?? 32;
+
+    const voiceMeter = new VoiceMeterWidget(voiceContainer as HTMLElement, globalVoiceLimit);
+
+    const originalTick = profiler.tick.bind(profiler);
+    profiler.tick = () => {
+        originalTick();
+        voiceMeter.update(profiler.metrics.voices.hardwareActive, profiler.metrics.voices.virtualCulled);
+    };
 
     fProfile.addBinding(profiler.metrics.mixer, 'globalSnapshot', { readonly: true, label: 'Global Snapshot' });
     fProfile.addBinding(profiler.metrics.mixer, 'activeLayers', { readonly: true, label: 'Active Overlays' });
@@ -390,8 +399,8 @@ function setupSpatialSection(pane: Pane, audio: IDebuggableEngine, PARAMS: IDebu
 }
 
 function setupSmartLoopSection(pane: Pane, audio: IDebuggableEngine, PARAMS: IDebugParams, config: any) {
-    const fLoop = pane.addFolder({ title: 'SMART LOOP MANAGER', expanded: false });
-    applyIcon(fLoop, 'fad-loop', 'SMART LOOP MANAGER');
+    const fLoop = pane.addFolder({ title: 'SEQUENCER', expanded: false });
+    applyIcon(fLoop, 'fad-loop', 'SEQUENCER');
 
     if (!config || !config.soundMap) return;
 
