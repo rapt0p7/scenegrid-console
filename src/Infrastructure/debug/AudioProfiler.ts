@@ -6,7 +6,8 @@ export class AudioProfiler {
         voices: {
             hardwareActive: 0,
             virtualCulled: 0,
-            totalTracked: 0
+            totalTracked: 0,
+            dump: [] as Array<{ name: string; isVirtual: boolean }>
         },
         mixer: {
             globalSnapshot: 'None',
@@ -47,18 +48,26 @@ export class AudioProfiler {
         const activeVoices = pool.getActiveVoices() as ReadonlySet<ISoundInstance>;
         let hw = 0;
         let virtual = 0;
+        const currentDump = [];
 
         for (const voice of activeVoices) {
-            if (voice.state === 'virtual') {
+            const isVirtual = voice.state === 'virtual';
+            if (isVirtual) {
                 virtual++;
             } else {
                 hw++;
             }
+
+            currentDump.push({
+                name: voice.id,
+                isVirtual
+            });
         }
 
         this.metrics.voices.hardwareActive = hw;
         this.metrics.voices.virtualCulled = virtual;
         this.metrics.voices.totalTracked = hw + virtual;
+        this.metrics.voices.dump = currentDump;
     }
 
     private updateMixerMetrics(): void {
@@ -66,12 +75,12 @@ export class AudioProfiler {
         if (!stack || !stack.layers) return;
 
         const allLayers = [...(stack.layers as Map<string, any>).values()]
-            // eslint-disable-next-line unicorn/no-array-sort
+            // oxlint-disable-next-line unicorn/no-array-sort
             .sort((a, b) => a.priority - b.priority);
 
         const baseLayer = allLayers.find(l => l.priority === 0);
 
-        const currentSnapshot = baseLayer?.snapshot?.metadata?.snapshotId || '[No Base Snapshot]';
+        const currentSnapshot = baseLayer?.snapshot?.metadata?.snapshotId ?? '[No Base Snapshot]';
 
         const overlays = allLayers
             .filter(l => l.priority > 0)
@@ -88,7 +97,6 @@ export class AudioProfiler {
         const busSystem = this.engine._debug?.busSystem;
         if (!busSystem) return;
 
-        // eslint-disable-next-line unicorn/no-array-for-each
         busSystem.getAllBuses().forEach((bus: any, id: string) => {
             const target = bus.targetParams;
             if (target && target.gain) {
@@ -98,7 +106,7 @@ export class AudioProfiler {
 
                 this.metrics.buses[id] = `Base: ${logical} × RTPC: ${rtpc} = ${final}`;
             } else {
-                this.metrics.buses[id] = `Final: ${(bus.logicalTargetGain || 0).toFixed(2)}`;
+                this.metrics.buses[id] = `Final: ${(bus.logicalTargetGain ?? 0).toFixed(2)}`;
             }
         });
     }

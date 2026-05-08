@@ -6,6 +6,7 @@ import { Pane, FolderApi } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import { AudioProfiler } from './AudioProfiler.js';
 import { VoiceMeterWidget } from '@infrastructure/debug/ui/VoiceMeterWidget.js';
+import { VoiceListWidget } from '@infrastructure/debug/ui/VoiceListWidget.js';
 
 interface IDebuggableEngine {
     play(soundId: string): any;
@@ -118,11 +119,13 @@ export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
     const globalVoiceLimit = audio._debug?.config?.globalVoiceLimit ?? 32;
 
     const voiceMeter = new VoiceMeterWidget(voiceContainer as HTMLElement, globalVoiceLimit);
+    const voiceList = new VoiceListWidget(voiceContainer as HTMLElement);
 
     const originalTick = profiler.tick.bind(profiler);
     profiler.tick = () => {
         originalTick();
         voiceMeter.update(profiler.metrics.voices.hardwareActive, profiler.metrics.voices.virtualCulled);
+        voiceList.update(profiler.metrics.voices.dump);
     };
 
     fProfile.addBinding(profiler.metrics.mixer, 'globalSnapshot', { readonly: true, label: 'Global Snapshot' });
