@@ -1,20 +1,25 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // oxlint-disable unicorn/no-useless-undefined
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { AudioContext as MockAudioContext, registrar } from 'standardized-audio-context-mock';
 
 import SoundPoolManager from '../SoundPoolManager.js';
 
 import type { SoundId } from '@shared/Types/Branded.js';
-import type { ISoundInstance } from '@infrastructure';
-import type { IVoiceConfig } from '@infrastructure';
+import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
+import type { IVoiceConfig } from '@infrastructure/types/IVoiceConfig.js';
 
 function createMockInstance(initialId: string): ISoundInstance {
     const listeners: Record<string, Array<(...arguments_: any[]) => any>> = {};
     let currentId = initialId;
+    let isLooping = false;
 
     return {
         get id() {
             return currentId;
+        },
+        get isLooping() {
+            return isLooping;
         },
         _poolIndex: -1,
         state: 'idle',
@@ -37,9 +42,12 @@ function createMockInstance(initialId: string): ISoundInstance {
         }),
         resetForReuse: vi.fn().mockImplementation(function (this: any) {
             this.state = 'idle';
+            isLooping = false;
         }),
         setRate: vi.fn(),
-        setLoop: vi.fn(),
+        setLoop: vi.fn().mockImplementation((val: boolean) => {
+            isLooping = val;
+        }),
         dispose: vi.fn(),
         on: vi.fn().mockImplementation((event: string, handler: (...arguments_: any[]) => any) => {
             if (!listeners[event]) listeners[event] = [];
@@ -58,12 +66,15 @@ function createMockInstance(initialId: string): ISoundInstance {
 }
 
 describe('SoundPoolManager (Global Voice Arbiter)', () => {
+    let mockCtx: MockAudioContext;
     let mockConfigs: Record<string, IVoiceConfig>;
     let pool: SoundPoolManager;
     let fakeBuffer: AudioBuffer;
 
     beforeEach(() => {
-        fakeBuffer = {} as AudioBuffer;
+        mockCtx = new MockAudioContext();
+        fakeBuffer = mockCtx.createBuffer(2, 44100, 44100) as unknown as AudioBuffer;
+
         mockConfigs = {
             music: { priority: 0, virtualization: 'virtualize' },
             sfx_high: { priority: 50, virtualization: 'kill' },
@@ -77,6 +88,12 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
             policy: 'steal_oldest',
             voiceConfigResolver: soundId => mockConfigs[soundId]
         });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+        registrar.reset(mockCtx as any);
     });
 
     it('should pre-allocate instances in constructor', () => {
@@ -140,13 +157,82 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
     });
 });
 
+describe('SoundPoolManager (Loop Stealing Immunity)', () => {
+    let mockCtx: MockAudioContext;
+    let mockConfigs: Record<string, IVoiceConfig>;
+    let pool: SoundPoolManager;
+    let fakeBuffer: AudioBuffer;
+
+    beforeEach(() => {
+        mockCtx = new MockAudioContext();
+        fakeBuffer = mockCtx.createBuffer(2, 44100, 44100) as unknown as AudioBuffer;
+        mockConfigs = {
+            sfx_high: { priority: 50, virtualization: 'kill' },
+            sfx_low: { priority: 200, virtualization: 'kill' },
+            ambient: { priority: 255, virtualization: 'virtualize' }
+        };
+
+        pool = new SoundPoolManager(soundId => createMockInstance(soundId), {
+            globalVoiceLimit: 2,
+            maxPolyphony: 32,
+            policy: 'steal_oldest',
+            voiceConfigResolver: soundId => mockConfigs[soundId]
+        });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+        registrar.reset(mockCtx as any);
+    });
+
+    it('should PREFER stealing from one-shots over loops, even if the loop has a weaker priority', () => {
+        const ambientInst = pool.acquire('ambient' as SoundId, fakeBuffer)!;
+        ambientInst.setLoop(true);
+        (ambientInst as any).state = 'playing';
+
+        const sfxLowInst = pool.acquire('sfx_low' as SoundId, fakeBuffer)!;
+        sfxLowInst.setLoop(false);
+        (sfxLowInst as any).state = 'playing';
+
+        const vipInst = pool.acquire('sfx_high' as SoundId, fakeBuffer);
+
+        expect(vipInst).not.toBeNull();
+
+        expect(sfxLowInst.stop).toHaveBeenCalled();
+        expect(ambientInst.stop).not.toHaveBeenCalled();
+    });
+
+    it('should steal a loop ONLY if no vulnerable one-shots are available', () => {
+        const ambient1 = pool.acquire('ambient' as SoundId, fakeBuffer)!;
+        ambient1.setLoop(true);
+        (ambient1 as any).state = 'playing';
+
+        const ambient2 = pool.acquire('ambient' as SoundId, fakeBuffer)!;
+        ambient2.setLoop(true);
+        (ambient2 as any).state = 'playing';
+
+        const vipInst = pool.acquire('sfx_high' as SoundId, fakeBuffer);
+
+        expect(vipInst).not.toBeNull();
+
+        const loop1Stopped = (ambient1.stop as any).mock.calls.length > 0;
+        const loop2Stopped = (ambient2.stop as any).mock.calls.length > 0;
+
+        expect(loop1Stopped || loop2Stopped).toBe(true);
+    });
+});
+
 describe('SoundPoolManager (Policy Logic)', () => {
+    let mockCtx: MockAudioContext;
     let mockFactory: any;
     let manager: SoundPoolManager;
     let fakeBuffer: AudioBuffer;
 
     beforeEach(() => {
-        fakeBuffer = {} as AudioBuffer;
+        mockCtx = new MockAudioContext();
+        fakeBuffer = mockCtx.createBuffer(2, 44100, 44100) as unknown as AudioBuffer;
+
         let idCounter = 0;
         mockFactory = vi.fn((soundId: string) => {
             const inst = createMockInstance(soundId);
@@ -160,6 +246,12 @@ describe('SoundPoolManager (Policy Logic)', () => {
             policy: 'steal_oldest',
             voiceConfigResolver: () => ({ priority: 128, virtualization: 'kill' })
         });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+        registrar.reset(mockCtx as any);
     });
 
     it('should STEAL the oldest busy instance when maxPolyphony is reached', () => {
@@ -177,12 +269,15 @@ describe('SoundPoolManager (Policy Logic)', () => {
 });
 
 describe('SoundPoolManager (Dispose)', () => {
+    let mockCtx: MockAudioContext;
     let mockFactory: any;
     let manager: SoundPoolManager;
     let fakeBuffer: AudioBuffer;
 
     beforeEach(() => {
-        fakeBuffer = {} as AudioBuffer;
+        mockCtx = new MockAudioContext();
+        fakeBuffer = mockCtx.createBuffer(2, 44100, 44100) as unknown as AudioBuffer;
+
         mockFactory = vi.fn((soundId: string) => createMockInstance(soundId));
         manager = new SoundPoolManager(mockFactory, {
             maxPolyphony: 10,
@@ -190,6 +285,12 @@ describe('SoundPoolManager (Dispose)', () => {
             policy: 'steal_oldest',
             voiceConfigResolver: () => undefined
         });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+        registrar.reset(mockCtx as any);
     });
 
     it('should dispose ONLY instances of the specified soundId', () => {

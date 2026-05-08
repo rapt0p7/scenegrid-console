@@ -6,7 +6,7 @@ import { VoiceCullingArbiter } from '../VoiceCullingArbiter.js';
 import type { ICullingContext } from '../Ports/ICullingArbiter.js';
 import type { BusId, PlaybackId, SoundId } from '@shared/Types/Branded.js';
 
-describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
+describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
     let arbiter: VoiceCullingArbiter;
     let mockContext: ICullingContext;
 
@@ -17,8 +17,11 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
     let soundRouting: Record<string, BusId>;
     let busVolumes: Record<string, number>;
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const HYSTERESIS_MS = 1000;
+
     beforeEach(() => {
-        arbiter = new VoiceCullingArbiter(0.01);
+        arbiter = new VoiceCullingArbiter(0.01, HYSTERESIS_MS);
 
         activePlaybacks = [];
         playbackStates = {};
@@ -52,7 +55,9 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
         const sId = soundId as SoundId;
         const bId = busId as BusId;
 
-        activePlaybacks.push(pId);
+        if (!activePlaybacks.includes(pId)) {
+            activePlaybacks.push(pId);
+        }
         soundIds[id] = sId;
         soundRouting[soundId] = bId;
         playbackStates[id] = physicalState;
@@ -62,93 +67,129 @@ describe('VoiceCullingArbiter (Pure Domain Logic)', () => {
         return pId;
     }
 
-    it('should return empty decisions if no sounds are playing', () => {
-        const decisions = arbiter.evaluate(mockContext);
-        expect(decisions.toVirtualize).toHaveLength(0);
-        expect(decisions.toDevirtualize).toHaveLength(0);
+    function setVolume(busId: string, volume: number) {
+        busVolumes[busId] = volume;
+    }
+
+    describe('Basic Culling Decisions', () => {
+        it('should return empty decisions if no sounds are playing', () => {
+            const decisions = arbiter.evaluate(mockContext, 500);
+            expect(decisions.toVirtualize).toHaveLength(0);
+            expect(decisions.toDevirtualize).toHaveLength(0);
+        });
+
+        it('should recommend to VIRTUALIZE a playing sound when its bus volume drops below threshold AND hysteresis time passes', () => {
+            const pId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0.005);
+
+            const decisions = arbiter.evaluate(mockContext, 1500);
+
+            expect(decisions.toVirtualize).toContain(pId);
+            expect(decisions.toDevirtualize).toHaveLength(0);
+        });
+
+        it('should recommend to DEVIRTUALIZE a sleeping sound when its bus volume rises above threshold INSTANTLY', () => {
+            const pId = addMockPlayback(1, 'violins', 'music', 'virtual', 'playing', 1);
+
+            const decisions = arbiter.evaluate(mockContext, 0);
+
+            expect(decisions.toDevirtualize).toContain(pId);
+            expect(decisions.toVirtualize).toHaveLength(0);
+        });
+
+        it('should VIRTUALIZE a paused sound if its bus volume drops below threshold (to free up pool slots)', () => {
+            const pId = addMockPlayback(1, 'ambient', 'bg', 'paused', 'paused', 0);
+
+            const decisions = arbiter.evaluate(mockContext, 1500);
+
+            expect(decisions.toVirtualize).toContain(pId);
+            expect(decisions.toDevirtualize).toHaveLength(0);
+        });
+
+        it('should NOT DEVIRTUALIZE a sleeping sound if its bus volume rises BUT its logical state is paused', () => {
+            addMockPlayback(1, 'ambient', 'bg', 'virtual', 'paused', 1);
+
+            const decisions = arbiter.evaluate(mockContext, 500);
+
+            expect(decisions.toDevirtualize).toHaveLength(0);
+            expect(decisions.toVirtualize).toHaveLength(0);
+        });
     });
 
-    it('should recommend to VIRTUALIZE a playing sound when its bus volume drops below threshold', () => {
-        const pId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0.005);
+    describe('Hysteresis (Anti-Flutter) Mechanics', () => {
+        it('should accumulate time and delay virtualization until hysteresis threshold is met', () => {
+            const pId = addMockPlayback(1, 'drone', 'bg', 'playing', 'playing', 0); // Тихий звук
 
-        const decisions = arbiter.evaluate(mockContext);
+            let decisions = arbiter.evaluate(mockContext, 500);
+            expect(decisions.toVirtualize).not.toContain(pId);
 
-        expect(decisions.toVirtualize).toContain(pId);
-        expect(decisions.toDevirtualize).toHaveLength(0);
+            decisions = arbiter.evaluate(mockContext, 400);
+            expect(decisions.toVirtualize).not.toContain(pId);
+
+            decisions = arbiter.evaluate(mockContext, 100);
+            expect(decisions.toVirtualize).toContain(pId);
+        });
+
+        it('should reset hysteresis timer instantly if volume spikes back up (Anti-Flutter)', () => {
+            const pId = addMockPlayback(1, 'drone', 'bg', 'playing', 'playing', 0);
+
+            arbiter.evaluate(mockContext, 800);
+
+            setVolume('bg', 0.5);
+
+            arbiter.evaluate(mockContext, 200);
+
+            setVolume('bg', 0);
+
+            const decisions = arbiter.evaluate(mockContext, 300);
+            expect(decisions.toVirtualize).not.toContain(pId);
+        });
+
+        it('should safely clean up timers for playbacks that have naturally ended (Memory Leak Prevention)', () => {
+            addMockPlayback(1, 'laser', 'sfx', 'playing', 'playing', 0);
+
+            arbiter.evaluate(mockContext, 500);
+            expect((arbiter as any).muteTimers.has(1)).toBe(true);
+
+            activePlaybacks.length = 0;
+
+            arbiter.evaluate(mockContext, 500);
+
+            expect((arbiter as any).muteTimers.has(1)).toBe(false);
+        });
     });
 
-    it('should recommend to DEVIRTUALIZE a sleeping sound when its bus volume rises above threshold', () => {
-        const pId = addMockPlayback(1, 'violins', 'music', 'virtual', 'playing', 1);
+    describe('Edge Cases', () => {
+        it('should DO NOTHING if state and volume already match', () => {
+            addMockPlayback(1, 'explosion', 'sfx', 'playing', 'playing', 0.8);
+            const decisions1 = arbiter.evaluate(mockContext, 1000);
+            expect(decisions1.toVirtualize).toHaveLength(0);
+            expect(decisions1.toDevirtualize).toHaveLength(0);
 
-        const decisions = arbiter.evaluate(mockContext);
+            addMockPlayback(2, 'ambient', 'bg', 'virtual', 'playing', 0);
+            const decisions2 = arbiter.evaluate(mockContext, 1000);
+            expect(decisions2.toVirtualize).toHaveLength(0);
+            expect(decisions2.toDevirtualize).toHaveLength(0);
+        });
 
-        expect(decisions.toDevirtualize).toContain(pId);
-        expect(decisions.toVirtualize).toHaveLength(0);
-    });
+        it('should NOT affect sounds on other buses that are still loud', () => {
+            const quietId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0);
+            addMockPlayback(2, 'explosion', 'sfx', 'playing', 'playing', 1);
 
-    it('should VIRTUALIZE a paused sound if its bus volume drops below threshold (to free up pool slots)', () => {
-        const pId = addMockPlayback(1, 'ambient', 'bg', 'paused', 'paused', 0);
+            const decisions = arbiter.evaluate(mockContext, 1500);
 
-        const decisions = arbiter.evaluate(mockContext);
+            expect(decisions.toVirtualize).toContain(quietId);
+            expect(decisions.toVirtualize).toHaveLength(1);
+        });
 
-        expect(decisions.toVirtualize).toContain(pId);
-        expect(decisions.toDevirtualize).toHaveLength(0);
-    });
+        it('should safely ignore playbacks with unknown soundIds or busIds', () => {
+            activePlaybacks.push(999 as PlaybackId);
+            let decisions = arbiter.evaluate(mockContext, 1000);
+            expect(decisions.toVirtualize).toHaveLength(0);
 
-    it('should NOT DEVIRTUALIZE a sleeping sound if its bus volume rises BUT its logical state is paused', () => {
-        addMockPlayback(1, 'ambient', 'bg', 'virtual', 'paused', 1);
-
-        const decisions = arbiter.evaluate(mockContext);
-
-        expect(decisions.toDevirtualize).toHaveLength(0);
-        expect(decisions.toVirtualize).toHaveLength(0);
-    });
-
-    it('should DO NOTHING if state and volume already match (e.g., loud and playing)', () => {
-        addMockPlayback(1, 'explosion', 'sfx', 'playing', 'playing', 0.8);
-
-        const decisions = arbiter.evaluate(mockContext);
-
-        expect(decisions.toVirtualize).toHaveLength(0);
-        expect(decisions.toDevirtualize).toHaveLength(0);
-    });
-
-    it('should DO NOTHING if state and volume already match (e.g., muted and virtual)', () => {
-        addMockPlayback(1, 'ambient', 'bg', 'virtual', 'playing', 0);
-
-        const decisions = arbiter.evaluate(mockContext);
-
-        expect(decisions.toVirtualize).toHaveLength(0);
-        expect(decisions.toDevirtualize).toHaveLength(0);
-    });
-
-    it('should NOT affect sounds on other buses that are still loud', () => {
-        const quietId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0);
-        addMockPlayback(2, 'explosion', 'sfx', 'playing', 'playing', 1);
-
-        const decisions = arbiter.evaluate(mockContext);
-
-        expect(decisions.toVirtualize).toContain(quietId);
-        expect(decisions.toVirtualize).toHaveLength(1);
-    });
-
-    it('should safely ignore playbacks with unknown soundIds or busIds', () => {
-        activePlaybacks.push(999 as PlaybackId);
-
-        const decisions = arbiter.evaluate(mockContext);
-
-        expect(decisions.toVirtualize).toHaveLength(0);
-        expect(decisions.toDevirtualize).toHaveLength(0);
-    });
-
-    it('should safely ignore playbacks with a valid SoundId but an unknown BusId', () => {
-        addMockPlayback(3, 'orphan_sound', 'unknown_bus', 'playing', 'playing', 1);
-
-        delete soundRouting['orphan_sound'];
-
-        const decisions = arbiter.evaluate(mockContext);
-
-        expect(decisions.toVirtualize).toHaveLength(0);
-        expect(decisions.toDevirtualize).toHaveLength(0);
+            addMockPlayback(3, 'orphan', 'unknown_bus', 'playing', 'playing', 1);
+            delete soundRouting['orphan'];
+            decisions = arbiter.evaluate(mockContext, 1000);
+            expect(decisions.toVirtualize).toHaveLength(0);
+        });
     });
 });

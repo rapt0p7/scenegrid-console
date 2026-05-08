@@ -33,15 +33,15 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
         runner = new CullingRunner(mockArbiter, mockController, mockContext);
     });
 
-    it('should query the arbiter and dispatch virtualization commands to the controller', () => {
+    it('should query the arbiter with deltaTime and dispatch virtualization commands to the controller', () => {
         vi.mocked(mockArbiter.evaluate).mockReturnValue({
             toVirtualize: [101 as PlaybackId, 102 as PlaybackId],
             toDevirtualize: []
         });
 
-        runner.tick();
+        runner.tick(10.5, 500);
 
-        expect(mockArbiter.evaluate).toHaveBeenCalledWith(mockContext);
+        expect(mockArbiter.evaluate).toHaveBeenCalledWith(mockContext, 500);
 
         expect(mockController.virtualize).toHaveBeenCalledTimes(2);
         expect(mockController.virtualize).toHaveBeenCalledWith(101);
@@ -50,15 +50,15 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
         expect(mockController.devirtualize).not.toHaveBeenCalled();
     });
 
-    it('should query the arbiter and dispatch devirtualization commands to the controller', () => {
+    it('should query the arbiter with deltaTime and dispatch devirtualization commands to the controller', () => {
         vi.mocked(mockArbiter.evaluate).mockReturnValue({
             toVirtualize: [],
             toDevirtualize: [201 as PlaybackId]
         });
 
-        runner.tick();
+        runner.tick(12.0, 0);
 
-        expect(mockArbiter.evaluate).toHaveBeenCalledWith(mockContext);
+        expect(mockArbiter.evaluate).toHaveBeenCalledWith(mockContext, 0);
 
         expect(mockController.devirtualize).toHaveBeenCalledTimes(1);
         expect(mockController.devirtualize).toHaveBeenCalledWith(201);

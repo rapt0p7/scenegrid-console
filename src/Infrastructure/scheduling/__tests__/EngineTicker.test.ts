@@ -145,7 +145,7 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
             capturedTick!();
 
             expect(tickable.tick).toHaveBeenCalledTimes(1);
-            expect(tickable.tick).toHaveBeenCalledWith(5.5, 15);
+            expect(tickable.tick).toHaveBeenCalledWith(5.5, 30);
 
             const task = (ticker as any).tasks.find((t: any) => t.id === 'task1');
             expect(task.accumulator).toBe(0);

@@ -15,5 +15,5 @@ export interface CullingDecisions {
 }
 
 export interface ICullingArbiter {
-    evaluate(context: ICullingContext): CullingDecisions;
+    evaluate(context: ICullingContext, deltaTimeMs: number): CullingDecisions;
 }

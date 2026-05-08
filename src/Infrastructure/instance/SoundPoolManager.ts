@@ -145,8 +145,11 @@ export default class SoundPoolManager {
     }
 
     #findStealCandidate(requestedPriority: number): number {
-        let weakestIndex = -1;
-        let weakestPriority = -1;
+        let weakestIndexNonLoop = -1;
+        let weakestPriorityNonLoop = -1;
+
+        let weakestIndexLoop = -1;
+        let weakestPriorityLoop = -1;
 
         for (const index of this.#activeIndices) {
             const inst = this.#allInstances[index];
@@ -154,12 +157,27 @@ export default class SoundPoolManager {
 
             const p = this.#config.voiceConfigResolver(inst.id)?.priority ?? 128;
 
-            if (p > weakestPriority) {
-                weakestPriority = p;
-                weakestIndex = index;
+            if (inst.isLooping) {
+                if (p > weakestPriorityLoop) {
+                    weakestPriorityLoop = p;
+                    weakestIndexLoop = index;
+                }
+            } else {
+                if (p > weakestPriorityNonLoop) {
+                    weakestPriorityNonLoop = p;
+                    weakestIndexNonLoop = index;
+                }
             }
         }
 
-        return weakestPriority >= requestedPriority ? weakestIndex : -1;
+        if (weakestPriorityNonLoop >= requestedPriority) {
+            return weakestIndexNonLoop;
+        }
+
+        if (weakestPriorityLoop >= requestedPriority) {
+            return weakestIndexLoop;
+        }
+
+        return -1;
     }
 }

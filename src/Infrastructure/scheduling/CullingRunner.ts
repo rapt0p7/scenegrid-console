@@ -10,8 +10,8 @@ export class CullingRunner {
         private readonly contextProvider: ICullingContext
     ) {}
 
-    public tick(): void {
-        const decisions = this.arbiter.evaluate(this.contextProvider);
+    public tick(audioCurrentTime: number, deltaTimeMs: number): void {
+        const decisions = this.arbiter.evaluate(this.contextProvider, deltaTimeMs);
 
         for (const id of decisions.toVirtualize) {
             this.controller.virtualize(id);

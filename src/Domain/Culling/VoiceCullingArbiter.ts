@@ -1,12 +1,34 @@
+// noinspection D
+
 import type { ICullingContext, CullingDecisions, ICullingArbiter } from '@domain/Culling/Ports/ICullingArbiter.js';
+import type { PlaybackId } from '@shared/Types/Branded.js';
 
 export class VoiceCullingArbiter implements ICullingArbiter {
-    constructor(private readonly cullingThreshold: number = 0.01) {}
+    private readonly muteTimers = new Map<PlaybackId, number>();
+    private readonly decisions: CullingDecisions = { toVirtualize: [], toDevirtualize: [] };
 
-    public evaluate(context: ICullingContext): CullingDecisions {
-        const decisions: CullingDecisions = { toVirtualize: [], toDevirtualize: [] };
+    constructor(
+        private readonly cullingThreshold: number = 0.01,
+        private readonly hysteresisMs: number = 1000
+    ) {}
 
-        for (const playbackId of context.activePlaybacks) {
+    // oxlint-disable-next-line max-lines-per-function
+    public evaluate(context: ICullingContext, deltaTimeMs: number): CullingDecisions {
+        this.decisions.toVirtualize.length = 0;
+        this.decisions.toDevirtualize.length = 0;
+
+        const activePlaybacks = context.activePlaybacks;
+
+        for (const id of this.muteTimers.keys()) {
+            if (!activePlaybacks.includes(id)) {
+                this.muteTimers.delete(id);
+            }
+        }
+
+        const length = activePlaybacks.length;
+        for (let i = 0; i < length; i++) {
+            const playbackId = activePlaybacks[i];
+
             const soundId = context.getSoundId(playbackId);
             if (!soundId) continue;
 
@@ -19,13 +41,22 @@ export class VoiceCullingArbiter implements ICullingArbiter {
             const physicalState = context.getPlaybackState(playbackId);
             const logicalState = context.getLogicalState(playbackId);
 
-            if (isMuted && physicalState !== 'virtual' && physicalState !== 'stopped') {
-                decisions.toVirtualize.push(playbackId);
-            } else if (!isMuted && physicalState === 'virtual' && logicalState === 'playing') {
-                decisions.toDevirtualize.push(playbackId);
+            if (isMuted) {
+                const timeMuted = (this.muteTimers.get(playbackId) ?? 0) + deltaTimeMs;
+                this.muteTimers.set(playbackId, timeMuted);
+
+                if (timeMuted >= this.hysteresisMs && physicalState !== 'virtual' && physicalState !== 'stopped') {
+                    this.decisions.toVirtualize.push(playbackId);
+                }
+            } else {
+                this.muteTimers.delete(playbackId);
+
+                if (physicalState === 'virtual' && logicalState === 'playing') {
+                    this.decisions.toDevirtualize.push(playbackId);
+                }
             }
         }
 
-        return decisions;
+        return this.decisions;
     }
 }

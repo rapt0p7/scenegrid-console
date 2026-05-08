@@ -341,7 +341,7 @@ export class AudioEngine {
             );
             this.#engineTicker.add('culling-runner' as TickerTaskId, CullingRunner.TICK_RATE_MS, this.#cullingRunner);
             mixerTransitionEngine.events.on('transition:start', () => {
-                this.#cullingRunner.tick();
+                this.#cullingRunner.tick(this.#contextManager.currentTime, 0);
             });
             this.#engineTicker.add(
                 'mixer-state-manager' as TickerTaskId,
