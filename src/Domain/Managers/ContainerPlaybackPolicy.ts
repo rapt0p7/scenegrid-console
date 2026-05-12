@@ -1,4 +1,4 @@
-import type { ContainerMode, IContainerSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { ContainerSourceItem, IContainerSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type {
     IContainerEvaluationResult,
     IContainerPlaybackState
@@ -10,52 +10,62 @@ export default class ContainerPlaybackPolicy {
         config: IContainerSoundConfig,
         currentState?: IContainerPlaybackState
     ): IContainerEvaluationResult {
-        const sources = config.sources;
+        const { sources, mode } = config;
+        if (!isDefined(sources) || sources.length === 0) return { soundId: null, nextState: { lastPlayedIndex: -1 } };
 
-        if (!isDefined(sources) || sources.length === 0) {
-            return {
-                soundId: null,
-                nextState: { lastPlayedIndex: -1 }
-            };
-        }
-
-        if (sources.length === 1) {
-            return {
-                soundId: sources[0],
-                nextState: { lastPlayedIndex: 0 }
-            };
-        }
-
+        const { length } = sources;
         const lastIndex = currentState?.lastPlayedIndex ?? -1;
-        const nextIndex = this.calculateNextIndex(config.mode, sources.length, lastIndex);
+        const history = currentState?.recentHistory ?? [];
+
+        let nextIndex = 0;
+
+        switch (mode) {
+            case 'sequence':
+                nextIndex = (lastIndex + 1) % length;
+                break;
+            case 'random_no_repeat':
+                nextIndex = this.calculateNoRepeat(sources, history);
+                break;
+            case 'random':
+            default:
+                nextIndex = this.calculateWeightedRandom(sources);
+                break;
+        }
+
+        const nextHistory = [nextIndex, ...history].slice(0, 2);
+
+        const selected = sources[nextIndex];
+        const soundId = typeof selected === 'string' ? selected : selected.id;
 
         return {
-            soundId: sources[nextIndex],
-            nextState: { lastPlayedIndex: nextIndex }
+            soundId,
+            nextState: { lastPlayedIndex: nextIndex, recentHistory: nextHistory }
         };
     }
 
-    private calculateNextIndex(mode: ContainerMode, length: number, lastIndex: number): number {
-        switch (mode) {
-            case 'sequence': {
-                return (lastIndex + 1) % length;
-            }
+    private calculateWeightedRandom(sources: ContainerSourceItem[]): number {
+        let totalWeight = 0;
+        const weights = sources.map(s => {
+            const w = typeof s === 'string' ? 1 : (s.weight ?? 1);
+            totalWeight += w;
+            return w;
+        });
 
-            case 'random': {
-                return Math.floor(Math.random() * length);
-            }
-
-            case 'random_no_repeat': {
-                let newIndex;
-                do {
-                    newIndex = Math.floor(Math.random() * length);
-                } while (newIndex === lastIndex);
-                return newIndex;
-            }
-
-            default: {
-                return 0;
-            }
+        let r = Math.random() * totalWeight;
+        const { length } = weights;
+        for (let i = 0; i < length; i++) {
+            r -= weights[i];
+            if (r <= 0) return i;
         }
+        return 0;
+    }
+
+    private calculateNoRepeat(sources: ContainerSourceItem[], history: number[]): number {
+        if (sources.length <= 1) return 0;
+        let index: number;
+        do {
+            index = this.calculateWeightedRandom(sources);
+        } while (history.includes(index));
+        return index;
     }
 }

@@ -10,8 +10,8 @@ import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js'
 import type { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 
 const testSoundMap: any = {
-    simple_sound: { busId: 'sfx' },
-    layer_sound: {
+    'simple_sound': { busId: 'sfx' },
+    'layer_sound': {
         isLayered: true,
         busId: 'music',
         layers: [
@@ -19,13 +19,24 @@ const testSoundMap: any = {
             { src: 'layer2.wav', delayMs: 500 }
         ]
     },
-    container_sound: {
+    'container_sound': {
         isContainer: true,
         mode: 'random',
         sources: ['var1.wav', 'var2.wav'],
         variation: { pitchVar: 0.1 }
     },
-    test_sound: { busId: 'sfx', voice: { priority: 5 } }
+    'var2.wav': { busId: 'sfx' },
+    'circular_container': {
+        isContainer: true,
+        mode: 'sequence',
+        sources: ['circular_container']
+    },
+    'container_to_layer': {
+        isContainer: true,
+        mode: 'sequence',
+        sources: ['layer_sound']
+    },
+    'test_sound': { busId: 'sfx', voice: { priority: 5 } }
 };
 
 describe('AudioRouter (Command Dispatcher)', () => {
@@ -40,6 +51,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
         vi.clearAllMocks();
         vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'warn').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
 
         mockController = {
             play: vi.fn().mockReturnValue(1 as PlaybackId),
@@ -106,7 +118,9 @@ describe('AudioRouter (Command Dispatcher)', () => {
         expect(mockController.play).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle container sounds using Registry and Policy (CQS pipeline)', () => {
+    it('should handle container sounds using Registry, Policy, and Recursion', () => {
+        const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+
         const result = router.play('container_sound' as SoundId);
 
         expect(result).toBe(1);
@@ -120,6 +134,8 @@ describe('AudioRouter (Command Dispatcher)', () => {
         expect(mockHistoryRegistry.updateHistory).toHaveBeenCalledWith('container_sound', { lastPlayedIndex: 1 });
 
         expect(mockController.play).toHaveBeenCalledWith('var2.wav', expect.any(Object));
+
+        expect(applyConfigSpy).toHaveBeenCalledWith(1, testSoundMap['container_sound']);
     });
 
     it('should reject plain soundController.play if config is not found', () => {
@@ -128,6 +144,37 @@ describe('AudioRouter (Command Dispatcher)', () => {
         expect(result).toBe(null);
         expect(mockController.play).not.toHaveBeenCalled();
         expect(mockController.routeToBus).not.toHaveBeenCalled();
+    });
+
+    describe('Recursive Container Resolutions', () => {
+        it('should break out of infinite recursion if depth exceeds 10', () => {
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: 'circular_container',
+                nextState: { lastPlayedIndex: 0 }
+            });
+
+            const result = router.play('circular_container' as SoundId);
+
+            expect(result).toBeNull();
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Max recursion depth reached'));
+        });
+
+        it('should correctly apply container config to ALL PlaybackIds if a layer is resolved', () => {
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: 'layer_sound',
+                nextState: { lastPlayedIndex: 0 }
+            });
+            mockController.play.mockReturnValueOnce(10 as PlaybackId).mockReturnValueOnce(20 as PlaybackId);
+
+            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+
+            const result = router.play('container_to_layer' as SoundId);
+
+            expect(result).toEqual([10, 20]);
+
+            expect(applyConfigSpy).toHaveBeenCalledWith(10, testSoundMap['container_to_layer']);
+            expect(applyConfigSpy).toHaveBeenCalledWith(20, testSoundMap['container_to_layer']);
+        });
     });
 
     describe('Playback Control (stop)', () => {
@@ -222,39 +269,17 @@ describe('AudioRouter (Command Dispatcher)', () => {
     });
 
     describe('Container Sounds Edge Cases (handleContainer)', () => {
-        it('should return null if soundController.play fails for a container source', () => {
+        it('should return null if recursive router.play fails for a container source', () => {
             mockContainerPolicy.evaluateNext.mockReturnValue({
-                soundId: 'some_internal_sound',
+                soundId: 'unknown_sound',
                 nextState: { lastPlayedIndex: 0 }
             });
-            mockController.play = vi.fn().mockReturnValue(null);
 
             const result = router.play('container_sound' as SoundId);
 
             expect(result).toBeNull();
-            expect(mockController.play).toHaveBeenCalledWith('some_internal_sound', expect.any(Object));
-        });
-
-        it('should pass a working onRevive hook to the container instance using PlaybackId', () => {
-            mockContainerPolicy.evaluateNext.mockReturnValue({
-                soundId: 'some_internal_sound',
-                nextState: { lastPlayedIndex: 0 }
-            });
-            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback').mockImplementation(() => {});
-
-            let capturedOptions: any;
-            mockController.play = vi.fn().mockImplementation((name, options) => {
-                capturedOptions = options;
-                return 99 as PlaybackId;
-            });
-
-            router.play('container_sound' as SoundId);
-
-            expect(typeof capturedOptions.onRevive).toBe('function');
-
-            capturedOptions.onRevive(99 as PlaybackId);
-
-            expect(applyConfigSpy).toHaveBeenCalledWith(99, testSoundMap['container_sound']);
+            // Поскольку звук неизвестен, рекурсивный вызов прервется ДО вызова soundController.play
+            expect(mockController.play).not.toHaveBeenCalled();
         });
     });
 

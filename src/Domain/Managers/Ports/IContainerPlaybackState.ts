@@ -2,6 +2,7 @@ import type { SoundId } from '@shared/Types/Branded.js';
 
 export interface IContainerPlaybackState {
     readonly lastPlayedIndex: number;
+    readonly recentHistory?: number[];
 }
 
 export interface IContainerEvaluationResult {

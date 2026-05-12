@@ -342,6 +342,56 @@ describe('ConsistencyChecker', () => {
             ConsistencyChecker.validate(config);
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('must be an array of two numbers'));
         });
+
+        it('should accept container sources as strings or objects with weights', () => {
+            const config: any = {
+                buses: { master: { gain: 1 } },
+                manifest: { s1: { url: '1' }, s2: { url: '2' } },
+                soundMap: {
+                    cont: {
+                        isContainer: true,
+                        mode: 'random',
+                        sources: ['s1', { id: 's2', weight: 4 }]
+                    }
+                }
+            };
+            const result = ConsistencyChecker.validate(config);
+            expect(result).toBe(true);
+        });
+
+        it('should catch invalid object sources in containers (missing id or bad weight type)', () => {
+            const config: any = {
+                buses: { master: { gain: 1 } },
+                manifest: { s1: { url: '1' }, s2: { url: '2' } },
+                soundMap: {
+                    cont: {
+                        isContainer: true,
+                        mode: 'random',
+                        sources: [{ weight: 2 }, { id: 's2', weight: 'heavy' }]
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "soundMap.cont.sources[0].id"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "soundMap.cont.sources[1].weight": expected number')
+            );
+        });
+
+        it('should catch containers with undefined sources in the array', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {
+                    bad_cont: { isContainer: true, mode: 'random', sources: [undefined] }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Container "bad_cont" has an undefined source at index 0.')
+            );
+        });
     });
 
     describe('Snapshot Validations', () => {
@@ -351,9 +401,9 @@ describe('ConsistencyChecker', () => {
                 snapshots: {
                     snap1: {
                         buses: {
-                            ghost_bus: { gain: 1 }, // Unknown bus
-                            master: { filter: { type: 'lowpass' } }, // Valid filter
-                            master_bad: { filter: { type: 123 } } // Invalid filter type
+                            ghost_bus: { gain: 1 },
+                            master: { filter: { type: 'lowpass' } },
+                            master_bad: { filter: { type: 123 } }
                         }
                     }
                 }

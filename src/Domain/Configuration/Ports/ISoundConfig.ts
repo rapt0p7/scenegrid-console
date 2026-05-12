@@ -35,6 +35,8 @@ export interface IVoiceConfig {
 
 export type ContainerMode = 'random' | 'random_no_repeat' | 'sequence';
 
+export type ContainerSourceItem = SoundId | { id: SoundId; weight: number };
+
 export interface ISoundConfig extends IBaseSoundConfig {
     readonly isLoop?: boolean;
     readonly voice?: IVoiceConfig;
@@ -56,7 +58,9 @@ export interface ISmartLoopSoundConfig {
 export interface IContainerSoundConfig extends IBaseSoundConfig {
     readonly isContainer: true;
     readonly mode: ContainerMode;
-    readonly sources: SoundId[];
+    readonly sources: ContainerSourceItem[];
+    readonly volumeRange?: [min: number, max: number];
+    readonly pitchRange?: [min: number, max: number];
 }
 
 export interface ILayerConfig {

@@ -296,9 +296,24 @@ export default class ConsistencyChecker {
         }
 
         for (const [index, source] of cfg.sources.entries()) {
-            this.assertRequiredType(`soundMap.${soundId}.sources[${index}]`, source, 'string');
-            if (isDefined(source) && !this.manifest[source] && !this.soundMap[source]) {
-                this.warnings.push(`Container "${soundId}" references missing source "${source}".`);
+            if (!isDefined(source)) {
+                this.errors.push(`Container "${soundId}" has an undefined source at index ${index}.`);
+                continue;
+            }
+
+            const targetId = typeof source === 'string' ? source : source.id;
+
+            if (typeof source === 'object') {
+                this.assertRequiredType(`soundMap.${soundId}.sources[${index}].id`, targetId, 'string');
+                if ('weight' in source && isDefined(source.weight)) {
+                    this.assertRequiredType(`soundMap.${soundId}.sources[${index}].weight`, source.weight, 'number');
+                }
+            } else {
+                this.assertRequiredType(`soundMap.${soundId}.sources[${index}]`, targetId, 'string');
+            }
+
+            if (isDefined(targetId) && !this.manifest[targetId] && !this.soundMap[targetId]) {
+                this.warnings.push(`Container "${soundId}" references missing source "${targetId}".`);
             }
         }
     }
@@ -576,7 +591,10 @@ export default class ConsistencyChecker {
 
                 if (Array.isArray(sources)) {
                     for (const source of sources) {
-                        if (isDefined(source)) referenced.add(source);
+                        if (isDefined(source)) {
+                            const targetId = typeof source === 'string' ? source : source.id;
+                            referenced.add(targetId as string);
+                        }
                     }
                 }
             } else if (this.isSmartLoop(cfg)) {

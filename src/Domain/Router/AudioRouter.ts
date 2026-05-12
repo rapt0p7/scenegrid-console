@@ -66,7 +66,12 @@ export default class AudioRouter implements IAudioRouter {
         }
     }
 
-    play(name: SoundId, options: IPlayOptions = {}): PlaybackId | PlaybackId[] | null {
+    play(name: SoundId, options: IPlayOptions = {}, depth: number = 0): PlaybackId | PlaybackId[] | null {
+        if (depth > 10) {
+            console.error(`[AudioRouter] Max recursion depth reached for: ${name}`);
+            return null;
+        }
+
         const config = this.getSoundConfig(name);
 
         if (!config) {
@@ -75,7 +80,7 @@ export default class AudioRouter implements IAudioRouter {
         }
 
         if ('isContainer' in config && config.isContainer) {
-            return this.handleContainer(name, config, options);
+            return this.handleContainer(name, config, options, depth);
         }
 
         if ('isLayered' in config && config.isLayered) {
@@ -131,7 +136,17 @@ export default class AudioRouter implements IAudioRouter {
         }
     }
 
-    private handleContainer(name: SoundId, config: IContainerSoundConfig, options: IPlayOptions): PlaybackId | null {
+    private handleContainer(
+        name: SoundId,
+        config: IContainerSoundConfig,
+        options: IPlayOptions,
+        depth: number
+    ): PlaybackId | PlaybackId[] | null {
+        if (depth > 10) {
+            console.error(`[AudioRouter] Max recursion depth reached for container: ${name}`);
+            return null;
+        }
+
         const history = this.historyRegistry.getHistory(name);
         const { soundId: nextSource, nextState } = this.containerPolicy.evaluateNext(config, history);
 
@@ -141,21 +156,20 @@ export default class AudioRouter implements IAudioRouter {
 
         const finalOptions = VariationResolver.apply(config, options);
 
-        const playbackId = this.soundController.play(nextSource, {
-            when: (finalOptions.seek ?? 0) / 1000,
-            offset: (finalOptions.seek ?? 0) / 1000,
-            loop: finalOptions.isLoop,
-            rate: finalOptions.rate,
-            onRevive: (id: PlaybackId) => {
-                this.applyConfigToPlayback(id, config);
+        const playbackResult = this.play(nextSource, finalOptions, depth + 1);
+
+        if (!playbackResult) return null;
+
+        if (Array.isArray(playbackResult)) {
+            const { length } = playbackResult;
+            for (let i = 0; i < length; i++) {
+                this.applyConfigToPlayback(playbackResult[i], config);
             }
-        });
+        } else {
+            this.applyConfigToPlayback(playbackResult, config);
+        }
 
-        if (!playbackId) return null;
-
-        this.applyConfigToPlayback(playbackId, config);
-
-        return playbackId;
+        return playbackResult;
     }
 
     private handleLayering(config: ILayeredSoundConfig, options: IPlayOptions): PlaybackId[] | null {
