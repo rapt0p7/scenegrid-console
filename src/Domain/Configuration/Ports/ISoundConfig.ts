@@ -1,5 +1,5 @@
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import { BusId, RegionId, SoundId } from '@shared/Types/Branded.js';
+import { BusId, GameParamId, RegionId, SoundId } from '@shared/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export interface IBaseSoundConfig {
@@ -63,6 +63,13 @@ export interface IContainerSoundConfig extends IBaseSoundConfig {
     readonly pitchRange?: [min: number, max: number];
 }
 
+export interface ISwitchSoundConfig extends IBaseSoundConfig {
+    readonly isSwitch: true;
+    readonly switchGroup: GameParamId;
+    readonly switches: Record<string | number, SoundId>;
+    readonly defaultSwitch?: SoundId;
+}
+
 export interface ILayerConfig {
     readonly src: SoundId;
     readonly delayMs: number;
@@ -84,4 +91,9 @@ export interface IPlayOptions {
     readonly seek?: number;
 }
 
-export type AnySoundConfig = ISoundConfig | ISmartLoopSoundConfig | IContainerSoundConfig | ILayeredSoundConfig;
+export type AnySoundConfig =
+    | ISoundConfig
+    | ISmartLoopSoundConfig
+    | IContainerSoundConfig
+    | ILayeredSoundConfig
+    | ISwitchSoundConfig;

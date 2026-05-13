@@ -59,6 +59,7 @@ import type { Handler } from 'mitt';
 import type { DeepReadonly } from '@shared/DeepReadonly.js';
 import { typedEntries, typedFromEntries } from '@shared/typedObjects.js';
 import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
+import SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 
 export interface InitParameters {
     readonly isStrictValidation?: boolean;
@@ -288,6 +289,7 @@ export class AudioEngine {
             const duckingManager = new DuckingManager(this.#busSystem, this.#soundController);
             const containerHistoryRegistry = new ContainerHistoryRegistry();
             const containerPolicy = new ContainerPlaybackPolicy();
+            const switchPolicy = new SwitchPlaybackPolicy();
 
             this.#router = new AudioRouter({
                 soundController: this.#soundController,
@@ -295,7 +297,9 @@ export class AudioEngine {
                 containerPolicy,
                 historyRegistry: containerHistoryRegistry,
                 soundMap: this.config.soundMap,
-                instanceRTPCBinder: this.#instanceRTPCBinder
+                instanceRTPCBinder: this.#instanceRTPCBinder,
+                rtpcAdapter: this.#rtpcManager,
+                switchPolicy
             });
 
             this.#sequencer = new Sequencer(this.#soundController, this.#router, this.#engineTicker);

@@ -573,6 +573,123 @@ describe('ConsistencyChecker', () => {
         });
     });
 
+    describe('Switch Validations', () => {
+        it('should pass a perfectly valid switch config', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: { surface: { defaultValue: 0 } },
+                soundMap: {
+                    wood: { busId: 'sfx' },
+                    stone: { busId: 'sfx' },
+                    def: { busId: 'sfx' },
+                    footstep: {
+                        isSwitch: true,
+                        busId: 'sfx',
+                        switchGroup: 'surface',
+                        switches: { 0: 'wood', 1: 'stone' },
+                        defaultSwitch: 'def'
+                    }
+                }
+            };
+            expect(ConsistencyChecker.validate(config)).toBe(true);
+        });
+
+        it('should fail if switchGroup references an unknown RTPC parameter', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: { health: { defaultValue: 100 } },
+                soundMap: {
+                    bad_switch: {
+                        isSwitch: true,
+                        busId: 'sfx',
+                        switchGroup: 'ghost_param',
+                        switches: {}
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Switch "bad_switch" uses unknown switchGroup (RTPC param) "ghost_param".')
+            );
+        });
+
+        it('should catch invalid switch structures (missing group, bad switches type)', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: { surface: {} },
+                soundMap: {
+                    bad_switch1: { isSwitch: true, busId: 'sfx', switchGroup: 'surface', switches: [] },
+                    bad_switch2: { isSwitch: true, busId: 'sfx', switchGroup: 123, switches: {} }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "soundMap.bad_switch1.switches": expected an object.')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "soundMap.bad_switch2.switchGroup"')
+            );
+        });
+
+        it('should warn if a switch maps to a non-existent soundId', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: { surface: {} },
+                soundMap: {
+                    my_switch: {
+                        isSwitch: true,
+                        busId: 'sfx',
+                        switchGroup: 'surface',
+                        switches: { 0: 'missing_sound' }
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Switch "my_switch" references missing source "missing_sound".')
+            );
+        });
+
+        it('should warn if defaultSwitch points to a missing soundId', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: { surface: {} },
+                soundMap: {
+                    my_switch: {
+                        isSwitch: true,
+                        busId: 'sfx',
+                        switchGroup: 'surface',
+                        switches: {},
+                        defaultSwitch: 'missing_default'
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Switch "my_switch" references missing defaultSwitch "missing_default".')
+            );
+        });
+
+        it('should warn if a switch has no mappings and no defaultSwitch', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: { surface: {} },
+                soundMap: {
+                    useless_switch: {
+                        isSwitch: true,
+                        busId: 'sfx',
+                        switchGroup: 'surface',
+                        switches: {}
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Switch "useless_switch" has empty switches and no defaultSwitch.')
+            );
+        });
+    });
+
     describe('100% Coverage Edge Cases', () => {
         it('should handle absent base properties in early returns (checkRoutingCycles, etc.)', () => {
             const checker = new (ConsistencyChecker as any)({

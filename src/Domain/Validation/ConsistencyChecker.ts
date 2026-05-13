@@ -1,3 +1,5 @@
+// oxlint-disable max-lines-per-function
+// oxlint-disable max-depth
 // noinspection D
 
 import { isAbsent, isDefined } from '@shared/guards.js';
@@ -9,7 +11,8 @@ import type {
     ISmartLoopSoundConfig,
     ISoundConfig,
     AnySoundConfig,
-    IBaseSoundConfig
+    IBaseSoundConfig,
+    ISwitchSoundConfig
 } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
@@ -262,6 +265,8 @@ export default class ConsistencyChecker {
                 this.validateLayeredSound(soundId, cfg);
             } else if (this.isContainer(cfg)) {
                 this.validateContainerSound(soundId, cfg);
+            } else if (this.isSwitch(cfg)) {
+                this.validateSwitchSound(soundId, cfg);
             } else if (this.isSmartLoop(cfg)) {
                 this.validateSmartLoop(soundId, cfg);
             }
@@ -571,6 +576,10 @@ export default class ConsistencyChecker {
         return typeof cfg === 'object' && cfg !== null && 'smartLoop' in cfg;
     }
 
+    private isSwitch(cfg: any): cfg is ISwitchSoundConfig {
+        return cfg && typeof cfg === 'object' && 'isSwitch' in cfg && cfg.isSwitch === true;
+    }
+
     // eslint-disable-next-line complexity
     private checkOrphanManifestSounds(): void {
         const referenced = new Set<string>();
@@ -596,6 +605,17 @@ export default class ConsistencyChecker {
                             referenced.add(targetId as string);
                         }
                     }
+                }
+            } else if (this.isSwitch(cfg)) {
+                if (cfg.switches && typeof cfg.switches === 'object' && !Array.isArray(cfg.switches)) {
+                    for (const targetId of Object.values(cfg.switches)) {
+                        if (isDefined(targetId) && typeof targetId === 'string') {
+                            referenced.add(targetId);
+                        }
+                    }
+                }
+                if (isDefined(cfg.defaultSwitch) && typeof cfg.defaultSwitch === 'string') {
+                    referenced.add(cfg.defaultSwitch);
                 }
             } else if (this.isSmartLoop(cfg)) {
                 // Smart loops generally reference their own key
@@ -638,6 +658,43 @@ export default class ConsistencyChecker {
                         `[Multiplicative Veto] Snapshot "${snapshotId}" explicitly ${action} gain (${busState.gain}) for bus "${busId}", which is RTPC-driven. This overrides the RTPC curve (Final = ${busState.gain} * RTPC).`
                     );
                 }
+            }
+        }
+    }
+
+    private validateSwitchSound(soundId: string, cfg: DeepReadonly<ISwitchSoundConfig>): void {
+        this.assertRequiredType(`soundMap.${soundId}.switchGroup`, cfg.switchGroup, 'string');
+
+        if (typeof cfg.switchGroup === 'string' && this.rtpcManifest) {
+            if (!(cfg.switchGroup in this.rtpcManifest)) {
+                this.errors.push(`Switch "${soundId}" uses unknown switchGroup (RTPC param) "${cfg.switchGroup}".`);
+            }
+        }
+
+        if (typeof cfg.switches !== 'object' || cfg.switches === null || Array.isArray(cfg.switches)) {
+            this.errors.push(`Type Error at "soundMap.${soundId}.switches": expected an object.`);
+            return;
+        }
+
+        const switchKeys = Object.keys(cfg.switches);
+
+        if (switchKeys.length === 0 && !isDefined(cfg.defaultSwitch)) {
+            this.warnings.push(`Switch "${soundId}" has empty switches and no defaultSwitch.`);
+        }
+
+        for (const [stateKey, targetId] of Object.entries(cfg.switches)) {
+            this.assertRequiredType(`soundMap.${soundId}.switches[${stateKey}]`, targetId, 'string');
+
+            if (isDefined(targetId) && !this.manifest[targetId] && !this.soundMap[targetId]) {
+                this.warnings.push(`Switch "${soundId}" references missing source "${targetId}".`);
+            }
+        }
+
+        if (isDefined(cfg.defaultSwitch)) {
+            this.assertRequiredType(`soundMap.${soundId}.defaultSwitch`, cfg.defaultSwitch, 'string');
+
+            if (!this.manifest[cfg.defaultSwitch] && !this.soundMap[cfg.defaultSwitch]) {
+                this.warnings.push(`Switch "${soundId}" references missing defaultSwitch "${cfg.defaultSwitch}".`);
             }
         }
     }

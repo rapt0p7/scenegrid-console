@@ -1,3 +1,4 @@
+// oxlint-disable import/max-dependencies
 // noinspection D
 
 import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
@@ -7,15 +8,18 @@ import type {
     AnySoundConfig,
     IContainerSoundConfig,
     ILayeredSoundConfig,
-    IPlayOptions
+    IPlayOptions,
+    ISwitchSoundConfig
 } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
+import type SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 import type { IContainerHistoryRegistry } from '@domain/Managers/Ports/IContainerHistoryRegistry.js';
 import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { PlaybackId, SoundId } from '@shared/Types/Branded.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly duckingManager: IDuckingManager;
@@ -24,6 +28,8 @@ export default class AudioRouter implements IAudioRouter {
     private readonly historyRegistry: IContainerHistoryRegistry;
     private readonly soundMap: ISoundMap | null = null;
     private readonly instanceRTPCBinder: InstanceRTPCBinder;
+    private readonly rtpcAdapter: IRTPCAdapter;
+    private readonly switchPolicy: SwitchPlaybackPolicy;
 
     constructor({
         soundController,
@@ -31,14 +37,18 @@ export default class AudioRouter implements IAudioRouter {
         containerPolicy,
         historyRegistry,
         soundMap,
-        instanceRTPCBinder
+        rtpcAdapter,
+        instanceRTPCBinder,
+        switchPolicy
     }: {
         soundController: ISoundController;
         duckingManager: IDuckingManager;
         containerPolicy: ContainerPlaybackPolicy;
         historyRegistry: IContainerHistoryRegistry;
         soundMap: ISoundMap;
+        rtpcAdapter: IRTPCAdapter;
         instanceRTPCBinder: InstanceRTPCBinder;
+        switchPolicy: SwitchPlaybackPolicy;
     }) {
         this.soundController = soundController;
         this.duckingManager = duckingManager;
@@ -46,6 +56,8 @@ export default class AudioRouter implements IAudioRouter {
         this.historyRegistry = historyRegistry;
         this.soundMap = soundMap;
         this.instanceRTPCBinder = instanceRTPCBinder;
+        this.rtpcAdapter = rtpcAdapter;
+        this.switchPolicy = switchPolicy;
     }
 
     getSoundConfig(name: SoundId): AnySoundConfig | null {
@@ -85,6 +97,10 @@ export default class AudioRouter implements IAudioRouter {
 
         if ('isLayered' in config && config.isLayered) {
             return this.handleLayering(config, options);
+        }
+
+        if ('isSwitch' in config && config.isSwitch) {
+            return this.handleSwitch(name, config, options, depth);
         }
 
         const finalOptions = VariationResolver.apply(config, options);
@@ -197,5 +213,39 @@ export default class AudioRouter implements IAudioRouter {
         }
 
         return playbackIds.length > 0 ? playbackIds : null;
+    }
+
+    private handleSwitch(
+        name: SoundId,
+        config: ISwitchSoundConfig,
+        options: IPlayOptions,
+        depth: number
+    ): PlaybackId | PlaybackId[] | null {
+        const currentValue = this.rtpcAdapter.getValue(config.switchGroup);
+        const nextSource = this.switchPolicy.evaluate(config, currentValue);
+
+        if (!nextSource) {
+            console.warn(
+                `[AudioRouter] Switch Container "${name}" failed to resolve. ` +
+                    `Group: "${config.switchGroup}", Current Value: "${currentValue}". ` +
+                    `Check your SoundMap for missing keys or add a defaultSwitch.`
+            );
+            return null;
+        }
+
+        const finalOptions = VariationResolver.apply(config, options);
+        const playbackResult = this.play(nextSource, finalOptions, depth + 1);
+
+        if (!playbackResult) return null;
+
+        if (Array.isArray(playbackResult)) {
+            for (let i = 0; i < playbackResult.length; i++) {
+                this.applyConfigToPlayback(playbackResult[i], config);
+            }
+        } else {
+            this.applyConfigToPlayback(playbackResult, config);
+        }
+
+        return playbackResult;
     }
 }

@@ -8,6 +8,7 @@ import type { PlaybackId, SoundId } from '@shared/Types/Branded.js';
 import type { Mocked } from 'vitest';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 
 const testSoundMap: any = {
     'simple_sound': { busId: 'sfx' },
@@ -25,6 +26,19 @@ const testSoundMap: any = {
         sources: ['var1.wav', 'var2.wav'],
         variation: { pitchVar: 0.1 }
     },
+    'switch_sound': {
+        isSwitch: true,
+        busId: 'sfx',
+        switchGroup: 'surface',
+        switches: {
+            0: 'step_wood',
+            1: 'step_stone'
+        },
+        defaultSwitch: 'step_default'
+    },
+    'step_wood': { busId: 'sfx' },
+    'step_stone': { busId: 'sfx' },
+    'step_default': { busId: 'sfx' },
     'var2.wav': { busId: 'sfx' },
     'circular_container': {
         isContainer: true,
@@ -45,6 +59,8 @@ describe('AudioRouter (Command Dispatcher)', () => {
     let mockInstanceRTPCBinder: Mocked<InstanceRTPCBinder>;
     let mockContainerPolicy: any;
     let mockHistoryRegistry: any;
+    let mockRtpcAdapter: Mocked<IRTPCAdapter>;
+    let mockSwitchPolicy: any;
     let router: AudioRouter;
 
     beforeEach(() => {
@@ -83,13 +99,23 @@ describe('AudioRouter (Command Dispatcher)', () => {
             updateHistory: vi.fn()
         };
 
+        mockRtpcAdapter = {
+            getValue: vi.fn()
+        } as unknown as Mocked<IRTPCAdapter>;
+
+        mockSwitchPolicy = {
+            evaluate: vi.fn()
+        };
+
         router = new AudioRouter({
             soundController: mockController,
             duckingManager: mockDuckingManager,
             containerPolicy: mockContainerPolicy,
             historyRegistry: mockHistoryRegistry,
             soundMap: testSoundMap,
-            instanceRTPCBinder: mockInstanceRTPCBinder
+            rtpcAdapter: mockRtpcAdapter,
+            instanceRTPCBinder: mockInstanceRTPCBinder,
+            switchPolicy: mockSwitchPolicy
         });
     });
 
@@ -144,6 +170,37 @@ describe('AudioRouter (Command Dispatcher)', () => {
         expect(result).toBe(null);
         expect(mockController.play).not.toHaveBeenCalled();
         expect(mockController.routeToBus).not.toHaveBeenCalled();
+    });
+
+    describe('Switch Sounds Edge Cases (handleSwitch)', () => {
+        it('should resolve a switch sound based on the RTPC adapter (using numeric states)', () => {
+            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+
+            mockRtpcAdapter.getValue.mockReturnValue(1);
+            mockSwitchPolicy.evaluate.mockReturnValue('step_stone');
+
+            const result = router.play('switch_sound' as SoundId);
+
+            expect(mockRtpcAdapter.getValue).toHaveBeenCalledWith('surface');
+            expect(mockSwitchPolicy.evaluate).toHaveBeenCalledWith(testSoundMap['switch_sound'], 1);
+
+            expect(mockController.play).toHaveBeenCalledWith('step_stone', expect.any(Object));
+            expect(applyConfigSpy).toHaveBeenCalledWith(1, testSoundMap['switch_sound']);
+            expect(result).toBe(1);
+        });
+
+        it('should return null and warn if the switch policy resolves to nothing (no fallback)', () => {
+            mockRtpcAdapter.getValue.mockReturnValue(99);
+            mockSwitchPolicy.evaluate.mockReturnValue(null);
+
+            const result = router.play('switch_sound' as SoundId);
+
+            expect(result).toBeNull();
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Switch Container "switch_sound" failed to resolve')
+            );
+            expect(mockController.play).not.toHaveBeenCalled();
+        });
     });
 
     describe('Recursive Container Resolutions', () => {
