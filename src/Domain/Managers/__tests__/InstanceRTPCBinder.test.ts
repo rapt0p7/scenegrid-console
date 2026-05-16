@@ -24,7 +24,8 @@ describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
         capturedCleanupCallbacks = new Map();
 
         mockRtpcAdapter = {
-            getValue: vi.fn().mockReturnValue(0)
+            getValue: vi.fn().mockReturnValue(0),
+            setValue: vi.fn().mockReturnValue(0)
         };
 
         mockSoundController = {

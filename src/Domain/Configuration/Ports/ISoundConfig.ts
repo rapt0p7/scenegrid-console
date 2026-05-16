@@ -7,6 +7,7 @@ export interface IBaseSoundConfig {
     readonly variation?: DeepReadonly<IVariationConfig>;
     readonly ducking?: DeepReadonly<IDuckingConfig>;
     readonly rtpc?: DeepReadonly<Partial<Record<RTPCTargetProperty, IRTPCConfig>>>;
+    readonly tail?: SoundId;
 }
 
 export interface ISpatialConfig {

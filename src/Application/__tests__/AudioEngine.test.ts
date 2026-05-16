@@ -153,6 +153,7 @@ describe('AudioEngine', () => {
                 sfx: { gain: 1, sidechain: { enabled: true } }
             },
             snapshots: {},
+            events: {},
             soundMap: {
                 ['test_sound' as SoundId]: { busId: 'sfx', voice: { priority: 5 }, spatial: true },
                 ['sound_no_voice' as SoundId]: { busId: 'master' }
@@ -183,7 +184,7 @@ describe('AudioEngine', () => {
         it('should warn if config is invalid', async () => {
             const warnSpy = vi.spyOn(console, 'warn');
             (ConsistencyChecker.validate as any).mockReturnValueOnce(false);
-            const badEngine = new AudioEngine({ manifest: {}, buses: {}, snapshots: {}, soundMap: {} });
+            const badEngine = new AudioEngine({ manifest: {}, buses: {}, snapshots: {}, soundMap: {}, events: {} });
             await badEngine.init();
             expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('initialized with errors'));
         });
@@ -191,7 +192,7 @@ describe('AudioEngine', () => {
         it('should emit engine:error and exit early if strict validation fails', async () => {
             (ConsistencyChecker.validate as any).mockReturnValueOnce(false);
 
-            const badEngine = new AudioEngine({ manifest: {}, buses: {}, snapshots: {}, soundMap: {} });
+            const badEngine = new AudioEngine({ manifest: {}, buses: {}, snapshots: {}, soundMap: {}, events: {} });
             const errorSpy = vi.fn();
             badEngine.events.on('engine:error', errorSpy);
 
@@ -215,6 +216,7 @@ describe('AudioEngine', () => {
                 buses: { master: { gain: 1 } },
                 snapshots: {},
                 soundMap: {},
+                events: {},
                 rtpcManifest: {
                     ['health' as GameParamId]: { attackMs: 100, releaseMs: 200, defaultValue: 100 },
                     ['speed' as GameParamId]: { attackMs: 50 }
@@ -283,7 +285,8 @@ describe('AudioEngine', () => {
                 },
                 buses: { master: { gain: 1 } },
                 soundMap: {},
-                snapshots: {}
+                snapshots: {},
+                events: {}
             });
 
             const startSpy = vi.fn();
@@ -307,7 +310,8 @@ describe('AudioEngine', () => {
                 manifest: {},
                 buses: { master: { gain: 1 } },
                 soundMap: {},
-                snapshots: {}
+                snapshots: {},
+                events: {}
             });
 
             const completeSpy = vi.fn();
@@ -326,7 +330,8 @@ describe('AudioEngine', () => {
                 },
                 buses: { master: { gain: 1 } },
                 soundMap: {},
-                snapshots: {}
+                snapshots: {},
+                events: {}
             });
 
             const errorSpy = vi.fn();
@@ -354,7 +359,8 @@ describe('AudioEngine', () => {
                 manifest: {},
                 buses: { master: { gain: 1 } },
                 soundMap: {},
-                snapshots: {}
+                snapshots: {},
+                events: {}
             });
 
             const suspendSpy = vi.fn();
@@ -383,7 +389,8 @@ describe('AudioEngine', () => {
                 manifest: {},
                 buses: { master: { gain: 1 } },
                 soundMap: {},
-                snapshots: {}
+                snapshots: {},
+                events: {}
             });
             const errorSpy = vi.fn();
             brokenEngine.events.on('engine:error', errorSpy);
@@ -514,6 +521,7 @@ describe('AudioEngine', () => {
                 manifest: {},
                 soundMap: {},
                 snapshots: {},
+                events: {},
                 buses: {
                     master: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } }
                 }
@@ -536,6 +544,7 @@ describe('AudioEngine', () => {
             const layerEngine = new AudioEngine({
                 manifest: {},
                 soundMap: {},
+                events: {},
                 buses: { master: { gain: 1 } },
                 snapshots: { ['snap1' as SnapshotId]: { buses: { ['master' as BusId]: { gain: 0.5 } } } }
             });
@@ -558,6 +567,28 @@ describe('AudioEngine', () => {
         it('should delegate stop to AudioRouter for single or multiple IDs', () => {
             engine.stop([1 as PlaybackId, 2 as PlaybackId]);
             expect(stopSpy).toHaveBeenCalledWith([1 as PlaybackId, 2 as PlaybackId]);
+        });
+    });
+
+    describe('Event Orchestrator Delegation', () => {
+        it('should warn and return early if postEvent is called before engine is initialized', () => {
+            const uninitEngine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {}, events: {} } as any);
+            const warnSpy = vi.spyOn(console, 'warn');
+
+            uninitEngine.postEvent('Player_Jump');
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Cannot post event "Player_Jump": Engine is not initialized.')
+            );
+        });
+
+        it('should delegate postEvent to AudioEventOrchestrator when initialized', () => {
+            const orchestratorSpy = vi.spyOn(engine._debug.eventOrchestrator, 'postEvent').mockImplementation(() => {});
+
+            engine.postEvent('Player_Jump');
+
+            expect(orchestratorSpy).toHaveBeenCalledWith('Player_Jump');
+            orchestratorSpy.mockRestore();
         });
     });
 
@@ -670,6 +701,7 @@ describe('AudioEngine', () => {
                 },
                 buses: { master: { gain: 1 } },
                 snapshots: {},
+                events: {},
                 soundMap: {
                     ['bullet_flyby' as SoundId]: { busId: 'master', spatial: true },
                     ['ui_click' as SoundId]: { busId: 'master' }
@@ -726,7 +758,7 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
     });
 
     it('should abort if engine is not initialized or config is invalid', async () => {
-        const engine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {} } as any);
+        const engine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {}, events: {} } as any);
 
         await engine._hotReloadConfig({} as any);
         expect(errorSpy).not.toHaveBeenCalled();
@@ -742,7 +774,7 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
     });
 
     it('should correctly orchestrate the update across all subsystems', async () => {
-        const engine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {} } as any);
+        const engine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {}, events: {} } as any);
 
         vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
         vi.spyOn(engine as any, 'loadSounds').mockResolvedValue(undefined);
@@ -760,6 +792,7 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
             buses: { sfx: {} },
             snapshots: { combat: {} },
             soundMap: { hit: {} },
+            events: {},
             rtpcManifest: { hp: { defaultValue: 100 } }
         };
 

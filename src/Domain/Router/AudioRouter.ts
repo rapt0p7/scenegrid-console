@@ -20,6 +20,7 @@ import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { PlaybackId, SoundId } from '@shared/Types/Branded.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type { IStopOptions } from '@domain/Configuration/Ports/IEventConfig.js';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly duckingManager: IDuckingManager;
@@ -122,13 +123,36 @@ export default class AudioRouter implements IAudioRouter {
         return playbackId;
     }
 
-    public stop(id: PlaybackId | PlaybackId[] | SoundId): void {
-        if (Array.isArray(id)) {
-            for (const index of id) this.soundController.stopById(index);
-        } else if (typeof id === 'number') {
-            this.soundController.stopById(id);
-        } else {
-            this.soundController.stopAll(id);
+    public stop(id: PlaybackId | PlaybackId[] | SoundId, options?: IStopOptions): void {
+        const playbacksToStop = this.resolvePlaybacks(id);
+        const allowTail = options?.allowTail ?? true;
+        const timeToStop = options?.fadeOutMs;
+
+        const length = playbacksToStop.length;
+        for (let i = 0; i < length; i++) {
+            const playbackId = playbacksToStop[i];
+            const soundId = this.soundController.getSoundId(playbackId);
+
+            if (!soundId) {
+                this.soundController.stopById(playbackId, timeToStop);
+                continue;
+            }
+
+            const config = this.getSoundConfig(soundId);
+
+            if (allowTail && config && 'tail' in config && config.tail) {
+                const position = this.soundController.getPosition(playbackId);
+                const tailPlaybackIds = this.play(config.tail);
+
+                if (position && tailPlaybackIds) {
+                    const ids = Array.isArray(tailPlaybackIds) ? tailPlaybackIds : [tailPlaybackIds];
+                    for (let j = 0; j < ids.length; j++) {
+                        this.soundController.setPosition(ids[j], position.x, position.y, position.z);
+                    }
+                }
+            }
+
+            this.soundController.stopById(playbackId, timeToStop);
         }
     }
 
@@ -150,6 +174,28 @@ export default class AudioRouter implements IAudioRouter {
         } else {
             this.soundController.resumeAll(id);
         }
+    }
+
+    private resolvePlaybacks(target: PlaybackId | PlaybackId[] | SoundId): PlaybackId[] {
+        if (Array.isArray(target)) {
+            return target;
+        }
+
+        if (typeof target === 'number') {
+            return [target];
+        }
+
+        const activeIds = this.soundController.getActivePlaybacks();
+        const result: PlaybackId[] = [];
+        const length = activeIds.length;
+
+        for (let i = 0; i < length; i++) {
+            if (this.soundController.getSoundId(activeIds[i]) === target) {
+                result.push(activeIds[i]);
+            }
+        }
+
+        return result;
     }
 
     private handleContainer(

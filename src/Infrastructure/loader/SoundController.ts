@@ -143,6 +143,12 @@ export class SoundController implements ISoundController {
         }
     }
 
+    public getPosition(
+        playbackId: PlaybackId
+    ): { readonly x: number; readonly y: number; readonly z: number } | undefined {
+        return this.activeVoices.get(playbackId)?.position;
+    }
+
     public get debugPool(): SoundPoolManager {
         return this.pool;
     }

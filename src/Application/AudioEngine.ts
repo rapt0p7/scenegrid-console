@@ -45,6 +45,7 @@ import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSo
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 import {
+    EventId,
     GameParamId,
     LayerId,
     PlaybackId,
@@ -60,6 +61,7 @@ import type { DeepReadonly } from '@shared/DeepReadonly.js';
 import { typedEntries, typedFromEntries } from '@shared/typedObjects.js';
 import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
+import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestrator.js';
 
 export interface InitParameters {
     readonly isStrictValidation?: boolean;
@@ -78,6 +80,7 @@ export class AudioEngine {
     #masterOutput!: MasterOutput;
     #dispatcher: EngineEventDispatcher = new EngineEventDispatcher();
     #instanceRTPCBinder!: InstanceRTPCBinder;
+    #eventOrchestrator!: AudioEventOrchestrator;
     #isInitialized = false;
 
     public readonly events = {
@@ -314,6 +317,8 @@ export class AudioEngine {
             const coordinator = new MixerCoordinator(layerStack, mixerTransitionEngine);
             this.#snapshotManager = new MixerSnapshotManager(layerStack, this.config.snapshots, coordinator);
 
+            this.#eventOrchestrator = new AudioEventOrchestrator(this.config.events, this.#router, this.#rtpcManager);
+
             const cullingArbiter = new VoiceCullingArbiter(0.01);
 
             const cullingProvider = new CullingContextProvider(
@@ -391,6 +396,14 @@ export class AudioEngine {
         this.#router.resume(playbackIdOrSoundId);
     }
 
+    public postEvent(eventId: string): void {
+        if (!this.#isInitialized) {
+            console.warn(`[AudioEngine] Cannot post event "${eventId}": Engine is not initialized.`);
+            return;
+        }
+        this.#eventOrchestrator.postEvent(eventId as EventId);
+    }
+
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public get _debug() {
         return {
@@ -402,7 +415,8 @@ export class AudioEngine {
             contextManager: this.#contextManager,
             snapshotManager: this.#snapshotManager,
             poolManager: this.#soundController.debugPool,
-            layerStack: this.#snapshotManager.debugLayerStack
+            layerStack: this.#snapshotManager.debugLayerStack,
+            eventOrchestrator: this.#eventOrchestrator
         };
     }
 

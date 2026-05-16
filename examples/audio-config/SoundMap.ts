@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 export default {
-    'backgroundMain': { busId: 'musicMain', isLoop: true },
+    'backgroundMain': { busId: 'musicMain', isLoop: true, tail: 'kickDrum2' },
     'backgroundMain2': { busId: 'musicExplore', isLoop: true },
     'backgroundMain3': { busId: 'musicCombat', isLoop: true },
 

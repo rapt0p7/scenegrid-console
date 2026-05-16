@@ -2,7 +2,7 @@
 
 import { AudioEngine } from 'scenegrid-console';
 
-import { Buses, Snapshots, SoundMap, RTPCManifest } from './audio-config/index.js';
+import { Buses, Snapshots, SoundMap, RTPCManifest, Events } from './audio-config/index.js';
 import soundManifest from './soundManifest.js';
 
 // oxlint-disable-next-line max-lines-per-function
@@ -13,6 +13,7 @@ async function bootstrap() {
         snapshots: Snapshots,
         soundMap: SoundMap,
         rtpcManifest: RTPCManifest,
+        events: Events,
         globalVoiceLimit: 32
     });
 

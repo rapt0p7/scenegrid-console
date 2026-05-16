@@ -77,7 +77,11 @@ describe('AudioRouter (Command Dispatcher)', () => {
             pauseById: vi.fn(),
             pauseAll: vi.fn(),
             resumeById: vi.fn(),
-            resumeAll: vi.fn()
+            resumeAll: vi.fn(),
+            getActivePlaybacks: vi.fn().mockReturnValue([]),
+            getSoundId: vi.fn(),
+            getPosition: vi.fn(),
+            setPosition: vi.fn()
         } as unknown as Mocked<ISoundController>;
 
         mockDuckingManager = { triggerDucking: vi.fn() };
@@ -235,22 +239,54 @@ describe('AudioRouter (Command Dispatcher)', () => {
     });
 
     describe('Playback Control (stop)', () => {
-        it('should delegate stop to SoundController by string (soundId)', () => {
-            router.stop('bg_music' as SoundId);
-            expect(mockController.stopAll).toHaveBeenCalledWith('bg_music');
+        it('should resolve active playbacks by string (soundId) and stop them via stopById', () => {
+            mockController.getActivePlaybacks.mockReturnValue([10 as PlaybackId, 20 as PlaybackId]);
+            mockController.getSoundId.mockImplementation(id => {
+                if (id === 10 || id === 20) return 'loop_sound' as SoundId;
+                // oxlint-disable-next-line unicorn/no-useless-undefined
+                return undefined;
+            });
+
+            router.stop('loop_sound' as SoundId, { fadeOutMs: 400 });
+
+            expect(mockController.stopById).toHaveBeenCalledTimes(2);
+            expect(mockController.stopById).toHaveBeenNthCalledWith(1, 10, 400);
+            expect(mockController.stopById).toHaveBeenNthCalledWith(2, 20, 400);
         });
 
         it('should delegate stop to SoundController by number (playbackId)', () => {
-            router.stop(42 as PlaybackId);
-            expect(mockController.stopById).toHaveBeenCalledWith(42);
-            expect(mockController.stopAll).not.toHaveBeenCalled();
+            router.stop(42 as PlaybackId, { fadeOutMs: 150 });
+            expect(mockController.stopById).toHaveBeenCalledWith(42, 150);
         });
 
         it('should delegate stop to SoundController by array of numbers (playbackIds)', () => {
-            router.stop([10, 11, 12] as PlaybackId[]);
+            router.stop([10, 11, 12] as PlaybackId[], { fadeOutMs: 500 });
             expect(mockController.stopById).toHaveBeenCalledTimes(3);
-            expect(mockController.stopById).toHaveBeenNthCalledWith(1, 10);
-            expect(mockController.stopById).toHaveBeenNthCalledWith(3, 12);
+            expect(mockController.stopById).toHaveBeenNthCalledWith(1, 10, 500);
+            expect(mockController.stopById).toHaveBeenNthCalledWith(3, 12, 500);
+        });
+        it('should spawn a tail and inherit spatial coordinates when stopping a sound with a tail config', () => {
+            testSoundMap['loop_with_tail'] = { busId: 'sfx', tail: 'reverb_tail' };
+            testSoundMap['reverb_tail'] = { busId: 'sfx' };
+
+            mockController.getActivePlaybacks.mockReturnValue([99 as PlaybackId]);
+
+            mockController.getSoundId.mockImplementation(id => {
+                if (id === 99) return 'loop_with_tail' as SoundId;
+                // oxlint-disable-next-line unicorn/no-useless-undefined
+                return undefined;
+            });
+
+            mockController.getPosition.mockReturnValue({ x: 10, y: 20, z: 30 });
+
+            mockController.play.mockReturnValueOnce(88 as PlaybackId);
+
+            router.stop(99 as PlaybackId, { allowTail: true, fadeOutMs: 1000 });
+
+            expect(mockController.getPosition).toHaveBeenCalledWith(99);
+            expect(mockController.play).toHaveBeenCalledWith('reverb_tail', expect.any(Object));
+            expect(mockController.setPosition).toHaveBeenCalledWith(88, 10, 20, 30);
+            expect(mockController.stopById).toHaveBeenCalledWith(99, 1000);
         });
     });
 

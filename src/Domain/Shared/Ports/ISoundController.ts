@@ -32,6 +32,7 @@ export interface ISoundController {
     getCurrentTime(): number;
     getSampleRate(): number;
     setPosition(playbackId: PlaybackId, x: number, y: number, z: number): void;
+    getPosition(playbackId: PlaybackId): { readonly x: number; readonly y: number; readonly z: number } | undefined;
     cancelScheduled(id: PlaybackId): void;
     onVoiceEnded(id: PlaybackId, callback: () => void): () => void;
     fadeParameter(id: PlaybackId, target: RTPCParameterTarget, targetValue: number, durationMs: number): void;
