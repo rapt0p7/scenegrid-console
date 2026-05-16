@@ -492,7 +492,8 @@ describe('ConsistencyChecker', () => {
                 soundManifest: {},
                 busSystemConfig: config.buses,
                 snapshotsConfig: {},
-                rtpcManifest: {}
+                rtpcManifest: {},
+                eventsConfig: {}
             });
 
             (checker as any).run();
@@ -523,7 +524,8 @@ describe('ConsistencyChecker', () => {
                 soundManifest: {},
                 busSystemConfig: config.buses,
                 snapshotsConfig: {},
-                rtpcManifest: {}
+                rtpcManifest: {},
+                eventsConfig: {}
             });
 
             (checker as any).run();
@@ -563,7 +565,8 @@ describe('ConsistencyChecker', () => {
                 soundManifest: {},
                 busSystemConfig: config.buses,
                 snapshotsConfig: {},
-                rtpcManifest: {}
+                rtpcManifest: {},
+                eventsConfig: {}
             });
 
             (checker as any).run();
@@ -919,6 +922,267 @@ describe('ConsistencyChecker', () => {
             expect(console.error).toHaveBeenCalledWith(
                 expect.stringContaining('has invalid curve (needs >= 2 points)')
             );
+        });
+    });
+
+    describe('ConsistencyChecker: Event Map Validations', () => {
+        let consoleErrorSpy: any;
+        let consoleWarnSpy: any;
+        // oxlint-disable-next-line no-unused-vars
+        let consoleLogSpy: any;
+        // oxlint-disable-next-line no-unused-vars
+        let consoleGroupSpy: any;
+        // oxlint-disable-next-line no-unused-vars
+        let consoleGroupEndSpy: any;
+
+        // oxlint-disable-next-line unicorn/consistent-function-scoping
+        const getBaseConfig = () => ({
+            buses: { master: {} },
+            soundMap: { sfx_test: { busId: 'master' }, bgm_test: { busId: 'master' } },
+            manifest: { sfx_test: { url: 'sfx.wav' } },
+            snapshots: {},
+            rtpcManifest: { player_health: { defaultValue: 100 } }
+        });
+
+        beforeEach(() => {
+            vi.clearAllMocks();
+            consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+            consoleGroupSpy = vi.spyOn(console, 'groupCollapsed').mockImplementation(() => {});
+            consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it('should pass a perfectly valid event map config', () => {
+            const config: any = {
+                ...getBaseConfig(),
+                events: {
+                    Valid_Event: {
+                        actions: [
+                            { type: 'play', target: 'sfx_test' },
+                            { type: 'stop', target: 'bgm_test', options: { allowTail: true, fadeOutMs: 500 } },
+                            { type: 'pause', target: 'sfx_test' },
+                            { type: 'resume', target: 'sfx_test' },
+                            { type: 'set_rtpc', param: 'player_health', value: 50 }
+                        ]
+                    }
+                }
+            };
+
+            const isValid = ConsistencyChecker.validate(config);
+
+            expect(isValid).toBe(true);
+            expect(consoleErrorSpy).not.toHaveBeenCalled();
+        });
+
+        it('should fail if "events" is not an object', () => {
+            const config: any = { ...getBaseConfig(), events: [] };
+            ConsistencyChecker.validate(config);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Type Error at "events"'));
+        });
+
+        it('should fail if an individual event config is not an object', () => {
+            const config: any = {
+                ...getBaseConfig(),
+                events: {
+                    Bad_Event: 'this should be an object'
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Type Error at "events.Bad_Event"'));
+        });
+
+        it('should fail if "actions" is missing or not an array', () => {
+            const config: any = {
+                ...getBaseConfig(),
+                events: {
+                    No_Actions: {},
+                    Bad_Actions: { actions: { type: 'play', target: 'sfx' } }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required array at "events.No_Actions.actions"')
+            );
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "events.Bad_Actions.actions"')
+            );
+        });
+
+        it('should fail if an action is not an object or lacks a string "type"', () => {
+            const config: any = {
+                ...getBaseConfig(),
+                events: {
+                    Bad_Event: {
+                        actions: [null, { target: 'sfx' }, { type: 123, target: 'sfx' }]
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "events.Bad_Event.actions[0]"')
+            );
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "events.Bad_Event.actions[1].type"')
+            );
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "events.Bad_Event.actions[2].type"')
+            );
+        });
+
+        it('should fail on unknown action types', () => {
+            const config: any = {
+                ...getBaseConfig(),
+                events: {
+                    Bad_Event: {
+                        actions: [{ type: 'do_barrel_roll', target: 'sfx_test' }]
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Unknown action type "do_barrel_roll" at events.Bad_Event.actions[0]')
+            );
+        });
+
+        describe('Action-specific Validations', () => {
+            it('should catch missing or invalid targets for play, pause, and resume', () => {
+                const config: any = {
+                    ...getBaseConfig(),
+                    events: {
+                        Bad_Event: {
+                            actions: [{ type: 'play' }, { type: 'pause', target: 42 }, { type: 'resume', target: [] }]
+                        }
+                    }
+                };
+                ConsistencyChecker.validate(config);
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining('Missing required field at "events.Bad_Event.actions[0].target"')
+                );
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining('Type Error at "events.Bad_Event.actions[1].target": expected string')
+                );
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining('Type Error at "events.Bad_Event.actions[2].target": expected string')
+                );
+            });
+
+            it('should catch missing or invalid target and options in stop action', () => {
+                const config: any = {
+                    ...getBaseConfig(),
+                    events: {
+                        Bad_Event: {
+                            actions: [
+                                { type: 'stop' },
+                                { type: 'stop', target: 'bgm_test', options: 'fast' },
+                                { type: 'stop', target: 'bgm_test', options: { allowTail: 'yes' } },
+                                { type: 'stop', target: 'bgm_test', options: { fadeOutMs: '1s' } }
+                            ]
+                        }
+                    }
+                };
+                ConsistencyChecker.validate(config);
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining('Missing required field at "events.Bad_Event.actions[0].target"')
+                );
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining('Type Error at "events.Bad_Event.actions[1].options": expected object')
+                );
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining(
+                        'Type Error at "events.Bad_Event.actions[2].options.allowTail": expected boolean'
+                    )
+                );
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining(
+                        'Type Error at "events.Bad_Event.actions[3].options.fadeOutMs": expected number'
+                    )
+                );
+            });
+
+            it('should catch missing or invalid fields in set_rtpc action', () => {
+                const config: any = {
+                    ...getBaseConfig(),
+                    events: {
+                        Bad_Event: {
+                            actions: [
+                                { type: 'set_rtpc', value: 50 },
+                                { type: 'set_rtpc', param: 123, value: 50 },
+                                { type: 'set_rtpc', param: 'player_health' },
+                                { type: 'set_rtpc', param: 'player_health', value: '50' }
+                            ]
+                        }
+                    }
+                };
+                ConsistencyChecker.validate(config);
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining('Missing required field at "events.Bad_Event.actions[0].param"')
+                );
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining('Type Error at "events.Bad_Event.actions[1].param": expected string')
+                );
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining('Missing required field at "events.Bad_Event.actions[2].value"')
+                );
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining('Type Error at "events.Bad_Event.actions[3].value": expected number')
+                );
+            });
+        });
+
+        describe('Cross-referential Validations (Warnings & Errors)', () => {
+            it('should issue a WARNING if a play/stop/pause/resume target does not exist in soundMap or manifest', () => {
+                const config: any = {
+                    ...getBaseConfig(),
+                    events: {
+                        Warning_Event: {
+                            actions: [{ type: 'play', target: 'ghost_sound' }]
+                        }
+                    }
+                };
+                ConsistencyChecker.validate(config);
+                expect(consoleWarnSpy).toHaveBeenCalledWith(
+                    expect.stringContaining(
+                        'Event "Warning_Event" references missing sound target "ghost_sound" at events.Warning_Event.actions[0]'
+                    )
+                );
+            });
+
+            it('should issue an ERROR if set_rtpc param does not exist in rtpcManifest', () => {
+                const config: any = {
+                    ...getBaseConfig(), // В базе есть только 'player_health'
+                    events: {
+                        Error_Event: {
+                            actions: [{ type: 'set_rtpc', param: 'ghost_parameter', value: 10 }]
+                        }
+                    }
+                };
+                ConsistencyChecker.validate(config);
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    expect.stringContaining(
+                        'Event "Error_Event" uses unknown RTPC param "ghost_parameter" at events.Error_Event.actions[0]'
+                    )
+                );
+            });
+
+            it('should NOT issue an ERROR for missing RTPC param if rtpcManifest is empty/not provided', () => {
+                const config: any = {
+                    ...getBaseConfig(),
+                    rtpcManifest: {},
+                    events: {
+                        Ok_Event: {
+                            actions: [{ type: 'set_rtpc', param: 'any_parameter', value: 10 }]
+                        }
+                    }
+                };
+                const isValid = ConsistencyChecker.validate(config);
+                expect(isValid).toBe(true);
+                expect(consoleErrorSpy).not.toHaveBeenCalled();
+            });
         });
     });
 });

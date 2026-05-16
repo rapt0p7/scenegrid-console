@@ -21,6 +21,7 @@ import type { DeepReadonly } from '@shared/DeepReadonly.js';
 import { typedEntries, typedKeys } from '@shared/typedObjects.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
+import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 
 export interface IConsistencyCheckerPayload {
     readonly soundMap?: ISoundMap;
@@ -28,6 +29,7 @@ export interface IConsistencyCheckerPayload {
     readonly buses?: IBuses;
     readonly snapshots?: ISnapshots;
     readonly rtpcManifest?: IRTPCManifest;
+    readonly events?: IEventMap;
 }
 
 type TypeMap = {
@@ -50,7 +52,8 @@ export default class ConsistencyChecker {
             soundManifest: config.manifest ?? {},
             busSystemConfig: config.buses ?? {},
             snapshotsConfig: config.snapshots ?? {},
-            rtpcManifest: config.rtpcManifest ?? {}
+            rtpcManifest: config.rtpcManifest ?? {},
+            eventsConfig: config.events ?? {}
         });
 
         try {
@@ -68,6 +71,7 @@ export default class ConsistencyChecker {
     private readonly snapshots: DeepReadonly<ISnapshots>;
     private readonly manifest: DeepReadonly<ISpriteSoundManifest>;
     private readonly rtpcManifest: DeepReadonly<IRTPCManifest>;
+    private readonly events: DeepReadonly<IEventMap>;
 
     private readonly errors: string[] = [];
     private readonly warnings: string[] = [];
@@ -77,19 +81,22 @@ export default class ConsistencyChecker {
         soundManifest,
         busSystemConfig,
         snapshotsConfig,
-        rtpcManifest
+        rtpcManifest,
+        eventsConfig
     }: {
         soundMapConfig: DeepReadonly<ISoundMap>;
         soundManifest: DeepReadonly<ISpriteSoundManifest>;
         busSystemConfig: DeepReadonly<IBuses>;
         snapshotsConfig: DeepReadonly<ISnapshots>;
         rtpcManifest: DeepReadonly<IRTPCManifest>;
+        eventsConfig: DeepReadonly<IEventMap>;
     }) {
         this.soundMap = soundMapConfig;
         this.manifest = soundManifest;
         this.buses = busSystemConfig;
         this.snapshots = snapshotsConfig;
         this.rtpcManifest = rtpcManifest;
+        this.events = eventsConfig;
     }
 
     private run(): void {
@@ -101,6 +108,7 @@ export default class ConsistencyChecker {
         this.checkOrphanManifestSounds();
         this.checkMultiplicativeVetoes();
         this.checkRTPCManifest();
+        this.checkEvents();
 
         this.report();
     }
@@ -665,7 +673,7 @@ export default class ConsistencyChecker {
     private validateSwitchSound(soundId: string, cfg: DeepReadonly<ISwitchSoundConfig>): void {
         this.assertRequiredType(`soundMap.${soundId}.switchGroup`, cfg.switchGroup, 'string');
 
-        if (typeof cfg.switchGroup === 'string' && this.rtpcManifest) {
+        if (typeof cfg.switchGroup === 'string' && Object.keys(this.rtpcManifest).length > 0) {
             if (!(cfg.switchGroup in this.rtpcManifest)) {
                 this.errors.push(`Switch "${soundId}" uses unknown switchGroup (RTPC param) "${cfg.switchGroup}".`);
             }
@@ -720,6 +728,88 @@ export default class ConsistencyChecker {
             if (isDefined(config.defaultValue)) {
                 this.assertOptionalType(`${configPath}.defaultValue`, config.defaultValue, 'number');
             }
+        }
+    }
+
+    private checkEvents(): void {
+        if (isAbsent(this.events)) return;
+        if (!this.assertOptionalType('events', this.events, 'object')) return;
+
+        for (const [eventIdRaw, eventConfigOriginal] of typedEntries(this.events)) {
+            const eventId = eventIdRaw as string;
+            const eventPath = `events.${eventId}`;
+
+            const eventConfig = eventConfigOriginal as Record<string, any>;
+
+            if (!this.assertRequiredType(eventPath, eventConfig, 'object')) continue;
+
+            const actions = eventConfig.actions;
+            if (!this.assertArray(`${eventPath}.actions`, actions, false)) continue;
+
+            const actionsArray = actions as any[];
+            const actionsLength = actionsArray.length;
+
+            for (let index = 0; index < actionsLength; index++) {
+                const actionPath = `${eventPath}.actions[${index}]`;
+
+                const action = actionsArray[index] as Record<string, any>;
+
+                if (!this.assertRequiredType(actionPath, action, 'object')) continue;
+                if (!this.assertRequiredType(`${actionPath}.type`, action.type, 'string')) continue;
+
+                const actionType = action.type;
+
+                switch (actionType) {
+                    case 'play':
+                    case 'pause':
+                    case 'resume': {
+                        const target = action.target;
+                        if (this.assertRequiredType(`${actionPath}.target`, target, 'string')) {
+                            this.checkTargetExists(eventId, actionPath, target);
+                        }
+                        break;
+                    }
+
+                    case 'stop': {
+                        const target = action.target;
+                        if (this.assertRequiredType(`${actionPath}.target`, target, 'string')) {
+                            this.checkTargetExists(eventId, actionPath, target);
+                        }
+
+                        const options = action.options;
+                        if (isDefined(options)) {
+                            if (this.assertRequiredType(`${actionPath}.options`, options, 'object')) {
+                                const opts = options as Record<string, any>;
+                                this.assertOptionalType(`${actionPath}.options.allowTail`, opts.allowTail, 'boolean');
+                                this.assertOptionalType(`${actionPath}.options.fadeOutMs`, opts.fadeOutMs, 'number');
+                            }
+                        }
+                        break;
+                    }
+
+                    case 'set_rtpc': {
+                        const param = action.param;
+                        if (this.assertRequiredType(`${actionPath}.param`, param, 'string')) {
+                            if (Object.keys(this.rtpcManifest).length > 0 && !(param in this.rtpcManifest)) {
+                                this.errors.push(
+                                    `Event "${eventId}" uses unknown RTPC param "${param}" at ${actionPath}.`
+                                );
+                            }
+                        }
+                        this.assertRequiredType(`${actionPath}.value`, action.value, 'number');
+                        break;
+                    }
+
+                    default:
+                        this.errors.push(`Unknown action type "${actionType}" at ${actionPath}`);
+                }
+            }
+        }
+    }
+
+    private checkTargetExists(eventId: string, path: string, targetId: string): void {
+        if (!this.manifest[targetId as any] && !this.soundMap[targetId as any]) {
+            this.warnings.push(`Event "${eventId}" references missing sound target "${targetId}" at ${path}.`);
         }
     }
 
