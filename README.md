@@ -9,6 +9,7 @@
 [![Web Audio API](https://img.shields.io/badge/Web_Audio-API-ffb244.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 
 > **Understand your audio system before it plays.**
+>
 > _Independent research project started ~mid 2025._
 
 **SceneGrid** is an observability-first simulation, debugging, and execution platform for real-time Web Audio. Built with a strict Hexagonal Architecture and Zero-Allocation memory management, it is designed for complex, state-driven applications (games, interactive web environments) where audio predictability and FPS stability are mission-critical.
@@ -141,7 +142,7 @@ The system follows a **Data-Driven** pattern. Defining assets and routing upfron
 import { AudioEngine } from 'scenegrid-console';
 
 // Configuration manifests (Data-Driven Graph)
-import { Buses, Snapshots, SoundMap, RTPCManifest } from './audio-config';
+import { Buses, Snapshots, SoundMap, RTPCManifest, Events } from './audio-config';
 import soundManifest from './soundManifest';
 
 async function bootstrap() {
@@ -152,6 +153,7 @@ async function bootstrap() {
         snapshots: Snapshots,
         soundMap: SoundMap,
         rtpcManifest: RTPCManifest,
+        events: Events,
         globalVoiceLimit: 32 // Critical for Culling & GC Safety
     });
 
