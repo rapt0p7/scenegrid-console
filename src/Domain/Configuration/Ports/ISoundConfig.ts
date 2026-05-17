@@ -46,6 +46,20 @@ export interface ISoundConfig extends IBaseSoundConfig {
     readonly hasPanner?: boolean;
 }
 
+export interface IMagnetConfig {
+    readonly region: RegionId;
+    readonly targetRegion: RegionId;
+    readonly condition: {
+        readonly param: GameParamId;
+        readonly operator: '>' | '<' | '==' | '>=' | '<=';
+        readonly value: number;
+    };
+    readonly quantize: 'Immediate' | 'NextBeat' | 'NextBar';
+    readonly transitionRegionName?: RegionId;
+    readonly crossfadeDuration?: number;
+    readonly tailDurationMs?: number;
+}
+
 export interface ISmartLoopSoundConfig {
     readonly busId: BusId;
     readonly smartLoop: {
@@ -56,6 +70,7 @@ export interface ISmartLoopSoundConfig {
             RegionId,
             readonly [startSample: number, endSample: number, preEntryMs?: number, tailMs?: number]
         >;
+        readonly magnets?: readonly IMagnetConfig[];
     };
 }
 

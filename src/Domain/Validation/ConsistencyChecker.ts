@@ -362,6 +362,49 @@ export default class ConsistencyChecker {
                 }
             }
         }
+
+        this.validateMagnets(soundId, cfg);
+    }
+
+    private validateMagnets(soundId: string, cfg: DeepReadonly<ISmartLoopSoundConfig>): void {
+        const magnets = cfg.smartLoop.magnets;
+        if (isAbsent(magnets)) return;
+
+        const magnetsArray = magnets as any[];
+        if (!this.assertArray(`soundMap.${soundId}.smartLoop.magnets`, magnetsArray, true)) return;
+
+        const length = magnetsArray.length;
+        for (let i = 0; i < length; i++) {
+            const magnetPath = `soundMap.${soundId}.smartLoop.magnets[${i}]`;
+
+            const magnet = magnetsArray[i] as Record<string, any>;
+
+            if (!this.assertRequiredType(magnetPath, magnet, 'object')) continue;
+            this.assertRequiredType(`${magnetPath}.region`, magnet.region, 'string');
+            this.assertRequiredType(`${magnetPath}.targetRegion`, magnet.targetRegion, 'string');
+            this.assertRequiredType(`${magnetPath}.quantize`, magnet.quantize, 'string');
+
+            this.assertOptionalType(`${magnetPath}.transitionRegionName`, magnet.transitionRegionName, 'string');
+            this.assertOptionalType(`${magnetPath}.crossfadeDuration`, magnet.crossfadeDuration, 'number');
+            this.assertOptionalType(`${magnetPath}.tailDurationMs`, magnet.tailDurationMs, 'number');
+
+            const condition = magnet.condition;
+            if (this.assertRequiredType(`${magnetPath}.condition`, condition, 'object')) {
+                const condObj = condition as Record<string, any>;
+                const param = condObj.param;
+
+                if (this.assertRequiredType(`${magnetPath}.condition.param`, param, 'string')) {
+                    if (Object.keys(this.rtpcManifest).length > 0 && !(param in this.rtpcManifest)) {
+                        this.errors.push(
+                            `SmartLoop "${soundId}" uses unknown RTPC param "${param}" in magnet condition.`
+                        );
+                    }
+                }
+
+                this.assertRequiredType(`${magnetPath}.condition.operator`, condObj.operator, 'string');
+                this.assertRequiredType(`${magnetPath}.condition.value`, condObj.value, 'number');
+            }
+        }
     }
 
     private checkDuckingTargets(soundId: string, cfg: DeepReadonly<IBaseSoundConfig>): void {

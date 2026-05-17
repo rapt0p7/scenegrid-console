@@ -1220,4 +1220,176 @@ describe('ConsistencyChecker', () => {
             });
         });
     });
+
+    describe('SmartLoop Magnets Validations', () => {
+        let consoleErrorSpy: any;
+        beforeEach(() => {
+            vi.clearAllMocks();
+            consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+        it('should pass a perfectly valid SmartLoop config with magnets', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { boss_phase: { defaultValue: 1 } },
+                soundMap: {
+                    bgm_boss: {
+                        busId: 'master',
+                        smartLoop: {
+                            regions: { intro: [0, 100], phase2: [100, 200] },
+                            magnets: [
+                                {
+                                    region: 'intro',
+                                    targetRegion: 'phase2',
+                                    quantize: 'NextBar',
+                                    transitionRegionName: 'drum_fill',
+                                    tailDurationMs: 1500,
+                                    condition: { param: 'boss_phase', operator: '==', value: 2 }
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(true);
+            expect(console.error).not.toHaveBeenCalled();
+        });
+
+        it('should fail if magnets property is not an array or contains non-objects', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {
+                    bad_magnets_1: {
+                        busId: 'master',
+                        smartLoop: { regions: { intro: [0, 100] }, magnets: 'should be an array' }
+                    },
+                    bad_magnets_2: {
+                        busId: 'master',
+                        smartLoop: { regions: { intro: [0, 100] }, magnets: ['should be an object'] }
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "soundMap.bad_magnets_1.smartLoop.magnets": expected array')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Type Error at "soundMap.bad_magnets_2.smartLoop.magnets[0]": expected object')
+            );
+        });
+
+        it('should catch missing required fields in magnet config (region, targetRegion, quantize, condition)', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {
+                    bad_magnet: {
+                        busId: 'master',
+                        smartLoop: {
+                            regions: { intro: [0, 100] },
+                            magnets: [{}]
+                        }
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "soundMap.bad_magnet.smartLoop.magnets[0].region"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Missing required field at "soundMap.bad_magnet.smartLoop.magnets[0].targetRegion"'
+                )
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "soundMap.bad_magnet.smartLoop.magnets[0].quantize"')
+            );
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Missing required field at "soundMap.bad_magnet.smartLoop.magnets[0].condition"'
+                )
+            );
+        });
+
+        it('should catch missing or invalid fields strictly inside the condition object', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { health: { defaultValue: 100 } },
+                soundMap: {
+                    bad_condition: {
+                        busId: 'master',
+                        smartLoop: {
+                            regions: { intro: [0, 100] },
+                            magnets: [
+                                {
+                                    region: 'intro',
+                                    targetRegion: 'main',
+                                    quantize: 'Immediate',
+                                    condition: { param: 123, operator: '>', value: '50' }
+                                },
+                                {
+                                    region: 'intro',
+                                    targetRegion: 'main',
+                                    quantize: 'Immediate',
+                                    condition: {}
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Type Error at "soundMap.bad_condition.smartLoop.magnets[0].condition.param": expected string'
+                )
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Type Error at "soundMap.bad_condition.smartLoop.magnets[0].condition.value": expected number'
+                )
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Missing required field at "soundMap.bad_condition.smartLoop.magnets[1].condition.param"'
+                )
+            );
+        });
+
+        it('should ERROR if magnet condition references a GameParamId that does not exist in rtpcManifest', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { known_parameter: { defaultValue: 100 } },
+                soundMap: {
+                    ghost_param_magnet: {
+                        busId: 'master',
+                        smartLoop: {
+                            regions: { intro: [0, 100] },
+                            magnets: [
+                                {
+                                    region: 'intro',
+                                    targetRegion: 'main',
+                                    quantize: 'NextBar',
+                                    condition: { param: 'unknown_ghost_parameter', operator: '==', value: 1 }
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'SmartLoop "ghost_param_magnet" uses unknown RTPC param "unknown_ghost_parameter" in magnet condition.'
+                )
+            );
+        });
+    });
 });

@@ -62,6 +62,7 @@ import { typedEntries, typedFromEntries } from '@shared/typedObjects.js';
 import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestrator.js';
+import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 
 export interface InitParameters {
     readonly isStrictValidation?: boolean;
@@ -305,7 +306,13 @@ export class AudioEngine {
                 switchPolicy
             });
 
-            this.#sequencer = new Sequencer(this.#soundController, this.#router, this.#engineTicker);
+            const smartLoopTransitionPolicy = new SmartLoopTransitionPolicy(this.#rtpcManager);
+            this.#sequencer = new Sequencer(
+                this.#soundController,
+                this.#router,
+                this.#engineTicker,
+                smartLoopTransitionPolicy
+            );
 
             const resolver = new MixerStateResolver({ defaultBusGain: 1 });
 

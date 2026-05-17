@@ -26,6 +26,7 @@ describe('Sequencer (Interactive Music)', () => {
     let mockController: any;
     let mockRouter: any;
     let mockTicker: Mocked<IEngineTicker>;
+    let mockTransitionPolicy: any;
     let manager: Sequencer;
 
     let capturedOnVoiceEnded: (() => void) | null;
@@ -87,7 +88,11 @@ describe('Sequencer (Interactive Music)', () => {
             applyConfigToPlayback: vi.fn()
         };
 
-        manager = new Sequencer(mockController, mockRouter, mockTicker);
+        mockTransitionPolicy = {
+            evaluate: vi.fn().mockReturnValue(null)
+        };
+
+        manager = new Sequencer(mockController, mockRouter, mockTicker, mockTransitionPolicy);
     });
 
     afterEach(() => {
@@ -486,6 +491,62 @@ describe('Sequencer (Interactive Music)', () => {
                     offset: 1
                 })
             );
+        });
+    });
+
+    describe('Magnet Regions Evaluation', () => {
+        it('should evaluate magnets via TransitionPolicy on tick when in a looping state', () => {
+            const config = mockRouter.getSoundConfig();
+
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+
+            mockTransitionPolicy.evaluate.mockClear();
+
+            triggerTick();
+
+            expect(mockTransitionPolicy.evaluate).toHaveBeenCalledTimes(1);
+            expect(mockTransitionPolicy.evaluate).toHaveBeenCalledWith(config, 'intro');
+        });
+
+        it('should automatically transition to magnet target if TransitionPolicy returns a decision', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            const transitionSpy = vi.spyOn(manager, 'transitionTo');
+
+            mockTransitionPolicy.evaluate.mockReturnValueOnce({
+                targetRegion: 'main',
+                transitionRegionName: 'fill',
+                options: {
+                    quantize: 'NextBar',
+                    interruptable: true
+                }
+            });
+
+            triggerTick();
+
+            expect(transitionSpy).toHaveBeenCalledWith({
+                soundId: 'battle_music',
+                targetRegion: 'main',
+                transitionRegionName: 'fill',
+                options: expect.objectContaining({
+                    quantize: 'NextBar',
+                    interruptable: true
+                })
+            });
+
+            transitionSpy.mockRestore();
+        });
+
+        it('should do nothing if TransitionPolicy returns null', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            const transitionSpy = vi.spyOn(manager, 'transitionTo');
+
+            mockTransitionPolicy.evaluate.mockClear();
+            mockTransitionPolicy.evaluate.mockReturnValue(null);
+
+            triggerTick();
+
+            expect(transitionSpy).not.toHaveBeenCalled();
+            transitionSpy.mockRestore();
         });
     });
 });

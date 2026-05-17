@@ -10,6 +10,7 @@ import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js'
 import { PlaybackId, RegionId, SoundId, TickerTaskId } from '@shared/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 import { isDefined, isAbsent } from '@shared/guards.js';
+import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 
 interface ActiveRegion {
     playbackId: PlaybackId;
@@ -31,6 +32,7 @@ interface TrackContext {
     gridStartTime: number | null;
     regionQueue: QueuedRegion[];
     loopRegion: RegionId | null;
+    currentRegion: RegionId | null;
 }
 
 export default class Sequencer implements ISequencer {
@@ -41,7 +43,8 @@ export default class Sequencer implements ISequencer {
     constructor(
         private readonly controller: ISoundController,
         private readonly router: IAudioRouter,
-        private readonly ticker: IEngineTicker
+        private readonly ticker: IEngineTicker,
+        private readonly transitionPolicy: SmartLoopTransitionPolicy
     ) {
         this.startScheduler();
     }
@@ -55,6 +58,7 @@ export default class Sequencer implements ISequencer {
         track.gridStartTime = null;
         track.regionQueue = [];
         track.loopRegion = regionName;
+        track.currentRegion = regionName;
 
         this.tick();
     }
@@ -183,14 +187,33 @@ export default class Sequencer implements ISequencer {
         }
 
         track.loopRegion = targetRegion;
+        track.currentRegion = targetRegion;
         track.state = LoopState.LOOPING;
 
         this.tick();
     }
 
+    // oxlint-disable-next-line max-lines-per-function
     public tick(): void {
         for (const [soundId, track] of this.tracks.entries()) {
             if (track.state !== LoopState.LOOPING) continue;
+
+            if (isDefined(track.currentRegion)) {
+                const config = this.router.getSoundConfig(soundId);
+                if (isDefined(config) && 'smartLoop' in config) {
+                    const decision = this.transitionPolicy.evaluate(config, track.currentRegion);
+
+                    if (decision) {
+                        this.transitionTo({
+                            soundId,
+                            targetRegion: decision.targetRegion,
+                            transitionRegionName: decision.transitionRegionName,
+                            options: decision.options
+                        });
+                        continue;
+                    }
+                }
+            }
 
             const now = this.controller.getCurrentTime();
             const scheduleHorizon = now + this.lookaheadWindowSec;
@@ -242,7 +265,8 @@ export default class Sequencer implements ISequencer {
                 activeRegions: new Set(),
                 gridStartTime: null,
                 regionQueue: [],
-                loopRegion: null
+                loopRegion: null,
+                currentRegion: null
             });
         }
         return this.tracks.get(soundId)!;
