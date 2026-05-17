@@ -52,7 +52,10 @@ export interface ISmartLoopSoundConfig {
         readonly bpm?: number;
         readonly beatsPerBar?: number;
         readonly crossfade?: number;
-        readonly regions: Record<RegionId, readonly [startSample: number, endSample: number]>;
+        readonly regions: Record<
+            RegionId,
+            readonly [startSample: number, endSample: number, preEntryMs?: number, tailMs?: number]
+        >;
     };
 }
 

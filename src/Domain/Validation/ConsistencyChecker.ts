@@ -341,12 +341,24 @@ export default class ConsistencyChecker {
 
         for (const [regionId, range] of typedEntries(cfg.smartLoop.regions)) {
             if (this.assertArray(`soundMap.${soundId}.smartLoop.regions.${regionId}`, range, false)) {
-                if (range.length !== 2 || typeof range[0] !== 'number' || typeof range[1] !== 'number') {
-                    this.errors.push(`SmartLoop "${soundId}" region "${regionId}" must be an array of two numbers.`);
+                if (
+                    range.length < 2 ||
+                    range.length > 4 ||
+                    typeof range[0] !== 'number' ||
+                    typeof range[1] !== 'number'
+                ) {
+                    this.errors.push(`SmartLoop "${soundId}" region "${regionId}" must be an array of 2 to 4 numbers.`);
                 } else if (range[0] >= range[1]) {
                     this.errors.push(
                         `SmartLoop "${soundId}" region "${regionId}" has invalid range (${range[0]} >= ${range[1]})`
                     );
+                } else {
+                    if (range.length >= 3 && typeof range[2] !== 'number') {
+                        this.errors.push(`SmartLoop "${soundId}" region "${regionId}" preEntryMs must be a number.`);
+                    }
+                    if (range.length === 4 && typeof range[3] !== 'number') {
+                        this.errors.push(`SmartLoop "${soundId}" region "${regionId}" tailMs must be a number.`);
+                    }
                 }
             }
         }

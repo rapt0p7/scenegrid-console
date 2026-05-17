@@ -2,6 +2,7 @@
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { AudioContext as MockAudioContext, registrar } from 'standardized-audio-context-mock';
 
 import { LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 import Sequencer from '@domain/Orchestration/Sequencer.js';
@@ -19,7 +20,9 @@ vi.mock('../AudioGrid', () => {
 });
 
 describe('Sequencer (Interactive Music)', () => {
-    let mockContext: any;
+    let mockContext: MockAudioContext;
+    let simulatedTime: number;
+
     let mockController: any;
     let mockRouter: any;
     let mockTicker: Mocked<IEngineTicker>;
@@ -33,7 +36,8 @@ describe('Sequencer (Interactive Music)', () => {
         capturedOnVoiceEnded = null;
         capturedTickTarget = null;
 
-        mockContext = { currentTime: 0, sampleRate: 44_100 };
+        simulatedTime = 0;
+        mockContext = new MockAudioContext();
 
         mockTicker = {
             add: vi.fn().mockImplementation((id, interval, target: ITickable) => {
@@ -49,7 +53,7 @@ describe('Sequencer (Interactive Music)', () => {
             stopById: vi.fn(),
             stopAll: vi.fn(),
             cancelScheduled: vi.fn(),
-            getCurrentTime: vi.fn().mockImplementation(() => mockContext.currentTime),
+            getCurrentTime: vi.fn().mockImplementation(() => simulatedTime),
             getSampleRate: vi.fn().mockReturnValue(44_100),
             setVolume: vi.fn(),
             fadeVolume: vi.fn(),
@@ -88,11 +92,12 @@ describe('Sequencer (Interactive Music)', () => {
 
     afterEach(() => {
         manager.destroy();
+        registrar.reset(mockContext as any);
     });
 
     function triggerTick(deltaTimeMs: number = 25) {
         if (capturedTickTarget) {
-            capturedTickTarget.tick(mockContext.currentTime, deltaTimeMs);
+            capturedTickTarget.tick(simulatedTime, deltaTimeMs);
         }
     }
 
@@ -118,7 +123,7 @@ describe('Sequencer (Interactive Music)', () => {
         manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         mockController.play.mockClear();
 
-        mockContext.currentTime = 0.95;
+        simulatedTime = 0.95;
         triggerTick();
 
         expect(mockController.play).toHaveBeenCalledTimes(1);
@@ -138,7 +143,7 @@ describe('Sequencer (Interactive Music)', () => {
 
     it('should perform DIRECT transition with full crossfade (No Fill)', () => {
         manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
-        mockContext.currentTime = 0.5;
+        simulatedTime = 0.5;
 
         manager.transitionTo({
             soundId: 'battle_music' as SoundId,
@@ -162,7 +167,7 @@ describe('Sequencer (Interactive Music)', () => {
 
         manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         mockController.play.mockClear();
-        mockContext.currentTime = 0.5;
+        simulatedTime = 0.5;
 
         mockController.play.mockReturnValueOnce(2 as PlaybackId);
 
@@ -188,7 +193,7 @@ describe('Sequencer (Interactive Music)', () => {
     it('should perform QUANTIZED transition using AudioGrid', () => {
         manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         mockController.play.mockClear();
-        mockContext.currentTime = 0.8;
+        simulatedTime = 0.8;
 
         manager.transitionTo({
             soundId: 'battle_music' as SoundId,
@@ -199,7 +204,7 @@ describe('Sequencer (Interactive Music)', () => {
 
         expect(mockController.play).not.toHaveBeenCalled();
 
-        mockContext.currentTime = 1.95;
+        simulatedTime = 1.95;
         triggerTick();
 
         expect(mockController.play).toHaveBeenCalledTimes(1);
@@ -374,6 +379,113 @@ describe('Sequencer (Interactive Music)', () => {
             });
 
             expect(result).toBeNull();
+        });
+    });
+
+    describe('Pickups (preEntryMs) Logic', () => {
+        it('should handle pickups on fresh start by pushing the grid forward to play the full pickup', () => {
+            mockRouter.getSoundConfig.mockReturnValue({
+                busId: 'music',
+                smartLoop: {
+                    bpm: 120,
+                    regions: {
+                        pickup_region: [44_100, 132_300, 500]
+                    }
+                }
+            });
+
+            simulatedTime = 0;
+            manager.playLoop('battle_music' as SoundId, 'pickup_region' as RegionId);
+
+            expect(mockController.play).toHaveBeenCalledTimes(1);
+            const playArgs = mockController.play.mock.calls[0][1];
+
+            expect(playArgs.when).toBe(0);
+            expect(playArgs.offset).toBeCloseTo(0.5);
+
+            const track = (manager as any).tracks.get('battle_music');
+            expect(track.nextScheduleTime).toBeCloseTo(2.5);
+        });
+
+        it('should crop the pickup if scheduling is late relative to the locked grid', () => {
+            mockRouter.getSoundConfig.mockReturnValue({
+                busId: 'music',
+                smartLoop: {
+                    bpm: 120,
+                    regions: {
+                        pickup_region: [44_100, 132_300, 500]
+                    }
+                }
+            });
+
+            const track = (manager as any).getTrackContext('battle_music');
+            track.gridStartTime = 0;
+
+            simulatedTime = 9.7;
+
+            (manager as any).scheduleRegion({
+                soundId: 'battle_music',
+                regionName: 'pickup_region',
+                targetTime: 10.0,
+                track
+            });
+
+            expect(mockController.play).toHaveBeenCalledTimes(1);
+            const playArgs = mockController.play.mock.calls[0][1];
+
+            expect(playArgs.when).toBe(0);
+            expect(playArgs.offset).toBeCloseTo(0.7);
+
+            expect(track.nextScheduleTime).toBeCloseTo(12.0);
+        });
+    });
+
+    describe('Musical Overlap & Tails (tailDurationMs) Logic', () => {
+        it('should append tailMs to the physical duration of the scheduled region without shifting the grid', () => {
+            mockRouter.getSoundConfig.mockReturnValue({
+                busId: 'music',
+                smartLoop: {
+                    bpm: 120,
+                    regions: {
+                        tail_region: [44_100, 88_200, 0, 1500]
+                    }
+                }
+            });
+
+            simulatedTime = 0;
+            manager.playLoop('battle_music' as SoundId, 'tail_region' as RegionId);
+
+            expect(mockController.play).toHaveBeenCalledTimes(1);
+            const playArgs = mockController.play.mock.calls[0][1];
+
+            expect(playArgs.duration).toBeCloseTo(2.5);
+
+            const track = (manager as any).tracks.get('battle_music');
+            expect(track.nextScheduleTime).toBeCloseTo(1.0);
+        });
+
+        it('should perform MUSICAL OVERLAP transition when tailDurationMs is provided', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            simulatedTime = 0.5;
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main' as RegionId,
+                transitionRegionName: '' as RegionId,
+                options: { quantize: 'Immediate', tailDurationMs: 2000 }
+            });
+
+            expect(mockController.fadeVolume).not.toHaveBeenCalled();
+
+            expect(mockController.stopById).toHaveBeenCalledWith(1, 2.5);
+
+            expect(mockController.play).toHaveBeenCalledWith(
+                'battle_music',
+                expect.objectContaining({
+                    when: 0,
+                    offset: 1
+                })
+            );
         });
     });
 });

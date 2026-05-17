@@ -21,6 +21,7 @@ export interface TransitionOptions {
     readonly quantize?: QuantizeType;
     readonly quantizeInterval?: number;
     readonly crossfadeDuration?: number;
+    readonly tailDurationMs?: number;
     readonly grid?: IAudioGrid;
     readonly blendMode?: TransitionBlendMode;
     readonly interruptable?: boolean;

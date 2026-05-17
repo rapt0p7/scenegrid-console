@@ -139,7 +139,8 @@ export default class Sequencer implements ISequencer {
                 : (options.crossfadeDuration ?? config.smartLoop.crossfade ?? 0);
 
         const crossfadeSec = crossfadeMs / 1000;
-        const stopTime = targetTime + crossfadeSec;
+        const isMusicalOverlap = isDefined(options.tailDurationMs);
+        const overrideTailSec = (options.tailDurationMs ?? 0) / 1000;
 
         for (const active of track.activeRegions) {
             try {
@@ -153,10 +154,16 @@ export default class Sequencer implements ISequencer {
                 continue;
             }
 
-            if (crossfadeMs > 0) {
+            if (isMusicalOverlap) {
+                if (overrideTailSec > 0) {
+                    this.controller.stopById(active.playbackId, targetTime + overrideTailSec);
+                } else {
+                    this.controller.stopById(active.playbackId, targetTime);
+                }
+            } else if (crossfadeMs > 0) {
                 const delayMsToFade = Math.max(0, (targetTime - now) * 1000);
                 this.controller.fadeVolume(active.playbackId, 0, crossfadeMs, 'equal-power', delayMsToFade);
-                this.controller.stopById(active.playbackId, stopTime);
+                this.controller.stopById(active.playbackId, targetTime + crossfadeSec);
             } else {
                 this.controller.stopById(active.playbackId, targetTime);
             }
@@ -259,42 +266,63 @@ export default class Sequencer implements ISequencer {
         const region = config.smartLoop.regions[regionName];
         if (isAbsent(region)) return null;
 
-        const [startSample, endSample] = region;
+        const [startSample, endSample, preEntryMs = 0, tailMs = 0] = region;
         const sampleRate = this.controller.getSampleRate();
-        const durationSec = (endSample - startSample) / sampleRate;
-        const offsetSec = startSample / sampleRate;
+
+        const logicalDurationSec = (endSample - startSample) / sampleRate;
+        const logicalOffsetSec = startSample / sampleRate;
+        const preEntrySec = preEntryMs / 1000;
+        const tailSec = tailMs / 1000;
+
+        let actualOffsetSec = Math.max(0, logicalOffsetSec - preEntrySec);
+
+        let actualDurationSec = logicalDurationSec + (logicalOffsetSec - actualOffsetSec) + tailSec;
+
+        let actualTargetTime = targetTime - preEntrySec;
+        let logicalScheduledTime = targetTime;
 
         const now = this.controller.getCurrentTime();
-        let delaySec = 0;
-        if (targetTime > 0) {
-            delaySec = Math.max(0, targetTime - now);
+
+        if (actualTargetTime < now) {
+            if (isAbsent(track.gridStartTime) && targetTime === 0) {
+                actualTargetTime = now;
+                logicalScheduledTime = now + preEntrySec;
+            } else {
+                const missedSec = now - actualTargetTime;
+                if (now >= targetTime) {
+                    actualOffsetSec = logicalOffsetSec + (now - targetTime);
+                    actualDurationSec = Math.max(0, logicalDurationSec - (now - targetTime) + tailSec);
+                    actualTargetTime = now;
+                } else {
+                    actualOffsetSec += missedSec;
+                    actualDurationSec -= missedSec;
+                    actualTargetTime = now;
+                }
+            }
         }
+
+        const delaySec = Math.max(0, actualTargetTime - now);
 
         const playbackId = this.controller.play(soundId, {
             when: delaySec,
-            offset: offsetSec,
-            duration: durationSec
+            offset: actualOffsetSec,
+            duration: actualDurationSec
         });
 
         if (isAbsent(playbackId)) {
             console.warn(`[Sequencer] Failed to schedule region ${regionName} for ${soundId} (voice dropped).`);
-
-            track.nextScheduleTime = targetTime + durationSec;
-
+            track.nextScheduleTime = logicalScheduledTime + logicalDurationSec;
             return null;
         }
 
         this.router.applyConfigToPlayback(playbackId, config);
 
-        targetTime = now + delaySec;
-
-        track.gridStartTime ??= targetTime;
-
-        track.nextScheduleTime = targetTime + durationSec;
+        track.gridStartTime ??= logicalScheduledTime;
+        track.nextScheduleTime = logicalScheduledTime + logicalDurationSec;
 
         const activeRegion: ActiveRegion = {
             playbackId,
-            scheduledStartTime: targetTime,
+            scheduledStartTime: logicalScheduledTime,
             unsubscribe: () => {}
         };
 

@@ -109,9 +109,9 @@ describe('ConsistencyChecker', () => {
         it('should validate bus filters (valid, invalid object, invalid type)', () => {
             const config: any = {
                 buses: {
-                    master: { filter: { type: 'lowpass' } }, // OK
-                    bad1: { filter: 'not an object' }, // Fail object check
-                    bad2: { filter: { type: 123 } } // Fail string check
+                    master: { filter: { type: 'lowpass' } },
+                    bad1: { filter: 'not an object' },
+                    bad2: { filter: { type: 123 } }
                 }
             };
             expect(ConsistencyChecker.validate(config)).toBe(false);
@@ -122,9 +122,9 @@ describe('ConsistencyChecker', () => {
         it('should validate sidechain property on bus config', () => {
             const config: any = {
                 buses: {
-                    master: { gain: 1, sidechain: { enabled: true } }, // OK
-                    bad1: { gain: 1, sidechain: 'not an object' }, // Fail
-                    bad2: { gain: 1, sidechain: { enabled: 'yes' } } // Fail
+                    master: { gain: 1, sidechain: { enabled: true } },
+                    bad1: { gain: 1, sidechain: 'not an object' },
+                    bad2: { gain: 1, sidechain: { enabled: 'yes' } }
                 },
                 soundMap: {}
             };
@@ -184,8 +184,8 @@ describe('ConsistencyChecker', () => {
                 buses: { master: {} },
                 soundMap: {
                     '3d_good': { busId: 'master', spatial: { position: [1, 2, 3] } },
-                    '3d_bad_type': { busId: 'master', spatial: { position: [1, 'two', 3] } }, // Fail inside if
-                    '3d_bad_len': { busId: 'master', spatial: { position: [1, 2] } } // Fail length check
+                    '3d_bad_type': { busId: 'master', spatial: { position: [1, 'two', 3] } },
+                    '3d_bad_len': { busId: 'master', spatial: { position: [1, 2] } }
                 }
             };
             expect(ConsistencyChecker.validate(config)).toBe(false);
@@ -291,14 +291,61 @@ describe('ConsistencyChecker', () => {
     });
 
     describe('SmartLoop & Container Validations', () => {
-        it('should catch invalid SmartLoop regions', () => {
+        it('should catch invalid SmartLoop regions (start >= end)', () => {
             const config: any = {
                 buses: { master: {} },
                 soundMap: {
-                    loop1: { smartLoop: { regions: { intro: [10, 5] } } }
+                    loop1: { busId: 'master', smartLoop: { regions: { intro: [10, 5] } } }
                 }
             };
             expect(ConsistencyChecker.validate(config)).toBe(false);
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('has invalid range (10 >= 5)'));
+        });
+
+        it('should catch SmartLoop regions with invalid lengths or non-number values', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {
+                    loop_short: { busId: 'master', smartLoop: { regions: { intro: [10] } } },
+                    loop_long: { busId: 'master', smartLoop: { regions: { intro: [10, 20, 300, 400, 500] } } },
+                    loop_str: { busId: 'master', smartLoop: { regions: { outro: ['10', 20] } } },
+                    loop_pre_str: { busId: 'master', smartLoop: { regions: { outro: [10, 20, '500'] } } },
+                    loop_tail_str: { busId: 'master', smartLoop: { regions: { outro: [10, 20, 500, '1000'] } } }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('SmartLoop "loop_short" region "intro" must be an array of 2 to 4 numbers.')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('SmartLoop "loop_long" region "intro" must be an array of 2 to 4 numbers.')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('SmartLoop "loop_str" region "outro" must be an array of 2 to 4 numbers.')
+            );
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('SmartLoop "loop_pre_str" region "outro" preEntryMs must be a number.')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('SmartLoop "loop_tail_str" region "outro" tailMs must be a number.')
+            );
+        });
+
+        it('should pass valid SmartLoop regions with or without preEntryMs and tailMs', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {
+                    loop_base: { busId: 'master', smartLoop: { regions: { intro: [10, 20] } } },
+                    loop_pickup: { busId: 'master', smartLoop: { regions: { intro: [10, 20, 500] } } },
+                    loop_tail: { busId: 'master', smartLoop: { regions: { intro: [10, 20, 500, 1500] } } }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(true);
+            expect(console.error).not.toHaveBeenCalled();
         });
 
         it('should catch layered sounds with missing audio references', () => {
@@ -329,18 +376,6 @@ describe('ConsistencyChecker', () => {
             expect(console.warn).toHaveBeenCalledWith(
                 expect.stringContaining('Container "bad_cont" references missing source "missing_source".')
             );
-        });
-
-        it('should catch SmartLoop regions with invalid lengths or non-number values', () => {
-            const config: any = {
-                buses: { master: {} },
-                soundMap: {
-                    loop1: { smartLoop: { regions: { intro: [10] } } },
-                    loop2: { smartLoop: { regions: { outro: ['10', 20] } } }
-                }
-            };
-            ConsistencyChecker.validate(config);
-            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('must be an array of two numbers'));
         });
 
         it('should accept container sources as strings or objects with weights', () => {
@@ -1154,7 +1189,7 @@ describe('ConsistencyChecker', () => {
 
             it('should issue an ERROR if set_rtpc param does not exist in rtpcManifest', () => {
                 const config: any = {
-                    ...getBaseConfig(), // В базе есть только 'player_health'
+                    ...getBaseConfig(),
                     events: {
                         Error_Event: {
                             actions: [{ type: 'set_rtpc', param: 'ghost_parameter', value: 10 }]
