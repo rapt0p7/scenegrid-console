@@ -82,7 +82,7 @@
         "oxfmt": "0.45.0",
         "oxlint": "1.60.0",
         "oxlint-tsgolint": "0.21.1",
-        "repomix": "1.12.0",
+        "repomix": "1.14.0",
         "standardized-audio-context-mock": "9.7.29",
         "ts-node": "10.9.2",
         "tsc-alias": "1.8.16",
