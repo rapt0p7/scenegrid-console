@@ -220,6 +220,45 @@ export default class Sequencer implements ISequencer {
         this.tick();
     }
 
+    public playStinger(
+        stingerId: SoundId,
+        quantize: 'Immediate' | 'NextBeat' | 'NextBar' = 'NextBeat',
+        referenceTrackId?: SoundId
+    ): void {
+        const now = this.controller.getCurrentTime();
+
+        if (quantize === 'Immediate') {
+            this.router.play(stingerId, { delayMs: 0 });
+            return;
+        }
+
+        const refTrack = isDefined(referenceTrackId)
+            ? this.tracks.get(referenceTrackId)
+            : Array.from(this.tracks.values()).find(t => t.state === LoopState.LOOPING);
+
+        if (isAbsent(refTrack) || isAbsent(refTrack.gridStartTime)) {
+            this.router.play(stingerId, { delayMs: 0 });
+            return;
+        }
+
+        const config = this.router.getSoundConfig(refTrack.soundId);
+        if (isAbsent(config) || !('smartLoop' in config)) {
+            this.router.play(stingerId, { delayMs: 0 });
+            return;
+        }
+
+        const bpm = config.smartLoop.bpm ?? 120;
+        const beatsPerBar = config.smartLoop.beatsPerBar ?? 4;
+
+        const grid = new AudioGrid(bpm, beatsPerBar, refTrack.gridStartTime);
+
+        const targetTime = quantize === 'NextBar' ? grid.getNextBarTime(now) : grid.getNextBeatTime(now);
+
+        const delaySec = Math.max(0, targetTime - now);
+
+        this.router.play(stingerId, { delayMs: delaySec * 1000 });
+    }
+
     // oxlint-disable-next-line max-lines-per-function
     public tick(): void {
         for (const [soundId, track] of this.tracks.entries()) {

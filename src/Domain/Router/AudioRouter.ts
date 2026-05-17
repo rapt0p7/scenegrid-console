@@ -107,7 +107,7 @@ export default class AudioRouter implements IAudioRouter {
         const finalOptions = VariationResolver.apply(config, options);
 
         const playbackId = this.soundController.play(name, {
-            when: (finalOptions.seek ?? 0) / 1000,
+            when: (finalOptions.delayMs ?? 0) / 1000,
             offset: (finalOptions.seek ?? 0) / 1000,
             loop: finalOptions.isLoop,
             rate: finalOptions.rate,

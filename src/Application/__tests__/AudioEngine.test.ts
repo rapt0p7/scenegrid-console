@@ -438,6 +438,9 @@ describe('AudioEngine', () => {
                 engine.music.stopLoop('bgm');
             }).not.toThrow();
             expect(() => {
+                engine.music.playStinger('bgm', 'NextBeat');
+            }).not.toThrow();
+            expect(() => {
                 engine.music.transitionTo({ soundId: 'bgm' as SoundId, targetRegion: 'chorus' as RegionId });
             }).not.toThrow();
         });

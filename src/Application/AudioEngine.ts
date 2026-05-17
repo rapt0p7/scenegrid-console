@@ -43,7 +43,7 @@ import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.j
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
-import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { ITransitionToParameters, QuantizeType } from '@domain/Orchestration/Ports/ISequencer.js';
 import {
     EventId,
     GameParamId,
@@ -125,6 +125,9 @@ export class AudioEngine {
         },
         stopLoop: (soundId: string) => {
             this.#sequencer.stopLoop(soundId as SoundId);
+        },
+        playStinger: (stingerId: string, quantize: QuantizeType, referenceTrackId?: SoundId): void => {
+            this.#sequencer.playStinger(stingerId as SoundId, quantize, referenceTrackId as SoundId);
         },
         transitionTo: (options: ITransitionToParameters) => {
             this.#sequencer.transitionTo(options);

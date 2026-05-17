@@ -108,6 +108,7 @@ export interface IPlayOptions {
     readonly rate?: number;
     readonly volume?: number;
     readonly seek?: number;
+    readonly delayMs?: number;
 }
 
 export type AnySoundConfig =

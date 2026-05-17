@@ -85,7 +85,8 @@ describe('Sequencer (Interactive Music)', () => {
                 }
             }),
             routeSound: vi.fn(),
-            applyConfigToPlayback: vi.fn()
+            applyConfigToPlayback: vi.fn(),
+            play: vi.fn()
         };
 
         mockTransitionPolicy = {
@@ -491,6 +492,42 @@ describe('Sequencer (Interactive Music)', () => {
                     offset: 1
                 })
             );
+        });
+    });
+
+    describe('Stingers (playStinger) Logic', () => {
+        beforeEach(() => {
+            mockRouter.play.mockClear();
+        });
+
+        it('should play stinger immediately if quantize is Immediate', () => {
+            manager.playStinger('victory_chord' as SoundId, 'Immediate');
+            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delayMs: 0 });
+        });
+
+        it('should play stinger immediately if no looping track is active', () => {
+            manager.playStinger('victory_chord' as SoundId, 'NextBar');
+            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delayMs: 0 });
+        });
+
+        it('should quantize stinger to NextBeat using the active track grid', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            mockRouter.play.mockClear();
+            simulatedTime = 1.0;
+
+            manager.playStinger('victory_chord' as SoundId, 'NextBeat');
+
+            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delayMs: 500 });
+        });
+
+        it('should quantize stinger to NextBar using the explicit reference track', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            mockRouter.play.mockClear();
+            simulatedTime = 0.5;
+
+            manager.playStinger('victory_chord' as SoundId, 'NextBar', 'battle_music' as SoundId);
+
+            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delayMs: 1500 });
         });
     });
 

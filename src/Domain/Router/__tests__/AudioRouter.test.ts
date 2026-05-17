@@ -459,7 +459,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
             expect(mockController.play).toHaveBeenCalledWith(
                 'var_sound',
                 expect.objectContaining({
-                    when: 500 / 1000,
+                    when: 0,
                     offset: 500 / 1000
                 })
             );
