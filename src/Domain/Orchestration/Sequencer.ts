@@ -21,6 +21,7 @@ interface ActiveRegion {
 interface QueuedRegion {
     name: RegionId;
     fadeInDurationMs: number;
+    startOffsetSec?: number;
 }
 
 interface TrackContext {
@@ -177,13 +178,39 @@ export default class Sequencer implements ISequencer {
         track.regionQueue = [];
         track.nextScheduleTime = targetTime;
 
+        let targetStartOffsetSec = 0;
+        if (options.offsetMode && options.offsetMode !== 'None' && track.currentRegion) {
+            const sourceRegion = config.smartLoop.regions[track.currentRegion];
+            const targetRegionData = config.smartLoop.regions[targetRegion];
+
+            if (sourceRegion && targetRegionData) {
+                const sr = this.controller.getSampleRate();
+                const sourceLenSec = (sourceRegion[1] - sourceRegion[0]) / sr;
+                const targetLenSec = (targetRegionData[1] - targetRegionData[0]) / sr;
+
+                if (sourceLenSec > 0) {
+                    const elapsedAtTarget = Math.max(0, targetTime - (track.gridStartTime ?? now));
+                    let phase = (elapsedAtTarget % sourceLenSec) / sourceLenSec;
+
+                    if (options.offsetMode === 'Inverted') {
+                        phase = 1.0 - phase;
+                    }
+                    targetStartOffsetSec = phase * targetLenSec;
+                }
+            }
+        }
+
         if (isDefined(transitionRegionName) && transitionRegionName !== '') {
             track.regionQueue.push(
                 { name: transitionRegionName, fadeInDurationMs: crossfadeMs },
-                { name: targetRegion, fadeInDurationMs: 0 }
+                { name: targetRegion, fadeInDurationMs: 0, startOffsetSec: targetStartOffsetSec }
             );
         } else {
-            track.regionQueue.push({ name: targetRegion, fadeInDurationMs: crossfadeMs });
+            track.regionQueue.push({
+                name: targetRegion,
+                fadeInDurationMs: crossfadeMs,
+                startOffsetSec: targetStartOffsetSec
+            });
         }
 
         track.loopRegion = targetRegion;
@@ -221,11 +248,13 @@ export default class Sequencer implements ISequencer {
             while (track.nextScheduleTime < scheduleHorizon) {
                 let nextRegionName: RegionId | null = null;
                 let fadeInMs = 0;
+                let startOffsetSec = 0;
 
                 if (track.regionQueue.length > 0) {
                     const queued = track.regionQueue.shift()!;
                     nextRegionName = queued.name;
                     fadeInMs = queued.fadeInDurationMs;
+                    startOffsetSec = queued.startOffsetSec ?? 0;
                 } else if (isDefined(track.loopRegion)) {
                     nextRegionName = track.loopRegion;
                 }
@@ -237,7 +266,8 @@ export default class Sequencer implements ISequencer {
                     soundId,
                     regionName: nextRegionName,
                     targetTime: regionStartTime,
-                    track
+                    track,
+                    startOffsetSec
                 });
 
                 if (isDefined(playbackId)) {
@@ -277,12 +307,14 @@ export default class Sequencer implements ISequencer {
         soundId,
         regionName,
         targetTime,
-        track
+        track,
+        startOffsetSec = 0
     }: {
         soundId: SoundId;
         regionName: RegionId;
         targetTime: number;
         track: TrackContext;
+        startOffsetSec?: number;
     }): PlaybackId | null {
         const config = this.router.getSoundConfig(soundId);
         if (isAbsent(config) || !('smartLoop' in config)) return null;
@@ -293,10 +325,14 @@ export default class Sequencer implements ISequencer {
         const [startSample, endSample, preEntryMs = 0, tailMs = 0] = region;
         const sampleRate = this.controller.getSampleRate();
 
-        const logicalDurationSec = (endSample - startSample) / sampleRate;
-        const logicalOffsetSec = startSample / sampleRate;
-        const preEntrySec = preEntryMs / 1000;
+        const fullLogicalDurationSec = (endSample - startSample) / sampleRate;
+        const safeStartOffsetSec = Math.min(startOffsetSec, fullLogicalDurationSec);
+
+        const preEntrySec = safeStartOffsetSec > 0 ? 0 : preEntryMs / 1000;
         const tailSec = tailMs / 1000;
+
+        const logicalDurationSec = fullLogicalDurationSec - safeStartOffsetSec;
+        const logicalOffsetSec = startSample / sampleRate + safeStartOffsetSec;
 
         let actualOffsetSec = Math.max(0, logicalOffsetSec - preEntrySec);
 

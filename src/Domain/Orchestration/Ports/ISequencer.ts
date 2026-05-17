@@ -25,6 +25,7 @@ export interface TransitionOptions {
     readonly grid?: IAudioGrid;
     readonly blendMode?: TransitionBlendMode;
     readonly interruptable?: boolean;
+    readonly offsetMode?: 'None' | 'Relative' | 'Inverted';
 }
 
 export interface ISequencer {

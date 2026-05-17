@@ -1234,10 +1234,13 @@ describe('ConsistencyChecker', () => {
         it('should pass a perfectly valid SmartLoop config with magnets', () => {
             const config: any = {
                 buses: { master: {} },
+                events: {},
                 rtpcManifest: { boss_phase: { defaultValue: 1 } },
                 soundMap: {
                     bgm_boss: {
                         busId: 'master',
+                        url: 'dummy/path.mp3',
+                        volume: 1,
                         smartLoop: {
                             regions: { intro: [0, 100], phase2: [100, 200] },
                             magnets: [
@@ -1245,7 +1248,6 @@ describe('ConsistencyChecker', () => {
                                     region: 'intro',
                                     targetRegion: 'phase2',
                                     quantize: 'NextBar',
-                                    transitionRegionName: 'drum_fill',
                                     tailDurationMs: 1500,
                                     condition: { param: 'boss_phase', operator: '==', value: 2 }
                                 }
@@ -1255,8 +1257,13 @@ describe('ConsistencyChecker', () => {
                 }
             };
 
-            expect(ConsistencyChecker.validate(config)).toBe(true);
-            expect(console.error).not.toHaveBeenCalled();
+            const errorSpy = vi.spyOn(console, 'error');
+            const isValid = ConsistencyChecker.validate(config);
+
+            expect(isValid).toBe(true);
+            expect(errorSpy).not.toHaveBeenCalled();
+
+            errorSpy.mockRestore();
         });
 
         it('should fail if magnets property is not an array or contains non-objects', () => {
@@ -1390,6 +1397,76 @@ describe('ConsistencyChecker', () => {
                     'SmartLoop "ghost_param_magnet" uses unknown RTPC param "unknown_ghost_parameter" in magnet condition.'
                 )
             );
+        });
+
+        it('should catch invalid offsetMode values in magnets', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { health: { defaultValue: 100 } },
+                soundMap: {
+                    bad_offset: {
+                        busId: 'master',
+                        smartLoop: {
+                            regions: { intro: [0, 100] },
+                            magnets: [
+                                {
+                                    region: 'intro',
+                                    targetRegion: 'intro',
+                                    quantize: 'Immediate',
+                                    offsetMode: 'Absolute',
+                                    condition: { param: 'health', operator: '<', value: 50 }
+                                },
+                                {
+                                    region: 'intro',
+                                    targetRegion: 'intro',
+                                    quantize: 'Immediate',
+                                    offsetMode: 123,
+                                    condition: { param: 'health', operator: '<', value: 50 }
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    "magnet has invalid offsetMode \"Absolute\". Expected 'None', 'Relative', or 'Inverted'"
+                )
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Type Error at "soundMap.bad_offset.smartLoop.magnets[1].offsetMode": expected string'
+                )
+            );
+        });
+
+        it('should pass valid offsetMode values in magnets', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { health: { defaultValue: 100 } },
+                soundMap: {
+                    good_offset: {
+                        busId: 'master',
+                        smartLoop: {
+                            regions: { intro: [0, 100] },
+                            magnets: [
+                                {
+                                    region: 'intro',
+                                    targetRegion: 'intro',
+                                    quantize: 'Immediate',
+                                    offsetMode: 'Relative',
+                                    condition: { param: 'health', operator: '<', value: 50 }
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(true);
         });
     });
 });

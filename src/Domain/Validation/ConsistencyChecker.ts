@@ -388,6 +388,19 @@ export default class ConsistencyChecker {
             this.assertOptionalType(`${magnetPath}.crossfadeDuration`, magnet.crossfadeDuration, 'number');
             this.assertOptionalType(`${magnetPath}.tailDurationMs`, magnet.tailDurationMs, 'number');
 
+            if (
+                isDefined(magnet.offsetMode) &&
+                this.assertOptionalType(`${magnetPath}.offsetMode`, magnet.offsetMode, 'string')
+            ) {
+                const mode = magnet.offsetMode as string;
+                if (mode !== 'None' && mode !== 'Relative' && mode !== 'Inverted') {
+                    this.errors.push(
+                        // oxlint-disable-next-line typescript/restrict-template-expressions
+                        `SmartLoop "${soundId}" region "${magnet.region}" magnet has invalid offsetMode "${mode}". Expected 'None', 'Relative', or 'Inverted'.`
+                    );
+                }
+            }
+
             const condition = magnet.condition;
             if (this.assertRequiredType(`${magnetPath}.condition`, condition, 'object')) {
                 const condObj = condition as Record<string, any>;

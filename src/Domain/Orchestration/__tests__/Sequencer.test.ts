@@ -548,5 +548,82 @@ describe('Sequencer (Interactive Music)', () => {
             expect(transitionSpy).not.toHaveBeenCalled();
             transitionSpy.mockRestore();
         });
+
+        describe('FMOD Destination Offset (offsetMode) Logic', () => {
+            beforeEach(() => {
+                mockRouter.getSoundConfig.mockReturnValue({
+                    busId: 'music',
+                    smartLoop: {
+                        bpm: 120,
+                        regions: {
+                            source_region: [0, 88_200],
+                            target_region: [44_100, 220_500, 500]
+                        }
+                    }
+                });
+            });
+
+            it('should apply Relative offset correctly and ignore preEntryMs', () => {
+                manager.playLoop('battle_music' as SoundId, 'source_region' as RegionId);
+
+                const track = (manager as any).tracks.get('battle_music');
+                track.gridStartTime = 0;
+                simulatedTime = 0.5;
+
+                mockController.play.mockClear();
+
+                manager.transitionTo({
+                    soundId: 'battle_music' as SoundId,
+                    targetRegion: 'target_region' as RegionId,
+                    options: { quantize: 'Immediate', offsetMode: 'Relative' }
+                });
+
+                expect(mockController.play).toHaveBeenCalledTimes(1);
+                const playArgs = mockController.play.mock.calls[0][1];
+
+                expect(playArgs.offset).toBeCloseTo(2.0);
+                expect(playArgs.when).toBe(0);
+            });
+
+            it('should apply Inverted offset correctly', () => {
+                manager.playLoop('battle_music' as SoundId, 'source_region' as RegionId);
+
+                const track = (manager as any).tracks.get('battle_music');
+                track.gridStartTime = 0;
+                simulatedTime = 0.5;
+
+                mockController.play.mockClear();
+
+                manager.transitionTo({
+                    soundId: 'battle_music' as SoundId,
+                    targetRegion: 'target_region' as RegionId,
+                    options: { quantize: 'Immediate', offsetMode: 'Inverted' }
+                });
+
+                const playArgs = mockController.play.mock.calls[0][1];
+                expect(playArgs.offset).toBeCloseTo(4.0);
+            });
+
+            it('should fallback to Normal (None) behavior if offsetMode is None', () => {
+                manager.playLoop('battle_music' as SoundId, 'source_region' as RegionId);
+
+                const track = (manager as any).tracks.get('battle_music');
+                track.gridStartTime = 0;
+                simulatedTime = 0.5;
+
+                mockController.play.mockClear();
+
+                manager.transitionTo({
+                    soundId: 'battle_music' as SoundId,
+                    targetRegion: 'target_region' as RegionId,
+                    options: { quantize: 'Immediate', offsetMode: 'None' }
+                });
+
+                const playArgs = mockController.play.mock.calls[0][1];
+
+                expect(playArgs.offset).toBeCloseTo(1.0);
+                expect(playArgs.when).toBe(0);
+            });
+        });
     });
 });
