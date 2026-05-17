@@ -122,12 +122,21 @@ They allow independent management of: music, SFX, UI sounds, and various game co
 
 The system natively supports professional interactive music patterns, strictly separating horizontal sequencing from vertical intensity to ensure the mix state remains predictable for the DevTools.
 
-**Horizontal Sequencing (The `Sequencer`)**
+**Horizontal Sequencing (The `Sequencer` & Smart Loops)**
 Instead of triggering multiple separate files chaotically, the `Sequencer` works with audio sprites (regions) within a single media file to manage musical time.
+
 Key capabilities:
-- Gapless looping of specific musical regions.
-- **Seamless Transitions:** Supports instant swaps, grid-quantized jumps (BPM/Bar), and intermediate fill/stinger playback.
-- **Local Crossfades:** Blending regions occurs strictly at the individual channel level (`NodeChain`), preserving global bus automation.
+
+* **Smart Looping (Overlap Preservation):** Supports gapless looping of specific musical regions with built-in `preEntryMs` (pickup notes/upbeats) and `tailMs` (reverb/decay tails). This architecture ensures natural musical phrasing and prevents unnatural cuts, all while maintaining the underlying rhythmic grid without allocating overlapping `AudioNodes` manually.
+* **Condition-Driven Transitions:** A dedicated `SmartLoopTransitionPolicy` evaluates predefined "magnet" conditions to dynamically resolve the optimal transition path and timing between looping regions, preventing chaotic jumps.
+* **Phase-Aware Jumps (`offsetMode`):** When moving between regions, the engine supports multiple alignment behaviors to preserve the musical meter and phase:
+* **None (Default):** Starts the target region precisely from its defined beginning.
+* **Relative:** Preserves the current playback offset (e.g., jumping seamlessly from beat 3 of Region A directly to beat 3 of Region B).
+* **Inverted:** Mathematically mirrors the offset relative to the region's duration, useful for specific rhythmic or reversing patterns.
+
+
+* **Seamless Execution:** Supports instant swaps, grid-quantized jumps (BPM/Bar), and intermediate fill/stinger injection.
+* **Local Crossfades:** Blending regions occurs strictly at the individual channel level (`NodeChain`), preserving global bus automation and preventing routing graph pollution.
 
 **Vertical Layering (Snapshots & RTPC)**
 Dynamic intensity is **not** handled by the Sequencer. Vertical music is achieved entirely through the `MixerTransitionEngine` and `RTPCManager`:
@@ -136,7 +145,62 @@ Dynamic intensity is **not** handled by the Sequencer. Vertical music is achieve
 
 ---
 
-### 7. Sends and Parallel Routing (Auxiliary Sends)
+### 7. Event Orchestration & Logical Resolution
+
+In a true Enterprise-grade audio engine, the game client should never hardcode complex audio behaviors. SceneGrid strictly decouples gameplay triggers from audio execution through a two-tiered resolution pipeline: **Event Orchestration** (Macros) and **Container Resolution** (Assets).
+
+#### Tier 1: The Event Orchestrator (Action Macros)
+
+Instead of the game client manually starting sounds and tweaking parameters, it simply dispatches semantic triggers via `engine.postEvent('Player_Jump')`.
+The `AudioEventOrchestrator` intercepts this and executes a predefined list of actions from the `EventMap`. A single event can simultaneously:
+
+* `play` an impact sound.
+* `stop` a looping breath sound.
+* `set_rtpc` to temporarily lower stamina parameters.
+  This macro-system ensures the game code remains entirely ignorant of the audio implementation details.
+
+#### Tier 2: Container Resolution & Routing
+
+When a `play` command is issued (either via an Event Action or directly via `engine.play(SoundId)`), it hits the `AudioRouter`. The router evaluates the target entity in the `SoundMap` before allocating Web Audio nodes. The target can be a simple AudioBuffer or a complex **Logical Container**:
+
+* **Switch Containers:** Handled by the `SwitchPlaybackPolicy`, the router dynamically resolves the target sound based on current RTPC game states (e.g., swapping footstep sounds based on a `Surface_Type` parameter).
+* **Random & Sequence Containers:** Evaluates playback rules to defeat the "machine-gun effect" by selecting variations without manual coding.
+
+**Non-Destructive Variability**
+To maximize asset reusability and prevent auditory fatigue, the engine applies real-time variability at the moment of instantiation.
+
+* **Micro-Randomization:** Designers can define deterministic boundaries in the manifest (e.g., `pitchVar:0.08`).
+* **Architecture Alignment:** This variability is calculated purely mathematically in the Domain layer and passed as initialization properties to the `SoundInstance`. This prevents unnecessary DSP overhead and ensures the resulting modifiers are fully visible in the DevTools Debugger.
+
+---
+
+### 8. Static Graph Analysis & AOT Validation (`ConsistencyChecker`)
+
+In a purely Data-Driven audio engine, misconfigurations (such as routing feedback loops or missing audio targets) can lead to silent runtime failures. SceneGrid eliminates this risk by employing an **Ahead-of-Time (AOT) Consistency Checker** — a static analyzer for your audio manifests that runs during system initialization.
+
+Before a single Web Audio node is allocated, the engine validates the entire configuration graph to guarantee structural integrity and prevent logic conflicts. If critical errors are found, the engine explicitly aborts initialization, ensuring predictable fail-fast behavior.
+
+**Key Validation Pillars:**
+
+* **Topology & Routing Protection:**
+    * **Feedback Loop Prevention:** Executes a Depth-First Search (DFS) algorithm to ensure buses do not send audio back into themselves or create infinite routing cycles (e.g., `A -> B -> C -> A`).
+    * **Target Legality:** Guarantees that every sound, send, and sidechain ducking target points to an explicitly defined and initialized Bus.
+
+
+* **Logical Integrity & Conflict Resolution:**
+    * **Ghost Ducking Analysis:** Detects state conflicts, warning developers if a sound is configured to duck a target bus, but its own parent bus is muted in the current Snapshot (resulting in "ghost" compression).
+    * **Multiplicative Vetoes:** Identifies collisions between dynamic RTPC controls and hardcoded Snapshot overrides to prevent erratic volume scaling.
+    * **Event & Magnet Validation:** Ensures that all `SmartLoop` transition conditions and `Switch Container` states point to registered variables within the `RTPC Manifest`.
+
+
+* **Asset Hygiene (Memory Safety):**
+    * **Orphan Detection:** Cross-references the loaded asset manifest with the `SoundMap` (including nested `Switch` layers and `Events`). It proactively flags unused audio files ("orphans") loaded into memory, helping technical audio designers optimize RAM usage before shipping.
+
+By treating audio configurations as compilable code, the `ConsistencyChecker` acts as the first line of defense for system stability, preserving frame rates and preventing unpredictable DSP behavior.
+
+---
+
+### 9. Sends and Parallel Routing (Auxiliary Sends)
 
 In addition to direct hierarchical routing, the system provides a parallel routing mechanism via Sends, acting as the DAW equivalent of **Aux Sends**.
 
@@ -151,7 +215,7 @@ Within the strict isolation of the graph, the Sends system maintains the core in
 
 ---
 
-### 8. Real-Time Parameter Control (RTPCManager)
+### 10. Real-Time Parameter Control (RTPCManager)
 
 The RTPC mechanism acts as a **virtual patchbay** for control signals (Control Voltage / Macros). It links "dry" game data (speed, distance, health) to the physical parameters of the audio path in real-time, utilizing advanced performance throttling.
 
@@ -168,7 +232,7 @@ The system uses an advanced `MathCurveDefinition` evaluator for mapping values:
 
 ---
 
-### 9. Observability, Telemetry & Analysis
+### 11. Observability, Telemetry & Analysis
 
 The system supports RMS meters, spectrum analyzers, and DSP detectors (forming the foundation of the **SceneGrid DevTools**). These are implemented as independent **AudioWorklet Plugins** (e.g., `MeterProcessor`) operating via the `silentTail` path:
 - They do not color the sound.
@@ -178,7 +242,7 @@ The system supports RMS meters, spectrum analyzers, and DSP detectors (forming t
 
 ---
 
-### 10. Stability Guarantees (System Invariants)
+### 12. Stability Guarantees (System Invariants)
 
 To maintain a single source of truth for the debugger, the following are **strictly prohibited**:
 
@@ -194,7 +258,7 @@ The principle of immutability **does not apply** to the dynamic runtime state (*
 
 ---
 
-### 11. Architectural Gotcha: The Multiplicative Veto
+### 13. Architectural Gotcha: The Multiplicative Veto
 
 Due to the transition to a multiplicative parameter resolution model (`Final Gain = Base Gain × RTPC Modifier`), the engine enforces a strict separation of orchestrator responsibilities. This strictness is what allows the DevTools to mathematically trace why a sound is muted.
 
