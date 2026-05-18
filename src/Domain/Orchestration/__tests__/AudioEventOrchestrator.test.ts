@@ -7,8 +7,10 @@ import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestr
 import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { EventId, SoundId, GameParamId } from '@shared/Types/Branded.js';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { EventId, SoundId, GameParamId, RegionId, SnapshotId, LayerId } from '@shared/Types/Branded.js';
 import type { Mocked } from 'vitest';
+import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
 
 const testEventMap: IEventMap = {
     ['Player_Jump' as EventId]: {
@@ -34,12 +36,57 @@ const testEventMap: IEventMap = {
             { type: 'stop', target: 'bgm_boss' as SoundId, options: { allowTail: true, fadeOutMs: 2000 } },
             { type: 'play', target: 'jingle_victory' as SoundId }
         ]
+    },
+    ['Start_Combat_Music' as EventId]: {
+        actions: [{ type: 'start_loop', target: 'bgm_combat' as SoundId, startRegion: 'intro' as RegionId }]
+    },
+    ['Stop_Combat_Music' as EventId]: {
+        actions: [{ type: 'stop_loop', target: 'bgm_combat' as SoundId }]
+    },
+    ['Transition_To_Phase2' as EventId]: {
+        actions: [
+            {
+                type: 'music_transition',
+                target: 'bgm_combat' as SoundId,
+                targetRegion: 'phase2' as RegionId,
+                transitionRegionName: 'fill' as RegionId,
+                options: { quantize: 'NextBar', offsetMode: 'Relative' }
+            }
+        ]
+    },
+    ['Play_Victory_Stinger' as EventId]: {
+        actions: [
+            {
+                type: 'play_stinger',
+                target: 'sfx_cymbal' as SoundId,
+                quantize: 'NextBeat',
+                referenceTrackId: 'bgm_combat' as SoundId
+            }
+        ]
+    },
+    ['Game_Paused' as EventId]: {
+        actions: [{ type: 'set_mixer_state', snapshotName: 'snap_pause' as SnapshotId }]
+    },
+    ['Player_Stunned' as EventId]: {
+        actions: [
+            {
+                type: 'add_mixer_modifier',
+                snapshotName: 'snap_muffle' as SnapshotId,
+                modifierId: 'stun_layer' as LayerId,
+                priority: 50
+            }
+        ]
+    },
+    ['Player_Recovered' as EventId]: {
+        actions: [{ type: 'remove_mixer_modifier', modifierId: 'stun_layer' as LayerId }]
     }
 };
 
 describe('AudioEventOrchestrator (State Machine)', () => {
     let mockRouter: Mocked<IAudioRouter>;
     let mockRtpcAdapter: Mocked<IRTPCAdapter>;
+    let mockSequencer: Mocked<ISequencer>;
+    let mockMixer: Mocked<MixerSnapshotManager>;
     let dispatcher: AudioEventOrchestrator;
 
     beforeEach(() => {
@@ -62,7 +109,23 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             configureParam: vi.fn()
         } as unknown as Mocked<IRTPCAdapter>;
 
-        dispatcher = new AudioEventOrchestrator(testEventMap, mockRouter, mockRtpcAdapter);
+        mockSequencer = {
+            playLoop: vi.fn(),
+            stopLoop: vi.fn(),
+            transitionTo: vi.fn(),
+            playStinger: vi.fn(),
+            destroy: vi.fn()
+        } as unknown as Mocked<ISequencer>;
+
+        mockMixer = {
+            activateSnapshot: vi.fn(),
+            clearLayer: vi.fn(),
+            events: {},
+            debugLayerStack: vi.fn(),
+            updateSnapshotsConfig: vi.fn()
+        } as unknown as Mocked<MixerSnapshotManager>;
+
+        dispatcher = new AudioEventOrchestrator(testEventMap, mockRouter, mockRtpcAdapter, mockSequencer, mockMixer);
     });
 
     afterEach(() => {
@@ -71,7 +134,6 @@ describe('AudioEventOrchestrator (State Machine)', () => {
 
     it('should dispatch a simple play action', () => {
         dispatcher.postEvent('Player_Jump' as EventId);
-
         expect(mockRouter.play).toHaveBeenCalledTimes(1);
         expect(mockRouter.play).toHaveBeenCalledWith('sfx_jump');
     });
@@ -95,7 +157,6 @@ describe('AudioEventOrchestrator (State Machine)', () => {
 
     it('should pass options down to the router on stop action', () => {
         dispatcher.postEvent('Boss_Defeated' as EventId);
-
         expect(mockRouter.stop).toHaveBeenCalledWith('bgm_boss', { allowTail: true, fadeOutMs: 2000 });
         expect(mockRouter.play).toHaveBeenCalledWith('jingle_victory');
     });
@@ -108,5 +169,60 @@ describe('AudioEventOrchestrator (State Machine)', () => {
         );
         expect(mockRouter.play).not.toHaveBeenCalled();
         expect(mockRtpcAdapter.setValue).not.toHaveBeenCalled();
+        expect(mockSequencer.playLoop).not.toHaveBeenCalled();
+    });
+
+    describe('Sequencer Integration Actions', () => {
+        it('should route "start_loop" action to sequencer', () => {
+            dispatcher.postEvent('Start_Combat_Music' as EventId);
+            expect(mockSequencer.playLoop).toHaveBeenCalledTimes(1);
+            expect(mockSequencer.playLoop).toHaveBeenCalledWith('bgm_combat', 'intro');
+        });
+
+        it('should route "stop_loop" action to sequencer', () => {
+            dispatcher.postEvent('Stop_Combat_Music' as EventId);
+            expect(mockSequencer.stopLoop).toHaveBeenCalledTimes(1);
+            expect(mockSequencer.stopLoop).toHaveBeenCalledWith('bgm_combat');
+        });
+
+        it('should route "music_transition" action to sequencer with full options', () => {
+            dispatcher.postEvent('Transition_To_Phase2' as EventId);
+            expect(mockSequencer.transitionTo).toHaveBeenCalledTimes(1);
+            expect(mockSequencer.transitionTo).toHaveBeenCalledWith({
+                soundId: 'bgm_combat',
+                targetRegion: 'phase2',
+                transitionRegionName: 'fill',
+                options: expect.objectContaining({
+                    quantize: 'NextBar',
+                    offsetMode: 'Relative'
+                })
+            });
+        });
+
+        it('should route "play_stinger" action to sequencer with quantize and reference track', () => {
+            dispatcher.postEvent('Play_Victory_Stinger' as EventId);
+            expect(mockSequencer.playStinger).toHaveBeenCalledTimes(1);
+            expect(mockSequencer.playStinger).toHaveBeenCalledWith('sfx_cymbal', 'NextBeat', 'bgm_combat');
+        });
+    });
+
+    describe('Mixer Facade Actions Integration', () => {
+        it('should trigger mixer.setState on "set_mixer_state" action', () => {
+            dispatcher.postEvent('Game_Paused' as EventId);
+            expect(mockMixer.activateSnapshot).toHaveBeenCalledTimes(1);
+            expect(mockMixer.activateSnapshot).toHaveBeenCalledWith('snap_pause', 'scene_main', PRIORITY.BASE);
+        });
+
+        it('should trigger mixer.addModifier on "add_mixer_modifier" action', () => {
+            dispatcher.postEvent('Player_Stunned' as EventId);
+            expect(mockMixer.activateSnapshot).toHaveBeenCalledTimes(1);
+            expect(mockMixer.activateSnapshot).toHaveBeenCalledWith('snap_muffle', 'stun_layer', 50);
+        });
+
+        it('should trigger mixer.removeModifier on "remove_mixer_modifier" action', () => {
+            dispatcher.postEvent('Player_Recovered' as EventId);
+            expect(mockMixer.clearLayer).toHaveBeenCalledTimes(1);
+            expect(mockMixer.clearLayer).toHaveBeenCalledWith('stun_layer');
+        });
     });
 });

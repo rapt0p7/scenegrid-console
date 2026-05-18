@@ -2,12 +2,13 @@ import type { IMagnetConfig, ISmartLoopSoundConfig } from '@domain/Configuration
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { RegionId } from '@shared/Types/Branded.js';
 import { isAbsent } from '@shared/guards.js';
+import { QuantizeType } from '@domain/Orchestration/Ports/ISequencer.js';
 
 export interface ITransitionDecision {
     readonly targetRegion: RegionId;
     readonly transitionRegionName?: RegionId;
     readonly options: {
-        readonly quantize: 'Immediate' | 'NextBeat' | 'NextBar';
+        readonly quantize: QuantizeType;
         readonly crossfadeDuration?: number;
         readonly tailDurationMs?: number;
         readonly interruptable: boolean;

@@ -1469,4 +1469,145 @@ describe('ConsistencyChecker', () => {
             expect(ConsistencyChecker.validate(config)).toBe(true);
         });
     });
+    describe('Event Actions (Sequencer Integration) Validations', () => {
+        it('should pass perfectly valid Sequencer event actions', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                soundMap: {},
+                events: {
+                    combat_start: {
+                        actions: [
+                            { type: 'start_loop', target: 'bgm_combat', startRegion: 'intro' },
+                            { type: 'play_stinger', target: 'sfx_cymbal', quantize: 'NextBar' },
+                            {
+                                type: 'music_transition',
+                                target: 'bgm_combat',
+                                targetRegion: 'phase2',
+                                options: { quantize: 'Immediate', offsetMode: 'Relative' }
+                            },
+                            { type: 'stop_loop', target: 'bgm_explore' }
+                        ]
+                    }
+                }
+            };
+
+            const isValid = ConsistencyChecker.validate(config);
+            if (!isValid) console.log((ConsistencyChecker as any).errors);
+
+            expect(isValid).toBe(true);
+        });
+
+        it('should catch missing required fields in Sequencer actions', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                soundMap: {},
+                events: {
+                    bad_events: {
+                        actions: [
+                            { type: 'start_loop', target: 'bgm' },
+                            { type: 'music_transition', target: 'bgm' }
+                        ]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "events.bad_events.actions[0].startRegion"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "events.bad_events.actions[1].targetRegion"')
+            );
+        });
+
+        it('should catch invalid enum values in quantize and offsetMode', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                soundMap: {},
+                events: {
+                    typo_events: {
+                        actions: [
+                            {
+                                type: 'play_stinger',
+                                target: 'sfx',
+                                quantize: 'NextFrame'
+                            },
+                            {
+                                type: 'music_transition',
+                                target: 'bgm',
+                                targetRegion: 'main',
+                                options: { offsetMode: 'Absolute' }
+                            }
+                        ]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    "has invalid value \"NextFrame\". Expected 'Immediate', 'NextBeat', or 'NextBar'"
+                )
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining("has invalid value \"Absolute\". Expected 'None', 'Relative', or 'Inverted'")
+            );
+        });
+    });
+
+    describe('Event Actions (Mixer Integration) Validations', () => {
+        it('should pass valid mixer actions under the exact API layout', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                soundMap: {},
+                events: {
+                    game_paused: {
+                        actions: [{ type: 'set_mixer_state', snapshotName: 'snap_pause' }]
+                    },
+                    explosion_heavy: {
+                        actions: [
+                            {
+                                type: 'add_mixer_modifier',
+                                snapshotName: 'snap_deafened',
+                                modifierId: 'mod_explosion_1',
+                                priority: 100
+                            }
+                        ]
+                    },
+                    explosion_ended: {
+                        actions: [{ type: 'remove_mixer_modifier', modifierId: 'mod_explosion_1' }]
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(true);
+        });
+
+        it('should catch missing fields in mixer actions', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                soundMap: {},
+                events: {
+                    bad_mixer_event: {
+                        actions: [{ type: 'set_mixer_state' }, { type: 'add_mixer_modifier', modifierId: 'mod_1' }]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "events.bad_mixer_event.actions[0].snapshotName"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "events.bad_mixer_event.actions[1].snapshotName"')
+            );
+        });
+    });
 });

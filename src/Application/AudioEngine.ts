@@ -327,7 +327,13 @@ export class AudioEngine {
             const coordinator = new MixerCoordinator(layerStack, mixerTransitionEngine);
             this.#snapshotManager = new MixerSnapshotManager(layerStack, this.config.snapshots, coordinator);
 
-            this.#eventOrchestrator = new AudioEventOrchestrator(this.config.events, this.#router, this.#rtpcManager);
+            this.#eventOrchestrator = new AudioEventOrchestrator(
+                this.config.events,
+                this.#router,
+                this.#rtpcManager,
+                this.#sequencer,
+                this.#snapshotManager
+            );
 
             const cullingArbiter = new VoiceCullingArbiter(0.01);
 

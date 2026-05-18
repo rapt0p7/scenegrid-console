@@ -30,7 +30,7 @@ export interface TransitionOptions {
 
 export interface ISequencer {
     playLoop(soundId: SoundId, regionName: RegionId): void;
-    playStinger(stingerId: SoundId, quantize: QuantizeType, referenceTrackId?: SoundId): void;
+    playStinger(stingerId: SoundId, quantize?: QuantizeType, referenceTrackId?: SoundId): void;
     stopLoop(soundId: SoundId): void;
     transitionTo(parameters: ITransitionToParameters): void;
     destroy(): void;

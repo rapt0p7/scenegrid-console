@@ -1,7 +1,7 @@
 // noinspection D
 
 import AudioGrid from '@domain/Orchestration/AudioGrid.js';
-import { LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
+import { LoopState, QuantizeType } from '@domain/Orchestration/Ports/ISequencer.js';
 
 import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
@@ -220,11 +220,7 @@ export default class Sequencer implements ISequencer {
         this.tick();
     }
 
-    public playStinger(
-        stingerId: SoundId,
-        quantize: 'Immediate' | 'NextBeat' | 'NextBar' = 'NextBeat',
-        referenceTrackId?: SoundId
-    ): void {
+    public playStinger(stingerId: SoundId, quantize: QuantizeType = 'NextBeat', referenceTrackId?: SoundId): void {
         const now = this.controller.getCurrentTime();
 
         if (quantize === 'Immediate') {

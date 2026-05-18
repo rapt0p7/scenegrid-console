@@ -868,6 +868,91 @@ export default class ConsistencyChecker {
                         break;
                     }
 
+                    case 'start_loop':
+                        this.assertRequiredType(`${actionPath}.target`, action.target, 'string');
+                        this.assertRequiredType(`${actionPath}.startRegion`, (action as any).startRegion, 'string');
+                        break;
+
+                    case 'stop_loop':
+                        this.assertRequiredType(`${actionPath}.target`, action.target, 'string');
+                        break;
+
+                    case 'music_transition': {
+                        const transitionAction = action as Record<string, any>;
+                        this.assertRequiredType(`${actionPath}.target`, transitionAction.target, 'string');
+                        this.assertRequiredType(`${actionPath}.targetRegion`, transitionAction.targetRegion, 'string');
+                        this.assertOptionalType(
+                            `${actionPath}.transitionRegionName`,
+                            transitionAction.transitionRegionName,
+                            'string'
+                        );
+
+                        if (
+                            isDefined(transitionAction.options) &&
+                            this.assertOptionalType(`${actionPath}.options`, transitionAction.options, 'object')
+                        ) {
+                            const optsPath = `${actionPath}.options`;
+                            const opts = transitionAction.options as Record<string, any>;
+
+                            this.assertOptionalType(`${optsPath}.quantize`, opts.quantize, 'string');
+                            this.assertOptionalType(`${optsPath}.crossfadeDuration`, opts.crossfadeDuration, 'number');
+                            this.assertOptionalType(`${optsPath}.tailDurationMs`, opts.tailDurationMs, 'number');
+                            this.assertOptionalType(`${optsPath}.interruptable`, opts.interruptable, 'boolean');
+
+                            if (
+                                isDefined(opts.offsetMode) &&
+                                this.assertOptionalType(`${optsPath}.offsetMode`, opts.offsetMode, 'string')
+                            ) {
+                                const mode = opts.offsetMode as string;
+                                if (mode !== 'None' && mode !== 'Relative' && mode !== 'Inverted') {
+                                    this.errors.push(
+                                        `Action at "${optsPath}.offsetMode" has invalid value "${mode}". Expected 'None', 'Relative', or 'Inverted'.`
+                                    );
+                                }
+                            }
+                        }
+                        break;
+                    }
+
+                    case 'play_stinger': {
+                        const stingerAction = action as Record<string, any>;
+                        this.assertRequiredType(`${actionPath}.target`, stingerAction.target, 'string');
+
+                        if (
+                            isDefined(stingerAction.quantize) &&
+                            this.assertOptionalType(`${actionPath}.quantize`, stingerAction.quantize, 'string')
+                        ) {
+                            const q = stingerAction.quantize as string;
+                            if (q !== 'Immediate' && q !== 'NextBeat' && q !== 'NextBar') {
+                                this.errors.push(
+                                    `Action at "${actionPath}.quantize" has invalid value "${q}". Expected 'Immediate', 'NextBeat', or 'NextBar'.`
+                                );
+                            }
+                        }
+                        this.assertOptionalType(
+                            `${actionPath}.referenceTrackId`,
+                            stingerAction.referenceTrackId,
+                            'string'
+                        );
+                        break;
+                    }
+
+                    case 'set_mixer_state':
+                        this.assertRequiredType(`${actionPath}.snapshotName`, (action as any).snapshotName, 'string');
+                        break;
+
+                    case 'add_mixer_modifier': {
+                        const addModAction = action as Record<string, any>;
+                        this.assertRequiredType(`${actionPath}.snapshotName`, addModAction.snapshotName, 'string');
+                        this.assertRequiredType(`${actionPath}.modifierId`, addModAction.modifierId, 'string');
+                        this.assertOptionalType(`${actionPath}.priority`, addModAction.priority, 'number');
+                        break;
+                    }
+
+                    case 'remove_mixer_modifier':
+                        this.assertRequiredType(`${actionPath}.modifierId`, (action as any).modifierId, 'string');
+                        break;
+
                     default:
                         this.errors.push(`Unknown action type "${actionType}" at ${actionPath}`);
                 }
