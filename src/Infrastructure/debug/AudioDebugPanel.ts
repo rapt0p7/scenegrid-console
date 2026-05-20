@@ -7,6 +7,7 @@ import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import { AudioProfiler } from './AudioProfiler.js';
 import { VoiceMeterWidget } from '@infrastructure/debug/ui/VoiceMeterWidget.js';
 import { VoiceListWidget } from '@infrastructure/debug/ui/VoiceListWidget.js';
+import { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
 interface IDebuggableEngine {
     play(soundId: string): any;
@@ -40,7 +41,7 @@ interface IDebugParams {
     loopRegion: string;
     targetRegion: string;
     transitionRegion: string;
-    quantize: 'Immediate' | 'NextBeat' | 'NextBar';
+    quantize: QuantizeType;
     quantizeInterval: number;
     blendMode: 'overlap' | 'crossfade';
     crossfade: number;

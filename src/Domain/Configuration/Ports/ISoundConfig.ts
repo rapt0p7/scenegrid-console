@@ -1,4 +1,5 @@
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
+import { QuantizeType } from '@domain/Shared/Types/Musical.js';
 import { BusId, GameParamId, RegionId, SoundId } from '@shared/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 
@@ -54,7 +55,7 @@ export interface IMagnetConfig {
         readonly operator: '>' | '<' | '==' | '>=' | '<=';
         readonly value: number;
     };
-    readonly quantize: 'Immediate' | 'NextBeat' | 'NextBar';
+    readonly quantize: QuantizeType;
     readonly transitionRegionName?: RegionId;
     readonly crossfadeDuration?: number;
     readonly tailDurationMs?: number;

@@ -14,7 +14,7 @@ export class AudioEventOrchestrator {
         private readonly mixer: MixerSnapshotManager
     ) {}
 
-    public postEvent(eventId: EventId): void {
+    public postEvent(eventId: EventId, depth: number = 0): void {
         const config = this.eventMap[eventId as string];
 
         if (!config) {
@@ -24,12 +24,16 @@ export class AudioEventOrchestrator {
 
         const actionsLength = config.actions.length;
         for (let i = 0; i < actionsLength; i++) {
-            this.executeAction(config.actions[i]);
+            this.executeAction(config.actions[i], depth);
         }
     }
 
     // oxlint-disable-next-line max-lines-per-function
-    private executeAction(action: EventAction): void {
+    private executeAction(action: EventAction, depth: number = 0): void {
+        if (depth > 10 && action.type === 'trigger_event') {
+            console.error(`[AudioEventOrchestrator] Max recursion depth reached for nested event: ${action.target}`);
+            return;
+        }
         switch (action.type) {
             case 'play':
                 this.router.play(action.target);
@@ -77,6 +81,10 @@ export class AudioEventOrchestrator {
 
             case 'remove_mixer_modifier':
                 this.mixer.clearLayer(action.modifierId);
+                break;
+
+            case 'trigger_event':
+                this.postEvent(action.target, depth + 1);
                 break;
         }
     }

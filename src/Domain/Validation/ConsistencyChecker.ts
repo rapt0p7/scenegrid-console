@@ -953,6 +953,21 @@ export default class ConsistencyChecker {
                         this.assertRequiredType(`${actionPath}.modifierId`, (action as any).modifierId, 'string');
                         break;
 
+                    case 'trigger_event': {
+                        const targetId = action.target;
+
+                        if (this.assertRequiredType(`${actionPath}.target`, targetId, 'string')) {
+                            if (!this.events[targetId as any]) {
+                                this.errors.push(`Event "${eventId}" references missing event target "${targetId}".`);
+                            }
+
+                            if ((targetId as any) === (eventId as any)) {
+                                this.errors.push(`Event "${eventId}" references itself in action list.`);
+                            }
+                        }
+                        break;
+                    }
+
                     default:
                         this.errors.push(`Unknown action type "${actionType}" at ${actionPath}`);
                 }

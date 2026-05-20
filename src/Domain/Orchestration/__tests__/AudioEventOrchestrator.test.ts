@@ -79,6 +79,15 @@ const testEventMap: IEventMap = {
     },
     ['Player_Recovered' as EventId]: {
         actions: [{ type: 'remove_mixer_modifier', modifierId: 'stun_layer' as LayerId }]
+    },
+    ['Player_Nested' as EventId]: {
+        actions: [
+            { type: 'trigger_event', target: 'Player_Recovered' as EventId },
+            { type: 'play', target: 'sfx_jump' as SoundId }
+        ]
+    },
+    ['Player_Recursion' as EventId]: {
+        actions: [{ type: 'trigger_event', target: 'Player_Recursion' as EventId }]
     }
 };
 
@@ -92,6 +101,7 @@ describe('AudioEventOrchestrator (State Machine)', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
 
         mockRouter = {
             play: vi.fn(),
@@ -223,6 +233,26 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             dispatcher.postEvent('Player_Recovered' as EventId);
             expect(mockMixer.clearLayer).toHaveBeenCalledTimes(1);
             expect(mockMixer.clearLayer).toHaveBeenCalledWith('stun_layer');
+        });
+    });
+
+    describe('Nested Actions Integration', () => {
+        it('should dispatch nested events and trigger them', () => {
+            const postEventSpy = vi.spyOn(AudioEventOrchestrator.prototype, 'postEvent');
+            dispatcher.postEvent('Player_Nested' as EventId);
+            expect(postEventSpy).toHaveBeenCalledTimes(2);
+            expect(mockMixer.clearLayer).toHaveBeenCalledWith('stun_layer');
+            expect(mockRouter.play).toHaveBeenCalledTimes(1);
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_jump');
+
+            postEventSpy.mockRestore();
+        });
+
+        it('should break out of infinite recursion if depth exceeds 10', () => {
+            const postEventSpy = vi.spyOn(AudioEventOrchestrator.prototype, 'postEvent');
+            dispatcher.postEvent('Player_Recursion' as EventId);
+            expect(postEventSpy).toHaveBeenCalledTimes(12);
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Max recursion depth reached'));
         });
     });
 });

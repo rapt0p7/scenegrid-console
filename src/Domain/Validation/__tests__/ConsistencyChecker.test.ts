@@ -1469,6 +1469,7 @@ describe('ConsistencyChecker', () => {
             expect(ConsistencyChecker.validate(config)).toBe(true);
         });
     });
+
     describe('Event Actions (Sequencer Integration) Validations', () => {
         it('should pass perfectly valid Sequencer event actions', () => {
             const config: any = {
@@ -1607,6 +1608,57 @@ describe('ConsistencyChecker', () => {
             );
             expect(console.error).toHaveBeenCalledWith(
                 expect.stringContaining('Missing required field at "events.bad_mixer_event.actions[1].snapshotName"')
+            );
+        });
+    });
+
+    describe('Event Actions (Nested Actions) Validations', () => {
+        it('should pass valid nested actions', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                soundMap: {},
+                events: {
+                    explosion_heavy: {
+                        actions: [
+                            {
+                                type: 'add_mixer_modifier',
+                                snapshotName: 'snap_deafened',
+                                modifierId: 'mod_explosion_1',
+                                priority: 100
+                            }
+                        ]
+                    },
+                    explosion_nested: {
+                        actions: [{ type: 'trigger_event', target: 'explosion_heavy' }]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+        });
+        it('should catch invalid nested actions', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                soundMap: {},
+                events: {
+                    pause_nested: {
+                        actions: [{ type: 'trigger_event', target: 'pause_unknown' }]
+                    },
+                    pause_recursion: {
+                        actions: [{ type: 'trigger_event', target: 'pause_recursion' }]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Event "pause_nested" references missing event target "pause_unknown".')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Event "pause_recursion" references itself in action list.')
             );
         });
     });

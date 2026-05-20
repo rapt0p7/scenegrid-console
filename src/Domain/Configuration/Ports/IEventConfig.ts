@@ -1,5 +1,6 @@
-import { GameParamId, LayerId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
+import { EventId, GameParamId, LayerId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
 import { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
+import { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
 export interface IStopOptions {
     readonly allowTail?: boolean;
@@ -31,7 +32,7 @@ export type EventAction =
     | {
           readonly type: 'play_stinger';
           readonly target: SoundId;
-          readonly quantize?: 'Immediate' | 'NextBeat' | 'NextBar';
+          readonly quantize?: QuantizeType;
           readonly referenceTrackId?: SoundId;
       }
     | {
@@ -47,6 +48,10 @@ export type EventAction =
     | {
           readonly type: 'remove_mixer_modifier';
           readonly modifierId: LayerId;
+      }
+    | {
+          readonly type: 'trigger_event';
+          readonly target: EventId;
       };
 
 export interface IEventConfig {

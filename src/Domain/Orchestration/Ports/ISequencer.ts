@@ -1,5 +1,6 @@
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
 import { RegionId, SoundId } from '@shared/Types/Branded.js';
+import { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
 export enum LoopState {
     IDLE = 'IDLE',
@@ -7,7 +8,6 @@ export enum LoopState {
     TRANSITIONING = 'TRANSITIONING'
 }
 
-export type QuantizeType = 'Immediate' | 'NextBeat' | 'NextBar';
 export type TransitionBlendMode = 'overlap' | 'crossfade';
 
 export interface ITransitionToParameters {
