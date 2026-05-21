@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
 
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
@@ -9,6 +9,7 @@ import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 import type { IScattererSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { PlaybackId, SoundId } from '@shared/Types/Branded.js';
+import type { IPRNG } from '@shared/Math/SeededPRNG.js';
 import type { Mocked } from 'vitest';
 
 describe('ScattererOrchestrator', () => {
@@ -16,8 +17,8 @@ describe('ScattererOrchestrator', () => {
     let mockController: Mocked<ISoundController>;
     let mockSequencer: Mocked<ISequencer>;
     let mockPolicy: Mocked<ContainerPlaybackPolicy>;
+    let mockPrng: Mocked<IPRNG>;
     let orchestrator: ScattererOrchestrator;
-    let mathRandomSpy: ReturnType<typeof vi.spyOn>;
 
     const dummyConfig: IScattererSoundConfig = {
         isScatterer: true,
@@ -40,13 +41,12 @@ describe('ScattererOrchestrator', () => {
         mockSequencer = { getPlaybackInfo: vi.fn() } as unknown as Mocked<ISequencer>;
         mockPolicy = { evaluateNext: vi.fn() } as unknown as Mocked<ContainerPlaybackPolicy>;
 
-        mathRandomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+        mockPrng = {
+            next: vi.fn().mockReturnValue(0.5),
+            nextRange: vi.fn().mockImplementation((min, max) => min + 0.5 * (max - min))
+        };
 
-        orchestrator = new ScattererOrchestrator(mockRouter, mockController, mockSequencer, mockPolicy);
-    });
-
-    afterEach(() => {
-        mathRandomSpy.mockRestore();
+        orchestrator = new ScattererOrchestrator(mockRouter, mockController, mockSequencer, mockPolicy, mockPrng);
     });
 
     describe('Lifecycle and State Management', () => {
@@ -74,7 +74,7 @@ describe('ScattererOrchestrator', () => {
 
         it('should accumulate deltaTime when paused to prevent Time Debt', () => {
             orchestrator.start(99 as PlaybackId, dummyConfig, 0);
-            const initialSpawnTime = (orchestrator as any).activeSessions[0].nextSpawnTimeMs;
+            const initialSpawnTime = (orchestrator as any).activeSessions[0].nextSpawnTimeMs; // 1500
 
             mockController.getLogicalState.mockReturnValue('paused');
 
@@ -129,7 +129,26 @@ describe('ScattererOrchestrator', () => {
             orchestrator.tick(1.5, 16);
 
             expect(mockRouter.play).not.toHaveBeenCalled();
+
             expect(session.nextSpawnTimeMs).toBe(3000);
+        });
+
+        it('should skip 3D position calculation if scatterDistance is undefined', () => {
+            const no3dConfig: IScattererSoundConfig = {
+                isScatterer: true,
+                sources: ['bird_chirp' as SoundId],
+                spawnRateMs: [1000, 2000],
+                maxPolyphony: 2
+            };
+
+            orchestrator.start(101 as PlaybackId, no3dConfig, 0);
+            const session = (orchestrator as any).activeSessions[1];
+
+            session.nextSpawnTimeMs = 0;
+
+            orchestrator.tick(0, 16);
+
+            expect(mockController.setPosition).toHaveBeenCalledWith(100, 0, 0, 0);
         });
     });
 

@@ -4,8 +4,10 @@ import type {
     IContainerPlaybackState
 } from '@domain/Managers/Ports/IContainerPlaybackState.js';
 import { isDefined } from '@shared/guards.js';
+import type { IPRNG } from '@shared/Math/SeededPRNG.js';
 
 export default class ContainerPlaybackPolicy {
+    constructor(private readonly prng: IPRNG) {}
     public evaluateNext(
         config: IContainerSoundConfig,
         currentState?: IContainerPlaybackState
@@ -51,7 +53,7 @@ export default class ContainerPlaybackPolicy {
             return w;
         });
 
-        let r = Math.random() * totalWeight;
+        let r = this.prng.next() * totalWeight;
         const { length } = weights;
         for (let i = 0; i < length; i++) {
             r -= weights[i];

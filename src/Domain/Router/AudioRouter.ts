@@ -24,6 +24,7 @@ import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IStopOptions } from '@domain/Configuration/Ports/IEventConfig.js';
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
 import { isAbsent } from '@shared/guards.js';
+import { IPRNG } from '@shared/Math/SeededPRNG.js';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly duckingManager: IDuckingManager;
@@ -35,6 +36,7 @@ export default class AudioRouter implements IAudioRouter {
     private readonly rtpcAdapter: IRTPCAdapter;
     private readonly switchPolicy: SwitchPlaybackPolicy;
     private scattererOrchestrator?: ScattererOrchestrator;
+    private readonly prng: IPRNG;
 
     constructor({
         soundController,
@@ -44,7 +46,8 @@ export default class AudioRouter implements IAudioRouter {
         soundMap,
         rtpcAdapter,
         instanceRTPCBinder,
-        switchPolicy
+        switchPolicy,
+        prng
     }: {
         soundController: ISoundController;
         duckingManager: IDuckingManager;
@@ -54,6 +57,7 @@ export default class AudioRouter implements IAudioRouter {
         rtpcAdapter: IRTPCAdapter;
         instanceRTPCBinder: InstanceRTPCBinder;
         switchPolicy: SwitchPlaybackPolicy;
+        prng: IPRNG;
     }) {
         this.soundController = soundController;
         this.duckingManager = duckingManager;
@@ -63,6 +67,7 @@ export default class AudioRouter implements IAudioRouter {
         this.instanceRTPCBinder = instanceRTPCBinder;
         this.rtpcAdapter = rtpcAdapter;
         this.switchPolicy = switchPolicy;
+        this.prng = prng;
     }
 
     getSoundConfig(name: SoundId): AnySoundConfig | null {
@@ -116,7 +121,7 @@ export default class AudioRouter implements IAudioRouter {
             return this.handleScatterer(name, config);
         }
 
-        const finalOptions = VariationResolver.apply(config, options);
+        const finalOptions = VariationResolver.apply(config, options, this.prng);
 
         const playbackId = this.soundController.play(name, {
             when: (finalOptions.delayMs ?? 0) / 1000,
@@ -241,7 +246,7 @@ export default class AudioRouter implements IAudioRouter {
 
         this.historyRegistry.updateHistory(name, nextState);
 
-        const finalOptions = VariationResolver.apply(config, options);
+        const finalOptions = VariationResolver.apply(config, options, this.prng);
 
         const playbackResult = this.play(nextSource, finalOptions, depth + 1);
 
@@ -262,10 +267,14 @@ export default class AudioRouter implements IAudioRouter {
     private handleLayering(config: ILayeredSoundConfig, options: IPlayOptions): PlaybackId[] | null {
         const playbackIds: PlaybackId[] = [];
         for (const layer of config.layers) {
-            const finalOptions = VariationResolver.apply(config, {
-                ...options,
-                ...layer
-            });
+            const finalOptions = VariationResolver.apply(
+                config,
+                {
+                    ...options,
+                    ...layer
+                },
+                this.prng
+            );
 
             const playbackId = this.soundController.play(layer.src, {
                 when: (layer.delayMs ?? 0) / 1000,
@@ -304,7 +313,7 @@ export default class AudioRouter implements IAudioRouter {
             return null;
         }
 
-        const finalOptions = VariationResolver.apply(config, options);
+        const finalOptions = VariationResolver.apply(config, options, this.prng);
         const playbackResult = this.play(nextSource, finalOptions, depth + 1);
 
         if (!playbackResult) return null;

@@ -3,6 +3,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AudioRouter from '@domain/Router/AudioRouter.js';
+import { SeededPRNG, IPRNG } from '@shared/Math/SeededPRNG.js';
 
 import type { PlaybackId, SoundId } from '@shared/Types/Branded.js';
 import type { Mocked } from 'vitest';
@@ -69,12 +70,16 @@ describe('AudioRouter (Command Dispatcher)', () => {
     let mockSwitchPolicy: any;
     let mockScattererOrchestrator: any;
     let router: AudioRouter;
+    let prng: IPRNG;
+    let seed = 123456;
 
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        prng = new SeededPRNG(seed);
 
         mockController = {
             play: vi.fn().mockReturnValue(1 as PlaybackId),
@@ -133,7 +138,8 @@ describe('AudioRouter (Command Dispatcher)', () => {
             soundMap: testSoundMap,
             rtpcAdapter: mockRtpcAdapter,
             instanceRTPCBinder: mockInstanceRTPCBinder,
-            switchPolicy: mockSwitchPolicy
+            switchPolicy: mockSwitchPolicy,
+            prng
         });
     });
 
@@ -465,20 +471,21 @@ describe('AudioRouter (Command Dispatcher)', () => {
                 variation: { volumeVar: 0.2, randomOffset: 500 }
             };
 
-            const mathRandomSpy = vi.spyOn(Math, 'random').mockReturnValue(1);
+            const expectedPrng = new SeededPRNG(seed);
+
+            expectedPrng.nextRange(-0.2, 0.2);
+
+            const expectedOffset = expectedPrng.nextRange(0, 500);
 
             router.play('var_sound' as SoundId, { volume: 0.5 });
 
-            expect(mathRandomSpy).toHaveBeenCalled();
             expect(mockController.play).toHaveBeenCalledWith(
                 'var_sound',
                 expect.objectContaining({
                     when: 0,
-                    offset: 500 / 1000
+                    offset: expectedOffset / 1000
                 })
             );
-
-            mathRandomSpy.mockRestore();
         });
     });
 

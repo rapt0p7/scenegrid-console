@@ -4,13 +4,20 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 
 import type { IContainerSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { IPRNG } from '@shared/Math/SeededPRNG.js';
+import type { Mocked } from 'vitest';
 
-describe('ContainerPlaybackPolicy (Pure Evaluator with Weights & History)', () => {
+describe('ContainerPlaybackPolicy (Pure Evaluator with Weights & History & PRNG)', () => {
     let policy: ContainerPlaybackPolicy;
+    let mockPrng: Mocked<IPRNG>;
 
     beforeEach(() => {
-        policy = new ContainerPlaybackPolicy();
-        vi.spyOn(Math, 'random');
+        mockPrng = {
+            next: vi.fn(),
+            nextRange: vi.fn()
+        };
+
+        policy = new ContainerPlaybackPolicy(mockPrng);
     });
 
     afterEach(() => {
@@ -42,7 +49,7 @@ describe('ContainerPlaybackPolicy (Pure Evaluator with Weights & History)', () =
             expect(result2.soundId).toBe('single.wav');
             expect(result2.nextState).toEqual({ lastPlayedIndex: 0, recentHistory: [0, 0] });
 
-            expect(Math.random).not.toHaveBeenCalled();
+            expect(mockPrng.next).not.toHaveBeenCalled();
         });
 
         it('should trim recentHistory to exactly 2 elements to prevent memory leaks', () => {
@@ -84,7 +91,7 @@ describe('ContainerPlaybackPolicy (Pure Evaluator with Weights & History)', () =
         });
     });
 
-    describe('Random Mode (Weighted Math)', () => {
+    describe('Random Mode (Weighted Math via PRNG)', () => {
         it('should resolve uniform random values if no weights are provided (strings only)', () => {
             const config = {
                 isContainer: true,
@@ -92,7 +99,7 @@ describe('ContainerPlaybackPolicy (Pure Evaluator with Weights & History)', () =
                 sources: ['A', 'B', 'C']
             } as unknown as IContainerSoundConfig;
 
-            vi.mocked(Math.random).mockReturnValueOnce(0.1).mockReturnValueOnce(0.9);
+            mockPrng.next.mockReturnValueOnce(0.1).mockReturnValueOnce(0.9);
 
             const result1 = policy.evaluateNext(config);
             expect(result1.soundId).toBe('A');
@@ -108,7 +115,7 @@ describe('ContainerPlaybackPolicy (Pure Evaluator with Weights & History)', () =
                 sources: ['common.wav', { id: 'rare.wav', weight: 4 }]
             } as unknown as IContainerSoundConfig;
 
-            vi.mocked(Math.random).mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+            mockPrng.next.mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
 
             const result1 = policy.evaluateNext(config);
             expect(result1.soundId).toBe('common.wav');
@@ -128,14 +135,14 @@ describe('ContainerPlaybackPolicy (Pure Evaluator with Weights & History)', () =
 
             const currentState = { lastPlayedIndex: 0, recentHistory: [0] };
 
-            vi.mocked(Math.random).mockReturnValueOnce(0.1).mockReturnValueOnce(0.2).mockReturnValueOnce(0.5);
+            mockPrng.next.mockReturnValueOnce(0.1).mockReturnValueOnce(0.2).mockReturnValueOnce(0.5);
 
             const result = policy.evaluateNext(config, currentState);
 
             expect(result.soundId).toBe('B');
             expect(result.nextState).toEqual({ lastPlayedIndex: 1, recentHistory: [1, 0] });
 
-            expect(Math.random).toHaveBeenCalledTimes(3);
+            expect(mockPrng.next).toHaveBeenCalledTimes(3);
         });
     });
 });

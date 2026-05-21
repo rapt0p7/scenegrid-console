@@ -65,6 +65,7 @@ import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestr
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
+import { SeededPRNG } from '@shared/Math/SeededPRNG.js';
 
 export interface InitParameters {
     readonly isStrictValidation?: boolean;
@@ -85,6 +86,7 @@ export class AudioEngine {
     #instanceRTPCBinder!: InstanceRTPCBinder;
     #eventOrchestrator!: AudioEventOrchestrator;
     #scattererOrchestrator!: ScattererOrchestrator;
+    #prng!: SeededPRNG;
     #isInitialized = false;
 
     public readonly events = {
@@ -212,6 +214,8 @@ export class AudioEngine {
             this.#engineTicker = new EngineTicker(() => this.#contextManager.currentTime);
             this.#engineTicker.start();
 
+            const seed = this.config.seed ?? Date.now();
+            this.#prng = new SeededPRNG(seed);
             const automation = new AutomationEngine(this.#contextManager.context, this.#engineTicker);
             this.#contextManager.initSpatial(automation);
             const nodeFactory = new AudioNodeFactory(this.#contextManager);
@@ -298,7 +302,7 @@ export class AudioEngine {
 
             const duckingManager = new DuckingManager(this.#busSystem, this.#soundController);
             const containerHistoryRegistry = new ContainerHistoryRegistry();
-            const containerPolicy = new ContainerPlaybackPolicy();
+            const containerPolicy = new ContainerPlaybackPolicy(this.#prng);
             const switchPolicy = new SwitchPlaybackPolicy();
 
             this.#router = new AudioRouter({
@@ -309,7 +313,8 @@ export class AudioEngine {
                 soundMap: this.config.soundMap,
                 instanceRTPCBinder: this.#instanceRTPCBinder,
                 rtpcAdapter: this.#rtpcManager,
-                switchPolicy
+                switchPolicy,
+                prng: this.#prng
             });
 
             const smartLoopTransitionPolicy = new SmartLoopTransitionPolicy(this.#rtpcManager);
@@ -342,7 +347,8 @@ export class AudioEngine {
                 this.#router,
                 this.#soundController,
                 this.#sequencer,
-                containerPolicy
+                containerPolicy,
+                this.#prng
             );
             this.#router.setScattererOrchestrator(this.#scattererOrchestrator);
 

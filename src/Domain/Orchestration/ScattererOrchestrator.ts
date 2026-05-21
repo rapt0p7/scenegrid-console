@@ -5,6 +5,7 @@ import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js'
 import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type { PlaybackId } from '@shared/Types/Branded.js';
+import type { IPRNG } from '@shared/Math/SeededPRNG.js';
 import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 
 interface ActiveScatterer {
@@ -24,7 +25,8 @@ export class ScattererOrchestrator implements ITickable {
         private readonly router: IAudioRouter,
         private readonly soundController: ISoundController,
         private readonly sequencer: ISequencer,
-        private readonly containerPolicy: ContainerPlaybackPolicy
+        private readonly containerPolicy: ContainerPlaybackPolicy,
+        private readonly prng: IPRNG
     ) {}
 
     public start(playbackId: PlaybackId, config: IScattererSoundConfig, currentTime: number): void {
@@ -85,8 +87,8 @@ export class ScattererOrchestrator implements ITickable {
         let z = 0;
         if (isDefined(session.config.scatterDistance)) {
             const [minDist, maxDist] = session.config.scatterDistance;
-            const distance = minDist + Math.random() * (maxDist - minDist);
-            const angle = Math.random() * Math.PI * 2;
+            const distance = this.prng.nextRange(minDist, maxDist);
+            const angle = this.prng.nextRange(0, Math.PI * 2);
             x = Math.cos(angle) * distance;
             z = Math.sin(angle) * distance;
         }
@@ -104,7 +106,7 @@ export class ScattererOrchestrator implements ITickable {
 
     private calculateNextSpawnTime(config: IScattererSoundConfig, currentTime: number): number {
         const [minMs, maxMs] = config.spawnRateMs;
-        const rawNextTime = currentTime + (minMs + Math.random() * (maxMs - minMs));
+        const rawNextTime = currentTime + this.prng.nextRange(minMs, maxMs);
 
         if (isDefined(config.sync)) {
             const gridInfo = this.sequencer.getPlaybackInfo?.(config.sync.referenceTrackId);

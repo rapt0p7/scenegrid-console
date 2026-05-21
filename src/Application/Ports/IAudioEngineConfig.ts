@@ -13,4 +13,5 @@ export interface IAudioEngineConfig {
     readonly rtpcManifest?: IRTPCManifest;
     readonly events: IEventMap;
     readonly globalVoiceLimit?: number;
+    readonly seed?: number;
 }
