@@ -196,8 +196,12 @@ export class SoundController implements ISoundController {
 
     stopById(playbackId: PlaybackId, timeToStop?: number): void {
         const voice = this.activeVoices.get(playbackId);
-        if (voice && voice.physicalInstance) {
-            voice.physicalInstance.stop(timeToStop);
+        if (voice) {
+            if (voice.physicalInstance) {
+                voice.physicalInstance.stop(timeToStop);
+            } else if ((voice as any).isVirtualNode) {
+                this.activeVoices.delete(playbackId);
+            }
         }
     }
 
@@ -256,6 +260,30 @@ export class SoundController implements ISoundController {
         } else {
             for (const id of this.activeVoices.keys()) this.resumeById(id);
         }
+    }
+
+    public playVirtual(soundId: SoundId): PlaybackId {
+        const playbackId = this.nextPlaybackId++ as PlaybackId;
+
+        const logicalVoice = {
+            playbackId,
+            soundId,
+            logicalState: 'playing',
+            position: { x: 0, y: 0, z: 0 },
+            startedAtContextTime: this.context.currentTime,
+            startOffset: 0,
+            physicalInstance: null as any,
+            isVirtualNode: true
+        } as unknown as ILogicalVoice;
+
+        this.activeVoices.set(playbackId, logicalVoice);
+
+        return playbackId;
+    }
+
+    public isGhostVoice(id: PlaybackId): boolean {
+        const voice = this.activeVoices.get(id);
+        return voice ? !!(voice as any).isVirtualNode : false;
     }
 
     getCurrentTime(): number {

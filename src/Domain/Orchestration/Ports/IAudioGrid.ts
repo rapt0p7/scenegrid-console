@@ -1,4 +1,4 @@
 export interface IAudioGrid {
-    getNextBeatTime(currentTime: number, interval: number): number;
-    getNextBarTime(currentTime: number, interval: number): number;
+    getNextBeatTime(currentTime: number, interval?: number): number;
+    getNextBarTime(currentTime: number, interval?: number): number;
 }

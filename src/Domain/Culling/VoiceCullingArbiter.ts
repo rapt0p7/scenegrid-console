@@ -29,6 +29,8 @@ export class VoiceCullingArbiter implements ICullingArbiter {
         for (let i = 0; i < length; i++) {
             const playbackId = activePlaybacks[i];
 
+            if (context.isGhostVoice(playbackId)) continue;
+
             const soundId = context.getSoundId(playbackId);
             if (!soundId) continue;
 

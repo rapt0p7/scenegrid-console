@@ -1,5 +1,5 @@
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import { QuantizeType } from '@domain/Shared/Types/Musical.js';
+import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 import { BusId, GameParamId, RegionId, SoundId } from '@shared/Types/Branded.js';
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 
@@ -112,9 +112,24 @@ export interface IPlayOptions {
     readonly delayMs?: number;
 }
 
+export interface IScattererSyncConfig {
+    readonly quantize: QuantizeType;
+    readonly referenceTrackId: SoundId;
+}
+
+export interface IScattererSoundConfig extends IBaseSoundConfig {
+    readonly isScatterer: true;
+    readonly sources: readonly ContainerSourceItem[];
+    readonly spawnRateMs: readonly [min: number, max: number];
+    readonly scatterDistance?: readonly [min: number, max: number];
+    readonly maxPolyphony?: number;
+    readonly sync?: IScattererSyncConfig;
+}
+
 export type AnySoundConfig =
     | ISoundConfig
     | ISmartLoopSoundConfig
     | IContainerSoundConfig
     | ILayeredSoundConfig
-    | ISwitchSoundConfig;
+    | ISwitchSoundConfig
+    | IScattererSoundConfig;

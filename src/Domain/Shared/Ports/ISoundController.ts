@@ -45,4 +45,6 @@ export interface ISoundController {
     removeSidechainTrigger(playbackId: PlaybackId, busId: BusId): void;
     virtualize(id: PlaybackId): void;
     devirtualize(id: PlaybackId): void;
+    playVirtual(soundId: SoundId): PlaybackId;
+    isGhostVoice(id: PlaybackId): boolean;
 }

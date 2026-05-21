@@ -12,7 +12,8 @@ import type {
     ISoundConfig,
     AnySoundConfig,
     IBaseSoundConfig,
-    ISwitchSoundConfig
+    ISwitchSoundConfig,
+    IScattererSoundConfig
 } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
@@ -277,6 +278,8 @@ export default class ConsistencyChecker {
                 this.validateSwitchSound(soundId, cfg);
             } else if (this.isSmartLoop(cfg)) {
                 this.validateSmartLoop(soundId, cfg);
+            } else if (this.isScatterer(cfg)) {
+                this.validateScattererSound(soundId, cfg as DeepReadonly<IScattererSoundConfig>);
             }
         }
     }
@@ -301,32 +304,58 @@ export default class ConsistencyChecker {
     private validateContainerSound(soundId: string, cfg: DeepReadonly<IContainerSoundConfig>): void {
         this.assertRequiredType(`soundMap.${soundId}.mode`, cfg.mode, 'string');
 
-        if (!this.assertArray(`soundMap.${soundId}.sources`, cfg.sources, false)) return;
+        this.validateContainerSources(`soundMap.${soundId}`, cfg.sources);
 
-        if (cfg.sources.length === 0) {
-            this.errors.push(`Container "${soundId}" has an empty sources array.`);
-            return;
+        if (isDefined(cfg.volumeRange)) this.validateTuple(`soundMap.${soundId}.volumeRange`, cfg.volumeRange);
+        if (isDefined(cfg.pitchRange)) this.validateTuple(`soundMap.${soundId}.pitchRange`, cfg.pitchRange);
+    }
+
+    private validateScattererSound(soundId: string, cfg: DeepReadonly<IScattererSoundConfig>): void {
+        const path = `soundMap.${soundId}`;
+
+        this.validateContainerSources(path, cfg.sources);
+
+        this.validateTuple(`${path}.spawnRateMs`, cfg.spawnRateMs);
+        if (isDefined(cfg.scatterDistance)) {
+            this.validateTuple(`${path}.scatterDistance`, cfg.scatterDistance);
         }
 
-        for (const [index, source] of cfg.sources.entries()) {
-            if (!isDefined(source)) {
-                this.errors.push(`Container "${soundId}" has an undefined source at index ${index}.`);
-                continue;
-            }
-
-            const targetId = typeof source === 'string' ? source : source.id;
-
-            if (typeof source === 'object') {
-                this.assertRequiredType(`soundMap.${soundId}.sources[${index}].id`, targetId, 'string');
-                if ('weight' in source && isDefined(source.weight)) {
-                    this.assertRequiredType(`soundMap.${soundId}.sources[${index}].weight`, source.weight, 'number');
+        if (isDefined(cfg.maxPolyphony)) {
+            if (this.assertOptionalType(`${path}.maxPolyphony`, cfg.maxPolyphony, 'number')) {
+                if (cfg.maxPolyphony <= 0) {
+                    this.errors.push(`Scatterer "${soundId}" maxPolyphony must be strictly greater than 0.`);
                 }
-            } else {
-                this.assertRequiredType(`soundMap.${soundId}.sources[${index}]`, targetId, 'string');
             }
+        }
 
-            if (isDefined(targetId) && !this.manifest[targetId] && !this.soundMap[targetId]) {
-                this.warnings.push(`Container "${soundId}" references missing source "${targetId}".`);
+        if (isDefined(cfg.sync)) {
+            if (this.assertRequiredType(`${path}.sync`, cfg.sync, 'object')) {
+                const syncPath = `${path}.sync`;
+                const syncObj = cfg.sync as Record<string, unknown>;
+
+                if (this.assertRequiredType(`${syncPath}.quantize`, syncObj.quantize, 'string')) {
+                    const q = syncObj.quantize;
+                    if (q !== 'Immediate' && q !== 'NextBeat' && q !== 'NextBar') {
+                        this.errors.push(`Scatterer "${soundId}" sync.quantize has invalid value "${q}".`);
+                    }
+                }
+
+                if (this.assertRequiredType(`${syncPath}.referenceTrackId`, syncObj.referenceTrackId, 'string')) {
+                    const refId = syncObj.referenceTrackId;
+
+                    if (!this.soundMap[refId as any]) {
+                        this.errors.push(
+                            `Scatterer sync reference track "${refId}" at "${syncPath}" does not exist in soundMap.`
+                        );
+                    } else {
+                        const refCfg = this.soundMap[refId as any];
+                        if (!this.isSmartLoop(refCfg as AnySoundConfig)) {
+                            this.errors.push(
+                                `Scatterer sync reference track "${refId}" at "${syncPath}" must be a smartLoop sound to provide a music grid.`
+                            );
+                        }
+                    }
+                }
             }
         }
     }
@@ -671,13 +700,14 @@ export default class ConsistencyChecker {
                         if (isDefined(layer) && isDefined(layer.src)) referenced.add(layer.src);
                     }
                 }
-            } else if (this.isContainer(cfg)) {
+            } else if (this.isContainer(cfg) || this.isScatterer(cfg)) {
                 const sources = cfg.sources;
 
                 if (Array.isArray(sources)) {
                     for (const source of sources) {
                         if (isDefined(source)) {
-                            const targetId = typeof source === 'string' ? source : source.id;
+                            const targetId =
+                                typeof source === 'string' ? source : (source as Record<string, unknown>).id;
                             referenced.add(targetId as string);
                         }
                     }
@@ -978,6 +1008,77 @@ export default class ConsistencyChecker {
     private checkTargetExists(eventId: string, path: string, targetId: string): void {
         if (!this.manifest[targetId as any] && !this.soundMap[targetId as any]) {
             this.warnings.push(`Event "${eventId}" references missing sound target "${targetId}" at ${path}.`);
+        }
+    }
+
+    private isScatterer(cfg: AnySoundConfig): cfg is IScattererSoundConfig {
+        return typeof cfg === 'object' && cfg !== null && 'isScatterer' in cfg && cfg.isScatterer;
+    }
+
+    private validateTuple(path: string, tuple: unknown): void {
+        if (!this.assertArray(path, tuple, false)) return;
+
+        const arr = tuple as readonly unknown[];
+        if (arr.length !== 2) {
+            this.errors.push(`Field "${path}" must be a tuple of exactly two numbers [min, max].`);
+            return;
+        }
+
+        const min = arr[0];
+        const max = arr[1];
+
+        if (typeof min !== 'number' || typeof max !== 'number') {
+            this.errors.push(`Elements in tuple "${path}" must be numbers.`);
+        } else if (min > max) {
+            this.errors.push(`Invalid tuple at "${path}": min (${min}) cannot be greater than max (${max}).`);
+        }
+    }
+
+    private validateContainerSources(parentPath: string, sources: unknown): void {
+        if (!this.assertArray(`${parentPath}.sources`, sources, false)) return;
+
+        const sourcesArray = sources as readonly unknown[];
+        if (sourcesArray.length === 0) {
+            this.errors.push(`"${parentPath}.sources" cannot be empty.`);
+            return;
+        }
+
+        for (const [index, source] of sourcesArray.entries()) {
+            const itemPath = `${parentPath}.sources[${index}]`;
+
+            if (isAbsent(source)) {
+                this.errors.push(`Source item at "${itemPath}" is undefined or null.`);
+                continue;
+            }
+
+            let targetId = '';
+
+            if (typeof source === 'string') {
+                targetId = source;
+            } else if (typeof source === 'object') {
+                if (this.assertRequiredType(itemPath, source, 'object')) {
+                    const obj = source;
+                    if (this.assertRequiredType(`${itemPath}.id`, obj.id, 'string')) {
+                        targetId = obj.id;
+                    }
+                    if (isDefined(obj.weight)) {
+                        if (this.assertRequiredType(`${itemPath}.weight`, obj.weight, 'number')) {
+                            if (obj.weight <= 0) {
+                                this.errors.push(`Weight at "${itemPath}.weight" must be > 0.`);
+                            }
+                        }
+                    }
+                }
+            } else {
+                this.errors.push(
+                    `Invalid source item type at "${itemPath}". Expected string or { id: string, weight?: number }`
+                );
+                continue;
+            }
+
+            if (targetId && !this.manifest[targetId as any] && !this.soundMap[targetId as any]) {
+                this.warnings.push(`Source item at "${itemPath}" references missing sound "${targetId}".`);
+            }
         }
     }
 

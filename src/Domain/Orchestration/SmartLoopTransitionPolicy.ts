@@ -2,7 +2,7 @@ import type { IMagnetConfig, ISmartLoopSoundConfig } from '@domain/Configuration
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { RegionId } from '@shared/Types/Branded.js';
 import { isAbsent } from '@shared/guards.js';
-import { QuantizeType } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
 export interface ITransitionDecision {
     readonly targetRegion: RegionId;

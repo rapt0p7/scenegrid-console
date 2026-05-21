@@ -9,6 +9,7 @@ import type {
     IContainerSoundConfig,
     ILayeredSoundConfig,
     IPlayOptions,
+    IScattererSoundConfig,
     ISwitchSoundConfig
 } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
@@ -21,6 +22,8 @@ import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js'
 import type { PlaybackId, SoundId } from '@shared/Types/Branded.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IStopOptions } from '@domain/Configuration/Ports/IEventConfig.js';
+import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
+import { isAbsent } from '@shared/guards.js';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly duckingManager: IDuckingManager;
@@ -31,6 +34,7 @@ export default class AudioRouter implements IAudioRouter {
     private readonly instanceRTPCBinder: InstanceRTPCBinder;
     private readonly rtpcAdapter: IRTPCAdapter;
     private readonly switchPolicy: SwitchPlaybackPolicy;
+    private scattererOrchestrator?: ScattererOrchestrator;
 
     constructor({
         soundController,
@@ -79,6 +83,10 @@ export default class AudioRouter implements IAudioRouter {
         }
     }
 
+    public setScattererOrchestrator(orchestrator: ScattererOrchestrator): void {
+        this.scattererOrchestrator = orchestrator;
+    }
+
     play(name: SoundId, options: IPlayOptions = {}, depth: number = 0): PlaybackId | PlaybackId[] | null {
         if (depth > 10) {
             console.error(`[AudioRouter] Max recursion depth reached for: ${name}`);
@@ -102,6 +110,10 @@ export default class AudioRouter implements IAudioRouter {
 
         if ('isSwitch' in config && config.isSwitch) {
             return this.handleSwitch(name, config, options, depth);
+        }
+
+        if ('isScatterer' in config && config.isScatterer) {
+            return this.handleScatterer(name, config);
         }
 
         const finalOptions = VariationResolver.apply(config, options);
@@ -196,6 +208,19 @@ export default class AudioRouter implements IAudioRouter {
         }
 
         return result;
+    }
+
+    private handleScatterer(name: SoundId, config: IScattererSoundConfig): PlaybackId | null {
+        if (isAbsent(this.scattererOrchestrator)) {
+            console.warn(`[AudioRouter] Cannot play scatterer ${name}: Orchestrator not initialized.`);
+            return null;
+        }
+        const virtualPlaybackId = this.soundController.playVirtual(name);
+
+        const currentTime = this.soundController.getCurrentTime() * 1000;
+        this.scattererOrchestrator.start(virtualPlaybackId, config, currentTime);
+
+        return virtualPlaybackId;
     }
 
     private handleContainer(

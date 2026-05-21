@@ -1,6 +1,6 @@
 import { EventId, GameParamId, LayerId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
 import { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import { QuantizeType } from '@domain/Shared/Types/Musical.js';
+import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
 export interface IStopOptions {
     readonly allowTail?: boolean;

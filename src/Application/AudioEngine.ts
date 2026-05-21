@@ -43,7 +43,7 @@ import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.j
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
-import type { ITransitionToParameters, QuantizeType } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 import {
     EventId,
     GameParamId,
@@ -63,6 +63,8 @@ import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestrator.js';
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
+import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
+import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
 export interface InitParameters {
     readonly isStrictValidation?: boolean;
@@ -82,6 +84,7 @@ export class AudioEngine {
     #dispatcher: EngineEventDispatcher = new EngineEventDispatcher();
     #instanceRTPCBinder!: InstanceRTPCBinder;
     #eventOrchestrator!: AudioEventOrchestrator;
+    #scattererOrchestrator!: ScattererOrchestrator;
     #isInitialized = false;
 
     public readonly events = {
@@ -335,6 +338,14 @@ export class AudioEngine {
                 this.#snapshotManager
             );
 
+            this.#scattererOrchestrator = new ScattererOrchestrator(
+                this.#router,
+                this.#soundController,
+                this.#sequencer,
+                containerPolicy
+            );
+            this.#router.setScattererOrchestrator(this.#scattererOrchestrator);
+
             const cullingArbiter = new VoiceCullingArbiter(0.01);
 
             const cullingProvider = new CullingContextProvider(
@@ -372,6 +383,12 @@ export class AudioEngine {
                 'mixer-state-manager' as TickerTaskId,
                 MixerTransitionEngine.TICK_RATE_MS,
                 mixerTransitionEngine
+            );
+
+            this.#engineTicker.add(
+                'scatterer-orchestrator' as TickerTaskId,
+                this.#scattererOrchestrator.TICK_RATE_MS,
+                this.#scattererOrchestrator
             );
 
             this.#isInitialized = true;

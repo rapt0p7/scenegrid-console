@@ -371,10 +371,12 @@ describe('ConsistencyChecker', () => {
             };
             ConsistencyChecker.validate(config);
             expect(console.error).toHaveBeenCalledWith(
-                expect.stringContaining('Container "empty_cont" has an empty sources array.')
+                expect.stringContaining('"soundMap.empty_cont.sources" cannot be empty.')
             );
             expect(console.warn).toHaveBeenCalledWith(
-                expect.stringContaining('Container "bad_cont" references missing source "missing_source".')
+                expect.stringContaining(
+                    'Source item at "soundMap.bad_cont.sources[0]" references missing sound "missing_source".'
+                )
             );
         });
 
@@ -424,7 +426,7 @@ describe('ConsistencyChecker', () => {
             };
             ConsistencyChecker.validate(config);
             expect(console.error).toHaveBeenCalledWith(
-                expect.stringContaining('Container "bad_cont" has an undefined source at index 0.')
+                expect.stringContaining('Source item at "soundMap.bad_cont.sources[0]" is undefined or null.')
             );
         });
     });
@@ -1660,6 +1662,132 @@ describe('ConsistencyChecker', () => {
             expect(console.error).toHaveBeenCalledWith(
                 expect.stringContaining('Event "pause_recursion" references itself in action list.')
             );
+        });
+    });
+
+    describe('Scatterer Configuration Validations', () => {
+        beforeEach(() => {
+            vi.clearAllMocks();
+            vi.spyOn(console, 'error').mockImplementation(() => {});
+            vi.spyOn(console, 'warn').mockImplementation(() => {});
+        });
+
+        it('should pass a fully valid scatterer config with sync', () => {
+            const config: any = {
+                buses: { sfx: {}, music: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                soundMap: {
+                    bgm_loop: {
+                        busId: 'music',
+                        smartLoop: { bpm: 120, regions: {} }
+                    },
+                    bird_chirp: { busId: 'sfx' },
+                    forest_scatterer: {
+                        isScatterer: true,
+                        busId: 'sfx',
+                        sources: ['bird_chirp', { id: 'bird_chirp', weight: 5 }],
+                        spawnRateMs: [1000, 2000],
+                        scatterDistance: [10, 30],
+                        maxPolyphony: 5,
+                        sync: {
+                            quantize: 'NextBeat',
+                            referenceTrackId: 'bgm_loop'
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(true);
+        });
+
+        it('should fail if scatterer sources reference unknown sounds', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                soundMap: {
+                    bad_scatterer: {
+                        isScatterer: true,
+                        sources: ['ghost_sound'],
+                        spawnRateMs: [100, 200],
+                        scatterDistance: [0, 10]
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Source item at "soundMap.bad_scatterer.sources[0]" references missing sound "ghost_sound".'
+                )
+            );
+        });
+
+        it('should fail if tuples are invalid (min > max or wrong length)', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                soundMap: {
+                    valid_sfx: { busId: 'sfx' },
+                    tuple_error_scatterer: {
+                        isScatterer: true,
+                        sources: ['valid_sfx'],
+                        spawnRateMs: [2000, 1000],
+                        scatterDistance: [10]
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('min (2000) cannot be greater than max (1000)')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('must be a tuple of exactly two numbers')
+            );
+        });
+
+        it('should fail if sync reference track does not exist or is not a smartLoop', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                soundMap: {
+                    standard_sound: { busId: 'sfx' },
+                    bad_sync_scatterer: {
+                        isScatterer: true,
+                        sources: ['standard_sound'],
+                        spawnRateMs: [100, 200],
+                        scatterDistance: [0, 10],
+                        sync: {
+                            quantize: 'NextBar',
+                            referenceTrackId: 'standard_sound'
+                        }
+                    },
+                    ghost_sync_scatterer: {
+                        isScatterer: true,
+                        sources: ['standard_sound'],
+                        spawnRateMs: [100, 200],
+                        scatterDistance: [0, 10],
+                        sync: {
+                            quantize: 'NextBar',
+                            referenceTrackId: 'does_not_exist'
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('must be a smartLoop sound to provide a music grid')
+            );
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('does not exist in soundMap'));
         });
     });
 });

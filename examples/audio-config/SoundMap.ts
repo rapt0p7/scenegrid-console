@@ -37,5 +37,13 @@ export default {
         ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 }
     },
 
-    'tick': { busId: 'sfx', variation: { pitchVar: 0.1, volumeVar: 0.1, randomOffset: 0.01 } }
+    'tick': { busId: 'sfx', variation: { pitchVar: 0.1, volumeVar: 0.1, randomOffset: 0.01 } },
+
+    'scatterer': {
+        isScatterer: true,
+        busId: 'sfx',
+        sources: ['tick'],
+        spawnRateMs: [1000, 2000],
+        maxPolyphony: 5
+    }
 };

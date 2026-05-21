@@ -16,6 +16,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
     let soundIds: Record<number, SoundId>;
     let soundRouting: Record<string, BusId>;
     let busVolumes: Record<string, number>;
+    let ghostStates: Record<number, boolean>;
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const HYSTERESIS_MS = 1000;
@@ -29,6 +30,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
         soundIds = {};
         soundRouting = {};
         busVolumes = {};
+        ghostStates = {};
 
         mockContext = {
             get activePlaybacks() {
@@ -38,7 +40,8 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
             getPlaybackState: id => playbackStates[id as number] || 'stopped',
             getLogicalState: id => logicalStates[id as number],
             resolveBusId: id => soundRouting[id as string],
-            getBusVolume: id => busVolumes[id as string] ?? 1
+            getBusVolume: id => busVolumes[id as string] ?? 1,
+            isGhostVoice: id => ghostStates[id as number] || false
         };
     });
 
@@ -47,7 +50,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
         id: number,
         soundId: string,
         busId: string,
-        physicalState: 'playing' | 'virtual' | 'paused',
+        physicalState: 'playing' | 'virtual' | 'paused' | 'stopped',
         logicalState: 'playing' | 'paused',
         volume: number
     ) {
@@ -112,6 +115,21 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
 
             expect(decisions.toDevirtualize).toHaveLength(0);
             expect(decisions.toVirtualize).toHaveLength(0);
+        });
+    });
+
+    describe('Ghost Voices (Scatterer Protection)', () => {
+        it('should completely ignore ghost voices and not track them in muteTimers', () => {
+            const pId = addMockPlayback(99, 'scatterer', 'bg', 'stopped', 'playing', 0);
+
+            ghostStates[pId] = true;
+
+            const decisions = arbiter.evaluate(mockContext, HYSTERESIS_MS + 100);
+
+            expect(decisions.toVirtualize).toHaveLength(0);
+            expect(decisions.toDevirtualize).toHaveLength(0);
+
+            expect((arbiter as any).muteTimers.has(pId)).toBe(false);
         });
     });
 

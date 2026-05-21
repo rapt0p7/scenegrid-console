@@ -1,6 +1,6 @@
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
 import { RegionId, SoundId } from '@shared/Types/Branded.js';
-import { QuantizeType } from '@domain/Shared/Types/Musical.js';
+import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
 export enum LoopState {
     IDLE = 'IDLE',
@@ -28,10 +28,15 @@ export interface TransitionOptions {
     readonly offsetMode?: 'None' | 'Relative' | 'Inverted';
 }
 
+export interface IPlaybackInfo {
+    readonly grid: IAudioGrid;
+}
+
 export interface ISequencer {
     playLoop(soundId: SoundId, regionName: RegionId): void;
     playStinger(stingerId: SoundId, quantize?: QuantizeType, referenceTrackId?: SoundId): void;
     stopLoop(soundId: SoundId): void;
     transitionTo(parameters: ITransitionToParameters): void;
+    getPlaybackInfo(soundId: SoundId): IPlaybackInfo | null;
     destroy(): void;
 }

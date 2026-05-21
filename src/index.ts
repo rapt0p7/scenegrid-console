@@ -8,7 +8,7 @@ export type { ISoundMap } from './Domain/Configuration/Ports/ISoundMap.js';
 export type { AnySoundConfig } from './Domain/Configuration/Ports/ISoundConfig.js';
 export type { ISnapshots } from './Domain/Mixer/Ports/ISnapshots.js';
 export type { IRTPCManager } from './Kernel/RTPC/Ports/IRTPCManager.js';
-export type { QuantizeType } from '@domain/Orchestration/Ports/ISequencer.js';
+export type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 export type { MixerSnapshot } from './Domain/Mixer/Ports/IMixerTransitionEngine.js';
 export type {
     GameParamId,

@@ -50,7 +50,13 @@ const testSoundMap: any = {
         mode: 'sequence',
         sources: ['layer_sound']
     },
-    'test_sound': { busId: 'sfx', voice: { priority: 5 } }
+    'test_sound': { busId: 'sfx', voice: { priority: 5 } },
+    'scatterer_sound': {
+        isScatterer: true,
+        sources: ['step_wood'],
+        spawnRateMs: [1000, 2000],
+        scatterDistance: [10, 30]
+    }
 };
 
 describe('AudioRouter (Command Dispatcher)', () => {
@@ -61,6 +67,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
     let mockHistoryRegistry: any;
     let mockRtpcAdapter: Mocked<IRTPCAdapter>;
     let mockSwitchPolicy: any;
+    let mockScattererOrchestrator: any;
     let router: AudioRouter;
 
     beforeEach(() => {
@@ -81,10 +88,17 @@ describe('AudioRouter (Command Dispatcher)', () => {
             getActivePlaybacks: vi.fn().mockReturnValue([]),
             getSoundId: vi.fn(),
             getPosition: vi.fn(),
-            setPosition: vi.fn()
+            setPosition: vi.fn(),
+            playVirtual: vi.fn(),
+            getCurrentTime: vi.fn().mockReturnValue(0)
         } as unknown as Mocked<ISoundController>;
 
         mockDuckingManager = { triggerDucking: vi.fn() };
+
+        mockScattererOrchestrator = {
+            start: vi.fn(),
+            tick: vi.fn()
+        };
 
         mockInstanceRTPCBinder = {
             bind: vi.fn(),
@@ -465,6 +479,32 @@ describe('AudioRouter (Command Dispatcher)', () => {
             );
 
             mathRandomSpy.mockRestore();
+        });
+    });
+
+    describe('Scatterer Sounds Edge Cases (handleScatterer)', () => {
+        it('should return null and warn if orchestrator is not set (Dependency Check)', () => {
+            const result = router.play('scatterer_sound' as SoundId);
+
+            expect(result).toBeNull();
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Cannot play scatterer scatterer_sound: Orchestrator not initialized')
+            );
+            expect(mockController.playVirtual).not.toHaveBeenCalled();
+        });
+
+        it('should create virtual voice and start orchestrator session', () => {
+            router.setScattererOrchestrator(mockScattererOrchestrator);
+
+            mockController.playVirtual.mockReturnValue(77 as PlaybackId);
+            mockController.getCurrentTime.mockReturnValue(1.5);
+
+            const result = router.play('scatterer_sound' as SoundId);
+
+            expect(result).toBe(77);
+            expect(mockController.playVirtual).toHaveBeenCalledWith('scatterer_sound');
+
+            expect(mockScattererOrchestrator.start).toHaveBeenCalledWith(77, testSoundMap['scatterer_sound'], 1500);
         });
     });
 });

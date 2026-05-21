@@ -7,6 +7,7 @@ export interface ICullingContext {
     readonly getLogicalState: (id: PlaybackId) => 'playing' | 'paused' | undefined;
     readonly resolveBusId: (id: SoundId) => BusId | undefined;
     readonly getBusVolume: (id: BusId) => number;
+    readonly isGhostVoice: (id: PlaybackId) => boolean;
 }
 
 export interface CullingDecisions {

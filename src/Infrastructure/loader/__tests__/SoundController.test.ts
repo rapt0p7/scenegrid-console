@@ -602,6 +602,70 @@ describe('SoundController', () => {
             expect(timers).toHaveLength(0);
         });
     });
+
+    describe('Virtual Nodes (Scatterer Support)', () => {
+        it('should create a ghost voice WITHOUT a physical instance or registry entry', () => {
+            const id = controller.playVirtual('unregistered_ghost' as SoundId);
+
+            expect(id).toBeDefined();
+            expect(typeof id).toBe('number');
+
+            const voice = controller.getLogicalVoice(id)!;
+            expect(voice.physicalInstance).toBeNull();
+            expect((voice as any).isVirtualNode).toBe(true);
+            expect(voice.soundId).toBe('unregistered_ghost');
+        });
+
+        it('should silently remove virtual voice on stopById without throwing', () => {
+            const id = controller.playVirtual('virtual_mock' as SoundId);
+
+            expect(() => {
+                controller.stopById(id);
+            }).not.toThrow();
+
+            expect(controller.activeVoices.has(id)).toBe(false);
+        });
+
+        it('should update logical state on pause/resume but not crash on physical operations', () => {
+            const id = controller.playVirtual('virtual_mock' as SoundId);
+
+            expect(() => {
+                controller.pauseById(id);
+            }).not.toThrow();
+            expect(controller.getLogicalState(id)).toBe('paused');
+
+            expect(() => {
+                controller.resumeById(id);
+            }).not.toThrow();
+            expect(controller.getLogicalState(id)).toBe('playing');
+        });
+
+        it('should safely ignore hardware/physical methods', () => {
+            const id = controller.playVirtual('virtual_mock' as SoundId);
+
+            expect(() => {
+                controller.setPosition(id, 10, 20, 30);
+                controller.setVolume(id, 0.5);
+                controller.fadeVolume(id, 1, 100);
+                controller.fadeParameter(id, 'pitch', 2, 100);
+                controller.routeToBus(id, 'sfx' as BusId);
+                controller.addSidechainTrigger(id, 'music' as BusId, 1);
+                controller.virtualize(id);
+                controller.devirtualize(id);
+            }).not.toThrow();
+
+            const voice = controller.getLogicalVoice(id)!;
+            expect(voice.position).toEqual({ x: 10, y: 20, z: 30 });
+        });
+
+        it('should resolve state getters correctly for ghost voices', () => {
+            const id = controller.playVirtual('virtual_mock' as SoundId);
+
+            expect(controller.getLogicalState(id)).toBe('playing');
+
+            expect(controller.getPlaybackState(id)).toBe('stopped');
+        });
+    });
 });
 
 describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {

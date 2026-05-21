@@ -33,6 +33,10 @@ export class CullingContextProvider implements ICullingContext {
         return this.soundMap[id]?.busId;
     }
 
+    public isGhostVoice(id: PlaybackId): boolean {
+        return this.soundController.isGhostVoice(id);
+    }
+
     public getBusVolume(busId: BusId): number {
         const bus = this.busSystem.getBus(busId);
         if (!bus) return 1;

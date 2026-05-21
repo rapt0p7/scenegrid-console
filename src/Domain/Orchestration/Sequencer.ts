@@ -1,7 +1,7 @@
 // noinspection D
 
 import AudioGrid from '@domain/Orchestration/AudioGrid.js';
-import { LoopState, QuantizeType } from '@domain/Orchestration/Ports/ISequencer.js';
+import { IPlaybackInfo, LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 
 import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
@@ -11,6 +11,7 @@ import { PlaybackId, RegionId, SoundId, TickerTaskId } from '@shared/Types/Brand
 import { DeepReadonly } from '@shared/DeepReadonly.js';
 import { isDefined, isAbsent } from '@shared/guards.js';
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
+import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
 interface ActiveRegion {
     playbackId: PlaybackId;
@@ -228,31 +229,42 @@ export default class Sequencer implements ISequencer {
             return;
         }
 
-        const refTrack = isDefined(referenceTrackId)
-            ? this.tracks.get(referenceTrackId)
-            : Array.from(this.tracks.values()).find(t => t.state === LoopState.LOOPING);
+        const refTrackId = isDefined(referenceTrackId)
+            ? referenceTrackId
+            : Array.from(this.tracks.values()).find(t => t.state === LoopState.LOOPING)?.soundId;
 
-        if (isAbsent(refTrack) || isAbsent(refTrack.gridStartTime)) {
+        const playbackInfo = isDefined(refTrackId) ? this.getPlaybackInfo(refTrackId) : undefined;
+
+        if (isAbsent(playbackInfo)) {
             this.router.play(stingerId, { delayMs: 0 });
             return;
         }
 
-        const config = this.router.getSoundConfig(refTrack.soundId);
+        const { grid } = playbackInfo;
+        const targetTime = quantize === 'NextBar' ? grid.getNextBarTime(now) : grid.getNextBeatTime(now);
+        const delaySec = Math.max(0, targetTime - now);
+
+        this.router.play(stingerId, { delayMs: delaySec * 1000 });
+    }
+
+    public getPlaybackInfo(soundId: SoundId): IPlaybackInfo | null {
+        const track = this.tracks.get(soundId);
+
+        if (isAbsent(track) || track.state !== LoopState.LOOPING || isAbsent(track.gridStartTime)) {
+            return null;
+        }
+
+        const config = this.router.getSoundConfig(soundId);
         if (isAbsent(config) || !('smartLoop' in config)) {
-            this.router.play(stingerId, { delayMs: 0 });
-            return;
+            return null;
         }
 
         const bpm = config.smartLoop.bpm ?? 120;
         const beatsPerBar = config.smartLoop.beatsPerBar ?? 4;
 
-        const grid = new AudioGrid(bpm, beatsPerBar, refTrack.gridStartTime);
-
-        const targetTime = quantize === 'NextBar' ? grid.getNextBarTime(now) : grid.getNextBeatTime(now);
-
-        const delaySec = Math.max(0, targetTime - now);
-
-        this.router.play(stingerId, { delayMs: delaySec * 1000 });
+        return {
+            grid: new AudioGrid(bpm, beatsPerBar, track.gridStartTime)
+        };
     }
 
     // oxlint-disable-next-line max-lines-per-function
