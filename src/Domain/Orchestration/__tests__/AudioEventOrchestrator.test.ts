@@ -11,6 +11,8 @@ import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { EventId, SoundId, GameParamId, RegionId, SnapshotId, LayerId } from '@shared/Types/Branded.js';
 import type { Mocked } from 'vitest';
 import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { IPRNG } from '@shared/Math/SeededPRNG.js';
 
 const testEventMap: IEventMap = {
     ['Player_Jump' as EventId]: {
@@ -88,6 +90,29 @@ const testEventMap: IEventMap = {
     },
     ['Player_Recursion' as EventId]: {
         actions: [{ type: 'trigger_event', target: 'Player_Recursion' as EventId }]
+    },
+    ['Event_With_Delay' as EventId]: {
+        actions: [{ type: 'play', target: 'sfx_delayed' as SoundId, delayMs: 1500 }]
+    },
+    ['Event_With_Probability' as EventId]: {
+        actions: [
+            { type: 'play', target: 'sfx_unlikely' as SoundId, probability: 0.2 },
+            { type: 'play', target: 'sfx_likely' as SoundId, probability: 0.8 }
+        ]
+    },
+    ['Event_With_Condition' as EventId]: {
+        actions: [
+            {
+                type: 'play',
+                target: 'sfx_low_hp' as SoundId,
+                condition: { param: 'hp' as GameParamId, operator: '<', value: 50 }
+            },
+            {
+                type: 'play',
+                target: 'sfx_high_hp' as SoundId,
+                condition: { param: 'hp' as GameParamId, operator: '>=', value: 50 }
+            }
+        ]
     }
 };
 
@@ -96,6 +121,8 @@ describe('AudioEventOrchestrator (State Machine)', () => {
     let mockRtpcAdapter: Mocked<IRTPCAdapter>;
     let mockSequencer: Mocked<ISequencer>;
     let mockMixer: Mocked<MixerSnapshotManager>;
+    let mockController: Mocked<ISoundController>;
+    let mockPrng: Mocked<IPRNG>;
     let dispatcher: AudioEventOrchestrator;
 
     beforeEach(() => {
@@ -135,7 +162,23 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             updateSnapshotsConfig: vi.fn()
         } as unknown as Mocked<MixerSnapshotManager>;
 
-        dispatcher = new AudioEventOrchestrator(testEventMap, mockRouter, mockRtpcAdapter, mockSequencer, mockMixer);
+        mockController = {
+            getCurrentTime: vi.fn().mockReturnValue(0)
+        } as unknown as Mocked<ISoundController>;
+
+        mockPrng = {
+            next: vi.fn().mockReturnValue(0.5)
+        } as unknown as Mocked<IPRNG>;
+
+        dispatcher = new AudioEventOrchestrator(
+            testEventMap,
+            mockRouter,
+            mockRtpcAdapter,
+            mockSequencer,
+            mockMixer,
+            mockController,
+            mockPrng
+        );
     });
 
     afterEach(() => {
@@ -253,6 +296,59 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             dispatcher.postEvent('Player_Recursion' as EventId);
             expect(postEventSpy).toHaveBeenCalledTimes(12);
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Max recursion depth reached'));
+        });
+    });
+
+    describe('Temporal Scheduling (Delays)', () => {
+        it('should schedule action with delayMs and execute it only when time is reached', () => {
+            mockController.getCurrentTime.mockReturnValue(5);
+
+            dispatcher.postEvent('Event_With_Delay' as EventId);
+
+            expect(mockRouter.play).not.toHaveBeenCalled();
+            expect((dispatcher as any).scheduledActions).toHaveLength(1);
+
+            dispatcher.tick(6, 1000);
+            expect(mockRouter.play).not.toHaveBeenCalled();
+
+            dispatcher.tick(6.6, 600);
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_delayed');
+
+            expect((dispatcher as any).scheduledActions).toHaveLength(0);
+        });
+    });
+
+    describe('Conditions and Probabilities', () => {
+        it('should skip actions if probability check fails, and execute if passes', () => {
+            dispatcher.postEvent('Event_With_Probability' as EventId);
+
+            expect(mockRouter.play).not.toHaveBeenCalledWith('sfx_unlikely');
+
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_likely');
+        });
+
+        it('should evaluate RTPC conditions dynamically before executing action', () => {
+            mockRtpcAdapter.getValue.mockImplementation(param => {
+                if (param === 'hp') return 80;
+                return 0;
+            });
+
+            dispatcher.postEvent('Event_With_Condition' as EventId);
+
+            expect(mockRouter.play).not.toHaveBeenCalledWith('sfx_low_hp');
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_high_hp');
+
+            mockRouter.play.mockClear();
+
+            mockRtpcAdapter.getValue.mockImplementation(param => {
+                if (param === 'hp') return 10;
+                return 0;
+            });
+
+            dispatcher.postEvent('Event_With_Condition' as EventId);
+
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_low_hp');
+            expect(mockRouter.play).not.toHaveBeenCalledWith('sfx_high_hp');
         });
     });
 });

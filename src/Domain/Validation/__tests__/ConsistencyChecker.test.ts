@@ -1472,6 +1472,129 @@ describe('ConsistencyChecker', () => {
         });
     });
 
+    describe('Event Actions (Base Properties: Delay, Probability, Conditions)', () => {
+        beforeEach(() => {
+            vi.clearAllMocks();
+            vi.spyOn(console, 'error').mockImplementation(() => {});
+        });
+
+        it('should pass valid base properties (delayMs, probability, condition)', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { boss_health: { defaultValue: 100 } },
+                soundMap: { sfx_hit: { busId: 'master' } },
+                events: {
+                    smart_event: {
+                        actions: [
+                            {
+                                type: 'play',
+                                target: 'sfx_hit',
+                                delayMs: 1500,
+                                probability: 0.5,
+                                condition: { param: 'boss_health', operator: '<=', value: 20 }
+                            }
+                        ]
+                    }
+                }
+            };
+
+            const isValid = ConsistencyChecker.validate(config);
+            expect(isValid).toBe(true);
+            expect(console.error).not.toHaveBeenCalled();
+        });
+
+        it('should catch negative delayMs', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                soundMap: { sfx: { busId: 'master' } },
+                events: {
+                    bad_delay: {
+                        actions: [{ type: 'play', target: 'sfx', delayMs: -500 }]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Action at "events.bad_delay.actions[0].delayMs" cannot be negative.')
+            );
+        });
+
+        it('should catch out-of-bounds probability', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                soundMap: { sfx: { busId: 'master' } },
+                events: {
+                    bad_prob_high: {
+                        actions: [{ type: 'play', target: 'sfx', probability: 1.5 }]
+                    },
+                    bad_prob_low: {
+                        actions: [{ type: 'play', target: 'sfx', probability: -0.1 }]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Action at "events.bad_prob_high.actions[0].probability" must be between 0.0 and 1.0.'
+                )
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Action at "events.bad_prob_low.actions[0].probability" must be between 0.0 and 1.0.'
+                )
+            );
+        });
+
+        it('should catch invalid conditions (unknown param, wrong operator, missing value)', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { player_speed: { defaultValue: 0 } },
+                soundMap: { sfx: { busId: 'master' } },
+                events: {
+                    bad_cond_event: {
+                        actions: [
+                            {
+                                type: 'play',
+                                target: 'sfx',
+                                condition: { param: 'ghost_param', operator: '==', value: 10 }
+                            },
+                            {
+                                type: 'play',
+                                target: 'sfx',
+                                condition: { param: 'player_speed', operator: '===', value: 10 }
+                            },
+                            {
+                                type: 'play',
+                                target: 'sfx',
+                                condition: { param: 'player_speed', operator: '==' } // Missing value
+                            }
+                        ]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Event "bad_cond_event" uses unknown RTPC param "ghost_param" in condition')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Invalid operator "===" at events.bad_cond_event.actions[1].condition.operator.'
+                )
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Missing required field at "events.bad_cond_event.actions[2].condition.value"')
+            );
+        });
+    });
+
     describe('Event Actions (Sequencer Integration) Validations', () => {
         it('should pass perfectly valid Sequencer event actions', () => {
             const config: any = {

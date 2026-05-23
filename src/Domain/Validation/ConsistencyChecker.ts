@@ -829,6 +829,7 @@ export default class ConsistencyChecker {
         }
     }
 
+    // oxlint-disable-next-line max-lines-per-function
     private checkEvents(): void {
         if (isAbsent(this.events)) return;
         if (!this.assertOptionalType('events', this.events, 'object')) return;
@@ -849,11 +850,52 @@ export default class ConsistencyChecker {
 
             for (let index = 0; index < actionsLength; index++) {
                 const actionPath = `${eventPath}.actions[${index}]`;
-
                 const action = actionsArray[index] as Record<string, any>;
 
                 if (!this.assertRequiredType(actionPath, action, 'object')) continue;
                 if (!this.assertRequiredType(`${actionPath}.type`, action.type, 'string')) continue;
+
+                if (isDefined(action.delayMs)) {
+                    if (this.assertOptionalType(`${actionPath}.delayMs`, action.delayMs, 'number')) {
+                        if (isDefined(action.delayMs) && action.delayMs < 0) {
+                            this.errors.push(`Action at "${actionPath}.delayMs" cannot be negative.`);
+                        }
+                    }
+                }
+
+                if (isDefined(action.probability)) {
+                    if (this.assertOptionalType(`${actionPath}.probability`, action.probability, 'number')) {
+                        if (isDefined(action.probability) && (action.probability < 0 || action.probability > 1)) {
+                            this.errors.push(`Action at "${actionPath}.probability" must be between 0.0 and 1.0.`);
+                        }
+                    }
+                }
+
+                if (isDefined(action.condition)) {
+                    if (this.assertOptionalType(`${actionPath}.condition`, action.condition, 'object')) {
+                        const conditionPath = `${actionPath}.condition`;
+                        const cond = action.condition as Record<string, any>;
+
+                        const param = cond.param;
+                        if (this.assertRequiredType(`${conditionPath}.param`, param, 'string')) {
+                            if (Object.keys(this.rtpcManifest).length > 0 && !(param in this.rtpcManifest)) {
+                                this.errors.push(
+                                    `Event "${eventId}" uses unknown RTPC param "${param}" in condition at ${conditionPath}.`
+                                );
+                            }
+                        }
+
+                        const operator = cond.operator;
+                        if (this.assertRequiredType(`${conditionPath}.operator`, operator, 'string')) {
+                            const validOperators = ['==', '!=', '>', '>=', '<', '<='];
+                            if (!validOperators.includes(operator)) {
+                                this.errors.push(`Invalid operator "${operator}" at ${conditionPath}.operator.`);
+                            }
+                        }
+
+                        this.assertRequiredType(`${conditionPath}.value`, cond.value, 'number');
+                    }
+                }
 
                 const actionType = action.type;
 

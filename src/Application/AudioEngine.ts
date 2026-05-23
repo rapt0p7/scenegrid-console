@@ -337,7 +337,9 @@ export class AudioEngine implements IAudioEngine {
                 this.#router,
                 this.#rtpcManager,
                 this.#sequencer,
-                this.#snapshotManager
+                this.#snapshotManager,
+                this.#soundController,
+                this.#prng
             );
 
             this.#scattererOrchestrator = new ScattererOrchestrator(
