@@ -135,13 +135,14 @@ Key capabilities:
 * **Inverted:** Mathematically mirrors the offset relative to the region's duration, useful for specific rhythmic or reversing patterns.
 
 
-* **Seamless Execution:** Supports instant swaps, grid-quantized jumps (BPM/Bar), and intermediate fill/stinger injection.
+* **Quantized Stinger Injection:** A dedicated `playStinger` pipeline allows short, non-looping audio events (e.g., a cymbal crash or musical flourish) to be injected with temporal precision, quantized to the next beat or bar of an active reference track.
 * **Local Crossfades:** Blending regions occurs strictly at the individual channel level (`NodeChain`), preserving global bus automation and preventing routing graph pollution.
 
 **Vertical Layering (Snapshots & RTPC)**
 Dynamic intensity is **not** handled by the Sequencer. Vertical music is achieved entirely through the `MixerTransitionEngine` and `RTPCManager`:
-- Stems are routed to dedicated buses.
-- Game logic pushes Snapshots or drives RTPC curves to fade stem buses in and out dynamically, keeping vertical mix states completely decoupled from timeline logic.
+
+* Stems are routed to dedicated buses.
+* Game logic pushes Snapshots or drives RTPC curves to fade stem buses in and out dynamically, keeping vertical mix states completely decoupled from timeline logic.
 
 ---
 
@@ -152,27 +153,26 @@ In a true Enterprise-grade audio engine, the game client should never hardcode c
 #### Tier 1: The Event Orchestrator (Action Macros)
 
 Instead of the game client manually starting sounds and tweaking parameters, it simply dispatches semantic triggers via `engine.postEvent('Player_Jump')`.
-The `AudioEventOrchestrator` intercepts this and executes a predefined list of actions from the `EventMap`. A single event can simultaneously:
+The `AudioEventOrchestrator` intercepts this and executes a predefined list of actions from the `EventMap`. This advanced macro-system acts as the central nervous system, capable of simultaneously executing complex logic:
 
-* `play` an impact sound.
-* `stop` a looping breath sound.
-* `set_rtpc` to temporarily lower stamina parameters.
-  This macro-system ensures the game code remains entirely ignorant of the audio implementation details.
+* **Playback & State Control:** Play/stop sounds, trigger nested events (safeguarded against infinite recursion), or manipulate global variables (`set_rtpc`).
+* **System Integration:** Directly command the Mixer (`set_mixer_state`, `add_mixer_modifier`) or the Sequencer (`start_loop`, `music_transition`, `play_stinger`).
+* **Conditional & Probabilistic Execution:** Actions can be delayed (`delayMs`), given a chance of execution (`probability`), or gated behind logical conditions based on real-time RTPC values (e.g., only play a heavy breathing sound *if* the `Stamina` parameter is `< 20`).
 
 #### Tier 2: Container Resolution & Routing
 
-When a `play` command is issued (either via an Event Action or directly via `engine.play(SoundId)`), it hits the `AudioRouter`. The router evaluates the target entity in the `SoundMap` before allocating Web Audio nodes. The target can be a simple AudioBuffer or a complex **Logical Container**:
+When a `play` command is issued, it hits the `AudioRouter`. The router evaluates the target entity in the `SoundMap` before allocating Web Audio nodes. The target can be a simple AudioBuffer or a complex **Logical Container**:
 
 * **Switch Containers:** Handled by the `SwitchPlaybackPolicy`, the router dynamically resolves the target sound based on current RTPC game states (e.g., swapping footstep sounds based on a `Surface_Type` parameter).
+* **Scatterer Containers:** Managed by the `ScattererOrchestrator`, these procedurally spawn overlapping audio instances over time (e.g., random ambient debris or flocking birds) and can be strictly quantized to a musical grid.
 * **Random & Sequence Containers:** Evaluates playback rules to defeat the "machine-gun effect" by selecting variations without manual coding.
 
-**Non-Destructive Variability**
+**Deterministic Variability**
 To maximize asset reusability and prevent auditory fatigue, the engine applies real-time variability at the moment of instantiation.
 
-* **Micro-Randomization:** Designers can define deterministic boundaries in the manifest (e.g., `pitchVar:0.08`).
-* **Architecture Alignment:** This variability is calculated purely mathematically in the Domain layer and passed as initialization properties to the `SoundInstance`. This prevents unnecessary DSP overhead and ensures the resulting modifiers are fully visible in the DevTools Debugger.
-
----
+* **Micro-Randomization:** Designers can define deterministic boundaries in the manifest (e.g., `pitchVar: 0.08`).
+* **Seeded Reproducibility:** All randomization is powered by a central `SeededPRNG` rather than the native `Math.random()`. This guarantees that variations are entirely deterministic, allowing for mathematically reproducible audio generation during testing and debugging.
+* **Architecture Alignment:** This variability is calculated purely mathematically in the Domain layer and passed as initialization properties to the `SoundInstance`, preventing unnecessary DSP overhead and ensuring modifiers are fully visible in the DevTools Debugger.
 
 ### 8. Static Graph Analysis & AOT Validation (`ConsistencyChecker`)
 
