@@ -9,13 +9,14 @@ import {
     MixerCoordinator,
     MixerLayerStack,
     MixerSnapshotManager,
-    MixerTransitionEngine,
     MixerStateResolver,
+    MixerTransitionEngine,
     PRIORITY
 } from '@domain/Mixer/index.js';
 import Sequencer from '@domain/Orchestration/Sequencer.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
+import type { IPluginFactory } from '@infrastructure';
 import {
     AudioBufferLoader,
     AudioBusSystem,
@@ -54,7 +55,6 @@ import {
     SoundId,
     TickerTaskId
 } from '@shared/Types/Branded.js';
-import type { IPluginFactory } from '@infrastructure';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { Handler } from 'mitt';
 import type { DeepReadonly } from '@shared/DeepReadonly.js';
@@ -66,12 +66,9 @@ import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransition
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 import { SeededPRNG } from '@shared/Math/SeededPRNG.js';
+import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngine.js';
 
-export interface InitParameters {
-    readonly isStrictValidation?: boolean;
-}
-
-export class AudioEngine {
+export class AudioEngine implements IAudioEngine {
     #contextManager!: AudioContextManager;
     #engineTicker!: EngineTicker;
     #router!: AudioRouter;
