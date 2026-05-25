@@ -33,4 +33,5 @@ export type AudioEngineEvents = {
     'load:complete': LoadCompletePayload;
     'state:suspended': void;
     'state:resumed': void;
+    'unload:complete': { bankId: string };
 };

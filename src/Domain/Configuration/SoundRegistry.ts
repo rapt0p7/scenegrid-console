@@ -1,25 +1,23 @@
 import type { SoundId } from '@shared/Types/Branded.js';
-import { DeepReadonly } from '@shared/DeepReadonly.js';
 
 interface SoundDescriptor {
-    readonly buffer: AudioBuffer;
     readonly options: {
-        readonly url: string;
+        readonly url: string | string[];
     };
 }
 
 export default class SoundRegistry {
-    #map = new Map<SoundId, SoundDescriptor>();
+    readonly #map = new Map<SoundId, SoundDescriptor>();
 
-    register(id: SoundId, desc: DeepReadonly<SoundDescriptor>): void {
+    public register(id: SoundId, desc: SoundDescriptor): void {
         this.#map.set(id, desc);
     }
 
-    get registry(): Map<SoundId, SoundDescriptor> {
+    public get registry(): Map<SoundId, SoundDescriptor> {
         return this.#map;
     }
 
-    get(id: SoundId): SoundDescriptor {
+    public get(id: SoundId): SoundDescriptor {
         const entry = this.#map.get(id);
         if (!entry) {
             throw new Error(`Sound "${id}" not registered`);

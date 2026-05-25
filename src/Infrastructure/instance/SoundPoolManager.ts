@@ -136,6 +136,16 @@ export default class SoundPoolManager {
         }
     }
 
+    public purgeSound(soundId: SoundId): void {
+        this.dispose(soundId);
+
+        for (const inst of this.#allInstances) {
+            if (inst.id === soundId) {
+                inst.rebind('__RESERVED__' as SoundId, null as any);
+            }
+        }
+    }
+
     #getActiveIndicesById(soundId: SoundId): number[] {
         const found: number[] = [];
         for (const index of this.#activeIndices) {

@@ -10,9 +10,8 @@ import type { AudioCtx } from '@infrastructure/types/IAudioContext';
 import type { ILogicalVoice } from '@infrastructure/types/ILogicalVoice.js';
 import type { ISoundOptions } from '@infrastructure/types/ISoundOptions.js';
 
-export interface SoundDefinition {
-    buffer: AudioBuffer;
-    options: ISoundOptions;
+export interface SoundDescriptor {
+    readonly options: ISoundOptions;
 }
 
 const DEFAULT_COOLDOWN_MS = 15;
@@ -38,8 +37,9 @@ export class SoundController implements ISoundController {
         private readonly scheduler: PlaybackScheduler,
         private readonly context: AudioCtx,
         private readonly automation: AutomationEngine,
-        private readonly registry = new Map<SoundId, SoundDefinition>(),
-        private readonly busSystem: AudioBusSystem
+        private readonly registry: Map<SoundId, SoundDescriptor>,
+        private readonly busSystem: AudioBusSystem,
+        private readonly bufferResolver: (url: string | string[]) => AudioBuffer | undefined
     ) {
         this.#sidechainLinks = Array.from({ length: pool.globalVoiceLimit }, () => new Map<BusId, number>());
         this.pool.events.on('released', this.#handleInstanceReleased);
@@ -65,9 +65,9 @@ export class SoundController implements ISoundController {
     }
 
     // oxlint-disable-next-line unicorn/no-object-as-default-parameter
-    register(soundId: SoundId, buffer: AudioBuffer, options: ISoundOptions = { url: '' }): void {
+    register(soundId: SoundId, options: ISoundOptions = { url: '' }): void {
         if (this.registry.has(soundId)) return;
-        this.registry.set(soundId, { buffer, options });
+        this.registry.set(soundId, { options });
     }
 
     unregister(soundId: SoundId): void {
@@ -81,12 +81,16 @@ export class SoundController implements ISoundController {
         soundId: SoundId,
         { when = 0, offset = 0, duration, loop = false, rate = 1, onRevive }: IControllerPlayOptions
     ): PlaybackId | null {
-        if (!this.registry.has(soundId)) return null;
+        const definition = this.registry.get(soundId);
+        if (!definition) return null;
+
+        const buffer = this.bufferResolver(definition.options.url);
+        if (!buffer) {
+            return null;
+        }
 
         const now = performance.now();
         const lastPlay = this.lastPlayTimes.get(soundId) ?? 0;
-        const definition = this.registry.get(soundId)!;
-
         const cooldownMs = definition.options.cooldownMs ?? DEFAULT_COOLDOWN_MS;
 
         if (now - lastPlay < cooldownMs) {
@@ -95,7 +99,7 @@ export class SoundController implements ISoundController {
 
         this.lastPlayTimes.set(soundId, now);
 
-        const instance = this.pool.acquire(soundId, definition.buffer);
+        const instance = this.pool.acquire(soundId, buffer);
 
         if (!instance) return null;
 

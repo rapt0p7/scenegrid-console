@@ -26,6 +26,7 @@ export { default as SoundPoolManager } from './instance/SoundPoolManager.js';
 export { SoundController } from './loader/SoundController.js';
 export { SoundInstance } from './instance/SoundInstance.js';
 export { AudioBufferLoader } from './loader/AudioBufferLoader.js';
+export { BankManagerAdapter } from './loader/BankManagerAdapter.js';
 export { PlaybackScheduler } from './scheduling/PlaybackScheduler.js';
 export { CullingRunner } from './scheduling/CullingRunner.js';
 export { CullingContextProvider } from './scheduling/CullingContextProvider.js';

@@ -86,6 +86,18 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         }
     }
 
+    public getBuffer(url: string | string[]): AudioBuffer | undefined {
+        const resolvedUrl = this.resolveFirstSupportedUrl(url);
+        return this.#bufferCache.get(resolvedUrl);
+    }
+
+    public purgeUrls(urls: (string | string[])[]): void {
+        for (const url of urls) {
+            const resolvedUrl = this.resolveFirstSupportedUrl(url);
+            this.#bufferCache.delete(resolvedUrl);
+        }
+    }
+
     private async performLoad(url: string): Promise<AudioBuffer> {
         try {
             const response = await fetch(url);
@@ -103,13 +115,7 @@ export class AudioBufferLoader implements IAudioBufferLoader {
     }
 
     private getDummyBuffer(): AudioBuffer {
-        if (!this.#dummyBuffer) {
-            this.#dummyBuffer = this.#contextManager.context.createBuffer(
-                1,
-                1,
-                this.#contextManager.context.sampleRate
-            );
-        }
+        this.#dummyBuffer ??= this.#contextManager.context.createBuffer(1, 1, this.#contextManager.context.sampleRate);
         return this.#dummyBuffer;
     }
 

@@ -3,7 +3,8 @@ import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
 import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
-import { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
+import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
+import type { IBankManifest } from '@domain/Configuration/Ports/IBankConfig.js';
 
 export interface IAudioEngineConfig {
     readonly manifest: ISpriteSoundManifest;
@@ -12,6 +13,7 @@ export interface IAudioEngineConfig {
     readonly soundMap: ISoundMap;
     readonly rtpcManifest?: IRTPCManifest;
     readonly events: IEventMap;
+    readonly banks: IBankManifest;
     readonly globalVoiceLimit?: number;
     readonly seed?: number;
 }

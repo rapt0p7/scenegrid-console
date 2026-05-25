@@ -23,6 +23,7 @@ import { typedEntries, typedKeys } from '@shared/typedObjects.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
+import type { IBankManifest } from '@domain/Configuration/Ports/IBankConfig.js';
 
 export interface IConsistencyCheckerPayload {
     readonly soundMap?: ISoundMap;
@@ -31,6 +32,7 @@ export interface IConsistencyCheckerPayload {
     readonly snapshots?: ISnapshots;
     readonly rtpcManifest?: IRTPCManifest;
     readonly events?: IEventMap;
+    readonly banks?: IBankManifest;
 }
 
 type TypeMap = {
@@ -54,7 +56,8 @@ export default class ConsistencyChecker {
             busSystemConfig: config.buses ?? {},
             snapshotsConfig: config.snapshots ?? {},
             rtpcManifest: config.rtpcManifest ?? {},
-            eventsConfig: config.events ?? {}
+            eventsConfig: config.events ?? {},
+            banksConfig: config.banks ?? {}
         });
 
         try {
@@ -73,6 +76,7 @@ export default class ConsistencyChecker {
     private readonly manifest: DeepReadonly<ISpriteSoundManifest>;
     private readonly rtpcManifest: DeepReadonly<IRTPCManifest>;
     private readonly events: DeepReadonly<IEventMap>;
+    private readonly banks: DeepReadonly<IBankManifest>;
 
     private readonly errors: string[] = [];
     private readonly warnings: string[] = [];
@@ -83,7 +87,8 @@ export default class ConsistencyChecker {
         busSystemConfig,
         snapshotsConfig,
         rtpcManifest,
-        eventsConfig
+        eventsConfig,
+        banksConfig
     }: {
         soundMapConfig: DeepReadonly<ISoundMap>;
         soundManifest: DeepReadonly<ISpriteSoundManifest>;
@@ -91,6 +96,7 @@ export default class ConsistencyChecker {
         snapshotsConfig: DeepReadonly<ISnapshots>;
         rtpcManifest: DeepReadonly<IRTPCManifest>;
         eventsConfig: DeepReadonly<IEventMap>;
+        banksConfig: DeepReadonly<IBankManifest>;
     }) {
         this.soundMap = soundMapConfig;
         this.manifest = soundManifest;
@@ -98,6 +104,7 @@ export default class ConsistencyChecker {
         this.snapshots = snapshotsConfig;
         this.rtpcManifest = rtpcManifest;
         this.events = eventsConfig;
+        this.banks = banksConfig;
     }
 
     private run(): void {
@@ -109,6 +116,7 @@ export default class ConsistencyChecker {
         this.checkOrphanManifestSounds();
         this.checkMultiplicativeVetoes();
         this.checkRTPCManifest();
+        this.checkBankSystem();
         this.checkEvents();
 
         this.report();
@@ -829,6 +837,86 @@ export default class ConsistencyChecker {
         }
     }
 
+    // eslint-disable-next-line complexity
+    private checkBankSystem(): void {
+        if (isAbsent(this.banks) || Object.keys(this.banks).length === 0) {
+            this.warnings.push('No banks defined. The engine will not be able to load any sounds.');
+            return;
+        }
+
+        if (!this.assertOptionalType('banks', this.banks, 'object')) return;
+
+        const soundToBanks = new Map<string, string[]>();
+
+        for (const [bankId, bankCfg] of typedEntries(this.banks)) {
+            if (!this.assertRequiredType(`banks.${bankId}`, bankCfg, 'object')) continue;
+            if (!this.assertArray(`banks.${bankId}.sounds`, bankCfg.sounds, false)) continue;
+
+            for (const soundId of bankCfg.sounds) {
+                if (typeof soundId !== 'string') {
+                    this.errors.push(`Bank "${bankId}" contains non-string sound ID.`);
+                    continue;
+                }
+
+                if (!soundToBanks.has(soundId)) {
+                    soundToBanks.set(soundId, []);
+                }
+                soundToBanks.get(soundId)!.push(bankId);
+
+                if (!this.soundMap[soundId as any] && !this.manifest[soundId as any]) {
+                    this.errors.push(`Bank "${bankId}" references missing sound "${soundId}".`);
+                }
+            }
+        }
+
+        for (const [soundId, bankList] of soundToBanks.entries()) {
+            if (bankList.length > 1) {
+                this.errors.push(
+                    `Critical: Sound "${soundId}" is duplicated in multiple banks: [${bankList.join(', ')}]. Extract it to a shared bank.`
+                );
+            }
+        }
+
+        for (const [soundId, cfg] of typedEntries(this.soundMap || {})) {
+            if (this.isContainer(cfg as any) || this.isScatterer(cfg as any) || this.isSwitch(cfg as any)) {
+                continue;
+            }
+
+            if (!soundToBanks.has(soundId)) {
+                this.errors.push(
+                    `Sound "${soundId}" exists in SoundMap but is not assigned to any Bank. It will never be loaded.`
+                );
+            }
+        }
+
+        for (const [soundId, cfg] of typedEntries(this.soundMap || {})) {
+            if (typeof cfg !== 'object' || cfg === null) continue;
+
+            if (this.isContainer(cfg) || this.isScatterer(cfg)) {
+                const sources = cfg.sources;
+                if (Array.isArray(sources)) {
+                    const referencedBanks = new Set<string>();
+                    for (const source of sources) {
+                        if (isDefined(source)) {
+                            const targetId =
+                                typeof source === 'string' ? source : (source as Record<string, unknown>).id;
+                            const banksForTarget = soundToBanks.get(targetId as string);
+                            if (banksForTarget && banksForTarget.length > 0) {
+                                referencedBanks.add(banksForTarget[0]);
+                            }
+                        }
+                    }
+
+                    if (referencedBanks.size > 1) {
+                        this.warnings.push(
+                            `Container/Scatterer "${soundId}" uses sounds from different banks: [${Array.from(referencedBanks).join(', ')}]. Ensure they are loaded together to avoid missing sounds.`
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     // oxlint-disable-next-line max-lines-per-function
     private checkEvents(): void {
         if (isAbsent(this.events)) return;
@@ -1035,6 +1123,19 @@ export default class ConsistencyChecker {
 
                             if ((targetId as any) === (eventId as any)) {
                                 this.errors.push(`Event "${eventId}" references itself in action list.`);
+                            }
+                        }
+                        break;
+                    }
+
+                    case 'load_bank':
+                    case 'unload_bank': {
+                        const targetId = action.target;
+                        if (this.assertRequiredType(`${actionPath}.target`, targetId, 'string')) {
+                            if (!this.banks || !(targetId in this.banks)) {
+                                this.errors.push(
+                                    `Event "${eventId}" references missing bank "${targetId}" at ${actionPath}.`
+                                );
                             }
                         }
                         break;

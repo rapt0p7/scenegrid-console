@@ -7,6 +7,7 @@ import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
 import type { IPRNG } from '@shared/Math/SeededPRNG.js';
 
 interface ScheduledAction {
@@ -25,7 +26,8 @@ export class AudioEventOrchestrator implements ITickable {
         private readonly sequencer: ISequencer,
         private readonly mixer: MixerSnapshotManager,
         private readonly soundController: ISoundController,
-        private readonly prng: IPRNG
+        private readonly prng: IPRNG,
+        private readonly bankManager: IBankManager
     ) {}
 
     public postEvent(eventId: EventId, depth: number = 0): void {
@@ -130,6 +132,12 @@ export class AudioEventOrchestrator implements ITickable {
                 break;
             case 'remove_mixer_modifier':
                 this.mixer.clearLayer(action.modifierId);
+                break;
+            case 'load_bank':
+                this.bankManager.loadBank(action.target).catch(console.error);
+                break;
+            case 'unload_bank':
+                this.bankManager.unloadBank(action.target);
                 break;
             case 'trigger_event':
                 this.postEvent(action.target, depth + 1);

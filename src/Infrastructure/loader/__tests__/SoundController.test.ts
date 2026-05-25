@@ -19,6 +19,7 @@ describe('SoundController', () => {
     let controller: SoundController;
     let fakeBuffer: AudioBuffer;
     let fakeInstance: any;
+    let mockBufferResolver: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -73,30 +74,33 @@ describe('SoundController', () => {
             removeSidechainSource: vi.fn()
         };
 
+        mockBufferResolver = vi.fn().mockReturnValue(fakeBuffer);
+
         controller = new SoundController(
             mockPool,
             mockScheduler,
             mockContext,
             mockAutomation,
             new Map() as any,
-            mockBusSystem
+            mockBusSystem,
+            mockBufferResolver as any
         );
     });
 
     describe('Registration', () => {
-        it('should register a new sound with default options', () => {
-            controller.register('sound_1' as SoundId, fakeBuffer);
+        it('should register a new sound with options only (No AudioBuffer)', () => {
+            controller.register('sound_1' as SoundId, { url: 'path.wav' });
 
             const registry = (controller as any).registry;
             expect(registry.has('sound_1')).toBe(true);
-            expect(registry.get('sound_1').options).toEqual({ url: '' });
+            expect(registry.get('sound_1').options).toEqual({ url: 'path.wav' });
         });
 
         it('should not throw and not overwrite if registering an already existing sound', () => {
-            controller.register('duplicate_sound' as SoundId, fakeBuffer, { url: 'first' });
+            controller.register('duplicate_sound' as SoundId, { url: 'first' });
 
             expect(() => {
-                controller.register('duplicate_sound' as SoundId, fakeBuffer, { url: 'second' });
+                controller.register('duplicate_sound' as SoundId, { url: 'second' });
             }).not.toThrow();
 
             expect((controller as any).registry.get('duplicate_sound').options.url).toBe('first');
@@ -105,7 +109,7 @@ describe('SoundController', () => {
 
     describe('Unregistration', () => {
         it('should remove sound from registry and dispose from pool', () => {
-            controller.register('sound_to_remove' as SoundId, fakeBuffer);
+            controller.register('sound_to_remove' as SoundId, { url: 'remove.wav' });
             controller.unregister('sound_to_remove' as SoundId);
 
             expect((controller as any).registry.has('sound_to_remove')).toBe(false);
@@ -113,14 +117,27 @@ describe('SoundController', () => {
         });
     });
 
-    describe('Playback', () => {
+    describe('Playback (Dynamic Buffer Resolution)', () => {
         it('should return null if playing an unregistered sound', () => {
             const result = controller.play('unknown_sound' as SoundId, {});
             expect(result).toBeNull();
         });
 
-        it('should acquire instance with buffer, schedule play, and return PlaybackId', () => {
-            controller.register('hero_jump' as SoundId, fakeBuffer);
+        it('should return null if buffer resolver returns undefined (bank is unloaded)', () => {
+            controller.register('unloaded_sound' as SoundId, { url: 'unloaded.wav' });
+
+            // oxlint-disable-next-line unicorn/no-useless-undefined
+            mockBufferResolver.mockReturnValueOnce(undefined);
+
+            const result = controller.play('unloaded_sound' as SoundId, {});
+
+            expect(mockBufferResolver).toHaveBeenCalledWith('unloaded.wav');
+            expect(result).toBeNull();
+            expect(mockPool.acquire).not.toHaveBeenCalled();
+        });
+
+        it('should resolve buffer dynamically, acquire instance, schedule play, and return PlaybackId', () => {
+            controller.register('hero_jump' as SoundId, { url: 'jump.wav' });
 
             const playbackId = controller.play('hero_jump' as SoundId, {
                 when: 0.5,
@@ -130,6 +147,7 @@ describe('SoundController', () => {
                 rate: 1.5
             });
 
+            expect(mockBufferResolver).toHaveBeenCalledWith('jump.wav');
             expect(mockPool.acquire).toHaveBeenCalledWith('hero_jump', fakeBuffer);
             expect(fakeInstance.setLoop).toHaveBeenCalledWith(true);
             expect(fakeInstance.setRate).toHaveBeenCalledWith(1.5);
@@ -139,7 +157,7 @@ describe('SoundController', () => {
         });
 
         it('should skip playback if cooldown is set and did not pass', () => {
-            controller.register('sound_limit' as SoundId, fakeBuffer, { url: 'path/to/sound.wav', cooldownMs: 30 });
+            controller.register('sound_limit' as SoundId, { url: 'path/to/sound.wav', cooldownMs: 30 });
 
             const id1 = controller.play('sound_limit' as SoundId, {});
             const id2 = controller.play('sound_limit' as SoundId, {});
@@ -161,8 +179,8 @@ describe('SoundController', () => {
                 return time;
             });
 
-            controller.register('test_sound' as any, {} as any, { url: 'dummy.wav', cooldownMs: 0 });
-            controller.register('other_sound' as any, {} as any, { url: 'dummy2.wav', cooldownMs: 0 });
+            controller.register('test_sound' as any, { url: 'dummy.wav', cooldownMs: 0 });
+            controller.register('other_sound' as any, { url: 'dummy2.wav', cooldownMs: 0 });
 
             acquireSpy = vi.spyOn(controller.debugPool, 'acquire').mockImplementation(() => {
                 const instance = {
@@ -276,8 +294,8 @@ describe('SoundController', () => {
 
     describe('Stopping & Resource Management', () => {
         beforeEach(() => {
-            controller.register('test_sound' as SoundId, fakeBuffer);
-            controller.register('other_sound' as SoundId, fakeBuffer);
+            controller.register('test_sound' as SoundId, { url: '' });
+            controller.register('other_sound' as SoundId, { url: '' });
         });
 
         it('should stop instance and clean up activeVoices on ended event', () => {
@@ -316,7 +334,7 @@ describe('SoundController', () => {
         let playbackId: PlaybackId;
 
         beforeEach(() => {
-            controller.register('test_sound' as SoundId, fakeBuffer);
+            controller.register('test_sound' as SoundId, { url: '' });
             playbackId = controller.play('test_sound' as SoundId, {}) as PlaybackId;
         });
 
@@ -341,7 +359,7 @@ describe('SoundController', () => {
 
     describe('Logical Voices Position', () => {
         beforeEach(() => {
-            controller.register('test_sound' as SoundId, fakeBuffer);
+            controller.register('test_sound' as SoundId, { url: '' });
         });
 
         it('should update logical position and physical instance position', () => {
@@ -358,7 +376,7 @@ describe('SoundController', () => {
         let playbackId: PlaybackId;
 
         beforeEach(() => {
-            controller.register('route_sound' as SoundId, fakeBuffer);
+            controller.register('route_sound' as SoundId, { url: '' });
             playbackId = controller.play('route_sound' as SoundId, {}) as PlaybackId;
         });
 
@@ -435,14 +453,14 @@ describe('SoundController', () => {
             fakeInstance.currentTime = 0;
             fakeInstance.playbackRate = 1;
 
-            controller.register('test_sound' as SoundId, fakeBuffer);
+            controller.register('test_sound' as SoundId, { url: '' });
             playbackId = controller.play('test_sound' as SoundId, {}) as PlaybackId;
         });
 
         it('should return null from play() if pool fails to acquire an instance', () => {
             mockPool.acquire.mockReturnValueOnce(null);
 
-            controller.register('failed_sound' as SoundId, fakeBuffer);
+            controller.register('failed_sound' as SoundId, { url: '' });
             const result = controller.play('failed_sound' as SoundId, {});
 
             expect(result).toBeNull();
@@ -481,7 +499,7 @@ describe('SoundController', () => {
 
         it('should handle devirtualize() and trigger onRevive correctly', () => {
             const reviveSpy = vi.fn();
-            controller.register('revive_sound' as SoundId, fakeBuffer);
+            controller.register('revive_sound' as SoundId, { url: '' });
             const revivableId = controller.play('revive_sound' as SoundId, { onRevive: reviveSpy }) as PlaybackId;
 
             controller.devirtualize(revivableId);
@@ -552,7 +570,7 @@ describe('SoundController', () => {
         });
 
         it('should correctly remove a timer from the virtual queue using swap-and-pop (O(1) deletion)', () => {
-            controller.register('swap_sound' as SoundId, fakeBuffer, { url: '', cooldownMs: 0 });
+            controller.register('swap_sound' as SoundId, { url: '', cooldownMs: 0 });
 
             const fakeInstance1 = { ...fakeInstance };
             const fakeInstance2 = { ...fakeInstance };
@@ -581,7 +599,7 @@ describe('SoundController', () => {
         });
 
         it('should remove timer from virtual queue via handleVoiceEnded if stopped while virtual', () => {
-            controller.register('end_sound' as SoundId, fakeBuffer, { url: '', cooldownMs: 0 });
+            controller.register('end_sound' as SoundId, { url: '', cooldownMs: 0 });
 
             const fakeInst = { ...fakeInstance };
             mockPool.acquire.mockReturnValueOnce(fakeInst);
@@ -672,6 +690,7 @@ describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {
     let controller: SoundController;
     let mockContext: any;
     let mockPool: any;
+    let mockBufferResolver: any;
 
     beforeEach(() => {
         vi.useFakeTimers();
@@ -692,6 +711,8 @@ describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {
         };
 
         const mockBuffer = { duration: 2 } as AudioBuffer;
+
+        mockBufferResolver = vi.fn().mockReturnValue(mockBuffer);
 
         mockPool = {
             globalVoiceLimit: 32,
@@ -722,7 +743,8 @@ describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {
             })
         };
         const mockBusSystem = { removeSidechainSource: vi.fn() };
-        const mockRegistry = new Map([['test_sound' as SoundId, { buffer: mockBuffer, options: { url: 'test.wav' } }]]);
+
+        const mockRegistry = new Map([['test_sound' as SoundId, { options: { url: 'test.wav' } }]]);
 
         controller = new SoundController(
             mockPool,
@@ -730,7 +752,8 @@ describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {
             mockContext,
             {} as any,
             mockRegistry,
-            mockBusSystem as any
+            mockBusSystem as any,
+            mockBufferResolver
         );
     });
 

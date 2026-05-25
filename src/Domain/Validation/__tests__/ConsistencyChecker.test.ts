@@ -530,7 +530,8 @@ describe('ConsistencyChecker', () => {
                 busSystemConfig: config.buses,
                 snapshotsConfig: {},
                 rtpcManifest: {},
-                eventsConfig: {}
+                eventsConfig: {},
+                banksConfig: {}
             });
 
             (checker as any).run();
@@ -562,7 +563,8 @@ describe('ConsistencyChecker', () => {
                 busSystemConfig: config.buses,
                 snapshotsConfig: {},
                 rtpcManifest: {},
-                eventsConfig: {}
+                eventsConfig: {},
+                banksConfig: {}
             });
 
             (checker as any).run();
@@ -603,7 +605,8 @@ describe('ConsistencyChecker', () => {
                 busSystemConfig: config.buses,
                 snapshotsConfig: {},
                 rtpcManifest: {},
-                eventsConfig: {}
+                eventsConfig: {},
+                banksConfig: {}
             });
 
             (checker as any).run();
@@ -811,6 +814,9 @@ describe('ConsistencyChecker', () => {
                 snapshots: {
                     snap1: { buses: {} },
                     snap2: { buses: { sfx: { gain: 0 } } }
+                },
+                banks: {
+                    Bank_A: { sounds: ['hit'] }
                 }
             };
             ConsistencyChecker.validate(config);
@@ -1572,7 +1578,7 @@ describe('ConsistencyChecker', () => {
                             {
                                 type: 'play',
                                 target: 'sfx',
-                                condition: { param: 'player_speed', operator: '==' } // Missing value
+                                condition: { param: 'player_speed', operator: '==' }
                             }
                         ]
                     }
@@ -1911,6 +1917,179 @@ describe('ConsistencyChecker', () => {
                 expect.stringContaining('must be a smartLoop sound to provide a music grid')
             );
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('does not exist in soundMap'));
+        });
+    });
+
+    describe('Bank System Consistency Validations', () => {
+        beforeEach(() => {
+            vi.clearAllMocks();
+            vi.spyOn(console, 'error').mockImplementation(() => {});
+            vi.spyOn(console, 'warn').mockImplementation(() => {});
+            vi.spyOn(console, 'log').mockImplementation(() => {});
+            vi.spyOn(console, 'groupCollapsed').mockImplementation(() => {});
+            vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it('should pass a valid, fully integrated bank configuration', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {
+                    sfx_ui_click: { busId: 'master' },
+                    sfx_step_1: { busId: 'master' },
+                    sfx_step_2: { busId: 'master' },
+                    container_steps: {
+                        isContainer: true,
+                        busId: 'master',
+                        mode: 'random',
+                        sources: ['sfx_step_1', 'sfx_step_2']
+                    }
+                },
+                manifest: {},
+                events: {
+                    enter_level: {
+                        actions: [{ type: 'load_bank', target: 'Bank_Level1' }]
+                    }
+                },
+                banks: {
+                    Bank_Global: { sounds: ['sfx_ui_click'] },
+                    Bank_Level1: { sounds: ['sfx_step_1', 'sfx_step_2', 'container_steps'] }
+                }
+            };
+
+            const isValid = ConsistencyChecker.validate(config);
+
+            expect(isValid).toBe(true);
+            expect(console.error).not.toHaveBeenCalled();
+            expect(console.warn).not.toHaveBeenCalled();
+        });
+
+        it('should warn if no banks are defined', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: { sfx_test: { busId: 'master' } },
+                banks: {}
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining('No banks defined. The engine will not be able to load any sounds.')
+            );
+        });
+
+        it('should catch orphan sounds (in SoundMap but not in any bank)', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {
+                    sfx_in_bank: { busId: 'master' },
+                    sfx_orphan: { busId: 'master' }
+                },
+                banks: {
+                    Bank_Main: { sounds: ['sfx_in_bank'] }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Sound "sfx_orphan" exists in SoundMap but is not assigned to any Bank')
+            );
+        });
+
+        it('should catch critical error when a sound is duplicated in multiple banks (Shared Sounds)', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {
+                    sfx_shared: { busId: 'master' }
+                },
+                banks: {
+                    Bank_A: { sounds: ['sfx_shared'] },
+                    Bank_B: { sounds: ['sfx_shared'] }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Critical: Sound "sfx_shared" is duplicated in multiple banks: [Bank_A, Bank_B]'
+                )
+            );
+        });
+
+        it('should catch sounds referenced in banks that do not exist in SoundMap or Manifest', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {},
+                manifest: {},
+                banks: {
+                    Bank_A: { sounds: ['sfx_ghost'] }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Bank "Bank_A" references missing sound "sfx_ghost".')
+            );
+        });
+
+        it('should warn if a Container or Scatterer uses sounds from different banks (Cross-Bank Dependency)', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: {
+                    sfx_step_forest: { busId: 'master' },
+                    sfx_step_desert: { busId: 'master' },
+                    container_steps: {
+                        isContainer: true,
+                        busId: 'master',
+                        mode: 'random',
+                        sources: ['sfx_step_forest', 'sfx_step_desert']
+                    }
+                },
+                banks: {
+                    Bank_Forest: { sounds: ['sfx_step_forest'] },
+                    Bank_Desert: { sounds: ['sfx_step_desert'] },
+                    Bank_Logic: { sounds: ['container_steps'] }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Container/Scatterer "container_steps" uses sounds from different banks: [Bank_Forest, Bank_Desert]'
+                )
+            );
+        });
+
+        it('should catch invalid bank targets in Event Actions (load_bank / unload_bank)', () => {
+            const config: any = {
+                buses: { master: {} },
+                soundMap: { sfx: { busId: 'master' } },
+                banks: { Bank_Valid: { sounds: ['sfx'] } },
+                events: {
+                    test_event: {
+                        actions: [
+                            { type: 'load_bank', target: 'Bank_Typo' },
+                            { type: 'unload_bank', target: 'Bank_Ghost' }
+                        ]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Event "test_event" references missing bank "Bank_Typo"')
+            );
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Event "test_event" references missing bank "Bank_Ghost"')
+            );
         });
     });
 });

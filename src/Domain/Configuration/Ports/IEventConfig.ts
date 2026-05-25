@@ -1,4 +1,4 @@
-import { EventId, GameParamId, LayerId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
+import { BankId, EventId, GameParamId, LayerId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
 import { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
@@ -94,6 +94,16 @@ export interface ITriggerEventAction extends IBaseEventAction {
     readonly target: EventId;
 }
 
+export interface ILoadBankAction extends IBaseEventAction {
+    readonly type: 'load_bank';
+    readonly target: BankId;
+}
+
+export interface IUnloadBankAction extends IBaseEventAction {
+    readonly type: 'unload_bank';
+    readonly target: BankId;
+}
+
 export type EventAction =
     | IPlayAction
     | IStopAction
@@ -107,7 +117,9 @@ export type EventAction =
     | ISetMixerStateAction
     | IAddMixerModifierAction
     | IRemoveMixerModifierAction
-    | ITriggerEventAction;
+    | ITriggerEventAction
+    | ILoadBankAction
+    | IUnloadBankAction;
 
 export interface IEventConfig {
     readonly actions: readonly EventAction[];

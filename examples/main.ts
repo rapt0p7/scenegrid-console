@@ -1,8 +1,8 @@
 // noinspection D
 
-import { AudioEngine } from 'scenegrid-console';
+import { AudioEngine, BankId } from 'scenegrid-console';
 
-import { Buses, Snapshots, SoundMap, RTPCManifest, Events } from './audio-config/index.js';
+import { Buses, Snapshots, SoundMap, RTPCManifest, Events, BankManifest } from './audio-config/index.js';
 import soundManifest from './soundManifest.js';
 
 // oxlint-disable-next-line max-lines-per-function
@@ -14,6 +14,7 @@ async function bootstrap() {
         soundMap: SoundMap,
         rtpcManifest: RTPCManifest,
         events: Events,
+        banks: BankManifest,
         globalVoiceLimit: 32
     });
 
@@ -47,6 +48,10 @@ async function bootstrap() {
         console.error('[Demo UI] Bootstrap aborted due to init failure.');
         return;
     }
+
+    await audio.banks.load('music' as BankId);
+    await audio.banks.load('sfx' as BankId);
+    await audio.banks.load('sfx2' as BankId);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error

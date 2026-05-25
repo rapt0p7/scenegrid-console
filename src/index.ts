@@ -18,7 +18,9 @@ export type {
     SnapshotId,
     RegionId,
     EventId,
-    PlaybackId
+    PlaybackId,
+    BankId
 } from './Shared/Types/Branded.js';
 export type { IRTPCManifest } from './Kernel/RTPC/Ports/IRTPCManifest.js';
 export type { IEventMap } from './Domain/Configuration/Ports/IEventConfig.js';
+export type { IBankManifest } from './Domain/Configuration/Ports/IBankConfig.js';

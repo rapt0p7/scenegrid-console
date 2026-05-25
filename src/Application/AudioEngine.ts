@@ -34,7 +34,8 @@ import {
     SoundController,
     SoundInstance,
     SoundPoolManager,
-    TinyLimiterNode
+    TinyLimiterNode,
+    BankManagerAdapter
 } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 import deepFreeze from '@shared/deepFreeze.js';
@@ -42,10 +43,10 @@ import { isDefined } from '@shared/guards.js';
 
 import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 import {
+    BankId,
     EventId,
     GameParamId,
     LayerId,
@@ -58,7 +59,7 @@ import {
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { Handler } from 'mitt';
 import type { DeepReadonly } from '@shared/DeepReadonly.js';
-import { typedEntries, typedFromEntries } from '@shared/typedObjects.js';
+import { typedEntries } from '@shared/typedObjects.js';
 import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestrator.js';
@@ -67,6 +68,7 @@ import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrat
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 import { SeededPRNG } from '@shared/Math/SeededPRNG.js';
 import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngine.js';
+import { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
 
 export class AudioEngine implements IAudioEngine {
     #contextManager!: AudioContextManager;
@@ -84,6 +86,7 @@ export class AudioEngine implements IAudioEngine {
     #eventOrchestrator!: AudioEventOrchestrator;
     #scattererOrchestrator!: ScattererOrchestrator;
     #prng!: SeededPRNG;
+    #bankManager!: BankManagerAdapter;
     #isInitialized = false;
 
     public readonly events = {
@@ -178,6 +181,23 @@ export class AudioEngine implements IAudioEngine {
         }
     };
 
+    public get banks() {
+        return {
+            load: async (bankId: BankId): Promise<void> => {
+                if (!this.#isInitialized) return;
+                await this.#bankManager.loadBank(bankId);
+            },
+            unload: (bankId: BankId): void => {
+                if (!this.#isInitialized) return;
+                this.#bankManager.unloadBank(bankId);
+            },
+            getState: (bankId: BankId): BankState => {
+                if (!this.#isInitialized) return 'UNLOADED';
+                return this.#bankManager.getBankState(bankId);
+            }
+        };
+    }
+
     public readonly config: Readonly<IAudioEngineConfig>;
 
     constructor(config: IAudioEngineConfig) {
@@ -224,15 +244,35 @@ export class AudioEngine implements IAudioEngine {
             if (this.config.rtpcManifest) this.initRTPC(this.config.rtpcManifest);
 
             const soundRegistry = new SoundRegistry();
-            await this.loadSounds(this.config.manifest, bufferLoader, soundRegistry);
+            for (const [key, entry] of typedEntries(this.config.manifest)) {
+                soundRegistry.register(key, {
+                    options: { url: entry.url }
+                });
+            }
 
             const instanceFactory = (soundId: SoundId): SoundInstance => {
                 if (soundId === ('__RESERVED__' as SoundId)) {
                     return new SoundInstance(soundId, this.#contextManager, nodeFactory, null, automation, {});
                 }
 
-                const { buffer, options } = soundRegistry.get(soundId);
+                const { options } = soundRegistry.get(soundId);
                 const soundConfig = this.config.soundMap[soundId] as any;
+
+                const buffer = bufferLoader.getBuffer(options.url);
+
+                if (!buffer) {
+                    console.warn(
+                        `[AudioEngine] Buffer for "${soundId}" not found. Ensure the corresponding bank is loaded.`
+                    );
+                    return new SoundInstance(
+                        '__RESERVED__' as SoundId,
+                        this.#contextManager,
+                        nodeFactory,
+                        null,
+                        automation,
+                        {}
+                    );
+                }
 
                 const instanceOptions = {
                     ...options,
@@ -292,7 +332,8 @@ export class AudioEngine implements IAudioEngine {
                 this.#contextManager.context,
                 automation,
                 soundRegistry.registry,
-                this.#busSystem
+                this.#busSystem,
+                (url: string | string[]) => bufferLoader.getBuffer(url)
             );
 
             this.#instanceRTPCBinder = new InstanceRTPCBinder(this.#rtpcManager, this.#soundController);
@@ -332,6 +373,40 @@ export class AudioEngine implements IAudioEngine {
             const coordinator = new MixerCoordinator(layerStack, mixerTransitionEngine);
             this.#snapshotManager = new MixerSnapshotManager(layerStack, this.config.snapshots, coordinator);
 
+            this.#bankManager = new BankManagerAdapter(
+                this.config.banks,
+                this.config.manifest,
+                bufferLoader,
+                soundPool,
+                this.#router,
+                {
+                    onStart: totalItems => {
+                        this.#dispatcher.emit('load:start', { totalItems });
+                    },
+                    onProgress: (loadedItems, totalItems, progress, lastLoadedResource) => {
+                        this.#dispatcher.emit('load:progress', {
+                            loadedItems,
+                            totalItems,
+                            progress,
+                            lastLoadedResource
+                        });
+                    },
+                    onError: (key, error) => {
+                        this.#dispatcher.emit('engine:error', {
+                            code: 'DECODE_ERROR',
+                            message: `Failed to load resource: ${key}`,
+                            details: error
+                        });
+                    },
+                    onComplete: (failedItems, durationMs) => {
+                        this.#dispatcher.emit('load:complete', { failedItems, durationMs });
+                    },
+                    onUnload: bankId => {
+                        this.#dispatcher.emit('unload:complete', { bankId });
+                    }
+                }
+            );
+
             this.#eventOrchestrator = new AudioEventOrchestrator(
                 this.config.events,
                 this.#router,
@@ -339,7 +414,8 @@ export class AudioEngine implements IAudioEngine {
                 this.#sequencer,
                 this.#snapshotManager,
                 this.#soundController,
-                this.#prng
+                this.#prng,
+                this.#bankManager
             );
 
             this.#scattererOrchestrator = new ScattererOrchestrator(
@@ -500,63 +576,5 @@ export class AudioEngine implements IAudioEngine {
 
             this.#rtpcManager.configureParam(parameterName as GameParamId, config.attackMs ?? 0, config.releaseMs ?? 0);
         }
-    }
-
-    // oxlint-disable-next-line max-lines-per-function
-    private async loadSounds(
-        manifest: ISpriteSoundManifest,
-        loader: AudioBufferLoader,
-        registry: SoundRegistry
-    ): Promise<void> {
-        const entries = typedEntries(manifest);
-        const totalItems = entries.length;
-
-        if (totalItems === 0) {
-            this.#dispatcher.emit('load:complete', { failedItems: [], durationMs: 0 });
-            return;
-        }
-
-        this.#dispatcher.emit('load:start', { totalItems });
-        const startTime = performance.now();
-        const failedItems: string[] = [];
-
-        const urls = typedFromEntries(entries.map(([k, v]) => [k, v.url]));
-
-        const buffers = await loader.loadBatch(
-            urls,
-            (loaded, total, lastKey) => {
-                this.#dispatcher.emit('load:progress', {
-                    loadedItems: loaded,
-                    totalItems: total,
-                    progress: loaded / total,
-                    lastLoadedResource: lastKey
-                });
-            },
-            (key, error) => {
-                failedItems.push(key);
-
-                this.#dispatcher.emit('engine:error', {
-                    code: 'DECODE_ERROR',
-                    message: `Failed to load resource: ${key}`,
-                    details: error
-                });
-            }
-        );
-
-        for (const [key, entry] of entries) {
-            const buffer = buffers[key];
-
-            if (isDefined(buffer)) {
-                registry.register(key, {
-                    buffer,
-                    options: { url: entry.url }
-                });
-            }
-        }
-
-        this.#dispatcher.emit('load:complete', {
-            failedItems,
-            durationMs: performance.now() - startTime
-        });
     }
 }

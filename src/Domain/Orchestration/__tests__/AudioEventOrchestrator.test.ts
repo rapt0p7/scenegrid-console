@@ -8,11 +8,12 @@ import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { EventId, SoundId, GameParamId, RegionId, SnapshotId, LayerId } from '@shared/Types/Branded.js';
+import type { EventId, SoundId, GameParamId, RegionId, SnapshotId, LayerId, BankId } from '@shared/Types/Branded.js';
 import type { Mocked } from 'vitest';
 import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { IPRNG } from '@shared/Math/SeededPRNG.js';
+import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
 
 const testEventMap: IEventMap = {
     ['Player_Jump' as EventId]: {
@@ -113,6 +114,12 @@ const testEventMap: IEventMap = {
                 condition: { param: 'hp' as GameParamId, operator: '>=', value: 50 }
             }
         ]
+    },
+    ['Load_Level_Bank' as EventId]: {
+        actions: [{ type: 'load_bank', target: 'Bank_Level1' as BankId }]
+    },
+    ['Unload_Level_Bank' as EventId]: {
+        actions: [{ type: 'unload_bank', target: 'Bank_Level1' as BankId }]
     }
 };
 
@@ -123,6 +130,7 @@ describe('AudioEventOrchestrator (State Machine)', () => {
     let mockMixer: Mocked<MixerSnapshotManager>;
     let mockController: Mocked<ISoundController>;
     let mockPrng: Mocked<IPRNG>;
+    let mockBankManager: Mocked<IBankManager>;
     let dispatcher: AudioEventOrchestrator;
 
     beforeEach(() => {
@@ -170,6 +178,13 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             next: vi.fn().mockReturnValue(0.5)
         } as unknown as Mocked<IPRNG>;
 
+        mockBankManager = {
+            getBankState: vi.fn(),
+            // oxlint-disable-next-line unicorn/no-useless-undefined
+            loadBank: vi.fn().mockResolvedValue(undefined),
+            unloadBank: vi.fn()
+        } as unknown as Mocked<IBankManager>;
+
         dispatcher = new AudioEventOrchestrator(
             testEventMap,
             mockRouter,
@@ -177,7 +192,8 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             mockSequencer,
             mockMixer,
             mockController,
-            mockPrng
+            mockPrng,
+            mockBankManager
         );
     });
 
@@ -323,7 +339,6 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             dispatcher.postEvent('Event_With_Probability' as EventId);
 
             expect(mockRouter.play).not.toHaveBeenCalledWith('sfx_unlikely');
-
             expect(mockRouter.play).toHaveBeenCalledWith('sfx_likely');
         });
 
@@ -349,6 +364,22 @@ describe('AudioEventOrchestrator (State Machine)', () => {
 
             expect(mockRouter.play).toHaveBeenCalledWith('sfx_low_hp');
             expect(mockRouter.play).not.toHaveBeenCalledWith('sfx_high_hp');
+        });
+    });
+
+    describe('Bank Management Actions', () => {
+        it('should route "load_bank" action to bankManager without blocking execution', () => {
+            dispatcher.postEvent('Load_Level_Bank' as EventId);
+
+            expect(mockBankManager.loadBank).toHaveBeenCalledTimes(1);
+            expect(mockBankManager.loadBank).toHaveBeenCalledWith('Bank_Level1');
+        });
+
+        it('should route "unload_bank" action to bankManager', () => {
+            dispatcher.postEvent('Unload_Level_Bank' as EventId);
+
+            expect(mockBankManager.unloadBank).toHaveBeenCalledTimes(1);
+            expect(mockBankManager.unloadBank).toHaveBeenCalledWith('Bank_Level1');
         });
     });
 });

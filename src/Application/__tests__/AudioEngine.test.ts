@@ -12,7 +12,7 @@ import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager, FiltersPlugin } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
-import type { BusId, GameParamId, PlaybackId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
+import type { BankId, BusId, GameParamId, PlaybackId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn((cb: Function, ms: number) => globalThis.setInterval(cb, ms)),
@@ -52,6 +52,8 @@ vi.mock('@infrastructure', async importOriginal => {
         }),
         AudioBufferLoader: vi.fn().mockImplementation(function () {
             return {
+                getBuffer: vi.fn().mockReturnValue(new ArrayBuffer(8)),
+                purgeUrls: vi.fn(),
                 load: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
                 // oxlint-disable-next-line require-await
                 loadBatch: vi.fn().mockImplementation(async (urls, onProgress, onError) => {
@@ -82,6 +84,7 @@ vi.mock('@infrastructure', async importOriginal => {
                     once: vi.fn().mockReturnThis()
                 },
                 getVoice: vi.fn(),
+                purgeSound: vi.fn(),
                 globalVoiceLimit: 32
             };
         }),
@@ -146,7 +149,8 @@ describe('AudioEngine', () => {
 
         engine = new AudioEngine({
             manifest: {
-                ['test_sound' as SoundId]: { url: 'audio/test.mp3' }
+                ['test_sound' as SoundId]: { url: 'audio/test.mp3' },
+                ['sound_no_voice' as SoundId]: { url: 'audio/no_voice.mp3' }
             },
             buses: {
                 master: { gain: 1 },
@@ -158,6 +162,9 @@ describe('AudioEngine', () => {
                 ['test_sound' as SoundId]: { busId: 'sfx', voice: { priority: 5 }, spatial: true },
                 ['sound_no_voice' as SoundId]: { busId: 'master' }
             } as any,
+            banks: {
+                ['Bank_A' as BankId]: { id: 'Bank_A' as BankId, sounds: ['test_sound', 'sound_no_voice'] as SoundId[] }
+            },
             globalVoiceLimit: 32
         });
 
@@ -184,7 +191,14 @@ describe('AudioEngine', () => {
         it('should warn if config is invalid', async () => {
             const warnSpy = vi.spyOn(console, 'warn');
             (ConsistencyChecker.validate as any).mockReturnValueOnce(false);
-            const badEngine = new AudioEngine({ manifest: {}, buses: {}, snapshots: {}, soundMap: {}, events: {} });
+            const badEngine = new AudioEngine({
+                manifest: {},
+                buses: {},
+                snapshots: {},
+                soundMap: {},
+                events: {},
+                banks: {}
+            });
             await badEngine.init();
             expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('initialized with errors'));
         });
@@ -192,7 +206,14 @@ describe('AudioEngine', () => {
         it('should emit engine:error and exit early if strict validation fails', async () => {
             (ConsistencyChecker.validate as any).mockReturnValueOnce(false);
 
-            const badEngine = new AudioEngine({ manifest: {}, buses: {}, snapshots: {}, soundMap: {}, events: {} });
+            const badEngine = new AudioEngine({
+                manifest: {},
+                buses: {},
+                snapshots: {},
+                soundMap: {},
+                events: {},
+                banks: {}
+            });
             const errorSpy = vi.fn();
             badEngine.events.on('engine:error', errorSpy);
 
@@ -220,7 +241,8 @@ describe('AudioEngine', () => {
                 rtpcManifest: {
                     ['health' as GameParamId]: { attackMs: 100, releaseMs: 200, defaultValue: 100 },
                     ['speed' as GameParamId]: { attackMs: 50 }
-                }
+                },
+                banks: {}
             });
             await rtpcEngine.init();
 
@@ -277,7 +299,7 @@ describe('AudioEngine', () => {
             expect(handler).not.toHaveBeenCalled();
         });
 
-        it('should emit load:start, load:progress, and load:complete during init', async () => {
+        it('should emit load:start, load:progress, and load:complete during BANK LOAD, not init', async () => {
             const freshEngine = new AudioEngine({
                 manifest: {
                     ['sound1' as SoundId]: { url: 'audio/1.mp3' },
@@ -286,8 +308,13 @@ describe('AudioEngine', () => {
                 buses: { master: { gain: 1 } },
                 soundMap: {},
                 snapshots: {},
-                events: {}
+                events: {},
+                banks: {
+                    ['Bank_A' as BankId]: { id: 'Bank_A' as BankId, sounds: ['sound1', 'sound2'] as SoundId[] }
+                }
             });
+
+            await freshEngine.init();
 
             const startSpy = vi.fn();
             const progressSpy = vi.fn();
@@ -297,7 +324,7 @@ describe('AudioEngine', () => {
             freshEngine.events.on('load:progress', progressSpy);
             freshEngine.events.on('load:complete', completeSpy);
 
-            await freshEngine.init();
+            await freshEngine.banks.load('Bank_A' as BankId);
 
             expect(startSpy).toHaveBeenCalledWith({ totalItems: 2 });
             expect(progressSpy).toHaveBeenCalledTimes(2);
@@ -305,24 +332,29 @@ describe('AudioEngine', () => {
             expect(completeSpy).toHaveBeenCalledWith(expect.objectContaining({ failedItems: [] }));
         });
 
-        it('should emit load:complete immediately if manifest is empty', async () => {
+        it('should emit load:complete immediately if bank is empty', async () => {
             const emptyEngine = new AudioEngine({
                 manifest: {},
                 buses: { master: { gain: 1 } },
                 soundMap: {},
                 snapshots: {},
-                events: {}
+                events: {},
+                banks: {
+                    ['Bank_Empty' as BankId]: { id: 'Bank_Empty' as BankId, sounds: [] }
+                }
             });
+
+            await emptyEngine.init();
 
             const completeSpy = vi.fn();
             emptyEngine.events.on('load:complete', completeSpy);
 
-            await emptyEngine.init();
+            await emptyEngine.banks.load('Bank_Empty' as BankId);
 
             expect(completeSpy).toHaveBeenCalledWith({ failedItems: [], durationMs: 0 });
         });
 
-        it('should emit engine:error for failed files and include them in load:complete', async () => {
+        it('should emit engine:error for failed files during bank load', async () => {
             const errorEngine = new AudioEngine({
                 manifest: {
                     ['good' as SoundId]: { url: 'audio/good.mp3' },
@@ -331,15 +363,24 @@ describe('AudioEngine', () => {
                 buses: { master: { gain: 1 } },
                 soundMap: {},
                 snapshots: {},
-                events: {}
+                events: {},
+                banks: {
+                    ['Bank_Mixed' as BankId]: { id: 'Bank_Mixed' as BankId, sounds: ['good', 'bad'] as SoundId[] }
+                }
             });
+
+            await errorEngine.init();
 
             const errorSpy = vi.fn();
             const completeSpy = vi.fn();
             errorEngine.events.on('engine:error', errorSpy);
             errorEngine.events.on('load:complete', completeSpy);
 
-            await errorEngine.init();
+            try {
+                await errorEngine.banks.load('Bank_Mixed' as BankId);
+            } catch {
+                // Ignore thrown error for test
+            }
 
             expect(errorSpy).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -354,13 +395,24 @@ describe('AudioEngine', () => {
             );
         });
 
+        it('should emit unload:complete when a bank is unloaded', async () => {
+            const unloadSpy = vi.fn();
+            engine.events.on('unload:complete', unloadSpy);
+
+            await engine.banks.load('Bank_A' as BankId);
+            engine.banks.unload('Bank_A' as BankId);
+
+            expect(unloadSpy).toHaveBeenCalledWith({ bankId: 'Bank_A' });
+        });
+
         it('should emit state:suspended and state:resumed when context state changes', async () => {
             const freshEngine = new AudioEngine({
                 manifest: {},
                 buses: { master: { gain: 1 } },
                 soundMap: {},
                 snapshots: {},
-                events: {}
+                events: {},
+                banks: {}
             });
 
             const suspendSpy = vi.fn();
@@ -390,7 +442,8 @@ describe('AudioEngine', () => {
                 buses: { master: { gain: 1 } },
                 soundMap: {},
                 snapshots: {},
-                events: {}
+                events: {},
+                banks: {}
             });
             const errorSpy = vi.fn();
             brokenEngine.events.on('engine:error', errorSpy);
@@ -408,6 +461,29 @@ describe('AudioEngine', () => {
     });
 
     describe('Facade API (params, mixer, music, misc)', () => {
+        describe('banks API', () => {
+            it('should load, unload and track bank states', async () => {
+                expect(engine.banks.getState('Bank_A' as BankId)).toBe('UNLOADED');
+
+                const loadPromise = engine.banks.load('Bank_A' as BankId);
+                expect(engine.banks.getState('Bank_A' as BankId)).toBe('LOADING');
+
+                await loadPromise;
+                expect(engine.banks.getState('Bank_A' as BankId)).toBe('LOADED');
+
+                engine.banks.unload('Bank_A' as BankId);
+                expect(engine.banks.getState('Bank_A' as BankId)).toBe('UNLOADED');
+            });
+
+            it('should safely ignore operations on unknown banks', async () => {
+                await expect(engine.banks.load('Bank_Ghost' as BankId)).resolves.not.toThrow();
+                expect(() => {
+                    engine.banks.unload('Bank_Ghost' as BankId);
+                }).not.toThrow();
+                expect(engine.banks.getState('Bank_Ghost' as BankId)).toBe('UNLOADED');
+            });
+        });
+
         it('should delegate params.set and params.get to RTPCManager', () => {
             const debugObject = engine._debug;
             const setSpy = vi.spyOn(debugObject.rtpcManager, 'setValue').mockImplementation(() => {});
@@ -527,7 +603,8 @@ describe('AudioEngine', () => {
                 events: {},
                 buses: {
                     master: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } }
-                }
+                },
+                banks: {}
             });
 
             const initPromise = filterEngine.init();
@@ -549,7 +626,8 @@ describe('AudioEngine', () => {
                 soundMap: {},
                 events: {},
                 buses: { master: { gain: 1 } },
-                snapshots: { ['snap1' as SnapshotId]: { buses: { ['master' as BusId]: { gain: 0.5 } } } }
+                snapshots: { ['snap1' as SnapshotId]: { buses: { ['master' as BusId]: { gain: 0.5 } } } },
+                banks: {}
             });
             await layerEngine.init();
 
@@ -708,7 +786,8 @@ describe('AudioEngine', () => {
                 soundMap: {
                     ['bullet_flyby' as SoundId]: { busId: 'master', spatial: true },
                     ['ui_click' as SoundId]: { busId: 'master' }
-                } as any
+                } as any,
+                banks: {}
             });
 
             await engine.init();
@@ -761,13 +840,19 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
     });
 
     it('should abort if engine is not initialized or config is invalid', async () => {
-        const engine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {}, events: {} } as any);
+        const engine = new AudioEngine({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        } as any);
 
         await engine._hotReloadConfig({} as any);
         expect(errorSpy).not.toHaveBeenCalled();
 
         vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
-        vi.spyOn(engine as any, 'loadSounds').mockResolvedValue(undefined);
         await engine.init();
 
         vi.spyOn(ConsistencyChecker, 'validate').mockReturnValueOnce(false);
@@ -777,10 +862,16 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
     });
 
     it('should correctly orchestrate the update across all subsystems', async () => {
-        const engine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {}, events: {} } as any);
+        const engine = new AudioEngine({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        } as any);
 
         vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
-        vi.spyOn(engine as any, 'loadSounds').mockResolvedValue(undefined);
         await engine.init();
 
         const busSystem = engine._debug.busSystem;
@@ -792,6 +883,8 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
         const initRTPCSpy = vi.spyOn(engine as any, 'initRTPC').mockImplementation(() => {});
 
         const newConfig = {
+            manifest: {},
+            banks: {},
             buses: { sfx: {} },
             snapshots: { combat: {} },
             soundMap: { hit: {} },
