@@ -68,7 +68,7 @@ import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrat
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 import { SeededPRNG } from '@shared/Math/SeededPRNG.js';
 import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngine.js';
-import { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
+import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
 
 export class AudioEngine implements IAudioEngine {
     #contextManager!: AudioContextManager;

@@ -1,14 +1,17 @@
 import { isDefined } from '@shared/guards.js';
-import type { EventAction, IEventMap, IActionCondition } from '@domain/Configuration/Ports/IEventConfig.js';
+import type { EventAction, IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import { EventId, LayerId } from '@shared/Types/Branded.js';
+import type { EventId, LayerId } from '@shared/Types/Branded.js';
 import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
 import type { IPRNG } from '@shared/Math/SeededPRNG.js';
+import type { IConditionConfig } from '@domain/Shared/Types/Condition.js';
+import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
+import type { DeepReadonly } from '@shared/DeepReadonly.js';
 
 interface ScheduledAction {
     readonly action: EventAction;
@@ -145,24 +148,9 @@ export class AudioEventOrchestrator implements ITickable {
         }
     }
 
-    private evaluateCondition(condition: IActionCondition): boolean {
+    private evaluateCondition(condition: DeepReadonly<IConditionConfig>): boolean {
         const currentValue = this.rtpcAdapter.getValue(condition.param) ?? 0;
 
-        switch (condition.operator) {
-            case '==':
-                return currentValue === condition.value;
-            case '!=':
-                return currentValue !== condition.value;
-            case '>':
-                return currentValue > condition.value;
-            case '>=':
-                return currentValue >= condition.value;
-            case '<':
-                return currentValue < condition.value;
-            case '<=':
-                return currentValue <= condition.value;
-            default:
-                return false;
-        }
+        return ConditionEvaluator.evaluate(currentValue, condition.operator, condition.value);
     }
 }

@@ -2,7 +2,7 @@
 
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { AudioCtx, AudioParamLike } from '@infrastructure/types/IAudioContext.js';
-import { TickerTaskId } from '@shared/Types/Branded.js';
+import type { TickerTaskId } from '@shared/Types/Branded.js';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const isChromeAndroid =

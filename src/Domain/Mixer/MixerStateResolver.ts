@@ -1,6 +1,6 @@
 // noinspection D
 
-import { BusId } from '@shared/Types/Branded.js';
+import type { BusId } from '@shared/Types/Branded.js';
 import clamp from '@shared/clamp.js';
 import { isDefined, isAbsent } from '@shared/guards.js';
 import type { DeepReadonly } from '@shared/DeepReadonly.js';

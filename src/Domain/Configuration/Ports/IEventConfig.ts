@@ -1,22 +1,17 @@
-import { BankId, EventId, GameParamId, LayerId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
-import { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { BankId, EventId, GameParamId, LayerId, RegionId, SnapshotId, SoundId } from '@shared/Types/Branded.js';
+import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
+import type { IConditionConfig } from '@domain/Shared/Types/Condition.js';
 
 export interface IStopOptions {
     readonly allowTail?: boolean;
     readonly fadeOutMs?: number;
 }
 
-export interface IActionCondition {
-    readonly param: GameParamId;
-    readonly operator: '==' | '!=' | '>' | '>=' | '<' | '<=';
-    readonly value: number;
-}
-
 export interface IBaseEventAction {
     readonly delayMs?: number;
     readonly probability?: number;
-    readonly condition?: IActionCondition;
+    readonly condition?: IConditionConfig;
 }
 
 export interface IPlayAction extends IBaseEventAction {

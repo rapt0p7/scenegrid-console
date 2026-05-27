@@ -7,8 +7,8 @@ import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import { PlaybackId, RegionId, SoundId, TickerTaskId } from '@shared/Types/Branded.js';
-import { DeepReadonly } from '@shared/DeepReadonly.js';
+import type { PlaybackId, RegionId, SoundId, TickerTaskId } from '@shared/Types/Branded.js';
+import type { DeepReadonly } from '@shared/DeepReadonly.js';
 import { isDefined, isAbsent } from '@shared/guards.js';
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';

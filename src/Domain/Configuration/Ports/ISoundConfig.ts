@@ -1,7 +1,8 @@
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
-import { BusId, GameParamId, RegionId, SoundId } from '@shared/Types/Branded.js';
-import { DeepReadonly } from '@shared/DeepReadonly.js';
+import type { BusId, GameParamId, RegionId, SoundId } from '@shared/Types/Branded.js';
+import type { DeepReadonly } from '@shared/DeepReadonly.js';
+import type { IConditionConfig } from '@domain/Shared/Types/Condition.js';
 
 export interface IBaseSoundConfig {
     readonly busId?: BusId;
@@ -50,11 +51,7 @@ export interface ISoundConfig extends IBaseSoundConfig {
 export interface IMagnetConfig {
     readonly region: RegionId;
     readonly targetRegion: RegionId;
-    readonly condition: {
-        readonly param: GameParamId;
-        readonly operator: '>' | '<' | '==' | '>=' | '<=';
-        readonly value: number;
-    };
+    readonly condition: IConditionConfig;
     readonly quantize: QuantizeType;
     readonly transitionRegionName?: RegionId;
     readonly crossfadeDuration?: number;

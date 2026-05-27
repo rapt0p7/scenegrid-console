@@ -127,7 +127,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
         });
 
         it('should ignore unknown operators', () => {
-            runOperatorTest('!=', 50, 40, false);
+            runOperatorTest('???' as any, 50, 40, false);
         });
     });
 

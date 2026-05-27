@@ -24,7 +24,7 @@ import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IStopOptions } from '@domain/Configuration/Ports/IEventConfig.js';
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
 import { isAbsent } from '@shared/guards.js';
-import { IPRNG } from '@shared/Math/SeededPRNG.js';
+import type { IPRNG } from '@shared/Math/SeededPRNG.js';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly duckingManager: IDuckingManager;

@@ -3,6 +3,7 @@ import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { RegionId } from '@shared/Types/Branded.js';
 import { isAbsent } from '@shared/guards.js';
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
+import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
 
 export interface ITransitionDecision {
     readonly targetRegion: RegionId;
@@ -31,7 +32,7 @@ export default class SmartLoopTransitionPolicy {
 
             const currentValue = this.rtpcAdapter.getValue(magnet.condition.param);
 
-            if (this.checkCondition(currentValue, magnet.condition.operator, magnet.condition.value)) {
+            if (ConditionEvaluator.evaluate(currentValue, magnet.condition.operator, magnet.condition.value)) {
                 return {
                     targetRegion: magnet.targetRegion,
                     transitionRegionName: magnet.transitionRegionName,
@@ -45,22 +46,5 @@ export default class SmartLoopTransitionPolicy {
             }
         }
         return null;
-    }
-
-    private checkCondition(current: number, operator: string, target: number): boolean {
-        switch (operator) {
-            case '>':
-                return current > target;
-            case '<':
-                return current < target;
-            case '==':
-                return current === target;
-            case '>=':
-                return current >= target;
-            case '<=':
-                return current <= target;
-            default:
-                return false;
-        }
     }
 }

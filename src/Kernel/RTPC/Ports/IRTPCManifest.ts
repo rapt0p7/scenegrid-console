@@ -1,4 +1,4 @@
-import { GameParamId } from '@shared/Types/Branded.js';
+import type { GameParamId } from '@shared/Types/Branded.js';
 
 export interface IGlobalRTPCParameterConfig {
     readonly attackMs?: number;

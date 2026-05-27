@@ -1,7 +1,7 @@
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
 import type MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
 import type { ITransitionOptions, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
-import { DeepReadonly } from '@shared/DeepReadonly.js';
+import type { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export default class MixerCoordinator {
     private baseState: MixerState = { buses: {} };

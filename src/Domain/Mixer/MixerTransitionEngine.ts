@@ -7,11 +7,11 @@ import { isDefined } from '@shared/guards.js';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import { ITransitionOptions, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
+import type { ITransitionOptions, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { BusId } from '@shared/Types/Branded.js';
 import type { Emitter } from 'mitt';
-import { DeepReadonly } from '@shared/DeepReadonly.js';
-import { IBus } from '@domain/BusSystem/Ports/IBuses.js';
+import type { DeepReadonly } from '@shared/DeepReadonly.js';
+import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
 import { typedEntries, typedKeys } from '@shared/typedObjects.js';
 
 type MixerFSMState =

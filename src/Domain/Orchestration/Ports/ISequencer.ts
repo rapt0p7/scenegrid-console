@@ -1,5 +1,5 @@
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
-import { RegionId, SoundId } from '@shared/Types/Branded.js';
+import type { RegionId, SoundId } from '@shared/Types/Branded.js';
 import type { QuantizeType } from '@domain/Shared/Types/Musical.js';
 
 export enum LoopState {

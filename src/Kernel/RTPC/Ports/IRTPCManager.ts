@@ -1,5 +1,5 @@
-import { GameParamId } from '@shared/Types/Branded.js';
-import { DeepReadonly } from '@shared/DeepReadonly.js';
+import type { GameParamId } from '@shared/Types/Branded.js';
+import type { DeepReadonly } from '@shared/DeepReadonly.js';
 
 export interface IRTPCManager {
     setValue(parameterName: GameParamId, value: number): void;
