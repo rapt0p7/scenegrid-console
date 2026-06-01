@@ -19,7 +19,11 @@ export interface ITransitionDecision {
 export default class SmartLoopTransitionPolicy {
     constructor(private readonly rtpcAdapter: IRTPCAdapter) {}
 
-    public evaluate(config: ISmartLoopSoundConfig, currentRegion: RegionId): ITransitionDecision | null {
+    public evaluate(
+        config: ISmartLoopSoundConfig,
+        currentRegion: RegionId,
+        magnetStates: boolean[]
+    ): ITransitionDecision | null {
         if (isAbsent(config.smartLoop.magnets)) return null;
 
         const length = config.smartLoop.magnets.length;
@@ -27,12 +31,23 @@ export default class SmartLoopTransitionPolicy {
             const magnet: IMagnetConfig = config.smartLoop.magnets[i];
 
             if (magnet.region !== currentRegion) continue;
-
             if (magnet.targetRegion === currentRegion) continue;
 
             const currentValue = this.rtpcAdapter.getValue(magnet.condition.param);
 
-            if (ConditionEvaluator.evaluate(currentValue, magnet.condition.operator, magnet.condition.value)) {
+            const previouslyMet = magnetStates[i];
+
+            const isMet = ConditionEvaluator.evaluate(
+                currentValue,
+                magnet.condition.operator,
+                magnet.condition.value,
+                magnet.condition.hysteresis,
+                previouslyMet
+            );
+
+            magnetStates[i] = isMet;
+
+            if (isMet) {
                 return {
                     targetRegion: magnet.targetRegion,
                     transitionRegionName: magnet.transitionRegionName,

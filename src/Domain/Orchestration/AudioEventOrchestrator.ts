@@ -21,6 +21,7 @@ interface ScheduledAction {
 
 export class AudioEventOrchestrator implements ITickable {
     private readonly scheduledActions: ScheduledAction[] = [];
+    private readonly conditionStates = new WeakMap<IConditionConfig, boolean>();
 
     constructor(
         private readonly eventMap: IEventMap,
@@ -151,6 +152,20 @@ export class AudioEventOrchestrator implements ITickable {
     private evaluateCondition(condition: DeepReadonly<IConditionConfig>): boolean {
         const currentValue = this.rtpcAdapter.getValue(condition.param) ?? 0;
 
-        return ConditionEvaluator.evaluate(currentValue, condition.operator, condition.value);
+        const conditionKey = condition as unknown as IConditionConfig;
+
+        const previouslyMet = this.conditionStates.get(conditionKey) ?? false;
+
+        const isMet = ConditionEvaluator.evaluate(
+            currentValue,
+            condition.operator,
+            condition.value,
+            condition.hysteresis,
+            previouslyMet
+        );
+
+        this.conditionStates.set(conditionKey, isMet);
+
+        return isMet;
     }
 }

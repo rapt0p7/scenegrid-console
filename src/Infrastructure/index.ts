@@ -32,6 +32,7 @@ export { CullingRunner } from './scheduling/CullingRunner.js';
 export { CullingContextProvider } from './scheduling/CullingContextProvider.js';
 export { EngineTicker } from './scheduling/EngineTicker.js';
 export { ContainerHistoryRegistry } from './state/ContainerHistoryRegistry.js';
+export { SwitchHistoryRegistry } from './state/SwitchHistoryRegistry.js';
 export { AudioNodeFactory } from './nodes/AudioNodeFactory.js';
 export { default as TinyLimiterNode } from './plugins/TinyLimiterNode.js';
 export { default as SidechainDucker } from './plugins/SidechainDucker.js';

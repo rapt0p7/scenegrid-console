@@ -617,10 +617,10 @@ describe('ConsistencyChecker', () => {
     });
 
     describe('Switch Validations', () => {
-        it('should pass a perfectly valid switch config', () => {
+        it('should pass a perfectly valid switch config (with and without hysteresis)', () => {
             const config: any = {
                 buses: { sfx: {} },
-                rtpcManifest: { surface: { defaultValue: 0 } },
+                rtpcManifest: { surface: { defaultValue: 0 }, speed: { defaultValue: 0 } },
                 soundMap: {
                     wood: { busId: 'sfx' },
                     stone: { busId: 'sfx' },
@@ -630,6 +630,14 @@ describe('ConsistencyChecker', () => {
                         busId: 'sfx',
                         switchGroup: 'surface',
                         switches: { 0: 'wood', 1: 'stone' },
+                        defaultSwitch: 'def'
+                    },
+                    footstep_with_hysteresis: {
+                        isSwitch: true,
+                        busId: 'sfx',
+                        switchGroup: 'speed',
+                        hysteresis: 15,
+                        switches: { 0: 'wood', 50: 'stone' },
                         defaultSwitch: 'def'
                     }
                 }
@@ -671,6 +679,26 @@ describe('ConsistencyChecker', () => {
             );
             expect(console.error).toHaveBeenCalledWith(
                 expect.stringContaining('Type Error at "soundMap.bad_switch2.switchGroup"')
+            );
+        });
+
+        it('should catch negative hysteresis in switch containers', () => {
+            const config: any = {
+                buses: { sfx: {} },
+                rtpcManifest: { speed: { defaultValue: 0 } },
+                soundMap: {
+                    bad_switch: {
+                        isSwitch: true,
+                        busId: 'sfx',
+                        switchGroup: 'speed',
+                        hysteresis: -5,
+                        switches: {}
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining('Switch "bad_switch" hysteresis cannot be negative.')
             );
         });
 
@@ -1476,6 +1504,59 @@ describe('ConsistencyChecker', () => {
 
             expect(ConsistencyChecker.validate(config)).toBe(true);
         });
+
+        it('should pass perfectly valid magnets with hysteresis', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { intensity: { defaultValue: 0 } },
+                soundMap: {
+                    music_loop: {
+                        busId: 'master',
+                        smartLoop: {
+                            regions: { intro: [0, 100], main: [100, 200] },
+                            magnets: [
+                                {
+                                    region: 'intro',
+                                    targetRegion: 'main',
+                                    quantize: 'NextBar',
+                                    condition: { param: 'intensity', operator: '>', value: 50, hysteresis: 10 }
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+            expect(ConsistencyChecker.validate(config)).toBe(true);
+        });
+
+        it('should catch negative hysteresis in magnet conditions', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { intensity: { defaultValue: 0 } },
+                soundMap: {
+                    music_loop: {
+                        busId: 'master',
+                        smartLoop: {
+                            regions: { intro: [0, 100], main: [100, 200] },
+                            magnets: [
+                                {
+                                    region: 'intro',
+                                    targetRegion: 'main',
+                                    quantize: 'NextBar',
+                                    condition: { param: 'intensity', operator: '>', value: 50, hysteresis: -20 }
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+            ConsistencyChecker.validate(config);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Hysteresis at "soundMap.music_loop.smartLoop.magnets[0].condition.hysteresis" cannot be negative.'
+                )
+            );
+        });
     });
 
     describe('Event Actions (Base Properties: Delay, Probability, Conditions)', () => {
@@ -1484,7 +1565,7 @@ describe('ConsistencyChecker', () => {
             vi.spyOn(console, 'error').mockImplementation(() => {});
         });
 
-        it('should pass valid base properties (delayMs, probability, condition)', () => {
+        it('should pass valid base properties (delayMs, probability, condition with hysteresis)', () => {
             const config: any = {
                 buses: { master: {} },
                 rtpcManifest: { boss_health: { defaultValue: 100 } },
@@ -1497,7 +1578,7 @@ describe('ConsistencyChecker', () => {
                                 target: 'sfx_hit',
                                 delayMs: 1500,
                                 probability: 0.5,
-                                condition: { param: 'boss_health', operator: '<=', value: 20 }
+                                condition: { param: 'boss_health', operator: '<=', value: 20, hysteresis: 5 }
                             }
                         ]
                     }
@@ -1525,6 +1606,33 @@ describe('ConsistencyChecker', () => {
 
             expect(console.error).toHaveBeenCalledWith(
                 expect.stringContaining('Action at "events.bad_delay.actions[0].delayMs" cannot be negative.')
+            );
+        });
+
+        it('should catch negative hysteresis in event conditions', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { hp: { defaultValue: 100 } },
+                soundMap: { sfx: { busId: 'master' } },
+                events: {
+                    bad_hysteresis_event: {
+                        actions: [
+                            {
+                                type: 'play',
+                                target: 'sfx',
+                                condition: { param: 'hp', operator: '<', value: 20, hysteresis: -10 }
+                            }
+                        ]
+                    }
+                }
+            };
+
+            ConsistencyChecker.validate(config);
+
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    'Action at "events.bad_hysteresis_event.actions[0].condition.hysteresis" cannot be negative.'
+                )
             );
         });
 

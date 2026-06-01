@@ -115,6 +115,15 @@ const testEventMap: IEventMap = {
             }
         ]
     },
+    ['Event_With_Hysteresis' as EventId]: {
+        actions: [
+            {
+                type: 'play',
+                target: 'sfx_critical_hp' as SoundId,
+                condition: { param: 'hp' as GameParamId, operator: '<', value: 20, hysteresis: 5 }
+            }
+        ]
+    },
     ['Load_Level_Bank' as EventId]: {
         actions: [{ type: 'load_bank', target: 'Bank_Level1' as BankId }]
     },
@@ -364,6 +373,32 @@ describe('AudioEventOrchestrator (State Machine)', () => {
 
             expect(mockRouter.play).toHaveBeenCalledWith('sfx_low_hp');
             expect(mockRouter.play).not.toHaveBeenCalledWith('sfx_high_hp');
+        });
+    });
+
+    describe('Hysteresis in Event Conditions', () => {
+        it('should maintain condition state within the hysteresis dead zone (Schmitt Trigger)', () => {
+            mockRtpcAdapter.getValue.mockReturnValue(30);
+            dispatcher.postEvent('Event_With_Hysteresis' as EventId);
+            expect(mockRouter.play).not.toHaveBeenCalled();
+
+            mockRtpcAdapter.getValue.mockReturnValue(22);
+            dispatcher.postEvent('Event_With_Hysteresis' as EventId);
+            expect(mockRouter.play).not.toHaveBeenCalled();
+
+            mockRtpcAdapter.getValue.mockReturnValue(14);
+            dispatcher.postEvent('Event_With_Hysteresis' as EventId);
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_critical_hp');
+            mockRouter.play.mockClear();
+
+            mockRtpcAdapter.getValue.mockReturnValue(22);
+            dispatcher.postEvent('Event_With_Hysteresis' as EventId);
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_critical_hp');
+            mockRouter.play.mockClear();
+
+            mockRtpcAdapter.getValue.mockReturnValue(26);
+            dispatcher.postEvent('Event_With_Hysteresis' as EventId);
+            expect(mockRouter.play).not.toHaveBeenCalled();
         });
     });
 

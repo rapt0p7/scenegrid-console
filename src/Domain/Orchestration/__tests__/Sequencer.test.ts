@@ -542,7 +542,7 @@ describe('Sequencer (Interactive Music)', () => {
             triggerTick();
 
             expect(mockTransitionPolicy.evaluate).toHaveBeenCalledTimes(1);
-            expect(mockTransitionPolicy.evaluate).toHaveBeenCalledWith(config, 'intro');
+            expect(mockTransitionPolicy.evaluate).toHaveBeenCalledWith(config, 'intro', expect.any(Array));
         });
 
         it('should automatically transition to magnet target if TransitionPolicy returns a decision', () => {

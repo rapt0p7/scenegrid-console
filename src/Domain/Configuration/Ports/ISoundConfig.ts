@@ -85,6 +85,7 @@ export interface ISwitchSoundConfig extends IBaseSoundConfig {
     readonly switchGroup: GameParamId;
     readonly switches: Record<string | number, SoundId>;
     readonly defaultSwitch?: SoundId;
+    readonly hysteresis?: number;
 }
 
 export interface ILayerConfig {

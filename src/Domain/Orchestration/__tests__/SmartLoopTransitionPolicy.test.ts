@@ -35,7 +35,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
 
     it('should return null if there are no magnets in the config', () => {
         const config = createConfig();
-        const result = policy.evaluate(config, 'main' as RegionId);
+        const result = policy.evaluate(config, 'main' as RegionId, []);
         expect(result).toBeNull();
     });
 
@@ -49,7 +49,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
             }
         ]);
 
-        const result = policy.evaluate(config, 'main' as RegionId);
+        const result = policy.evaluate(config, 'main' as RegionId, []);
         expect(result).toBeNull();
         expect(mockRtpcAdapter.getValue).not.toHaveBeenCalled();
     });
@@ -65,7 +65,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
         ]);
 
         mockRtpcAdapter.getValue.mockReturnValue(10);
-        const result = policy.evaluate(config, 'main' as RegionId);
+        const result = policy.evaluate(config, 'main' as RegionId, []);
 
         expect(result).toBeNull();
     });
@@ -87,7 +87,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
             ]);
 
             mockRtpcAdapter.getValue.mockReturnValue(currentValue);
-            const result = policy.evaluate(config, 'main' as RegionId);
+            const result = policy.evaluate(config, 'main' as RegionId, []);
 
             if (shouldTrigger) {
                 expect(result).not.toBeNull();
@@ -131,6 +131,46 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
         });
     });
 
+    describe('Hysteresis (Schmitt Trigger)', () => {
+        it('should respect hysteresis bounds and update magnetStates array (Zero-Allocation approach)', () => {
+            const config = createConfig([
+                {
+                    region: 'main' as RegionId,
+                    targetRegion: 'outro' as RegionId,
+                    quantize: 'Immediate',
+                    condition: {
+                        param: 'intensity' as GameParamId,
+                        operator: '>',
+                        value: 50,
+                        hysteresis: 5
+                    }
+                }
+            ]);
+
+            const magnetStates: boolean[] = [];
+
+            mockRtpcAdapter.getValue.mockReturnValue(52);
+            let result = policy.evaluate(config, 'main' as RegionId, magnetStates);
+            expect(result).toBeNull();
+            expect(magnetStates[0]).toBe(false);
+
+            mockRtpcAdapter.getValue.mockReturnValue(56);
+            result = policy.evaluate(config, 'main' as RegionId, magnetStates);
+            expect(result).not.toBeNull();
+            expect(magnetStates[0]).toBe(true);
+
+            mockRtpcAdapter.getValue.mockReturnValue(48);
+            result = policy.evaluate(config, 'main' as RegionId, magnetStates);
+            expect(result).not.toBeNull();
+            expect(magnetStates[0]).toBe(true);
+
+            mockRtpcAdapter.getValue.mockReturnValue(44);
+            result = policy.evaluate(config, 'main' as RegionId, magnetStates);
+            expect(result).toBeNull();
+            expect(magnetStates[0]).toBe(false);
+        });
+    });
+
     it('should return the FIRST matching magnet if multiple are valid (Priority: top to bottom)', () => {
         const config = createConfig([
             {
@@ -149,7 +189,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
 
         mockRtpcAdapter.getValue.mockReturnValue(80);
 
-        const result = policy.evaluate(config, 'main' as RegionId);
+        const result = policy.evaluate(config, 'main' as RegionId, []);
 
         expect(result).not.toBeNull();
         expect(result?.targetRegion).toBe('outro');
@@ -169,7 +209,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
         ]);
 
         mockRtpcAdapter.getValue.mockReturnValue(0);
-        const result = policy.evaluate(config, 'main' as RegionId);
+        const result = policy.evaluate(config, 'main' as RegionId, []);
 
         expect(result).toEqual({
             targetRegion: 'outro',

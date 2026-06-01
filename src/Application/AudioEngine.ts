@@ -16,7 +16,6 @@ import {
 import Sequencer from '@domain/Orchestration/Sequencer.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
-import type { IPluginFactory } from '@infrastructure';
 import {
     AudioBufferLoader,
     AudioBusSystem,
@@ -35,8 +34,10 @@ import {
     SoundInstance,
     SoundPoolManager,
     TinyLimiterNode,
-    BankManagerAdapter
+    BankManagerAdapter,
+    SwitchHistoryRegistry
 } from '@infrastructure';
+import type { IPluginFactory } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 import deepFreeze from '@shared/deepFreeze.js';
 import { isDefined } from '@shared/guards.js';
@@ -342,6 +343,7 @@ export class AudioEngine implements IAudioEngine {
             const containerHistoryRegistry = new ContainerHistoryRegistry();
             const containerPolicy = new ContainerPlaybackPolicy(this.#prng);
             const switchPolicy = new SwitchPlaybackPolicy();
+            const switchHistoryRegistry = new SwitchHistoryRegistry();
 
             this.#router = new AudioRouter({
                 soundController: this.#soundController,
@@ -352,6 +354,7 @@ export class AudioEngine implements IAudioEngine {
                 instanceRTPCBinder: this.#instanceRTPCBinder,
                 rtpcAdapter: this.#rtpcManager,
                 switchPolicy,
+                switchHistoryRegistry,
                 prng: this.#prng
             });
 

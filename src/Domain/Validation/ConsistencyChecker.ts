@@ -453,6 +453,14 @@ export default class ConsistencyChecker {
 
                 this.assertRequiredType(`${magnetPath}.condition.operator`, condObj.operator, 'string');
                 this.assertRequiredType(`${magnetPath}.condition.value`, condObj.value, 'number');
+
+                if (isDefined(condObj.hysteresis)) {
+                    if (this.assertOptionalType(`${magnetPath}.condition.hysteresis`, condObj.hysteresis, 'number')) {
+                        if (isDefined(condObj.hysteresis) && condObj.hysteresis < 0) {
+                            this.errors.push(`Hysteresis at "${magnetPath}.condition.hysteresis" cannot be negative.`);
+                        }
+                    }
+                }
             }
         }
     }
@@ -811,6 +819,14 @@ export default class ConsistencyChecker {
                 this.warnings.push(`Switch "${soundId}" references missing defaultSwitch "${cfg.defaultSwitch}".`);
             }
         }
+
+        if (isDefined(cfg.hysteresis)) {
+            if (this.assertOptionalType(`soundMap.${soundId}.hysteresis`, cfg.hysteresis, 'number')) {
+                if (cfg.hysteresis < 0) {
+                    this.errors.push(`Switch "${soundId}" hysteresis cannot be negative.`);
+                }
+            }
+        }
     }
 
     private checkRTPCManifest(): void {
@@ -982,6 +998,14 @@ export default class ConsistencyChecker {
                         }
 
                         this.assertRequiredType(`${conditionPath}.value`, cond.value, 'number');
+
+                        if (isDefined(cond.hysteresis)) {
+                            if (this.assertOptionalType(`${conditionPath}.hysteresis`, cond.hysteresis, 'number')) {
+                                if (isDefined(cond.hysteresis) && cond.hysteresis < 0) {
+                                    this.errors.push(`Action at "${conditionPath}.hysteresis" cannot be negative.`);
+                                }
+                            }
+                        }
                     }
                 }
 

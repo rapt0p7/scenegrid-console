@@ -16,6 +16,7 @@ import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 import type SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 import type { IContainerHistoryRegistry } from '@domain/Managers/Ports/IContainerHistoryRegistry.js';
+import type { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
 import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
@@ -35,6 +36,7 @@ export default class AudioRouter implements IAudioRouter {
     private readonly instanceRTPCBinder: InstanceRTPCBinder;
     private readonly rtpcAdapter: IRTPCAdapter;
     private readonly switchPolicy: SwitchPlaybackPolicy;
+    private readonly switchHistoryRegistry: ISwitchHistoryRegistry;
     private scattererOrchestrator?: ScattererOrchestrator;
     private readonly prng: IPRNG;
 
@@ -47,6 +49,7 @@ export default class AudioRouter implements IAudioRouter {
         rtpcAdapter,
         instanceRTPCBinder,
         switchPolicy,
+        switchHistoryRegistry,
         prng
     }: {
         soundController: ISoundController;
@@ -57,6 +60,7 @@ export default class AudioRouter implements IAudioRouter {
         rtpcAdapter: IRTPCAdapter;
         instanceRTPCBinder: InstanceRTPCBinder;
         switchPolicy: SwitchPlaybackPolicy;
+        switchHistoryRegistry: ISwitchHistoryRegistry;
         prng: IPRNG;
     }) {
         this.soundController = soundController;
@@ -67,6 +71,7 @@ export default class AudioRouter implements IAudioRouter {
         this.instanceRTPCBinder = instanceRTPCBinder;
         this.rtpcAdapter = rtpcAdapter;
         this.switchPolicy = switchPolicy;
+        this.switchHistoryRegistry = switchHistoryRegistry;
         this.prng = prng;
     }
 
@@ -302,7 +307,10 @@ export default class AudioRouter implements IAudioRouter {
         depth: number
     ): PlaybackId | PlaybackId[] | null {
         const currentValue = this.rtpcAdapter.getValue(config.switchGroup);
-        const nextSource = this.switchPolicy.evaluate(config, currentValue);
+        const currentState = this.switchHistoryRegistry.getHistory(name);
+        const { soundId: nextSource, nextState } = this.switchPolicy.evaluateNext(config, currentValue, currentState);
+
+        this.switchHistoryRegistry.updateHistory(name, nextState);
 
         if (!nextSource) {
             console.warn(

@@ -35,6 +35,7 @@ interface TrackContext {
     regionQueue: QueuedRegion[];
     loopRegion: RegionId | null;
     currentRegion: RegionId | null;
+    magnetStates: boolean[];
 }
 
 export default class Sequencer implements ISequencer {
@@ -275,7 +276,7 @@ export default class Sequencer implements ISequencer {
             if (isDefined(track.currentRegion)) {
                 const config = this.router.getSoundConfig(soundId);
                 if (isDefined(config) && 'smartLoop' in config) {
-                    const decision = this.transitionPolicy.evaluate(config, track.currentRegion);
+                    const decision = this.transitionPolicy.evaluate(config, track.currentRegion, track.magnetStates);
 
                     if (decision) {
                         this.transitionTo({
@@ -343,7 +344,8 @@ export default class Sequencer implements ISequencer {
                 gridStartTime: null,
                 regionQueue: [],
                 loopRegion: null,
-                currentRegion: null
+                currentRegion: null,
+                magnetStates: []
             });
         }
         return this.tracks.get(soundId)!;
