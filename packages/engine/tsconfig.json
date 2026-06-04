@@ -1,0 +1,21 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "./dist",
+        "paths": {
+            "@scene-grid/shared": ["../shared/src/index.ts"],
+            "@domain/*": ["./src/Domain/*"],
+            "@infrastructure/*": ["./src/Infrastructure/*"],
+            "@infrastructure": ["./src/Infrastructure/index.ts"],
+            "@kernel/*": ["./src/Kernel/*"],
+            "@application/*": ["./src/Application/*"]
+        },
+        "types": ["./src/audio-worklet-global-scope"]
+    },
+    "include": ["src/**/*.ts", "**/scripts/**/*.ts", "vite.config.ts"],
+    "references": [
+        {
+            "path": "../shared"
+        }
+    ]
+}

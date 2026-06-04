@@ -1,6 +1,6 @@
 // noinspection D
 
-import { AudioEngine, BankId } from 'scenegrid-console';
+import { AudioEngine, BankId } from '@scene-grid/engine';
 
 import { Buses, Snapshots, SoundMap, RTPCManifest, Events, BankManifest } from './audio-config/index.js';
 import soundManifest from './soundManifest.js';
@@ -72,7 +72,7 @@ async function bootstrap() {
             audio.play('backgroundMain3', { isLoop: true });
 
             if (process.env.NODE_ENV !== 'production') {
-                void import('scenegrid-console/debug').then(({ attachDebugUI, initAudioDebugPanel }) => {
+                void import('@scene-grid/inspector').then(({ attachDebugUI, initAudioDebugPanel }) => {
                     void attachDebugUI(audio, { wrapperSelector: '#wrapper' });
                     initAudioDebugPanel(audio);
                 });

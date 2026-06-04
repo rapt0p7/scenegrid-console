@@ -1,0 +1,13 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "@domain/*": ["./src/Domain/*"],
+            "@infrastructure/*": ["./src/Infrastructure/*"],
+            "@infrastructure": ["./src/Infrastructure/index.ts"],
+            "@kernel/*": ["./src/Kernel/*"],
+            "@application/*": ["./src/Application/*"]
+        }
+    },
+    "references": []
+}

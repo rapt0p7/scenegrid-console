@@ -1,0 +1,28 @@
+{
+    "name": "@scene-grid/engine",
+    "version": "1.0.0",
+    "files": [
+        "dist"
+    ],
+    "type": "module",
+    "main": "./dist/engine.es.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/engine.es.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build"
+    },
+    "dependencies": {
+        "@scene-grid/shared": "*",
+        "globalthis": "1.0.4"
+    },
+    "peerDependencies": {
+        "mitt": "3.0.1",
+        "standardized-audio-context": "25.3.77",
+        "worker-timers": "8.0.30"
+    }
+}

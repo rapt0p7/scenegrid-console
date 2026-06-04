@@ -1,4 +1,4 @@
-import type { IEventMap, SoundId } from 'src/index.js';
+import type { IEventMap, SoundId } from '@scene-grid/engine';
 
 export default {
     stop: {

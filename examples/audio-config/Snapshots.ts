@@ -1,4 +1,4 @@
-import type { ISnapshots } from 'src/index.js';
+import type { ISnapshots } from '@scene-grid/engine';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Snapshots = {

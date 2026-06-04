@@ -14,16 +14,18 @@ export default tseslint.config(
         ignores: ['node_modules/', '**/build/**', '**/dist/**', '**/*.js', 'coverage/']
     },
     {
-        files: ['**/*.ts'],
+        files: ['**/*.ts', '**/*.config.ts'],
         ignores: ['**/*.json', '**/*md'],
         languageOptions: {
             parser: tseslint.parser,
             parserOptions: {
                 ecmaVersion: 'latest',
                 sourceType: 'module',
-                projectService: true,
-                tsconfigRootDir: import.meta.dirname,
-                warnOnUnsupportedTypeScriptVersion: false
+                projectService: {
+                    allowDefaultProject: ['vitest.config.ts', 'vitest.setup.ts', 'eslint.config.js'],
+                    defaultProject: './tsconfig.base.json'
+                },
+                tsconfigRootDir: import.meta.dirname
             }
         },
         plugins: {
@@ -35,20 +37,19 @@ export default tseslint.config(
             'import/resolver': {
                 typescript: {
                     alwaysTryTypes: true,
-                    project: './tsconfig.json'
+                    project: './tsconfig.base.json'
                 },
                 node: {
                     extensions: ['.js', '.ts']
                 }
             },
             'boundaries/elements': [
-                { type: 'application', mode: 'full', pattern: 'src/Application' },
-                { type: 'domain', mode: 'full', pattern: 'src/Domain' },
-                { type: 'kernel', mode: 'full', pattern: 'src/Kernel' },
-                { type: 'debug', mode: 'full', pattern: 'src/Infrastructure/debug' },
-                { type: 'infrastructure', mode: 'full', pattern: 'src/Infrastructure' },
-                { type: 'shared', mode: 'full', pattern: 'src/Shared' },
-                { type: 'helpers', mode: 'full', pattern: 'src/helpers' },
+                { type: 'application', mode: 'full', pattern: 'packages/engine/src/Application' },
+                { type: 'domain', mode: 'full', pattern: 'packages/engine/src/Domain' },
+                { type: 'kernel', mode: 'full', pattern: 'packages/engine/src/Kernel' },
+                { type: 'debug', mode: 'full', pattern: 'packages/inspector' },
+                { type: 'infrastructure', mode: 'full', pattern: 'packages/engine/src/Infrastructure' },
+                { type: 'shared', mode: 'full', pattern: 'packages/shared' },
                 { type: 'root', mode: 'full', pattern: 'src/*.ts' }
             ]
         },
@@ -58,18 +59,28 @@ export default tseslint.config(
                 {
                     zones: [
                         {
-                            target: './src/Domain/**/*.ts',
-                            from: ['./src/Infrastructure/**/*.ts', './src/Application/**/*.ts'],
+                            target: './packages/engine/src/Domain/**/*.ts',
+                            from: [
+                                './packages/engine/src/Infrastructure/**/*.ts',
+                                './packages/engine/src/Application/**/*.ts'
+                            ],
                             message: 'Domain layer must be pure. Infrastructure or Application details leaked.'
                         },
                         {
-                            target: './src/Kernel/**/*.ts',
-                            from: ['./src/Domain/**/*.ts', './src/Infrastructure/**/*.ts'],
+                            target: './packages/engine/src/Kernel/**/*.ts',
+                            from: [
+                                './packages/engine/src/Domain/**/*.ts',
+                                './packages/engine/src/Infrastructure/**/*.ts'
+                            ],
                             message: 'Kernel should only contain low-level logic. Domain logic found.'
                         },
                         {
-                            target: './src/Shared/**/*.ts',
-                            from: ['./src/Domain/**/*.ts', './src/Kernel/**/*.ts', './src/Infrastructure/**/*.ts'],
+                            target: './packages/shared/**/*.ts',
+                            from: [
+                                './packages/engine/src/Domain/**/*.ts',
+                                './packages/engine/src/Kernel/**/*.ts',
+                                './packages/engine/src/Infrastructure/**/*.ts'
+                            ],
                             message: 'Shared utilities must be independent of business logic.'
                         }
                     ]
@@ -124,7 +135,7 @@ export default tseslint.config(
                 {
                     patterns: [
                         {
-                            group: ['@infrastructure/*', 'src/Infrastructure/*'],
+                            group: ['@infrastructure/*', 'packages/engine/src/Infrastructure/*'],
                             message: 'Deep imports from Infrastructure are forbidden. Use the public API facade.'
                         }
                     ]
@@ -289,7 +300,31 @@ export default tseslint.config(
         }
     },
     {
-        files: ['src/Infrastructure/**/*.{js,ts,jsx,tsx}'],
+        files: ['**/vite.config.ts', 'packages/*/vite.config.ts'],
+        languageOptions: {
+            parser: tseslint.parser,
+            parserOptions: {
+                project: false
+            }
+        },
+        rules: {
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/no-explicit-any': 'off'
+        }
+    },
+    {
+        files: ['vitest.setup.ts', '**/vitest.setup.ts'],
+        languageOptions: {
+            parserOptions: {
+                project: false
+            }
+        }
+    },
+    {
+        files: ['packages/engine/src/Infrastructure/**/*.{js,ts,jsx,tsx}'],
         rules: {
             'no-restricted-imports': 'off'
         }

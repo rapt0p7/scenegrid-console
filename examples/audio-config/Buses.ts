@@ -1,4 +1,4 @@
-import type { IBuses } from 'src/index.js';
+import type { IBuses } from '@scene-grid/engine';
 
 export default {
     musicMain: {

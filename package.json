@@ -1,7 +1,7 @@
 {
-    "name": "scenegrid-console",
-    "version": "1.0.0",
-    "description": "Snapshot-Driven Virtual Mixing Console",
+    "name": "scenegrid-workspace",
+    "private": true,
+    "description": "Snapshot-Driven Virtual Mixing Console Workspace",
     "license": "SEE LICENSE IN LICENSE.md",
     "author": {
         "name": "Igor Zabrodin",
@@ -11,50 +11,30 @@
         "type": "git",
         "url": "https://github.com/rapt0p7/scenegrid-console"
     },
-    "files": [
-        "dist",
-        "README.md",
-        "LICENSE.md"
+    "workspaces": [
+        "packages/*",
+        "examples"
     ],
     "type": "module",
-    "main": "./dist/scenegrid-audio.index.es.js",
-    "module": "./dist/scenegrid-audio.index.es.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/scenegrid-audio.index.es.js"
-        },
-        "./debug": {
-            "types": "./dist/debug.d.ts",
-            "import": "./dist/scenegrid-audio.debug.es.js"
-        }
-    },
     "scripts": {
-        "build": "npm run build:lib && npm run build:demo",
-        "build:demo": "vite build",
-        "build:lib": "vite build --config vite.library.config.ts",
+        "build": "npm run build --workspaces --if-present",
+        "dev": "npm run dev --workspace=examples",
         "changelog": "git cliff -o CHANGELOG.md",
         "changelog:latest": "git cliff --latest -o CHANGELOG.md",
         "changelog:preview": "git cliff --latest",
-        "createDependencyGraph": "npx depcruise src --include-only \"^src\" --exclude \"(__tests__|\\\\.test\\\\.ts$|\\\\.spec\\\\.ts$)\" --output-type mermaid > docs/dependency-graph.mmd",
-        "dev": "vite",
-        "docs": "typedoc",
-        "license-checker": "license-checker --production --failOn \"GPL;GPL-1.0;GPL-2.0;GPL-3.0;LGPL;LGPL-2.0;LGPL-2.1;LGPL-3.0;AGPL;AGPL-1.0;AGPL-3.0;SSPL;CDDL;EUPL;MPL-1.0;NPL;QPL;CPAL;RPL\"\n",
-        "lint:architecture": "depcruise src --config .dependency-cruiser.cjs",
+        "createDependencyGraph": "npx depcruise packages/engine/src packages/shared/src --config .dependency-cruiser.cjs --include-only \"^packages/(engine|shared)/src\" --exclude \"(__tests__|\\\\.test\\\\.ts$|\\\\.spec\\\\.ts$)\" --output-type mermaid > docs/dependency-graph.mmd",
+        "license-checker": "license-checker --production --failOn \"GPL;GPL-1.0;GPL-2.0;GPL-3.0;LGPL;LGPL-2.0;LGPL-2.1;LGPL-3.0;AGPL;AGPL-1.0;AGPL-3.0;SSPL;CDDL;EUPL;MPL-1.0;NPL;QPL;CPAL;RPL\"",
+        "lint:architecture": "depcruise packages/engine/src --config .dependency-cruiser.cjs",
         "prepare": "husky || true",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
         "test:watch": "vitest",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "tsc -b",
         "format": "oxfmt --no-error-on-unmatched-pattern",
         "format:check": "oxfmt --check",
         "lint:fast": "oxlint --deny-warnings",
         "lint:arch": "eslint .",
         "lint": "npm run lint:fast && npm run lint:arch"
-    },
-    "dependencies": {
-        "globalthis": "1.0.4"
     },
     "devDependencies": {
         "@commitlint/cli": "20.5.0",
@@ -95,14 +75,6 @@
         "vite-plugin-dts": "4.5.4",
         "vite-plugin-static-copy": "4.0.1",
         "vitest": "4.1.0"
-    },
-    "peerDependencies": {
-        "@tweakpane/core": "2.0.5",
-        "@tweakpane/plugin-essentials": "0.2.1",
-        "mitt": "3.0.1",
-        "standardized-audio-context": "25.3.77",
-        "tweakpane": "4.0.5",
-        "worker-timers": "8.0.30"
     },
     "overrides": {
         "typedoc": {

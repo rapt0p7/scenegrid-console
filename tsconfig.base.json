@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "jsx": "react",
+        "moduleResolution": "bundler",
+        "moduleDetection": "force",
+        "isolatedModules": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "declaration": true,
+        "sourceMap": true,
+        "composite": true,
+        "lib": ["ESNext", "DOM", "WebWorker"],
+        "paths": {
+            "@scene-grid/shared": ["./packages/shared/src/index.ts"],
+            "@scene-grid/engine": ["./packages/engine/src/index.ts"],
+            "@scene-grid/inspector": ["./packages/inspector/src/index.ts"]
+        }
+    },
+    "exclude": ["node_modules", "dist", "public"]
+}

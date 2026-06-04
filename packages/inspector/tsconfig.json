@@ -1,0 +1,16 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "./dist",
+        "types": ["../engine/src/audio-worklet-global-scope"]
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx", "**/scripts/**/*.ts", "vite.config.ts"],
+    "references": [
+        {
+            "path": "../shared"
+        },
+        {
+            "path": "../engine"
+        }
+    ]
+}

@@ -1,3 +1,3 @@
-import { IRTPCManifest } from 'src/index.js';
+import type { IRTPCManifest } from '@scene-grid/engine';
 
 export default {} as IRTPCManifest;

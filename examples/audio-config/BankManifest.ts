@@ -1,4 +1,4 @@
-import type { IBankManifest, BankId, SoundId } from 'src/index.js';
+import type { IBankManifest, BankId, SoundId } from '@scene-grid/engine';
 
 export default {
     music: {

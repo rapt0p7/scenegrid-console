@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
 
-globalThis.AudioWorkletProcessor = class AudioWorkletProcessor {
+(globalThis as Record<string, unknown>).AudioWorkletProcessor = class AudioWorkletProcessor {
     public port = {
         postMessage: vi.fn(),
         onmessage: null
     };
 } as any;
 
-globalThis.registerProcessor = vi.fn();
+(globalThis as Record<string, unknown>).registerProcessor = vi.fn();

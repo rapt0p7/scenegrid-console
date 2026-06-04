@@ -1,40 +1,4 @@
 {
-    "compilerOptions": {
-        "target": "ESNext",
-        "module": "ESNext",
-        "jsx": "react",
-        "moduleResolution": "bundler",
-        "moduleDetection": "force",
-        "isolatedModules": true,
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
-        "resolveJsonModule": true,
-        "declaration": true,
-        "sourceMap": true,
-        "outDir": "./public",
-        "paths": {
-            "@domain/*": ["./src/Domain/*"],
-            "@shared/*": ["./src/Shared/*"],
-            "@infrastructure/*": ["./src/Infrastructure/*"],
-            "@infrastructure": ["./src/Infrastructure/index.ts"],
-            "@kernel/*": ["./src/Kernel/*"],
-            "@application/*": ["./src/Application/*"],
-            "*": ["./*"],
-            "scenegrid-console": ["./src/index.ts"],
-            "scenegrid-console/debug": ["./src/debug.ts"]
-        },
-        "lib": ["ESNext", "DOM", "WebWorker"],
-        "types": ["./src/audio-worklet-global-scope", "vite/client"]
-    },
-    "include": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "examples/**/*.ts",
-        "examples/**/*.tsx",
-        "src/audio.d.ts",
-        "*.ts",
-        "vite.config.ts",
-        "vite.library.config.ts"
-    ],
-    "exclude": ["node_modules", "dist", "public"]
+    "files": [],
+    "references": [{ "path": "./packages/shared" }, { "path": "./packages/engine" }, { "path": "./packages/inspector" }]
 }

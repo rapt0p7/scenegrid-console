@@ -1,0 +1,16 @@
+{
+    "name": "scenegrid-demo",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "type-check": "tsc -p tsconfig.json --noEmit",
+        "type-check:watch": "tsc -p tsconfig.json --noEmit -w"
+    },
+    "dependencies": {
+        "@scene-grid/engine": "*",
+        "@scene-grid/inspector": "*",
+        "@scene-grid/shared": "*"
+    }
+}
