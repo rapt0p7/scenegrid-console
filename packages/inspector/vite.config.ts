@@ -7,6 +7,7 @@ import dts from 'vite-plugin-dts';
 // @ts-ignore
 import { audioWorkletIsolator } from '../../scripts/vite-worklet-isolator';
 
+// oxlint-disable-next-line no-underscore-dangle
 const __dirname = import.meta.dirname;
 
 export default defineConfig({
@@ -36,7 +37,6 @@ export default defineConfig({
     plugins: [
         audioWorkletIsolator(),
         dts({
-            rollupTypes: true,
             tsconfigPath: './tsconfig.build.json'
         })
     ]

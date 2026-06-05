@@ -111,6 +111,7 @@ async function bootstrap() {
                     rtpcManifest: newModule.RTPCManifest
                 };
 
+                // oxlint-disable-next-line no-underscore-dangle
                 await audio._hotReloadConfig(updatedConfig);
             }
         });

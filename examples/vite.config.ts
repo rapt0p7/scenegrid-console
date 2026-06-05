@@ -8,6 +8,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 // @ts-ignore
 import { audioWorkletIsolator } from '../scripts/vite-worklet-isolator';
 
+// oxlint-disable-next-line no-underscore-dangle
 const __dirname = import.meta.dirname;
 
 export default defineConfig(({ mode }) => ({

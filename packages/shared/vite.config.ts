@@ -3,6 +3,7 @@ import path from 'node:path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
+// oxlint-disable-next-line no-underscore-dangle
 const __dirname = import.meta.dirname;
 
 export default defineConfig({
@@ -18,7 +19,6 @@ export default defineConfig({
     },
     plugins: [
         dts({
-            rollupTypes: true,
             tsconfigPath: './tsconfig.build.json'
         })
     ]
