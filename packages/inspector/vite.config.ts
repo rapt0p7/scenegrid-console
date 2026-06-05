@@ -23,7 +23,11 @@ export default defineConfig({
                 '@scene-grid/engine',
                 'tweakpane',
                 '@tweakpane/core',
-                '@tweakpane/plugin-essentials'
+                '@tweakpane/plugin-essentials',
+                'standardized-audio-context',
+                'mitt',
+                'worker-timers',
+                'globalthis'
             ]
         },
         sourcemap: true,

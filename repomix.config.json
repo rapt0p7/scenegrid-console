@@ -22,7 +22,7 @@
             "includeDiffs": false
         }
     },
-    "include": ["src/**/*.js", "src/**/*.ts"],
+    "include": ["packages/**/*.js", "packages/**/*.ts"],
     "ignore": {
         "useGitignore": true,
         "useDefaultPatterns": true,

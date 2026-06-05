@@ -9,5 +9,6 @@
             "@application/*": ["./src/Application/*"]
         }
     },
+    "include": ["src/**/*.ts"],
     "references": []
 }

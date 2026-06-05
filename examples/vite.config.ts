@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
             targets: [
                 {
                     src: 'assets/**/*',
-                    dest: 'assets',
+                    dest: '/',
                     rename: (_name, _extension, fullPath) => {
                         const index = fullPath.lastIndexOf('assets');
                         const relative = index === -1 ? fullPath : fullPath.slice(index + 'assets'.length);
