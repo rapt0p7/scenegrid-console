@@ -45,8 +45,8 @@ SceneGrid is structured as a monorepo to enforce strict architectural boundaries
 
 For a deep dive into the system's topology, including **C4 Container Diagrams** and the complete **Audio Signal Flow**, please refer to the detailed documentation:
 
-- 🇬🇧 [Audio System Architecture - English](https://www.google.com/search?q=./docs/AudioSystem%2520-%2520Description.md)
-- 🇷🇺 [Архитектура Аудио Системы - Русский](https://www.google.com/search?q=./docs/AudioSystem%2520-%2520Description.RU.md)
+- 🇬🇧 [Audio System Architecture - English](./docs/AudioSystem%2520-%2520Description.md)
+- 🇷🇺 [Архитектура Аудио Системы - Русский](./docs/AudioSystem%2520-%2520Description.RU.md)
 
 ---
 
