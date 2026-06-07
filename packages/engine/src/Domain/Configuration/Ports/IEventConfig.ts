@@ -6,10 +6,10 @@ import type {
     RegionId,
     SnapshotId,
     SoundId,
-    QuantizeType
+    QuantizeType,
+    IConditionConfig
 } from '@scene-grid/shared';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { IConditionConfig } from '@domain/Shared/Types/Condition.js';
 
 export interface IStopOptions {
     readonly allowTail?: boolean;

@@ -35,11 +35,14 @@ import {
     SoundPoolManager,
     TinyLimiterNode,
     BankManagerAdapter,
-    SwitchHistoryRegistry
+    SwitchHistoryRegistry,
+    TelemetryDispatcher,
+    BrowserTelemetryTransport,
+    TelemetrySnapshotter
 } from '@infrastructure';
 import type { IPluginFactory } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
-import { SeededPRNG, isDefined, deepFreeze, typedEntries } from '@scene-grid/shared';
+import { SeededPRNG, isDefined, deepFreeze, typedEntries, typedKeys } from '@scene-grid/shared';
 
 import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
@@ -231,6 +234,8 @@ export class AudioEngine implements IAudioEngine {
 
             const seed = this.config.seed ?? Date.now();
             this.#prng = new SeededPRNG(seed);
+            const browserTransport = new BrowserTelemetryTransport();
+            const telemetry = new TelemetryDispatcher(browserTransport);
             const automation = new AutomationEngine(this.#contextManager.context, this.#engineTicker);
             this.#contextManager.initSpatial(automation);
             const nodeFactory = new AudioNodeFactory(this.#contextManager);
@@ -331,7 +336,8 @@ export class AudioEngine implements IAudioEngine {
                 automation,
                 soundRegistry.registry,
                 this.#busSystem,
-                (url: string | string[]) => bufferLoader.getBuffer(url)
+                (url: string | string[]) => bufferLoader.getBuffer(url),
+                telemetry
             );
 
             this.#instanceRTPCBinder = new InstanceRTPCBinder(this.#rtpcManager, this.#soundController);
@@ -352,7 +358,8 @@ export class AudioEngine implements IAudioEngine {
                 rtpcAdapter: this.#rtpcManager,
                 switchPolicy,
                 switchHistoryRegistry,
-                prng: this.#prng
+                prng: this.#prng,
+                telemetry
             });
 
             const smartLoopTransitionPolicy = new SmartLoopTransitionPolicy(this.#rtpcManager);
@@ -427,6 +434,16 @@ export class AudioEngine implements IAudioEngine {
             );
             this.#router.setScattererOrchestrator(this.#scattererOrchestrator);
 
+            const snapshotter = new TelemetrySnapshotter(
+                telemetry,
+                this.#soundController,
+                this.#rtpcManager,
+                switchHistoryRegistry,
+                typedKeys(this.config.rtpcManifest ?? {}),
+                typedKeys(this.config.soundMap).filter(k => 'isSwitch' in this.config.soundMap[k]),
+                this.config.globalVoiceLimit ?? 128
+            );
+
             const cullingArbiter = new VoiceCullingArbiter(0.01);
 
             const cullingProvider = new CullingContextProvider(
@@ -436,6 +453,10 @@ export class AudioEngine implements IAudioEngine {
             );
 
             this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingProvider);
+
+            this.#engineTicker.add('telemetry' as TickerTaskId, telemetry.TICK_RATE_MS, telemetry);
+
+            this.#engineTicker.add('snapshotter' as TickerTaskId, snapshotter.TICK_RATE_MS, snapshotter);
 
             this.#engineTicker.add('rtpc-manager' as TickerTaskId, RTPCManager.TICK_RATE_MS, this.#rtpcManager);
 

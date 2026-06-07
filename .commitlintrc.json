@@ -44,6 +44,7 @@
                 "types",
                 "helpers",
                 "utils",
+                "telemetry",
 
                 "debug",
                 "profiler",

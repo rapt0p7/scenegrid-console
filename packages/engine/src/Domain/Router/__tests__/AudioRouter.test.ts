@@ -9,7 +9,8 @@ import type { Mocked } from 'vitest';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry';
+import { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 const testSoundMap: any = {
     'simple_sound': { busId: 'sfx' },
@@ -70,6 +71,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
     let mockRtpcAdapter: Mocked<IRTPCAdapter>;
     let mockSwitchPolicy: any;
     let mockScattererOrchestrator: any;
+    let mockTelemetry: Mocked<ITelemetryDispatcher>;
     let router: AudioRouter;
     let prng: IPRNG;
     let seed = 123456;
@@ -141,6 +143,10 @@ describe('AudioRouter (Command Dispatcher)', () => {
             })
         };
 
+        mockTelemetry = {
+            dispatch: vi.fn()
+        };
+
         router = new AudioRouter({
             soundController: mockController,
             duckingManager: mockDuckingManager,
@@ -151,7 +157,8 @@ describe('AudioRouter (Command Dispatcher)', () => {
             instanceRTPCBinder: mockInstanceRTPCBinder,
             switchPolicy: mockSwitchPolicy,
             switchHistoryRegistry: mockSwitchRegistry,
-            prng
+            prng,
+            telemetry: mockTelemetry
         });
     });
 

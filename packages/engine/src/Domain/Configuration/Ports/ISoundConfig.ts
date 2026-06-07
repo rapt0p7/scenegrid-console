@@ -1,6 +1,13 @@
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import type { BusId, GameParamId, RegionId, SoundId, QuantizeType, DeepReadonly } from '@scene-grid/shared';
-import type { IConditionConfig } from '@domain/Shared/Types/Condition.js';
+import type {
+    BusId,
+    GameParamId,
+    RegionId,
+    SoundId,
+    QuantizeType,
+    DeepReadonly,
+    IConditionConfig
+} from '@scene-grid/shared';
 
 export interface IBaseSoundConfig {
     readonly busId?: BusId;

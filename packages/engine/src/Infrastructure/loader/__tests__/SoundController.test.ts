@@ -1,5 +1,6 @@
+// oxlint-disable no-underscore-dangle
 // noinspection D
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, Mocked } from 'vitest';
 
 import { SoundInstance } from '@infrastructure';
 import { SoundController } from '@infrastructure/loader/SoundController.js';
@@ -9,6 +10,7 @@ import type AutomationEngine from '@infrastructure/automation/AutomationEngine.j
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
 import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 describe('SoundController', () => {
     let mockPool: any;
@@ -20,6 +22,7 @@ describe('SoundController', () => {
     let fakeBuffer: AudioBuffer;
     let fakeInstance: any;
     let mockBufferResolver: ReturnType<typeof vi.fn>;
+    let mockTelemetry: Mocked<ITelemetryDispatcher>;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -76,6 +79,10 @@ describe('SoundController', () => {
 
         mockBufferResolver = vi.fn().mockReturnValue(fakeBuffer);
 
+        mockTelemetry = {
+            dispatch: vi.fn()
+        };
+
         controller = new SoundController(
             mockPool,
             mockScheduler,
@@ -83,7 +90,8 @@ describe('SoundController', () => {
             mockAutomation,
             new Map() as any,
             mockBusSystem,
-            mockBufferResolver as any
+            mockBufferResolver as any,
+            mockTelemetry
         );
     });
 
@@ -369,6 +377,15 @@ describe('SoundController', () => {
             const voice = controller.getLogicalVoice(id);
             expect(voice?.position).toEqual({ x: 10, y: 20, z: 30 });
             expect(fakeInstance.setPosition).toHaveBeenCalledWith(10, 20, 30);
+        });
+
+        it('should return position coordinates or undefined if voice is missing', () => {
+            const id = controller.play('test_sound' as SoundId, {})!;
+            controller.setPosition(id, 5, 15, 25);
+
+            expect(controller.getPosition(id)).toEqual({ x: 5, y: 15, z: 25 });
+
+            expect(controller.getPosition(999 as PlaybackId)).toBeUndefined();
         });
     });
 
@@ -682,6 +699,70 @@ describe('SoundController', () => {
             expect(controller.getLogicalState(id)).toBe('playing');
 
             expect(controller.getPlaybackState(id)).toBe('stopped');
+        });
+
+        it('should correctly identify ghost voices and ignore physical or missing voices', () => {
+            controller.register('physical_mock' as SoundId, { url: '' });
+            const physicalId = controller.play('physical_mock' as SoundId, {})!;
+
+            const ghostId = controller.playVirtual('ghost_mock' as SoundId);
+
+            expect(controller.isGhostVoice(ghostId)).toBe(true);
+            expect(controller.isGhostVoice(physicalId)).toBe(false);
+            expect(controller.isGhostVoice(999 as PlaybackId)).toBe(false);
+        });
+    });
+
+    describe('Telemetry State Extraction (getPlaybackPositionSec & getCurrentVolume)', () => {
+        beforeEach(() => {
+            controller.register('telemetry_sound' as SoundId, { url: '' });
+        });
+
+        it('should return 0 for both if voice does not exist', () => {
+            expect(controller.getPlaybackPositionSec(999 as PlaybackId)).toBe(0);
+            expect(controller.getCurrentVolume(999 as PlaybackId)).toBe(0);
+        });
+
+        it('should return physical instance properties if voice is active and physical', () => {
+            const id = controller.play('telemetry_sound' as SoundId, {})!;
+
+            fakeInstance.currentTime = 4.25;
+            fakeInstance.gainParam = { value: 0.85 };
+
+            expect(controller.getPlaybackPositionSec(id)).toBe(4.25);
+            expect(controller.getCurrentVolume(id)).toBe(0.85);
+        });
+
+        it('should calculate time mathematically if voice is paused or virtual', () => {
+            const id = controller.play('telemetry_sound' as SoundId, { offset: 2.0 })!;
+
+            mockContext.currentTime = 128.45;
+
+            const voice = controller.getLogicalVoice(id)!;
+            voice.logicalState = 'paused';
+
+            delete fakeInstance.currentTime;
+
+            expect(controller.getPlaybackPositionSec(id)).toBeCloseTo(7.0);
+        });
+
+        it('should fallback to mathematical calculation for ghost voices (playVirtual)', () => {
+            const id = controller.playVirtual('ghost_telemetry' as SoundId);
+
+            mockContext.currentTime = 126.45;
+
+            expect(controller.getPlaybackPositionSec(id)).toBeCloseTo(3.0);
+        });
+
+        it('should fallback to volume 1.0 if physical instance or gainParam is missing', () => {
+            const id = controller.playVirtual('ghost_telemetry' as SoundId);
+
+            expect(controller.getCurrentVolume(id)).toBe(1.0);
+
+            const physicalId = controller.play('telemetry_sound' as SoundId, {})!;
+            delete fakeInstance.gainParam;
+
+            expect(controller.getCurrentVolume(physicalId)).toBe(1.0);
         });
     });
 });

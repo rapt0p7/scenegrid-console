@@ -39,6 +39,8 @@ export interface ISoundController {
     getActivePlaybacks(): PlaybackId[];
     getSoundId(id: PlaybackId): SoundId | undefined;
     getPlaybackState(id: PlaybackId): PlaybackState;
+    getPlaybackPositionSec(id: PlaybackId): number;
+    getCurrentVolume(id: PlaybackId): number;
     getLogicalState(id: PlaybackId): 'playing' | 'paused' | undefined;
     routeToBus(playbackId: PlaybackId, busId: BusId): void;
     addSidechainTrigger(playbackId: PlaybackId, busId: BusId, intensity: number): void;

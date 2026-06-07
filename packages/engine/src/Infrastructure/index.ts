@@ -38,3 +38,6 @@ export { default as TinyLimiterNode } from './plugins/TinyLimiterNode.js';
 export { default as SidechainDucker } from './plugins/SidechainDucker.js';
 export { default as FiltersPlugin } from './plugins/FiltersPlugin.js';
 export { safeDisconnect } from './utils/safeDisconnect.js';
+export { TelemetryDispatcher } from './telemetry/TelemetryDispatcher.js';
+export { BrowserTelemetryTransport } from './telemetry/BrowserTelemetryTransport.js';
+export { TelemetrySnapshotter } from './telemetry/TelemetrySnapshotter.js';

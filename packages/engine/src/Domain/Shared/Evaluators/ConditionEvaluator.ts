@@ -1,4 +1,4 @@
-import type { ConditionOperator } from '@domain/Shared/Types/Condition.js';
+import type { ConditionOperator } from '@scene-grid/shared';
 
 // oxlint-disable-next-line typescript/no-extraneous-class
 export class ConditionEvaluator {
@@ -32,9 +32,9 @@ export class ConditionEvaluator {
                 return actualValue < lowerBound || actualValue > upperBound;
 
             default: {
-                // oxlint-disable-next-line typescript/no-unsafe-assignment
                 // noinspection JSUnusedLocalSymbols
-                // eslint-disable-next-line @typescript-eslint/naming-convention
+                // oxlint-disable-next-line no-underscore-dangle
+                // eslint-disable-next-line
                 const _exhaustiveCheck: never = operator;
                 return false;
             }
@@ -56,9 +56,9 @@ export class ConditionEvaluator {
             case '!=':
                 return actualValue !== targetValue;
             default: {
-                // oxlint-disable-next-line typescript/no-unsafe-assignment
                 // noinspection JSUnusedLocalSymbols
-                // eslint-disable-next-line @typescript-eslint/naming-convention
+                // oxlint-disable-next-line no-underscore-dangle
+                // eslint-disable-next-line
                 const _exhaustiveCheck: never = operator;
                 return false;
             }

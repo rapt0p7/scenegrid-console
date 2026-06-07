@@ -1,7 +1,9 @@
+// oxlint-disable no-underscore-dangle
 // noinspection D
 
 import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { BusId, PlaybackId, SoundId } from '@scene-grid/shared';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import type { BusId, PlaybackId, SoundId, LifecycleAction } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
@@ -39,7 +41,8 @@ export class SoundController implements ISoundController {
         private readonly automation: AutomationEngine,
         private readonly registry: Map<SoundId, SoundDescriptor>,
         private readonly busSystem: AudioBusSystem,
-        private readonly bufferResolver: (url: string | string[]) => AudioBuffer | undefined
+        private readonly bufferResolver: (url: string | string[]) => AudioBuffer | undefined,
+        private readonly telemetry?: ITelemetryDispatcher
     ) {
         this.#sidechainLinks = Array.from({ length: pool.globalVoiceLimit }, () => new Map<BusId, number>());
         this.pool.events.on('released', this.#handleInstanceReleased);
@@ -131,6 +134,8 @@ export class SoundController implements ISoundController {
 
         this.scheduler.schedulePlay(instance, when, offset, duration);
 
+        this.pushLifecycle('START', playbackId, soundId);
+
         return playbackId;
     }
 
@@ -206,6 +211,8 @@ export class SoundController implements ISoundController {
             } else if ((voice as any).isVirtualNode) {
                 this.activeVoices.delete(playbackId);
             }
+
+            this.pushLifecycle('STOP', playbackId, voice.soundId, 'API_STOP');
         }
     }
 
@@ -230,6 +237,8 @@ export class SoundController implements ISoundController {
                     (voice.physicalInstance as any).pause();
                 }
             }
+
+            this.pushLifecycle('PAUSE', playbackId, voice.soundId);
         }
     }
 
@@ -253,6 +262,8 @@ export class SoundController implements ISoundController {
                     (voice.physicalInstance as any).resume();
                 }
             }
+
+            this.pushLifecycle('RESUME', playbackId, voice.soundId);
         }
     }
 
@@ -282,6 +293,8 @@ export class SoundController implements ISoundController {
 
         this.activeVoices.set(playbackId, logicalVoice);
 
+        this.pushLifecycle('VIRTUALIZE', playbackId, soundId);
+
         return playbackId;
     }
 
@@ -296,6 +309,29 @@ export class SoundController implements ISoundController {
 
     getSampleRate(): number {
         return this.context.sampleRate;
+    }
+
+    public getPlaybackPositionSec(id: PlaybackId): number {
+        const voice = this.activeVoices.get(id);
+        if (!voice) return 0;
+
+        if (voice.physicalInstance && typeof voice.physicalInstance.currentTime === 'number') {
+            return voice.physicalInstance.currentTime;
+        }
+
+        if ((voice as any).isVirtualNode || voice.logicalState === 'paused' || !voice.physicalInstance) {
+            const ctxTime = this.context.currentTime;
+            return voice.startOffset + (ctxTime - voice.startedAtContextTime);
+        }
+
+        return 0;
+    }
+
+    public getCurrentVolume(id: PlaybackId): number {
+        const voice = this.activeVoices.get(id);
+        if (!voice) return 0;
+
+        return voice.physicalInstance?.gainParam?.value ?? 1;
     }
 
     setVolume(id: PlaybackId, targetVolume: number): void {
@@ -345,6 +381,8 @@ export class SoundController implements ISoundController {
             }
 
             instance.virtualize();
+
+            this.pushLifecycle('VIRTUALIZE', id, voice.soundId);
         }
     }
 
@@ -369,6 +407,8 @@ export class SoundController implements ISoundController {
             if (voice.onRevive) {
                 voice.onRevive(id);
             }
+
+            this.pushLifecycle('REVIVE', id, voice.soundId);
         }
     }
 
@@ -416,6 +456,10 @@ export class SoundController implements ISoundController {
     #handleVoiceEnded = (instance: any): void => {
         const playbackId = instance._currentPlaybackId;
         if (playbackId) {
+            const voice = this.activeVoices.get(playbackId);
+            if (voice) {
+                this.pushLifecycle('STOP', playbackId, voice.soundId, 'NATURAL_END');
+            }
             this.activeVoices.delete(playbackId);
             this.#removeFromVirtualQueue(playbackId);
         }
@@ -444,5 +488,17 @@ export class SoundController implements ISoundController {
                 break;
             }
         }
+    }
+
+    private pushLifecycle(action: LifecycleAction, playbackId: PlaybackId, soundId: SoundId, reason?: string): void {
+        if (!this.telemetry) return;
+        this.telemetry.dispatch({
+            type: 'LIFECYCLE',
+            timestampMs: performance.now(),
+            action,
+            playbackId,
+            soundId,
+            reason
+        });
     }
 }

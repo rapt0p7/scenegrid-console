@@ -2,10 +2,11 @@
 import { describe, it, expect } from 'vitest';
 
 import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
-import type { ConditionOperator } from '@domain/Shared/Types/Condition.js';
+import type { ConditionOperator } from '@scene-grid/shared';
 
 describe('ConditionEvaluator', () => {
     describe('Raw Evaluation (hysteresis = 0)', () => {
+        // oxlint-disable-next-line unicorn/consistent-function-scoping
         const runRawTest = (operator: ConditionOperator, actual: number, target: number, expected: boolean) => {
             expect(ConditionEvaluator.evaluate(actual, operator, target, 0)).toBe(expected);
             expect(ConditionEvaluator.evaluate(actual, operator, target)).toBe(expected);

@@ -1,5 +1,6 @@
 export type * from './Types/Branded.js';
 export type * from './Types/Musical.js';
+export type * from './Types/Condition.js';
 export type { DeepReadonly } from './DeepReadonly.js';
 export type { Point2D, MathCurveType, MathCurvePresetDefinition, MathCurveDefinition } from './Math/MathCurve.js';
 export type { IPRNG } from './Math/SeededPRNG.js';
@@ -13,3 +14,7 @@ export { typedEntries, typedKeys, typedFromEntries } from './typedObjects.js';
 
 export { evaluateRTPCCurve } from './Math/rtpcMath.js';
 export { SeededPRNG } from './Math/SeededPRNG.js';
+
+export type { ITelemetryTransport } from './Telemetry/ITelemetryTransport.js';
+export type * from './Telemetry/TelemetryEvents.js';
+export type * from './Telemetry/TelemetryBatch.js';

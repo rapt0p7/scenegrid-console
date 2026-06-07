@@ -1,4 +1,4 @@
-import type { GameParamId } from '@scene-grid/shared';
+import type { GameParamId } from './Branded.js';
 
 export type ConditionOperator = '==' | '!=' | '>' | '>=' | '<' | '<=';
 

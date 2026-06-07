@@ -1,4 +1,4 @@
-// oxlint-disable import/max-dependencies
+// oxlint-disable import/max-dependencies max-lines-per-function
 // noinspection D
 
 import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
@@ -25,6 +25,7 @@ import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IStopOptions } from '@domain/Configuration/Ports/IEventConfig.js';
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
 import { isAbsent } from '@scene-grid/shared';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly duckingManager: IDuckingManager;
@@ -38,6 +39,7 @@ export default class AudioRouter implements IAudioRouter {
     private readonly switchHistoryRegistry: ISwitchHistoryRegistry;
     private scattererOrchestrator?: ScattererOrchestrator;
     private readonly prng: IPRNG;
+    private readonly telemetry: ITelemetryDispatcher;
 
     constructor({
         soundController,
@@ -49,7 +51,8 @@ export default class AudioRouter implements IAudioRouter {
         instanceRTPCBinder,
         switchPolicy,
         switchHistoryRegistry,
-        prng
+        prng,
+        telemetry
     }: {
         soundController: ISoundController;
         duckingManager: IDuckingManager;
@@ -61,6 +64,7 @@ export default class AudioRouter implements IAudioRouter {
         switchPolicy: SwitchPlaybackPolicy;
         switchHistoryRegistry: ISwitchHistoryRegistry;
         prng: IPRNG;
+        telemetry: ITelemetryDispatcher;
     }) {
         this.soundController = soundController;
         this.duckingManager = duckingManager;
@@ -72,6 +76,7 @@ export default class AudioRouter implements IAudioRouter {
         this.switchPolicy = switchPolicy;
         this.switchHistoryRegistry = switchHistoryRegistry;
         this.prng = prng;
+        this.telemetry = telemetry;
     }
 
     getSoundConfig(name: SoundId): AnySoundConfig | null {
@@ -99,6 +104,12 @@ export default class AudioRouter implements IAudioRouter {
     play(name: SoundId, options: IPlayOptions = {}, depth: number = 0): PlaybackId | PlaybackId[] | null {
         if (depth > 10) {
             console.error(`[AudioRouter] Max recursion depth reached for: ${name}`);
+            this.telemetry?.dispatch({
+                type: 'CAUSE_CHAIN',
+                timestampMs: performance.now(),
+                initiator: { type: 'API', method: 'router.play' },
+                result: { type: 'BLOCKED', reason: `Max recursion depth reached for SoundId: ${name}` }
+            });
             return null;
         }
 
@@ -106,6 +117,12 @@ export default class AudioRouter implements IAudioRouter {
 
         if (!config) {
             console.warn(`[AudioRouter] Sound "${name}" ignored: not found in config.`);
+            this.telemetry?.dispatch({
+                type: 'CAUSE_CHAIN',
+                timestampMs: performance.now(),
+                initiator: { type: 'API', method: 'router.play' },
+                result: { type: 'BLOCKED', reason: `Config not found for SoundId: ${name}` }
+            });
             return null;
         }
 
@@ -222,6 +239,12 @@ export default class AudioRouter implements IAudioRouter {
     private handleScatterer(name: SoundId, config: IScattererSoundConfig): PlaybackId | null {
         if (isAbsent(this.scattererOrchestrator)) {
             console.warn(`[AudioRouter] Cannot play scatterer ${name}: Orchestrator not initialized.`);
+            this.telemetry?.dispatch({
+                type: 'CAUSE_CHAIN',
+                timestampMs: performance.now(),
+                initiator: { type: 'API', method: 'router.handleScatterer' },
+                result: { type: 'BLOCKED', reason: `ScattererOrchestrator not initialized for: ${name}` }
+            });
             return null;
         }
         const virtualPlaybackId = this.soundController.playVirtual(name);
@@ -240,13 +263,27 @@ export default class AudioRouter implements IAudioRouter {
     ): PlaybackId | PlaybackId[] | null {
         if (depth > 10) {
             console.error(`[AudioRouter] Max recursion depth reached for container: ${name}`);
+            this.telemetry?.dispatch({
+                type: 'CAUSE_CHAIN',
+                timestampMs: performance.now(),
+                initiator: { type: 'API', method: 'router.handleContainer' },
+                result: { type: 'BLOCKED', reason: `Max recursion depth reached for container: ${name}` }
+            });
             return null;
         }
 
         const history = this.historyRegistry.getHistory(name);
         const { soundId: nextSource, nextState } = this.containerPolicy.evaluateNext(config, history);
 
-        if (!nextSource) return null;
+        if (!nextSource) {
+            this.telemetry?.dispatch({
+                type: 'CAUSE_CHAIN',
+                timestampMs: performance.now(),
+                initiator: { type: 'API', method: 'router.handleContainer' },
+                result: { type: 'BLOCKED', reason: `Container "${name}" resolved to empty source.` }
+            });
+            return null;
+        }
 
         this.historyRegistry.updateHistory(name, nextState);
 
@@ -317,6 +354,15 @@ export default class AudioRouter implements IAudioRouter {
                     `Group: "${config.switchGroup}", Current Value: "${currentValue}". ` +
                     `Check your SoundMap for missing keys or add a defaultSwitch.`
             );
+            this.telemetry?.dispatch({
+                type: 'CAUSE_CHAIN',
+                timestampMs: performance.now(),
+                initiator: { type: 'API', method: 'router.handleSwitch' },
+                result: {
+                    type: 'BLOCKED',
+                    reason: `Switch "${name}" failed to resolve. Group: "${config.switchGroup}" = ${currentValue}`
+                }
+            });
             return null;
         }
 
