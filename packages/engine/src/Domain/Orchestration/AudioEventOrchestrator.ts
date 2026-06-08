@@ -51,7 +51,7 @@ export class AudioEventOrchestrator implements ITickable {
             console.warn(`[EventDispatcher] Event "${eventId}" not found in EventMap.`);
             this.telemetry?.dispatch({
                 type: 'CAUSE_CHAIN',
-                timestampMs: performance.now(),
+                timestampMs: this.soundController.getCurrentTime() * 1000,
                 initiator: { type: 'API', method: 'postEvent' },
                 result: { type: 'BLOCKED', reason: `Event "${eventId}" not found in EventMap.` }
             });
@@ -69,7 +69,7 @@ export class AudioEventOrchestrator implements ITickable {
                 if (!trace.passed) {
                     this.telemetry?.dispatch({
                         type: 'CAUSE_CHAIN',
-                        timestampMs: performance.now(),
+                        timestampMs: currentTimeMs,
                         initiator: { type: 'EVENT', eventId },
                         result: { type: 'BLOCKED', reason: `Condition failed for action type: ${action.type}` },
                         conditionTrace: trace as any
@@ -81,7 +81,7 @@ export class AudioEventOrchestrator implements ITickable {
             if (isDefined(action.probability) && this.prng.next() > action.probability) {
                 this.telemetry?.dispatch({
                     type: 'CAUSE_CHAIN',
-                    timestampMs: performance.now(),
+                    timestampMs: currentTimeMs,
                     initiator: { type: 'EVENT', eventId },
                     result: { type: 'BLOCKED', reason: `Probability check failed for action type: ${action.type}` }
                 });
@@ -122,7 +122,7 @@ export class AudioEventOrchestrator implements ITickable {
             console.error(`[AudioEventOrchestrator] Max recursion depth reached for nested event: ${action.target}`);
             this.telemetry?.dispatch({
                 type: 'CAUSE_CHAIN',
-                timestampMs: performance.now(),
+                timestampMs: this.soundController.getCurrentTime() * 1000,
                 initiator: { type: 'EVENT', eventId },
                 result: { type: 'BLOCKED', reason: `Max recursion depth reached for nested event: ${action.target}` }
             });
@@ -221,7 +221,7 @@ export class AudioEventOrchestrator implements ITickable {
     private dispatchSuccess(eventId: EventId, result: any): void {
         this.telemetry?.dispatch({
             type: 'CAUSE_CHAIN',
-            timestampMs: performance.now(),
+            timestampMs: this.soundController.getCurrentTime() * 1000,
             initiator: { type: 'EVENT', eventId },
             result
         });

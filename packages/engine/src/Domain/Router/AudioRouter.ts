@@ -106,7 +106,7 @@ export default class AudioRouter implements IAudioRouter {
             console.error(`[AudioRouter] Max recursion depth reached for: ${name}`);
             this.telemetry?.dispatch({
                 type: 'CAUSE_CHAIN',
-                timestampMs: performance.now(),
+                timestampMs: this.soundController.getCurrentTime() * 1000,
                 initiator: { type: 'API', method: 'router.play' },
                 result: { type: 'BLOCKED', reason: `Max recursion depth reached for SoundId: ${name}` }
             });
@@ -119,7 +119,7 @@ export default class AudioRouter implements IAudioRouter {
             console.warn(`[AudioRouter] Sound "${name}" ignored: not found in config.`);
             this.telemetry?.dispatch({
                 type: 'CAUSE_CHAIN',
-                timestampMs: performance.now(),
+                timestampMs: this.soundController.getCurrentTime() * 1000,
                 initiator: { type: 'API', method: 'router.play' },
                 result: { type: 'BLOCKED', reason: `Config not found for SoundId: ${name}` }
             });
@@ -241,7 +241,7 @@ export default class AudioRouter implements IAudioRouter {
             console.warn(`[AudioRouter] Cannot play scatterer ${name}: Orchestrator not initialized.`);
             this.telemetry?.dispatch({
                 type: 'CAUSE_CHAIN',
-                timestampMs: performance.now(),
+                timestampMs: this.soundController.getCurrentTime() * 1000,
                 initiator: { type: 'API', method: 'router.handleScatterer' },
                 result: { type: 'BLOCKED', reason: `ScattererOrchestrator not initialized for: ${name}` }
             });
@@ -265,7 +265,7 @@ export default class AudioRouter implements IAudioRouter {
             console.error(`[AudioRouter] Max recursion depth reached for container: ${name}`);
             this.telemetry?.dispatch({
                 type: 'CAUSE_CHAIN',
-                timestampMs: performance.now(),
+                timestampMs: this.soundController.getCurrentTime() * 1000,
                 initiator: { type: 'API', method: 'router.handleContainer' },
                 result: { type: 'BLOCKED', reason: `Max recursion depth reached for container: ${name}` }
             });
@@ -278,7 +278,7 @@ export default class AudioRouter implements IAudioRouter {
         if (!nextSource) {
             this.telemetry?.dispatch({
                 type: 'CAUSE_CHAIN',
-                timestampMs: performance.now(),
+                timestampMs: this.soundController.getCurrentTime() * 1000,
                 initiator: { type: 'API', method: 'router.handleContainer' },
                 result: { type: 'BLOCKED', reason: `Container "${name}" resolved to empty source.` }
             });
@@ -356,7 +356,7 @@ export default class AudioRouter implements IAudioRouter {
             );
             this.telemetry?.dispatch({
                 type: 'CAUSE_CHAIN',
-                timestampMs: performance.now(),
+                timestampMs: this.soundController.getCurrentTime() * 1000,
                 initiator: { type: 'API', method: 'router.handleSwitch' },
                 result: {
                     type: 'BLOCKED',

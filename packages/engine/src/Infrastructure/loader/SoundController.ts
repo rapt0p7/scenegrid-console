@@ -92,8 +92,8 @@ export class SoundController implements ISoundController {
             return null;
         }
 
-        const now = performance.now();
-        const lastPlay = this.lastPlayTimes.get(soundId) ?? 0;
+        const now = this.getCurrentTime() * 1000;
+        const lastPlay = this.lastPlayTimes.get(soundId) ?? -Number.MAX_SAFE_INTEGER;
         const cooldownMs = definition.options.cooldownMs ?? DEFAULT_COOLDOWN_MS;
 
         if (now - lastPlay < cooldownMs) {
@@ -494,7 +494,7 @@ export class SoundController implements ISoundController {
         if (!this.telemetry) return;
         this.telemetry.dispatch({
             type: 'LIFECYCLE',
-            timestampMs: performance.now(),
+            timestampMs: this.getCurrentTime() * 1000,
             action,
             playbackId,
             soundId,
