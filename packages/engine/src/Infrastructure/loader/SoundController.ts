@@ -3,7 +3,7 @@
 
 import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
-import type { BusId, PlaybackId, SoundId, LifecycleAction } from '@scene-grid/shared';
+import type { BusId, PlaybackId, SoundId, LifecycleAction, ITelemetryLifecycleEvent } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
@@ -32,6 +32,16 @@ export class SoundController implements ISoundController {
     private nextPlaybackId = 1 as PlaybackId;
     readonly #sidechainLinks: Array<Map<BusId, number>>;
     private readonly virtualTimers: VirtualVoiceTimer[] = [];
+    private readonly lifecyclePoolSize = 128;
+    private lifecycleCursor = 0;
+    private readonly lifecyclePool: ITelemetryLifecycleEvent[] = Array.from({ length: 128 }, () => ({
+        type: 'LIFECYCLE',
+        timestampMs: 0,
+        action: 'START',
+        playbackId: 0 as PlaybackId,
+        soundId: '' as SoundId,
+        reason: undefined
+    }));
 
     // eslint-disable-next-line max-params
     constructor(
@@ -505,13 +515,22 @@ export class SoundController implements ISoundController {
 
     private pushLifecycle(action: LifecycleAction, playbackId: PlaybackId, soundId: SoundId, reason?: string): void {
         if (!this.telemetry) return;
-        this.telemetry.dispatch({
-            type: 'LIFECYCLE',
-            timestampMs: this.getCurrentTime() * 1000,
-            action,
-            playbackId,
-            soundId,
-            reason
-        });
+
+        const dto = this.lifecyclePool[this.lifecycleCursor];
+
+        this.lifecycleCursor = (this.lifecycleCursor + 1) % this.lifecyclePoolSize;
+
+        // oxlint-disable-next-line typescript/no-explicit-any
+        (dto as any).timestampMs = this.getCurrentTime() * 1000;
+        // oxlint-disable-next-line typescript/no-explicit-any
+        (dto as any).action = action;
+        // oxlint-disable-next-line typescript/no-explicit-any
+        (dto as any).playbackId = playbackId;
+        // oxlint-disable-next-line typescript/no-explicit-any
+        (dto as any).soundId = soundId;
+        // oxlint-disable-next-line typescript/no-explicit-any
+        (dto as any).reason = reason;
+
+        this.telemetry.dispatch(dto);
     }
 }
