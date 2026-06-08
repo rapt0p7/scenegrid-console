@@ -34,7 +34,8 @@
         "format:check": "oxfmt --check",
         "lint:fast": "oxlint --deny-warnings",
         "lint:arch": "eslint .",
-        "lint": "npm run lint:fast && npm run lint:arch"
+        "lint": "npm run lint:fast && npm run lint:arch",
+        "notebooklm:update": "npm run createDependencyGraph && npx repomix"
     },
     "devDependencies": {
         "@commitlint/cli": "20.5.0",
