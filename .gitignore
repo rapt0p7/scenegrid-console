@@ -155,6 +155,7 @@ stats.json
 .env.sentry-build-plugin
 
 docs/repomix-output.md
+docs/Project_Source_Code.md
 
 # Generated documentation
 /docs/api

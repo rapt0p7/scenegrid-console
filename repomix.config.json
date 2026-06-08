@@ -4,7 +4,7 @@
         "maxFileSize": 52428800
     },
     "output": {
-        "filePath": "docs/repomix-output.md",
+        "filePath": "docs/Project_Source_Code.md",
         "style": "xml",
         "parsableStyle": false,
         "fileSummary": true,
