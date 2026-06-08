@@ -474,13 +474,23 @@ describe('SoundController', () => {
             playbackId = controller.play('test_sound' as SoundId, {}) as PlaybackId;
         });
 
-        it('should return null from play() if pool fails to acquire an instance', () => {
-            mockPool.acquire.mockReturnValueOnce(null);
+        it('should return null from play() and dispatch telemetry if pool rejects the request', () => {
+            mockPool.acquire.mockReturnValueOnce('MAX_POLYPHONY');
 
             controller.register('failed_sound' as SoundId, { url: '' });
             const result = controller.play('failed_sound' as SoundId, {});
 
             expect(result).toBeNull();
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'CAUSE_CHAIN',
+                    result: expect.objectContaining({
+                        type: 'BLOCKED',
+                        reason: expect.stringContaining('MAX_POLYPHONY')
+                    })
+                })
+            );
         });
 
         it('should early return in setPosition if voice does not exist', () => {

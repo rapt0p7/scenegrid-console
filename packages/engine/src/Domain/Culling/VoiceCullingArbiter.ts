@@ -1,21 +1,43 @@
 // noinspection D
 
-import type { ICullingContext, CullingDecisions, ICullingArbiter } from '@domain/Culling/Ports/ICullingArbiter.js';
+import type {
+    ICullingContext,
+    CullingDecisions,
+    ICullingArbiter,
+    IVirtualizeDecision
+} from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { PlaybackId } from '@scene-grid/shared';
 
 export class VoiceCullingArbiter implements ICullingArbiter {
     private readonly muteTimers = new Map<PlaybackId, number>();
-    private readonly decisions: CullingDecisions = { toVirtualize: [], toDevirtualize: [] };
+    private readonly virtualizePool: IVirtualizeDecision[];
+    private readonly devirtualizePool: PlaybackId[];
+    private readonly decisions: CullingDecisions;
 
     constructor(
         private readonly cullingThreshold: number = 0.01,
-        private readonly hysteresisMs: number = 1000
-    ) {}
+        private readonly hysteresisMs: number = 1000,
+        maxPlaybacks: number = 128
+    ) {
+        this.virtualizePool = Array.from({ length: maxPlaybacks }, () => ({
+            playbackId: 0 as PlaybackId,
+            reason: 'DEAF_BUS'
+        }));
+        // oxlint-disable-next-line unicorn/no-new-array
+        this.devirtualizePool = new Array(maxPlaybacks).fill(0);
+
+        this.decisions = {
+            toVirtualize: this.virtualizePool,
+            virtualizeCount: 0,
+            toDevirtualize: this.devirtualizePool,
+            devirtualizeCount: 0
+        };
+    }
 
     // oxlint-disable-next-line max-lines-per-function
     public evaluate(context: ICullingContext, deltaTimeMs: number): CullingDecisions {
-        this.decisions.toVirtualize.length = 0;
-        this.decisions.toDevirtualize.length = 0;
+        let virtCount = 0;
+        let devirtCount = 0;
 
         const activePlaybacks = context.activePlaybacks;
 
@@ -48,16 +70,25 @@ export class VoiceCullingArbiter implements ICullingArbiter {
                 this.muteTimers.set(playbackId, timeMuted);
 
                 if (timeMuted >= this.hysteresisMs && physicalState !== 'virtual' && physicalState !== 'stopped') {
-                    this.decisions.toVirtualize.push(playbackId);
+                    const poolItem = this.virtualizePool[virtCount++];
+                    // oxlint-disable-next-line typescript/no-explicit-any
+                    (poolItem as any).playbackId = playbackId;
+                    // oxlint-disable-next-line typescript/no-explicit-any
+                    (poolItem as any).reason = 'DEAF_BUS';
                 }
             } else {
                 this.muteTimers.delete(playbackId);
 
                 if (physicalState === 'virtual' && logicalState === 'playing') {
-                    this.decisions.toDevirtualize.push(playbackId);
+                    this.devirtualizePool[devirtCount++] = playbackId;
                 }
             }
         }
+
+        // oxlint-disable-next-line typescript/no-explicit-any
+        (this.decisions as any).virtualizeCount = virtCount;
+        // oxlint-disable-next-line typescript/no-explicit-any
+        (this.decisions as any).devirtualizeCount = devirtCount;
 
         return this.decisions;
     }

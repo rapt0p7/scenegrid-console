@@ -125,35 +125,35 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
 
         const droppedInst = pool.acquire('sfx_low' as SoundId, fakeBuffer);
 
-        expect(droppedInst).toBeNull();
+        expect(droppedInst).toEqual('PRIORITY_STEAL_FAILED');
         expect(pool.getActiveVoices().length).toBe(2);
         consoleSpy.mockRestore();
     });
 
     it('should STEAL a voice (Kill) from a lower priority sound', () => {
-        const victim1 = pool.acquire('sfx_low' as SoundId, fakeBuffer)!;
+        const victim1 = pool.acquire('sfx_low' as SoundId, fakeBuffer) as ISoundInstance;
         pool.acquire('sfx_low' as SoundId, fakeBuffer);
 
         (victim1 as any).state = 'playing';
 
         const VIP_Inst = pool.acquire('sfx_high' as SoundId, fakeBuffer);
 
-        expect(VIP_Inst).toBeDefined();
+        expect(typeof VIP_Inst).not.toBe('string');
         expect(victim1.stop).toHaveBeenCalled();
         expect(pool.getActiveVoices().length).toBe(2);
     });
 
     it('should correctly release voices back to the stack', () => {
-        const inst = pool.acquire('sfx_high' as SoundId, fakeBuffer)!;
+        const inst = pool.acquire('sfx_high' as SoundId, fakeBuffer) as ISoundInstance;
         expect(pool.getActiveVoices().length).toBe(1);
 
         pool.release(inst);
         expect(pool.getActiveVoices().length).toBe(0);
 
-        const instAgain = pool.acquire('sfx_high' as SoundId, fakeBuffer);
+        const instAgain = pool.acquire('sfx_high' as SoundId, fakeBuffer) as ISoundInstance;
         expect(instAgain).toBe(inst);
-        expect(instAgain?.rebind).toHaveBeenCalledWith('sfx_high', fakeBuffer, undefined);
-        expect(instAgain?.resetForReuse).toHaveBeenCalled();
+        expect(instAgain.rebind).toHaveBeenCalledWith('sfx_high', fakeBuffer, undefined);
+        expect(instAgain.resetForReuse).toHaveBeenCalled();
     });
 });
 
@@ -187,34 +187,34 @@ describe('SoundPoolManager (Loop Stealing Immunity)', () => {
     });
 
     it('should PREFER stealing from one-shots over loops, even if the loop has a weaker priority', () => {
-        const ambientInst = pool.acquire('ambient' as SoundId, fakeBuffer)!;
+        const ambientInst = pool.acquire('ambient' as SoundId, fakeBuffer) as ISoundInstance;
         ambientInst.setLoop(true);
         (ambientInst as any).state = 'playing';
 
-        const sfxLowInst = pool.acquire('sfx_low' as SoundId, fakeBuffer)!;
+        const sfxLowInst = pool.acquire('sfx_low' as SoundId, fakeBuffer) as ISoundInstance;
         sfxLowInst.setLoop(false);
         (sfxLowInst as any).state = 'playing';
 
         const vipInst = pool.acquire('sfx_high' as SoundId, fakeBuffer);
 
-        expect(vipInst).not.toBeNull();
+        expect(typeof vipInst).not.toBe('string');
 
         expect(sfxLowInst.stop).toHaveBeenCalled();
         expect(ambientInst.stop).not.toHaveBeenCalled();
     });
 
     it('should steal a loop ONLY if no vulnerable one-shots are available', () => {
-        const ambient1 = pool.acquire('ambient' as SoundId, fakeBuffer)!;
+        const ambient1 = pool.acquire('ambient' as SoundId, fakeBuffer) as ISoundInstance;
         ambient1.setLoop(true);
         (ambient1 as any).state = 'playing';
 
-        const ambient2 = pool.acquire('ambient' as SoundId, fakeBuffer)!;
+        const ambient2 = pool.acquire('ambient' as SoundId, fakeBuffer) as ISoundInstance;
         ambient2.setLoop(true);
         (ambient2 as any).state = 'playing';
 
         const vipInst = pool.acquire('sfx_high' as SoundId, fakeBuffer);
 
-        expect(vipInst).not.toBeNull();
+        expect(typeof vipInst).not.toBe('string');
 
         const loop1Stopped = (ambient1.stop as any).mock.calls.length > 0;
         const loop2Stopped = (ambient2.stop as any).mock.calls.length > 0;
@@ -266,6 +266,23 @@ describe('SoundPoolManager (Policy Logic)', () => {
         expect(inst3.resetForReuse).toHaveBeenCalledTimes(2);
         expect(manager.getActiveVoices().length).toBe(2);
     });
+
+    it('should return literal "MAX_POLYPHONY" if max polyphony is reached and policy rejects stealing', () => {
+        const strictManager = new SoundPoolManager(mockFactory, {
+            maxPolyphony: 2,
+            globalVoiceLimit: 10,
+            policy: 'expand',
+            voiceConfigResolver: () => ({ priority: 128, virtualization: 'kill' })
+        });
+
+        strictManager.acquire('laser' as SoundId, fakeBuffer);
+        strictManager.acquire('laser' as SoundId, fakeBuffer);
+
+        const result = strictManager.acquire('laser' as SoundId, fakeBuffer);
+
+        expect(result).toBe('MAX_POLYPHONY');
+        expect(strictManager.getActiveVoices().length).toBe(2);
+    });
 });
 
 describe('SoundPoolManager (Dispose)', () => {
@@ -294,9 +311,9 @@ describe('SoundPoolManager (Dispose)', () => {
     });
 
     it('should dispose ONLY instances of the specified soundId', () => {
-        const sfx1 = manager.acquire('sfx_a' as SoundId, fakeBuffer)!;
-        const sfx2 = manager.acquire('sfx_a' as SoundId, fakeBuffer)!;
-        const bgm = manager.acquire('bgm_b' as SoundId, fakeBuffer)!;
+        const sfx1 = manager.acquire('sfx_a' as SoundId, fakeBuffer) as ISoundInstance;
+        const sfx2 = manager.acquire('sfx_a' as SoundId, fakeBuffer) as ISoundInstance;
+        const bgm = manager.acquire('bgm_b' as SoundId, fakeBuffer) as ISoundInstance;
 
         expect(manager.getActiveVoices().length).toBe(3);
 
@@ -310,8 +327,8 @@ describe('SoundPoolManager (Dispose)', () => {
     });
 
     it('should dispose ALL instances across all soundIds if no argument is provided', () => {
-        const sfx = manager.acquire('sfx_a' as SoundId, fakeBuffer)!;
-        const bgm = manager.acquire('bgm_b' as SoundId, fakeBuffer)!;
+        const sfx = manager.acquire('sfx_a' as SoundId, fakeBuffer) as ISoundInstance;
+        const bgm = manager.acquire('bgm_b' as SoundId, fakeBuffer) as ISoundInstance;
 
         manager.dispose();
 

@@ -10,6 +10,7 @@ import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js'
 import type { PlaybackId, RegionId, SoundId, TickerTaskId, DeepReadonly, QuantizeType } from '@scene-grid/shared';
 import { isDefined, isAbsent } from '@scene-grid/shared';
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
+import { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 interface ActiveRegion {
     playbackId: PlaybackId;
@@ -45,7 +46,8 @@ export default class Sequencer implements ISequencer {
         private readonly controller: ISoundController,
         private readonly router: IAudioRouter,
         private readonly ticker: IEngineTicker,
-        private readonly transitionPolicy: SmartLoopTransitionPolicy
+        private readonly transitionPolicy: SmartLoopTransitionPolicy,
+        private readonly telemetry?: ITelemetryDispatcher
     ) {
         this.startScheduler();
     }
@@ -277,6 +279,17 @@ export default class Sequencer implements ISequencer {
                     const decision = this.transitionPolicy.evaluate(config, track.currentRegion, track.magnetStates);
 
                     if (decision) {
+                        this.telemetry?.dispatch({
+                            type: 'CAUSE_CHAIN',
+                            timestampMs: this.controller.getCurrentTime() * 1000,
+                            initiator: {
+                                type: 'MAGNET',
+                                sourceRegion: track.currentRegion,
+                                targetRegion: decision.targetRegion
+                            },
+                            result: { type: 'TRANSITION', target: track.soundId, toRegion: decision.targetRegion },
+                            conditionTrace: decision.trace
+                        });
                         this.transitionTo({
                             soundId,
                             targetRegion: decision.targetRegion,

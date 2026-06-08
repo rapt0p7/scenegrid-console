@@ -50,7 +50,8 @@ export type CauseInitiator =
     | { readonly type: 'API'; readonly method: string }
     | { readonly type: 'EVENT'; readonly eventId: EventId }
     | { readonly type: 'MAGNET'; readonly sourceRegion: RegionId; readonly targetRegion: RegionId }
-    | { readonly type: 'CONTAINER_POLICY'; readonly containerId: SoundId };
+    | { readonly type: 'CONTAINER_POLICY'; readonly containerId: SoundId }
+    | { readonly type: 'CULLING_ARBITER'; readonly reason: 'GLOBAL_LIMIT' | 'PRIORITY_STEAL' | 'DEAF_BUS' };
 
 export type CauseResult =
     | { readonly type: 'PLAY'; readonly target: SoundId }
@@ -58,7 +59,9 @@ export type CauseResult =
     | { readonly type: 'SET_RTPC'; readonly param: GameParamId; readonly value: number }
     | { readonly type: 'TRANSITION'; readonly target: SoundId; readonly toRegion: RegionId }
     | { readonly type: 'ACTION_EXECUTED'; readonly action: IActionTelemetryDTO }
-    | { readonly type: 'BLOCKED'; readonly reason: string };
+    | { readonly type: 'BLOCKED'; readonly reason: string }
+    | { readonly type: 'VIRTUALIZE'; readonly target: PlaybackId }
+    | { readonly type: 'KILL'; readonly target: PlaybackId };
 
 export interface IConditionTrace {
     readonly param: GameParamId;

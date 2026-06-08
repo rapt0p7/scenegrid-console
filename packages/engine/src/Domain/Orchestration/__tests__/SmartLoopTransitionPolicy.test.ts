@@ -21,6 +21,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
         policy = new SmartLoopTransitionPolicy(mockRtpcAdapter);
     });
 
+    // oxlint-disable-next-line unicorn/consistent-function-scoping
     const createConfig = (magnets?: IMagnetConfig[]): ISmartLoopSoundConfig => ({
         busId: 'master' as BusId,
         smartLoop: {
@@ -219,6 +220,14 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
                 crossfadeDuration: 500,
                 tailDurationMs: 1000,
                 interruptable: true
+            },
+            trace: {
+                actualValue: 0,
+                hysteresisDeadZone: undefined,
+                operator: '==',
+                param: 'time',
+                passed: true,
+                threshold: 0
             }
         });
     });

@@ -10,9 +10,16 @@ export interface ICullingContext {
     readonly isGhostVoice: (id: PlaybackId) => boolean;
 }
 
+export interface IVirtualizeDecision {
+    readonly playbackId: PlaybackId;
+    readonly reason: 'GLOBAL_LIMIT' | 'PRIORITY_STEAL' | 'DEAF_BUS';
+}
+
 export interface CullingDecisions {
-    readonly toVirtualize: PlaybackId[];
-    readonly toDevirtualize: PlaybackId[];
+    readonly toVirtualize: ReadonlyArray<IVirtualizeDecision>;
+    readonly virtualizeCount: number;
+    readonly toDevirtualize: ReadonlyArray<PlaybackId>;
+    readonly devirtualizeCount: number;
 }
 
 export interface ICullingArbiter {

@@ -1,3 +1,4 @@
+// oxlint-disable no-underscore-dangle
 // noinspection D
 
 import mitt from 'mitt';
@@ -13,6 +14,8 @@ type PoolEvents = {
 };
 
 export type PoolPolicy = 'expand' | 'steal_oldest';
+
+export type RejectReason = 'MAX_POLYPHONY' | 'GLOBAL_LIMIT' | 'PRIORITY_STEAL_FAILED';
 
 export interface PoolConfig {
     maxPolyphony: number;
@@ -58,7 +61,7 @@ export default class SoundPoolManager {
         return this.#config.globalVoiceLimit;
     }
 
-    public acquire(soundId: SoundId, buffer: AudioBuffer): ISoundInstance | null {
+    public acquire(soundId: SoundId, buffer: AudioBuffer): ISoundInstance | RejectReason {
         const voiceConfig = this.#config.voiceConfigResolver(soundId);
         const priority = voiceConfig?.priority ?? 128;
 
@@ -67,7 +70,7 @@ export default class SoundPoolManager {
             if (this.#config.policy === 'steal_oldest') {
                 this.release(this.#allInstances[activeForId[0]]);
             } else {
-                return null;
+                return 'MAX_POLYPHONY';
             }
         }
 
@@ -76,7 +79,7 @@ export default class SoundPoolManager {
 
             if (victimIndex === -1) {
                 console.warn(`[Pool] Rejected "${soundId}": No victims with lower priority.`);
-                return null;
+                return 'PRIORITY_STEAL_FAILED';
             }
 
             this.release(this.#allInstances[victimIndex]);

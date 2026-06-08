@@ -1,6 +1,6 @@
 import type { IMagnetConfig, ISmartLoopSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { RegionId, QuantizeType } from '@scene-grid/shared';
+import type { RegionId, QuantizeType, IConditionTrace } from '@scene-grid/shared';
 import { isAbsent } from '@scene-grid/shared';
 import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
 
@@ -13,11 +13,13 @@ export interface ITransitionDecision {
         readonly tailDurationMs?: number;
         readonly interruptable: boolean;
     };
+    readonly trace: IConditionTrace;
 }
 
 export default class SmartLoopTransitionPolicy {
     constructor(private readonly rtpcAdapter: IRTPCAdapter) {}
 
+    // oxlint-disable-next-line max-lines-per-function
     public evaluate(
         config: ISmartLoopSoundConfig,
         currentRegion: RegionId,
@@ -55,6 +57,19 @@ export default class SmartLoopTransitionPolicy {
                         crossfadeDuration: magnet.crossfadeDuration,
                         tailDurationMs: magnet.tailDurationMs,
                         interruptable: true
+                    },
+                    trace: {
+                        param: magnet.condition.param,
+                        operator: magnet.condition.operator,
+                        threshold: magnet.condition.value,
+                        actualValue: currentValue,
+                        passed: true,
+                        hysteresisDeadZone: magnet.condition.hysteresis
+                            ? [
+                                  magnet.condition.value - magnet.condition.hysteresis,
+                                  magnet.condition.value + magnet.condition.hysteresis
+                              ]
+                            : undefined
                     }
                 };
             }

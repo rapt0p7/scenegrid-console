@@ -367,7 +367,8 @@ export class AudioEngine implements IAudioEngine {
                 this.#soundController,
                 this.#router,
                 this.#engineTicker,
-                smartLoopTransitionPolicy
+                smartLoopTransitionPolicy,
+                telemetry
             );
 
             const resolver = new MixerStateResolver({ defaultBusGain: 1 });
@@ -444,7 +445,7 @@ export class AudioEngine implements IAudioEngine {
                 this.config.globalVoiceLimit ?? 128
             );
 
-            const cullingArbiter = new VoiceCullingArbiter(0.01);
+            const cullingArbiter = new VoiceCullingArbiter(0.01, 1000, this.config.globalVoiceLimit);
 
             const cullingProvider = new CullingContextProvider(
                 this.#soundController,
@@ -452,7 +453,7 @@ export class AudioEngine implements IAudioEngine {
                 this.config.soundMap
             );
 
-            this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingProvider);
+            this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingProvider, telemetry);
 
             this.#engineTicker.add('telemetry' as TickerTaskId, telemetry.TICK_RATE_MS, telemetry);
 

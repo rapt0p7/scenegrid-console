@@ -102,9 +102,22 @@ export class SoundController implements ISoundController {
 
         this.lastPlayTimes.set(soundId, now);
 
-        const instance = this.pool.acquire(soundId, buffer);
+        const acquireResult = this.pool.acquire(soundId, buffer);
 
-        if (!instance) return null;
+        if (typeof acquireResult === 'string') {
+            this.telemetry?.dispatch({
+                type: 'CAUSE_CHAIN',
+                timestampMs: this.getCurrentTime() * 1000,
+                initiator: { type: 'API', method: 'controller.play' },
+                result: {
+                    type: 'BLOCKED',
+                    reason: `Pool rejected play for ${soundId}. Reason: ${acquireResult}`
+                }
+            });
+            return null;
+        }
+
+        const instance = acquireResult;
 
         const playbackId = this.nextPlaybackId++ as PlaybackId;
 
