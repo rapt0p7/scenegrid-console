@@ -16,7 +16,7 @@ describe('AudioBufferLoader', () => {
         vi.clearAllMocks();
 
         fakeAudioBuffer = { duration: 2.5, isDummy: false };
-        dummyAudioBuffer = { duration: 0.0001, isDummy: true }; // Наш фейковый буфер тишины
+        dummyAudioBuffer = { duration: 0.0001, isDummy: true };
 
         mockContextManager = {
             context: {

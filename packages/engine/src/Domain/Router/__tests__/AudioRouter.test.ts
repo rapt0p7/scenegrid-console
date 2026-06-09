@@ -424,7 +424,6 @@ describe('AudioRouter (Command Dispatcher)', () => {
             const result = router.play('container_sound' as SoundId);
 
             expect(result).toBeNull();
-            // Поскольку звук неизвестен, рекурсивный вызов прервется ДО вызова soundController.play
             expect(mockController.play).not.toHaveBeenCalled();
         });
     });

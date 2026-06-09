@@ -793,7 +793,7 @@ describe('AudioBusSystem - HMR (updateConfig)', () => {
         };
 
         const initialConfig = {
-            sfx: { gain: 1, sends: { verb: 0.5, delay: 0.8 } }, // У sfx есть два посыла
+            sfx: { gain: 1, sends: { verb: 0.5, delay: 0.8 } },
             verb: { gain: 1 },
             delay: { gain: 1 },
             master: { gain: 1 }
