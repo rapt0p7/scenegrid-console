@@ -31,7 +31,7 @@ We use `dependency-cruiser` to enforce the **Inward Dependency Rule**: logic flo
 - **Role:** Bootstrapping and coordinating use cases. The `AudioEngine` facade and high-level orchestration live here.
 - **Dependency:** Can depend on all layers to "wire" the adapters to the domain.
 
-### 5. Shared Layer (`packages/src/Shared`) — _Common Utilities and Types_
+### 5. Shared Layer (`packages/shared`) — _Common Utilities and Types_
 
 - **Role:** Mathematical constants, universal types, and guards used by all layers.
 - **Strict Rule:** Must have **zero dependencies** on other internal layers.
