@@ -10,28 +10,28 @@ This is a high-performance virtual mixing engine. To ensure long-term stability 
 
 We use `dependency-cruiser` to enforce the **Inward Dependency Rule**: logic flows toward the center (Domain), and the center is agnostic of the outside world.
 
-### 1. Domain Layer (`src/Domain`) — _The Golden Circle_
+### 1. Domain Layer (`packages/engine/src/Domain`) — _The Golden Circle_
 
 - **Role:** Pure business logic (Mixer states, routing calculations, voice culling rules).
 - **Strict Rule:** **ZERO dependencies on Web Audio API.** You must not import `AudioContext`, `GainNode`, or any browser-specific audio types.
 - **Communication:** Defines **Ports** (interfaces) that describe what the engine needs (e.g., `IAudioBusSystem`).
 
-### 2. Infrastructure Layer (`src/Infrastructure`) — _Adapters_
+### 2. Infrastructure Layer (`packages/engine/src/Infrastructure`) — _Adapters_
 
 - **Role:** Technical implementation of Domain Ports. This is where the Web Audio nodes, `AudioWorklet` processors, and buffer loaders reside.
 - **Dependency:** May depend on `Domain` (to implement ports) and `Shared`.
 
-### 3. Kernel Layer (`src/Kernel`) — _The Math Engine_
+### 3. Kernel Layer (`packages/engine/src/Kernel`) — _The Math Engine_
 
 - **Role:** High-performance, performance-critical mathematical code (RTPC modulation engine, curve evaluation).
 - **Dependency:** May depend on `Shared` and `Domain/*/Ports`. It must remain stateless and optimized for high-frequency execution.
 
-### 4. Application Layer (`src/Application`) — _The Orchestrator_
+### 4. Application Layer (`packages/engine/src/Application`) — _The Orchestrator_
 
 - **Role:** Bootstrapping and coordinating use cases. The `AudioEngine` facade and high-level orchestration live here.
 - **Dependency:** Can depend on all layers to "wire" the adapters to the domain.
 
-### 5. Shared Layer (`src/Shared`) — _Common Utilities_
+### 5. Shared Layer (`packages/src/Shared`) — _Common Utilities and Types_
 
 - **Role:** Mathematical constants, universal types, and guards used by all layers.
 - **Strict Rule:** Must have **zero dependencies** on other internal layers.
@@ -66,7 +66,7 @@ _Example of a good commit:_
 
 To protect the integrity of the engine, the following are strictly forbidden:
 
-1.  **Domain Pollution:** Importing anything from `src/Infrastructure` or `src/Application` into `src/Domain`.
+1.  **Domain Pollution:** Importing anything from `packages/engine/src/Infrastructure` or `packages/engine/src/Application` into `packages/engine/src/Domain`.
 2.  **Bypass Routing:** Connecting audio sources (Voices) directly to the Master Output. All signals **must** flow through the hierarchical `AudioBus` system.
 3.  **Direct Parameter Manipulation:** Bypassing the `RTPCManager` or `AutomationEngine`. All real-time parameter changes must be batched and throttled to protect the Audio Thread.
 4.  **Circular Dependencies:** Creating circular references between components (e.g., `Mixer` calling `Router` while `Router` calls `Mixer`). Use events or third-party orchestrators.
@@ -90,6 +90,6 @@ Always keep the **Ports and Adapters** pattern in mind:
 - **The Domain** defines the _Interface_ (The Port).
 - **The Infrastructure** defines the _Implementation_ (The Adapter).
 
-If you need to access a new Web Audio feature, first define its logical behavior as an interface in `src/domain/busSystem/ports`.
+If you need to access a new Web Audio feature, first define its logical behavior as an interface in `packages/engine/src/Domain/BusSystem/Ports`.
 
 Thank you for contributing to the **SceneGrid Console**!
