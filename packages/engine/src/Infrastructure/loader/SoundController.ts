@@ -11,6 +11,7 @@ import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackSched
 import type { AudioCtx } from '@infrastructure/types/IAudioContext';
 import type { ILogicalVoice } from '@infrastructure/types/ILogicalVoice.js';
 import type { ISoundOptions } from '@infrastructure/types/ISoundOptions.js';
+import { CyclePool } from '@scene-grid/shared';
 
 export interface SoundDescriptor {
     readonly options: ISoundOptions;
@@ -32,9 +33,7 @@ export class SoundController implements ISoundController {
     private nextPlaybackId = 1 as PlaybackId;
     readonly #sidechainLinks: Array<Map<BusId, number>>;
     private readonly virtualTimers: VirtualVoiceTimer[] = [];
-    private readonly lifecyclePoolSize = 128;
-    private lifecycleCursor = 0;
-    private readonly lifecyclePool: ITelemetryLifecycleEvent[] = Array.from({ length: 128 }, () => ({
+    private readonly lifecyclePool = new CyclePool<ITelemetryLifecycleEvent>(128, () => ({
         type: 'LIFECYCLE',
         timestampMs: 0,
         action: 'START',
@@ -516,9 +515,7 @@ export class SoundController implements ISoundController {
     private pushLifecycle(action: LifecycleAction, playbackId: PlaybackId, soundId: SoundId, reason?: string): void {
         if (!this.telemetry) return;
 
-        const dto = this.lifecyclePool[this.lifecycleCursor];
-
-        this.lifecycleCursor = (this.lifecycleCursor + 1) % this.lifecyclePoolSize;
+        const dto = this.lifecyclePool.getNext();
 
         // oxlint-disable-next-line typescript/no-explicit-any
         (dto as any).timestampMs = this.getCurrentTime() * 1000;

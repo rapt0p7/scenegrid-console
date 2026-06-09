@@ -5,6 +5,8 @@ export type { DeepReadonly } from './DeepReadonly.js';
 export type { Point2D, MathCurveType, MathCurvePresetDefinition, MathCurveDefinition } from './Math/MathCurve.js';
 export type { IPRNG } from './Math/SeededPRNG.js';
 
+export { CyclePool } from './Memory/CyclePool.js';
+
 export { default as clamp } from './clamp.js';
 export { default as deepFreeze } from './deepFreeze.js';
 

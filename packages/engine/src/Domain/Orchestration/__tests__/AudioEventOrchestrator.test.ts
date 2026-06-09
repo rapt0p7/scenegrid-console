@@ -13,6 +13,7 @@ import type { Mocked } from 'vitest';
 import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 const testEventMap: IEventMap = {
     ['Player_Jump' as EventId]: {
@@ -131,7 +132,7 @@ const testEventMap: IEventMap = {
     }
 };
 
-describe('AudioEventOrchestrator (State Machine)', () => {
+describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
     let mockRouter: Mocked<IAudioRouter>;
     let mockRtpcAdapter: Mocked<IRTPCAdapter>;
     let mockSequencer: Mocked<ISequencer>;
@@ -139,6 +140,7 @@ describe('AudioEventOrchestrator (State Machine)', () => {
     let mockController: Mocked<ISoundController>;
     let mockPrng: Mocked<IPRNG>;
     let mockBankManager: Mocked<IBankManager>;
+    let mockTelemetry: Mocked<ITelemetryDispatcher>;
     let dispatcher: AudioEventOrchestrator;
 
     beforeEach(() => {
@@ -179,7 +181,7 @@ describe('AudioEventOrchestrator (State Machine)', () => {
         } as unknown as Mocked<MixerSnapshotManager>;
 
         mockController = {
-            getCurrentTime: vi.fn().mockReturnValue(0)
+            getCurrentTime: vi.fn().mockReturnValue(1.5)
         } as unknown as Mocked<ISoundController>;
 
         mockPrng = {
@@ -193,6 +195,10 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             unloadBank: vi.fn()
         } as unknown as Mocked<IBankManager>;
 
+        mockTelemetry = {
+            dispatch: vi.fn()
+        } as unknown as Mocked<ITelemetryDispatcher>;
+
         dispatcher = new AudioEventOrchestrator(
             testEventMap,
             mockRouter,
@@ -201,7 +207,8 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             mockMixer,
             mockController,
             mockPrng,
-            mockBankManager
+            mockBankManager,
+            mockTelemetry
         );
     });
 
@@ -209,10 +216,23 @@ describe('AudioEventOrchestrator (State Machine)', () => {
         vi.restoreAllMocks();
     });
 
-    it('should dispatch a simple play action', () => {
+    it('should dispatch a simple play action and send ACTION_EXECUTED telemetry', () => {
         dispatcher.postEvent('Player_Jump' as EventId);
+
         expect(mockRouter.play).toHaveBeenCalledTimes(1);
         expect(mockRouter.play).toHaveBeenCalledWith('sfx_jump');
+
+        expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({
+                type: 'CAUSE_CHAIN',
+                timestampMs: 1500,
+                initiator: { type: 'EVENT', eventId: 'Player_Jump' },
+                result: expect.objectContaining({
+                    type: 'ACTION_EXECUTED',
+                    action: expect.objectContaining({ type: 'play', target: 'sfx_jump' })
+                })
+            })
+        );
     });
 
     it('should dispatch multiple actions in order (play and set_rtpc)', () => {
@@ -238,15 +258,24 @@ describe('AudioEventOrchestrator (State Machine)', () => {
         expect(mockRouter.play).toHaveBeenCalledWith('jingle_victory');
     });
 
-    it('should safely ignore and warn when posting an unknown event', () => {
+    it('should safely ignore and warn when posting an unknown event, and dispatch BLOCKED telemetry', () => {
         dispatcher.postEvent('Unknown_Event' as EventId);
 
         expect(console.warn).toHaveBeenCalledWith(
             expect.stringContaining('Event "Unknown_Event" not found in EventMap.')
         );
         expect(mockRouter.play).not.toHaveBeenCalled();
-        expect(mockRtpcAdapter.setValue).not.toHaveBeenCalled();
-        expect(mockSequencer.playLoop).not.toHaveBeenCalled();
+
+        expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({
+                type: 'CAUSE_CHAIN',
+                initiator: { type: 'API', method: 'postEvent' },
+                result: expect.objectContaining({
+                    type: 'BLOCKED',
+                    reason: expect.stringContaining('not found in EventMap')
+                })
+            })
+        );
     });
 
     describe('Sequencer Integration Actions', () => {
@@ -315,11 +344,25 @@ describe('AudioEventOrchestrator (State Machine)', () => {
             postEventSpy.mockRestore();
         });
 
-        it('should break out of infinite recursion if depth exceeds 10', () => {
+        it('should break out of infinite recursion if depth exceeds 10 and dispatch BLOCKED telemetry', () => {
             const postEventSpy = vi.spyOn(AudioEventOrchestrator.prototype, 'postEvent');
             dispatcher.postEvent('Player_Recursion' as EventId);
+
             expect(postEventSpy).toHaveBeenCalledTimes(12);
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Max recursion depth reached'));
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'CAUSE_CHAIN',
+                    initiator: { type: 'EVENT', eventId: 'Player_Recursion' },
+                    result: expect.objectContaining({
+                        type: 'BLOCKED',
+                        reason: expect.stringContaining('Max recursion depth')
+                    })
+                })
+            );
+
+            postEventSpy.mockRestore();
         });
     });
 
@@ -343,14 +386,24 @@ describe('AudioEventOrchestrator (State Machine)', () => {
     });
 
     describe('Conditions and Probabilities', () => {
-        it('should skip actions if probability check fails, and execute if passes', () => {
+        it('should skip actions if probability check fails, execute if passes, and send BLOCKED telemetry', () => {
             dispatcher.postEvent('Event_With_Probability' as EventId);
 
             expect(mockRouter.play).not.toHaveBeenCalledWith('sfx_unlikely');
             expect(mockRouter.play).toHaveBeenCalledWith('sfx_likely');
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'CAUSE_CHAIN',
+                    result: expect.objectContaining({
+                        type: 'BLOCKED',
+                        reason: expect.stringContaining('Probability check failed')
+                    })
+                })
+            );
         });
 
-        it('should evaluate RTPC conditions dynamically before executing action', () => {
+        it('should evaluate RTPC conditions dynamically, block with telemetry trace if failed', () => {
             mockRtpcAdapter.getValue.mockImplementation(param => {
                 if (param === 'hp') return 80;
                 return 0;
@@ -360,6 +413,22 @@ describe('AudioEventOrchestrator (State Machine)', () => {
 
             expect(mockRouter.play).not.toHaveBeenCalledWith('sfx_low_hp');
             expect(mockRouter.play).toHaveBeenCalledWith('sfx_high_hp');
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'CAUSE_CHAIN',
+                    result: expect.objectContaining({
+                        type: 'BLOCKED',
+                        reason: expect.stringContaining('Condition failed')
+                    }),
+                    conditionTrace: expect.objectContaining({
+                        passed: false,
+                        actualValue: 80,
+                        threshold: 50,
+                        operator: '<'
+                    })
+                })
+            );
 
             mockRouter.play.mockClear();
 

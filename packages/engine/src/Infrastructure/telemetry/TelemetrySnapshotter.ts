@@ -63,18 +63,16 @@ export class TelemetrySnapshotter implements ITickable {
 
         // oxlint-disable-next-line typescript/no-explicit-any
         (this.snapshotDto as any).timestampMs = currentTimeMs;
-        // oxlint-disable-next-line typescript/no-explicit-any
-        (this.snapshotDto as any).rtpcs = this.collectRtpcs();
-        // oxlint-disable-next-line typescript/no-explicit-any
-        (this.snapshotDto as any).switches = this.collectSwitches();
-        // oxlint-disable-next-line typescript/no-explicit-any
-        (this.snapshotDto as any).activePlaybacks = this.collectPlaybacks();
+        this.collectRtpcs(this.snapshotDto.rtpcs);
+        this.collectSwitches(this.snapshotDto.switches);
+        this.collectPlaybacks(this.snapshotDto.activePlaybacks);
 
         this.dispatcher.dispatch(this.snapshotDto);
     }
 
-    private collectRtpcs(): IRtpcSnapshot[] {
+    private collectRtpcs(out: IRtpcSnapshot[]): void {
         const length = this.rtpcKeys.length;
+
         for (let i = 0; i < length; i++) {
             const param = this.rtpcKeys[i];
             const poolItem = this.rtpcPool[i];
@@ -83,11 +81,14 @@ export class TelemetrySnapshotter implements ITickable {
             (poolItem as any).param = param;
             // oxlint-disable-next-line typescript/no-explicit-any
             (poolItem as any).value = this.rtpcAdapter.getValue(param) ?? 0;
+
+            out[i] = poolItem;
         }
-        return this.rtpcPool;
+
+        out.length = length;
     }
 
-    private collectSwitches(): ISwitchSnapshot[] {
+    private collectSwitches(out: ISwitchSnapshot[]): void {
         let activeCount = 0;
         const length = this.switchKeys.length;
 
@@ -96,33 +97,33 @@ export class TelemetrySnapshotter implements ITickable {
             const state = this.switchRegistry.getHistory(switchId);
 
             if (isDefined(state?.currentSwitchKey)) {
-                const poolItem = this.switchPool[activeCount++];
+                const poolItem = this.switchPool[activeCount];
                 // oxlint-disable-next-line typescript/no-explicit-any
                 (poolItem as any).switchId = switchId;
                 // oxlint-disable-next-line typescript/no-explicit-any
                 (poolItem as any).currentKey = state.currentSwitchKey;
+
+                out[activeCount++] = poolItem;
             }
         }
 
-        return activeCount === this.switchPool.length ? this.switchPool : this.switchPool.slice(0, activeCount);
+        out.length = activeCount;
     }
 
-    private collectPlaybacks(): IPlaybackSnapshot[] {
+    private collectPlaybacks(out: IPlaybackSnapshot[]): void {
         const activeIds = this.soundController.getActivePlaybacks();
-        const length = activeIds.length;
         let activeCount = 0;
+        const limit = this.playbackPool.length;
 
-        for (let i = 0; i < length; i++) {
-            if (activeCount >= this.playbackPool.length) break;
+        for (let i = 0; i < activeIds.length; i++) {
+            if (activeCount >= limit) break;
 
             const id = activeIds[i];
             const soundId = this.soundController.getSoundId(id);
             if (!soundId) continue;
 
             const state = this.soundController.getPlaybackState(id);
-            const poolItem = this.playbackPool[activeCount++];
-
-            const controller = this.soundController;
+            const poolItem = this.playbackPool[activeCount];
 
             // oxlint-disable-next-line typescript/no-explicit-any
             (poolItem as any).playbackId = id;
@@ -130,15 +131,14 @@ export class TelemetrySnapshotter implements ITickable {
             (poolItem as any).soundId = soundId;
             // oxlint-disable-next-line typescript/no-explicit-any
             (poolItem as any).isVirtual = state === 'virtual';
+            // oxlint-disable-next-line typescript/no-explicit-any
+            (poolItem as any).positionSec = this.soundController.getPlaybackPositionSec?.(id) ?? 0;
+            // oxlint-disable-next-line typescript/no-explicit-any
+            (poolItem as any).volume = this.soundController.getCurrentVolume?.(id) ?? 1;
 
-            // oxlint-disable-next-line typescript/no-explicit-any
-            (poolItem as any).positionSec = controller.getPlaybackPositionSec
-                ? controller.getPlaybackPositionSec(id)
-                : 0;
-            // oxlint-disable-next-line typescript/no-explicit-any
-            (poolItem as any).volume = controller.getCurrentVolume ? controller.getCurrentVolume(id) : 1;
+            out[activeCount++] = poolItem;
         }
 
-        return activeCount === this.playbackPool.length ? this.playbackPool : this.playbackPool.slice(0, activeCount);
+        out.length = activeCount;
     }
 }

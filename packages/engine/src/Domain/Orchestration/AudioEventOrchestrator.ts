@@ -1,5 +1,5 @@
 // oxlint-disable max-lines-per-function
-import { isDefined } from '@scene-grid/shared';
+import { isDefined, CyclePool, TelemetryPacket, ConditionOperator, GameParamId } from '@scene-grid/shared';
 import type { EventAction, IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
@@ -20,17 +20,41 @@ interface ScheduledAction {
 }
 
 interface IConditionTrace {
-    readonly param: string;
-    readonly operator: string;
-    readonly threshold: number;
-    readonly actualValue: number;
-    readonly passed: boolean;
-    readonly hysteresisDeadZone?: [number, number];
+    param: GameParamId;
+    operator: ConditionOperator;
+    threshold: number;
+    actualValue: number;
+    passed: boolean;
+    hysteresisDeadZone?: [number, number];
 }
 
 export class AudioEventOrchestrator implements ITickable {
     private readonly scheduledActions: ScheduledAction[] = [];
     private readonly conditionStates = new WeakMap<IConditionConfig, boolean>();
+    private readonly tmpConditionTrace: IConditionTrace = {
+        param: '' as GameParamId,
+        operator: '' as ConditionOperator,
+        threshold: 0,
+        actualValue: 0,
+        passed: false,
+        hysteresisDeadZone: undefined
+    };
+    private readonly telemetryPool = new CyclePool<TelemetryPacket>(256, () => ({
+        type: 'CAUSE_CHAIN',
+        timestampMs: 0,
+        initiator: { type: 'EVENT', method: undefined, eventId: '' as EventId },
+        result: { type: 'BLOCKED', reason: '', action: undefined },
+        conditionTrace: undefined
+    }));
+
+    private readonly tracePool = new CyclePool<IConditionTrace>(256, () => ({
+        param: '' as GameParamId,
+        operator: '' as ConditionOperator,
+        threshold: 0,
+        actualValue: 0,
+        passed: false,
+        hysteresisDeadZone: undefined
+    }));
 
     constructor(
         private readonly eventMap: IEventMap,
@@ -49,12 +73,7 @@ export class AudioEventOrchestrator implements ITickable {
 
         if (!config) {
             console.warn(`[EventDispatcher] Event "${eventId}" not found in EventMap.`);
-            this.telemetry?.dispatch({
-                type: 'CAUSE_CHAIN',
-                timestampMs: this.soundController.getCurrentTime() * 1000,
-                initiator: { type: 'API', method: 'postEvent' },
-                result: { type: 'BLOCKED', reason: `Event "${eventId}" not found in EventMap.` }
-            });
+            this.dispatchTelemetryBlocked(eventId, 'API', 'postEvent', `Event "${eventId}" not found in EventMap.`);
             return;
         }
 
@@ -65,26 +84,26 @@ export class AudioEventOrchestrator implements ITickable {
             const action = config.actions[i];
 
             if (isDefined(action.condition)) {
-                const trace = this.evaluateCondition(action.condition);
-                if (!trace.passed) {
-                    this.telemetry?.dispatch({
-                        type: 'CAUSE_CHAIN',
-                        timestampMs: currentTimeMs,
-                        initiator: { type: 'EVENT', eventId },
-                        result: { type: 'BLOCKED', reason: `Condition failed for action type: ${action.type}` },
-                        conditionTrace: trace as any
-                    });
+                this.evaluateCondition(action.condition, this.tmpConditionTrace);
+                if (!this.tmpConditionTrace.passed) {
+                    this.dispatchTelemetryBlocked(
+                        eventId,
+                        'EVENT',
+                        undefined,
+                        `Condition failed for action type: ${action.type}`,
+                        this.tmpConditionTrace
+                    );
                     continue;
                 }
             }
 
             if (isDefined(action.probability) && this.prng.next() > action.probability) {
-                this.telemetry?.dispatch({
-                    type: 'CAUSE_CHAIN',
-                    timestampMs: currentTimeMs,
-                    initiator: { type: 'EVENT', eventId },
-                    result: { type: 'BLOCKED', reason: `Probability check failed for action type: ${action.type}` }
-                });
+                this.dispatchTelemetryBlocked(
+                    eventId,
+                    'EVENT',
+                    undefined,
+                    `Probability check failed for action type: ${action.type}`
+                );
                 continue;
             }
 
@@ -120,12 +139,12 @@ export class AudioEventOrchestrator implements ITickable {
     private executeAction(eventId: EventId, action: EventAction, depth: number = 0): void {
         if (depth > 10 && action.type === 'trigger_event') {
             console.error(`[AudioEventOrchestrator] Max recursion depth reached for nested event: ${action.target}`);
-            this.telemetry?.dispatch({
-                type: 'CAUSE_CHAIN',
-                timestampMs: this.soundController.getCurrentTime() * 1000,
-                initiator: { type: 'EVENT', eventId },
-                result: { type: 'BLOCKED', reason: `Max recursion depth reached for nested event: ${action.target}` }
-            });
+            this.dispatchTelemetryBlocked(
+                eventId,
+                'EVENT',
+                undefined,
+                `Max recursion depth reached for nested event: ${action.target}`
+            );
             return;
         }
 
@@ -186,10 +205,10 @@ export class AudioEventOrchestrator implements ITickable {
                 break;
         }
 
-        this.dispatchSuccess(eventId, { type: 'ACTION_EXECUTED', action });
+        this.dispatchTelemetrySuccess(eventId, action);
     }
 
-    private evaluateCondition(condition: DeepReadonly<IConditionConfig>): IConditionTrace {
+    private evaluateCondition(condition: DeepReadonly<IConditionConfig>, outTrace: IConditionTrace): void {
         const currentValue = this.rtpcAdapter.getValue(condition.param) ?? 0;
 
         const conditionKey = condition as unknown as IConditionConfig;
@@ -206,24 +225,67 @@ export class AudioEventOrchestrator implements ITickable {
 
         this.conditionStates.set(conditionKey, isMet);
 
-        return {
-            param: condition.param,
-            operator: condition.operator,
-            threshold: condition.value,
-            actualValue: currentValue,
-            passed: isMet,
-            hysteresisDeadZone: condition.hysteresis
-                ? [condition.value - condition.hysteresis, condition.value + condition.hysteresis]
-                : undefined
-        };
+        outTrace.param = condition.param;
+        outTrace.operator = condition.operator;
+        outTrace.threshold = condition.value;
+        outTrace.actualValue = currentValue;
+        outTrace.passed = isMet;
+        outTrace.hysteresisDeadZone = condition.hysteresis
+            ? [condition.value - condition.hysteresis, condition.value + condition.hysteresis]
+            : undefined;
     }
 
-    private dispatchSuccess(eventId: EventId, result: any): void {
-        this.telemetry?.dispatch({
-            type: 'CAUSE_CHAIN',
-            timestampMs: this.soundController.getCurrentTime() * 1000,
-            initiator: { type: 'EVENT', eventId },
-            result
-        });
+    private dispatchTelemetryBlocked(
+        eventId: EventId,
+        initType: 'API' | 'EVENT',
+        initMethod: string | undefined,
+        reason: string,
+        trace?: IConditionTrace
+    ): void {
+        if (!this.telemetry) return;
+
+        const log = this.telemetryPool.getNext() as any;
+
+        log.timestampMs = this.soundController.getCurrentTime() * 1000;
+        log.initiator.type = initType;
+        log.initiator.eventId = initType === 'EVENT' ? eventId : undefined;
+        log.initiator.method = initMethod;
+        log.result.type = 'BLOCKED';
+        log.result.reason = reason;
+        log.result.action = undefined;
+
+        if (trace) {
+            const pooledTrace = this.tracePool.getNext();
+
+            pooledTrace.param = trace.param;
+            pooledTrace.operator = trace.operator;
+            pooledTrace.threshold = trace.threshold;
+            pooledTrace.actualValue = trace.actualValue;
+            pooledTrace.passed = trace.passed;
+            pooledTrace.hysteresisDeadZone = trace.hysteresisDeadZone;
+
+            log.conditionTrace = pooledTrace;
+        } else {
+            log.conditionTrace = undefined;
+        }
+
+        this.telemetry.dispatch(log);
+    }
+
+    private dispatchTelemetrySuccess(eventId: EventId, action: EventAction): void {
+        if (!this.telemetry) return;
+
+        const log = this.telemetryPool.getNext() as any;
+
+        log.timestampMs = this.soundController.getCurrentTime() * 1000;
+        log.initiator.type = 'EVENT';
+        log.initiator.eventId = eventId;
+        log.initiator.method = undefined;
+        log.result.type = 'ACTION_EXECUTED';
+        log.result.reason = undefined;
+        log.result.action = action;
+        log.conditionTrace = undefined;
+
+        this.telemetry.dispatch(log);
     }
 }

@@ -2,7 +2,7 @@
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TelemetrySnapshotter } from '@infrastructure/telemetry/TelemetrySnapshotter.js'; // Укажи свой путь
+import { TelemetrySnapshotter } from '@infrastructure/telemetry/TelemetrySnapshotter.js';
 
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
