@@ -1,7 +1,5 @@
 // noinspection D
 
-import type { IAudioWorkletProcessor } from '../types/IAudioWorkletProcessor.js';
-
 interface DuckerProcessorOptions {
     processorOptions?: {
         attack?: number;
@@ -9,7 +7,7 @@ interface DuckerProcessorOptions {
     };
 }
 
-class DuckerProcessor extends AudioWorkletProcessor implements IAudioWorkletProcessor {
+class DuckerProcessor extends AudioWorkletProcessor {
     public static parameterDescriptors = [];
     private frameCounter: number = 0;
     private readonly attack: number;

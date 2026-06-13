@@ -16,7 +16,6 @@ export type { ISoundInstance, InstanceParameterTarget } from './types/ISoundInst
 export type { ISoundOptions } from './types/ISoundOptions.js';
 export type { IVoiceConfig } from './types/IVoiceConfig.js';
 export type { ISidechain, IPluginFactory, ILimiterNode } from './types/IAudioPlugins.js';
-export type { IAudioWorkletProcessor } from './types/IAudioWorkletProcessor.js';
 
 export { default as AudioBusSystem } from './busSystem/AudioBusSystem.js';
 export { default as AudioContextManager } from './context/AudioContextManager.js';

@@ -20,6 +20,9 @@
         "@scene-grid/shared": "*",
         "globalthis": "1.0.4"
     },
+    "devDependencies": {
+        "@types/audioworklet": "0.0.100"
+    },
     "peerDependencies": {
         "mitt": "3.0.1",
         "standardized-audio-context": "25.3.77",

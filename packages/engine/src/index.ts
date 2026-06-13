@@ -25,7 +25,6 @@ export type { IRTPCManifest } from './Kernel/RTPC/Ports/IRTPCManifest.js';
 export type { IEventMap } from './Domain/Configuration/Ports/IEventConfig.js';
 export type { IBankManifest } from './Domain/Configuration/Ports/IBankConfig.js';
 export type {
-    IAudioWorkletProcessor,
     ISoundInstance,
     AudioWorkletNodeLike,
     GainNodeLike,

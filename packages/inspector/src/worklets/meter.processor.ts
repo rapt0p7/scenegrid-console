@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
-import type { IAudioWorkletProcessor } from '@scene-grid/engine';
-
 interface FilterCoeffs {
     b0: number;
     b1: number;
@@ -29,7 +27,7 @@ interface HighshelfFilter extends FilterCoeffs {
     outR: number;
 }
 
-class MeterProcessor extends AudioWorkletProcessor implements IAudioWorkletProcessor {
+class MeterProcessor extends AudioWorkletProcessor {
     public static parameterDescriptors = [];
     private readonly sampleRate: number;
     private rms: number;

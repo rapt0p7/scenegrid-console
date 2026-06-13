@@ -1,5 +1,3 @@
-import type { IAudioWorkletProcessor } from '../types/IAudioWorkletProcessor.js';
-
 interface TinyLimiterOptions {
     processorOptions?: {
         lookahead?: number;
@@ -8,7 +6,7 @@ interface TinyLimiterOptions {
     };
 }
 
-class TinyLimiter extends AudioWorkletProcessor implements IAudioWorkletProcessor {
+class TinyLimiter extends AudioWorkletProcessor {
     private readonly lookahead: number;
     private readonly ceiling: number;
     private readonly releaseTime: number;

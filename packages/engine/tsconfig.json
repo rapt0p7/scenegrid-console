@@ -10,7 +10,7 @@
             "@kernel/*": ["./src/Kernel/*"],
             "@application/*": ["./src/Application/*"]
         },
-        "types": ["./src/audio-worklet-global-scope"]
+        "types": ["audioworklet"]
     },
     "include": ["src/**/*.ts", "**/scripts/**/*.ts", "vite.config.ts"],
     "references": [
