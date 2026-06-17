@@ -37,7 +37,7 @@ import {
     BankManagerAdapter,
     SwitchHistoryRegistry,
     TelemetryDispatcher,
-    BrowserTelemetryTransport,
+    BroadcastTelemetryTransport,
     TelemetrySnapshotter
 } from '@infrastructure';
 import type { IPluginFactory } from '@infrastructure';
@@ -234,8 +234,8 @@ export class AudioEngine implements IAudioEngine {
 
             const seed = this.config.seed ?? Date.now();
             this.#prng = new SeededPRNG(seed);
-            const browserTransport = new BrowserTelemetryTransport();
-            const telemetry = new TelemetryDispatcher(browserTransport);
+            const transport = new BroadcastTelemetryTransport();
+            const telemetry = new TelemetryDispatcher(transport);
             const automation = new AutomationEngine(this.#contextManager.context, this.#engineTicker);
             this.#contextManager.initSpatial(automation);
             const nodeFactory = new AudioNodeFactory(this.#contextManager);

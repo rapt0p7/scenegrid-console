@@ -39,4 +39,5 @@ export { default as FiltersPlugin } from './plugins/FiltersPlugin.js';
 export { safeDisconnect } from './utils/safeDisconnect.js';
 export { TelemetryDispatcher } from './telemetry/TelemetryDispatcher.js';
 export { BrowserTelemetryTransport } from './telemetry/BrowserTelemetryTransport.js';
+export { BroadcastTelemetryTransport } from './telemetry/BroadcastTelemetryTransport.js';
 export { TelemetrySnapshotter } from './telemetry/TelemetrySnapshotter.js';
