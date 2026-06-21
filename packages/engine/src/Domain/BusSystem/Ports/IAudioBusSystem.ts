@@ -10,7 +10,11 @@ export interface IAudioBusSystem {
     applySend(sourceBusId: BusId, targetBusId: BusId, gain: number | null, durationMs?: number): void;
     getCurrentRealGain(busId: BusId): number;
     getDefaultGain(busId: BusId): number;
+    getBusLogicalGain(busId: BusId): number | undefined;
+    getBusRtpcGain(busId: BusId): number | undefined;
+    getBusFinalGain(busId: BusId): number | undefined;
     getBaseBusConfig(busId: BusId): IBus | undefined;
+    getSidechainGain(busId: BusId): number;
     tickRTPC(rtpcAdapter: IRTPCAdapter): void;
     updateConfig(newConfig: IBuses): Promise<void>;
 }

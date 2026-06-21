@@ -9,6 +9,8 @@ export interface IAudioBus {
     bindRTPC(configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> | undefined, rtpcAdapter: IRTPCAdapter): void;
     safeReplaceFilter(newFilterConfig: IFilter | null, durationMs?: number): void;
     updateFilterParams(config: IFilter | null): void;
+    getTargetParamsGain(): { logical: number; rtpc: number };
+    getLogicalTargetGain(): number;
     setLogicalGain(gain: number, durationMs: number): void;
     setGainImmediate(gain: number): void;
     setRtpcGainModifier(modifier: number, durationMs: number): void;

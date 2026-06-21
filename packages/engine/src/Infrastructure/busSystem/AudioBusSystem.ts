@@ -209,6 +209,27 @@ export default class AudioBusSystem implements IAudioBusSystem {
         }
     }
 
+    public getBusLogicalGain(busId: BusId): number | undefined {
+        const bus = this.buses.get(busId);
+        return bus?.getTargetParamsGain().logical;
+    }
+
+    public getBusRtpcGain(busId: BusId): number | undefined {
+        const bus = this.buses.get(busId);
+        return bus?.getTargetParamsGain().rtpc;
+    }
+
+    public getBusFinalGain(busId: BusId): number | undefined {
+        const bus = this.buses.get(busId);
+        return bus?.getLogicalTargetGain();
+    }
+
+    public getSidechainGain(busId: BusId): number {
+        const sidechain = this.getSidechain(busId);
+
+        return 1 - (sidechain?.activeEnvelope ?? 0);
+    }
+
     /**
      * @internal Hot Module Replacement API
      * Soft-reloads the bus system configuration without stopping the audio context.

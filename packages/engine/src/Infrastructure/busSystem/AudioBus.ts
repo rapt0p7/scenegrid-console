@@ -2,7 +2,7 @@
 // noinspection D
 
 import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
-import { evaluateRTPCCurve, isDefined, isAbsent, clamp, typedEntries } from '@scene-grid/shared';
+import { evaluateRTPCCurve, isDefined, isAbsent, clamp, typedEntries, DeepReadonly } from '@scene-grid/shared';
 
 import type { IAudioBus } from '@domain/BusSystem/Ports/IAudioBus.js';
 import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
@@ -237,6 +237,14 @@ export default class AudioBus implements IAudioBus {
         if (isDefined(config.Q) && isDefined(this.filterNode.Q)) {
             this.automation.ramp(this.filterNode.Q, config.Q, 30, 'linear');
         }
+    }
+
+    public getTargetParamsGain(): DeepReadonly<{ logical: number; rtpc: number }> {
+        return this.targetParams.gain;
+    }
+
+    public getLogicalTargetGain(): number {
+        return this.logicalTargetGain;
     }
 
     private applyRTPCTarget(
