@@ -80,7 +80,8 @@ describe('SoundController', () => {
         mockBufferResolver = vi.fn().mockReturnValue(fakeBuffer);
 
         mockTelemetry = {
-            dispatch: vi.fn()
+            dispatch: vi.fn(),
+            dispatchManifest: vi.fn()
         };
 
         controller = new SoundController(

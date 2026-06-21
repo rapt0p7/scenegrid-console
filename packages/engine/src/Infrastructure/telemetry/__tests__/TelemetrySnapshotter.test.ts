@@ -8,7 +8,7 @@ import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispat
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
-import type { GameParamId, SoundId, PlaybackId, ITelemetrySnapshot } from '@scene-grid/shared';
+import type { GameParamId, SoundId, PlaybackId, ITelemetrySnapshot, BusId } from '@scene-grid/shared';
 
 describe('TelemetrySnapshotter', () => {
     let mockDispatcher: { dispatch: ReturnType<typeof vi.fn> };
@@ -21,11 +21,13 @@ describe('TelemetrySnapshotter', () => {
     };
     let mockRtpcAdapter: { getValue: ReturnType<typeof vi.fn> };
     let mockSwitchRegistry: { getHistory: ReturnType<typeof vi.fn> };
+    let mockBusSystem: any;
 
     let snapshotter: TelemetrySnapshotter;
 
     const rtpcKeys = ['speed', 'health'] as GameParamId[];
     const switchKeys = ['material', 'weather'] as SoundId[];
+    const busKeys = ['main', 'sfx'] as BusId[];
 
     beforeEach(() => {
         mockDispatcher = { dispatch: vi.fn() };
@@ -38,14 +40,21 @@ describe('TelemetrySnapshotter', () => {
         };
         mockRtpcAdapter = { getValue: vi.fn() };
         mockSwitchRegistry = { getHistory: vi.fn() };
+        mockBusSystem = {
+            getBusLogicalGain: vi.fn(),
+            getBusRtpcGain: vi.fn(),
+            getBusFinalGain: vi.fn()
+        };
 
         snapshotter = new TelemetrySnapshotter(
             mockDispatcher as unknown as ITelemetryDispatcher,
             mockSoundController as unknown as ISoundController,
             mockRtpcAdapter as unknown as IRTPCAdapter,
+            mockBusSystem,
             mockSwitchRegistry as unknown as ISwitchHistoryRegistry,
             rtpcKeys,
             switchKeys,
+            busKeys,
             2
         );
     });

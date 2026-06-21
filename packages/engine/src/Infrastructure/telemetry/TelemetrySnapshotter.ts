@@ -2,6 +2,7 @@ import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
 import type {
     ITelemetrySnapshot,
@@ -9,7 +10,9 @@ import type {
     IPlaybackSnapshot,
     ISwitchSnapshot,
     SoundId,
-    GameParamId
+    GameParamId,
+    BusId,
+    IBusSnapshot
 } from '@scene-grid/shared';
 import { isDefined } from '@scene-grid/shared';
 
@@ -21,14 +24,17 @@ export class TelemetrySnapshotter implements ITickable {
     private readonly rtpcPool: IRtpcSnapshot[];
     private readonly switchPool: ISwitchSnapshot[];
     private readonly playbackPool: IPlaybackSnapshot[];
+    private readonly busPool: IBusSnapshot[];
 
     constructor(
         private readonly dispatcher: ITelemetryDispatcher,
         private readonly soundController: ISoundController,
         private readonly rtpcAdapter: IRTPCAdapter,
+        private readonly busSystem: IAudioBusSystem,
         private readonly switchRegistry: ISwitchHistoryRegistry,
         private readonly rtpcKeys: GameParamId[],
         private readonly switchKeys: SoundId[],
+        private readonly busKeys: BusId[],
         private readonly maxPlaybacks: number = 128
     ) {
         this.rtpcPool = Array.from({ length: rtpcKeys.length }, () => ({ param: '' as GameParamId, value: 0 }));
@@ -44,12 +50,21 @@ export class TelemetrySnapshotter implements ITickable {
             isVirtual: false
         }));
 
+        this.busPool = Array.from({ length: busKeys.length }, () => ({
+            busId: '' as BusId,
+            logicalGain: 1,
+            rtpcGain: 1,
+            finalGain: 1,
+            sidechainGain: 1
+        }));
+
         this.snapshotDto = {
             type: 'SNAPSHOT',
             timestampMs: 0,
             rtpcs: [],
             switches: [],
-            activePlaybacks: []
+            activePlaybacks: [],
+            buses: []
         };
     }
 
@@ -65,9 +80,39 @@ export class TelemetrySnapshotter implements ITickable {
         (this.snapshotDto as any).timestampMs = currentTimeMs;
         this.collectRtpcs(this.snapshotDto.rtpcs);
         this.collectSwitches(this.snapshotDto.switches);
+        this.collectBuses(this.snapshotDto.buses);
         this.collectPlaybacks(this.snapshotDto.activePlaybacks);
 
         this.dispatcher.dispatch(this.snapshotDto);
+    }
+
+    private collectBuses(out: IBusSnapshot[]): void {
+        const length = this.busKeys.length;
+
+        for (let i = 0; i < length; i++) {
+            const busId = this.busKeys[i];
+            const poolItem = this.busPool[i];
+
+            const logical = this.busSystem.getBusLogicalGain(busId) ?? 1;
+            const rtpc = this.busSystem.getBusRtpcGain(busId) ?? 1;
+            const final = this.busSystem.getBusFinalGain(busId) ?? 1;
+            const sidechainGain = this.busSystem.getSidechainGain(busId);
+
+            // oxlint-disable-next-line typescript/no-explicit-any
+            (poolItem as any).busId = busId;
+            // oxlint-disable-next-line typescript/no-explicit-any
+            (poolItem as any).logicalGain = logical;
+            // oxlint-disable-next-line typescript/no-explicit-any
+            (poolItem as any).rtpcGain = rtpc;
+            // oxlint-disable-next-line typescript/no-explicit-any
+            (poolItem as any).finalGain = final;
+            // oxlint-disable-next-line typescript/no-explicit-any
+            (poolItem as any).sidechainGain = sidechainGain;
+
+            out[i] = poolItem;
+        }
+
+        out.length = length;
     }
 
     private collectRtpcs(out: IRtpcSnapshot[]): void {

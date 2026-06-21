@@ -32,6 +32,18 @@ export class TelemetryDispatcher implements ITelemetryDispatcher {
         }
     }
 
+    public dispatchManifest(manifestPayload: unknown): void {
+        if (!this.transport) return;
+
+        try {
+            if (this.transport.sendManifest) {
+                this.transport.sendManifest(manifestPayload);
+            }
+        } catch (error) {
+            console.warn('[TelemetryDispatcher] Failed to send manifest:', error);
+        }
+    }
+
     public tick(_currentTimeSec: number, _deltaTimeMs: number): void {
         this.flush();
     }

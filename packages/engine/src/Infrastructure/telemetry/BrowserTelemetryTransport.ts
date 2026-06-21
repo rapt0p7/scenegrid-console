@@ -17,4 +17,10 @@ export class BrowserTelemetryTransport implements ITelemetryTransport {
 
         this.targetWindow.postMessage({ channel: this.channelId, payload: batch.packets.slice(0, batch.size) }, '*');
     }
+
+    public sendManifest(manifestPayload: unknown): void {
+        if (!this.targetWindow) return;
+
+        this.targetWindow.postMessage({ channel: this.channelId, type: 'MANIFEST', payload: manifestPayload }, '*');
+    }
 }

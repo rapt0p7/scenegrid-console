@@ -1,4 +1,4 @@
-import type { GameParamId, SoundId, PlaybackId, EventId, RegionId, BankId } from '../Types/Branded.js';
+import type { GameParamId, SoundId, PlaybackId, EventId, RegionId, BankId, BusId } from '../Types/Branded.js';
 import type { ConditionOperator } from '../Types/Condition.js';
 
 export interface IRtpcSnapshot {
@@ -19,12 +19,21 @@ export interface IPlaybackSnapshot {
     readonly isVirtual: boolean;
 }
 
+export interface IBusSnapshot {
+    busId: BusId;
+    logicalGain: number;
+    rtpcGain: number;
+    sidechainGain: number;
+    finalGain: number;
+}
+
 export interface ITelemetrySnapshot {
     readonly type: 'SNAPSHOT';
     readonly timestampMs: number;
     readonly rtpcs: IRtpcSnapshot[];
     readonly switches: ISwitchSnapshot[];
     readonly activePlaybacks: IPlaybackSnapshot[];
+    readonly buses: IBusSnapshot[];
 }
 
 export type LifecycleAction = 'START' | 'STOP' | 'PAUSE' | 'RESUME' | 'VIRTUALIZE' | 'REVIVE';

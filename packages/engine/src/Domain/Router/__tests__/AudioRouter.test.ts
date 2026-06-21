@@ -144,7 +144,8 @@ describe('AudioRouter (Command Dispatcher)', () => {
         };
 
         mockTelemetry = {
-            dispatch: vi.fn()
+            dispatch: vi.fn(),
+            dispatchManifest: vi.fn()
         };
 
         router = new AudioRouter({

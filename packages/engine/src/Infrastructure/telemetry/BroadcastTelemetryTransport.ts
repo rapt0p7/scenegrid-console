@@ -12,6 +12,11 @@ export class BroadcastTelemetryTransport implements ITelemetryTransport {
         this.channel.postMessage(batch);
     }
 
+    public sendManifest(manifestPayload: unknown): void {
+        // oxlint-disable-next-line unicorn/require-post-message-target-origin
+        this.channel.postMessage({ type: 'MANIFEST', payload: manifestPayload });
+    }
+
     public dispose(): void {
         this.channel.close();
     }

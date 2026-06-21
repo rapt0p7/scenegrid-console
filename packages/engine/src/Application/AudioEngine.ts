@@ -57,6 +57,7 @@ import type {
     RegionId,
     SnapshotId,
     SoundId,
+    BusId,
     TickerTaskId,
     DeepReadonly,
     QuantizeType
@@ -439,9 +440,11 @@ export class AudioEngine implements IAudioEngine {
                 telemetry,
                 this.#soundController,
                 this.#rtpcManager,
+                this.#busSystem,
                 switchHistoryRegistry,
                 typedKeys(this.config.rtpcManifest ?? {}),
                 typedKeys(this.config.soundMap).filter(k => 'isSwitch' in this.config.soundMap[k]),
+                typedKeys(this.config.buses) as BusId[],
                 this.config.globalVoiceLimit ?? 128
             );
 
@@ -495,6 +498,8 @@ export class AudioEngine implements IAudioEngine {
             );
 
             this.#isInitialized = true;
+
+            telemetry.dispatchManifest(this.config);
 
             this.#dispatcher.emit('engine:ready', {
                 timestamp: performance.now(),
