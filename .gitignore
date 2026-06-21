@@ -152,6 +152,9 @@ public
 packages/*/dist
 stats.json
 
+scripts/vite-worklet-isolator.js
+scripts/vite-worklet-isolator.js.map
+
 .env.sentry-build-plugin
 
 docs/repomix-output.md

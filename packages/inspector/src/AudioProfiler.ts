@@ -1,3 +1,4 @@
+// oxlint-disable no-underscore-dangle
 // noinspection D
 import type { ISoundInstance } from '@scene-grid/engine';
 

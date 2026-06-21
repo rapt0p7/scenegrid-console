@@ -1,0 +1,106 @@
+// oxlint-disable max-lines-per-function
+// noinspection D
+
+import React from 'react';
+import { clsx } from 'clsx';
+import type { ITelemetryCauseChain, ITelemetryLifecycleEvent } from '@scene-grid/shared';
+
+interface RawLoggerProps {
+    logs: Array<ITelemetryLifecycleEvent | ITelemetryCauseChain>;
+}
+
+export const RawLogger: React.FC<RawLoggerProps> = ({ logs }) => {
+    // oxlint-disable-next-line unicorn/consistent-function-scoping
+    const renderInitiator = (initiator: ITelemetryCauseChain['initiator']) => {
+        switch (initiator.type) {
+            case 'API':
+                return `API::${initiator.method}`;
+            case 'EVENT':
+                return `EVENT::${initiator.eventId}`;
+            case 'MAGNET':
+                return `MAGNET::${initiator.sourceRegion}->${initiator.targetRegion}`;
+            case 'CONTAINER_POLICY':
+                return `CONTAINER::${initiator.containerId}`;
+            case 'CULLING_ARBITER':
+                return `CULLING::${initiator.reason}`;
+            default:
+                return 'UNKNOWN';
+        }
+    };
+
+    if (logs.length === 0) {
+        return (
+            <div className="flex-1 p-4 text-zinc-500 italic flex items-center justify-center">
+                Waiting for engine telemetry...
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {logs.map((log, i) => {
+                const isCause = log.type === 'CAUSE_CHAIN';
+                const isBlocked = isCause && log.result.type === 'BLOCKED';
+
+                return (
+                    <div
+                        key={i}
+                        className={clsx(
+                            'p-2 rounded-sm border-l-4 transition-colors',
+                            isBlocked ? 'bg-red-950/30 border-red-500' : 'bg-zinc-900 border-zinc-700',
+                            isCause && !isBlocked && 'border-indigo-500',
+                            !isCause && 'border-emerald-500'
+                        )}
+                    >
+                        <div className="text-[10px] text-zinc-500 mb-1">{log.timestampMs.toFixed(2)}ms</div>
+
+                        {log.type === 'LIFECYCLE' && (
+                            <div className="leading-tight">
+                                <strong className="text-emerald-400">[LIFECYCLE]</strong>
+                                <span className="text-amber-200 ml-1">{log.action}</span>
+                                <span className="text-zinc-400 ml-2">
+                                    V:{log.playbackId} | S:<b className="text-zinc-200">{log.soundId}</b>
+                                </span>
+                                {log.reason && <span className="text-orange-400 ml-1">({log.reason})</span>}
+                            </div>
+                        )}
+
+                        {log.type === 'CAUSE_CHAIN' && (
+                            <div className="leading-tight">
+                                <strong className={clsx(isBlocked ? 'text-red-400' : 'text-indigo-400')}>
+                                    [{renderInitiator(log.initiator)}]
+                                </strong>
+                                <span className="mx-2 text-zinc-500">-&gt;</span>
+                                <span className={clsx(isBlocked ? 'text-red-400 font-bold' : 'text-sky-300')}>
+                                    {log.result.type}{' '}
+                                    {log.result.type === 'PLAY' || log.result.type === 'STOP' ? log.result.target : ''}
+                                </span>
+
+                                {log.conditionTrace && (
+                                    <div className="mt-1 pl-2 ml-1 border-l-2 border-zinc-700 text-zinc-400 text-[10px]">
+                                        Cond: {log.conditionTrace.param} {log.conditionTrace.operator}{' '}
+                                        {log.conditionTrace.threshold}
+                                        <span className="mx-1">|</span>
+                                        Act: {log.conditionTrace.actualValue}
+                                        <span
+                                            className={clsx(
+                                                'ml-2 font-bold',
+                                                log.conditionTrace.passed ? 'text-emerald-500' : 'text-red-500'
+                                            )}
+                                        >
+                                            [{log.conditionTrace.passed ? 'PASS' : 'FAIL'}]
+                                        </span>
+                                    </div>
+                                )}
+
+                                {log.result.type === 'BLOCKED' && (
+                                    <div className="mt-1 text-red-400 text-[10px]">Reason: {log.result.reason}</div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+};

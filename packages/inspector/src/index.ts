@@ -1,3 +1,4 @@
+// oxlint-disable no-underscore-dangle
 import AudioDebugger, { DebuggerOptions } from './AudioDebugger.js';
 import { initAudioDebugPanel } from './AudioDebugPanel.js';
 

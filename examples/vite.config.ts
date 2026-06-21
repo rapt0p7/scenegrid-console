@@ -3,6 +3,8 @@ import path from 'node:path';
 import { defineConfig } from 'vite';
 import { checker } from 'vite-plugin-checker';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 // oxlint-disable-next-line typescript/ban-ts-comment typescript/prefer-ts-expect-error
 // @ts-ignore
@@ -11,11 +13,14 @@ import { audioWorkletIsolator } from '../scripts/vite-worklet-isolator';
 // oxlint-disable-next-line no-underscore-dangle
 const __dirname = import.meta.dirname;
 
+// oxlint-disable-next-line max-lines-per-function
 export default defineConfig(({ mode }) => ({
     root: './',
     publicDir: 'public',
 
     plugins: [
+        react(),
+        tailwindcss(),
         audioWorkletIsolator(),
         checker({
             typescript: {
@@ -58,5 +63,13 @@ export default defineConfig(({ mode }) => ({
         port: 8117,
         host: 'localhost',
         open: true
+    },
+    build: {
+        rollupOptions: {
+            input: {
+                main: path.resolve(__dirname, 'index.html'),
+                inspector: path.resolve(__dirname, 'inspector.html')
+            }
+        }
     }
 }));
