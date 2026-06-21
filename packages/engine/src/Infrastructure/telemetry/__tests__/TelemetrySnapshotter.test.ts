@@ -40,10 +40,12 @@ describe('TelemetrySnapshotter', () => {
         };
         mockRtpcAdapter = { getValue: vi.fn() };
         mockSwitchRegistry = { getHistory: vi.fn() };
+
         mockBusSystem = {
             getBusLogicalGain: vi.fn(),
             getBusRtpcGain: vi.fn(),
-            getBusFinalGain: vi.fn()
+            getBusFinalGain: vi.fn(),
+            getSidechainGain: vi.fn()
         };
 
         snapshotter = new TelemetrySnapshotter(
@@ -180,5 +182,34 @@ describe('TelemetrySnapshotter', () => {
 
         expect(dispatchCall.activePlaybacks[0].positionSec).toBe(0);
         expect(dispatchCall.activePlaybacks[0].volume).toBe(1);
+    });
+
+    it('should collect bus gains and sidechain correctly, falling back to 1 if undefined', () => {
+        mockBusSystem.getBusLogicalGain.mockImplementation((busId: string) => (busId === 'main' ? 0.8 : undefined));
+        mockBusSystem.getBusRtpcGain.mockImplementation((busId: string) => (busId === 'main' ? 0.9 : undefined));
+        mockBusSystem.getBusFinalGain.mockImplementation((busId: string) => (busId === 'main' ? 0.72 : undefined));
+        mockBusSystem.getSidechainGain.mockImplementation((busId: string) => (busId === 'main' ? 0.5 : undefined));
+
+        snapshotter.tick(0.1, 100);
+
+        const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
+
+        expect(dispatchCall.buses).toHaveLength(2);
+
+        expect(dispatchCall.buses[0]).toEqual({
+            busId: 'main',
+            logicalGain: 0.8,
+            rtpcGain: 0.9,
+            finalGain: 0.72,
+            sidechainGain: 0.5
+        });
+
+        expect(dispatchCall.buses[1]).toEqual({
+            busId: 'sfx',
+            logicalGain: 1,
+            rtpcGain: 1,
+            finalGain: 1,
+            sidechainGain: undefined
+        });
     });
 });
