@@ -32,7 +32,7 @@ export const PolyphonyCounter: React.FC<Props> = ({ snapshotRef }) => {
     }, [snapshotRef]);
 
     return (
-        <span ref={spanRef} className="text-zinc-300">
+        <span ref={spanRef} className="text-foreground">
             0
         </span>
     );

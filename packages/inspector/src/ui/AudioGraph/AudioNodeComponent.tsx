@@ -18,7 +18,11 @@ export const AudioNodeComponent = ({ id, data }: any) => {
                 },
                 updateColors: (isVeto: boolean, isVirtual: boolean) => {
                     if (containerRef.current) {
-                        containerRef.current.style.borderColor = isVeto ? '#dc2626' : isVirtual ? '#d97706' : '#27272a';
+                        containerRef.current.style.borderColor = isVeto
+                            ? 'var(--danger)'
+                            : isVirtual
+                              ? 'var(--warning)'
+                              : '';
                     }
                 },
                 updateDucking: (duckingMultiplier: number) => {
@@ -36,20 +40,27 @@ export const AudioNodeComponent = ({ id, data }: any) => {
 
     const isMaster = type === 'master';
     const isVoice = type === 'voice';
-    const headerColor = isMaster ? 'bg-pink-900' : isVoice ? 'bg-emerald-900' : 'bg-indigo-900';
+
+    const nodeTypeBg = isMaster ? 'bg-node-master-bg' : isVoice ? 'bg-node-source-bg' : 'bg-node-bus-bg';
+    const nodeTypeBorder = isMaster
+        ? 'border-node-master-border'
+        : isVoice
+          ? 'border-node-source-border'
+          : 'border-node-bus-border';
+    const headerColor = isMaster ? 'bg-node-master-header' : isVoice ? 'bg-node-source-header' : 'bg-node-bus-header';
 
     return (
         <div
             ref={containerRef}
-            className="flex flex-col min-w-[250px] bg-zinc-900 border-2 border-zinc-800 rounded-md shadow-xl font-mono text-xs select-none overflow-hidden"
+            className={`flex flex-col min-w-[250px] ${nodeTypeBg} border-2 ${nodeTypeBorder} rounded-md shadow-xl font-mono text-xs select-none overflow-hidden`}
         >
             <div
-                className={`px-2 py-1 font-bold text-zinc-300 uppercase ${headerColor} flex justify-between items-center`}
+                className={`px-2 py-1 font-bold text-primary-foreground uppercase ${headerColor} flex justify-between items-center`}
             >
                 <span>{title}</span>
                 {!isVoice && !isMaster && (
-                    <div className="w-16 h-1.5 bg-zinc-950 rounded-sm overflow-hidden flex justify-end">
-                        <div ref={grBarRef} className="h-full bg-red-500 w-0 transition-none" />
+                    <div className="w-16 h-1.5 bg-background rounded-sm overflow-hidden flex justify-end">
+                        <div ref={grBarRef} className="h-full bg-danger w-0 transition-none" />
                     </div>
                 )}
             </div>
@@ -59,12 +70,12 @@ export const AudioNodeComponent = ({ id, data }: any) => {
                     <Handle
                         type="target"
                         position={Position.Left}
-                        className="w-3 h-3 bg-zinc-700 border-2 border-zinc-900"
+                        className="w-3 h-3 bg-border border-2 border-background"
                         isConnectable={true}
                     />
                 )}
 
-                <div ref={textRef} className="flex-1 px-3 py-2 text-zinc-400 whitespace-pre-wrap leading-tight">
+                <div ref={textRef} className="flex-1 px-3 py-2 text-foreground-muted whitespace-pre-wrap leading-tight">
                     Waiting...
                 </div>
 
@@ -72,7 +83,7 @@ export const AudioNodeComponent = ({ id, data }: any) => {
                     <Handle
                         type="source"
                         position={Position.Right}
-                        className="w-3 h-3 bg-indigo-600 border-2 border-zinc-900"
+                        className="w-3 h-3 bg-primary border-2 border-background"
                         isConnectable={true}
                     />
                 )}

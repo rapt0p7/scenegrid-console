@@ -30,7 +30,7 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs }) => {
 
     if (logs.length === 0) {
         return (
-            <div className="flex-1 p-4 text-zinc-500 italic flex items-center justify-center">
+            <div className="flex-1 p-4 text-foreground-muted italic flex items-center justify-center">
                 Waiting for engine telemetry...
             </div>
         );
@@ -47,37 +47,37 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs }) => {
                         key={i}
                         className={clsx(
                             'p-2 rounded-sm border-l-4 transition-colors',
-                            isBlocked ? 'bg-red-950/30 border-red-500' : 'bg-zinc-900 border-zinc-700',
-                            isCause && !isBlocked && 'border-indigo-500',
-                            !isCause && 'border-emerald-500'
+                            isBlocked ? 'bg-danger/20 border-danger' : 'bg-surface border-border',
+                            isCause && !isBlocked && 'border-primary',
+                            !isCause && 'border-success'
                         )}
                     >
-                        <div className="text-[10px] text-zinc-500 mb-1">{log.timestampMs.toFixed(2)}ms</div>
+                        <div className="text-[10px] text-foreground-muted mb-1">{log.timestampMs.toFixed(2)}ms</div>
 
                         {log.type === 'LIFECYCLE' && (
                             <div className="leading-tight">
-                                <strong className="text-emerald-400">[LIFECYCLE]</strong>
-                                <span className="text-amber-200 ml-1">{log.action}</span>
-                                <span className="text-zinc-400 ml-2">
-                                    V:{log.playbackId} | S:<b className="text-zinc-200">{log.soundId}</b>
+                                <strong className="text-success">[LIFECYCLE]</strong>
+                                <span className="text-warning ml-1">{log.action}</span>
+                                <span className="text-foreground-muted ml-2">
+                                    V:{log.playbackId} | S:<b className="text-foreground">{log.soundId}</b>
                                 </span>
-                                {log.reason && <span className="text-orange-400 ml-1">({log.reason})</span>}
+                                {log.reason && <span className="text-warning ml-1">({log.reason})</span>}
                             </div>
                         )}
 
                         {log.type === 'CAUSE_CHAIN' && (
                             <div className="leading-tight">
-                                <strong className={clsx(isBlocked ? 'text-red-400' : 'text-indigo-400')}>
+                                <strong className={clsx(isBlocked ? 'text-danger' : 'text-primary')}>
                                     [{renderInitiator(log.initiator)}]
                                 </strong>
-                                <span className="mx-2 text-zinc-500">-&gt;</span>
-                                <span className={clsx(isBlocked ? 'text-red-400 font-bold' : 'text-sky-300')}>
+                                <span className="mx-2 text-foreground-muted">-&gt;</span>
+                                <span className={clsx(isBlocked ? 'text-danger font-bold' : 'text-info')}>
                                     {log.result.type}{' '}
                                     {log.result.type === 'PLAY' || log.result.type === 'STOP' ? log.result.target : ''}
                                 </span>
 
                                 {log.conditionTrace && (
-                                    <div className="mt-1 pl-2 ml-1 border-l-2 border-zinc-700 text-zinc-400 text-[10px]">
+                                    <div className="mt-1 pl-2 ml-1 border-l-2 border-border text-foreground-muted text-[10px]">
                                         Cond: {log.conditionTrace.param} {log.conditionTrace.operator}{' '}
                                         {log.conditionTrace.threshold}
                                         <span className="mx-1">|</span>
@@ -85,7 +85,7 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs }) => {
                                         <span
                                             className={clsx(
                                                 'ml-2 font-bold',
-                                                log.conditionTrace.passed ? 'text-emerald-500' : 'text-red-500'
+                                                log.conditionTrace.passed ? 'text-success' : 'text-danger'
                                             )}
                                         >
                                             [{log.conditionTrace.passed ? 'PASS' : 'FAIL'}]
@@ -94,7 +94,7 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs }) => {
                                 )}
 
                                 {log.result.type === 'BLOCKED' && (
-                                    <div className="mt-1 text-red-400 text-[10px]">Reason: {log.result.reason}</div>
+                                    <div className="mt-1 text-danger text-[10px]">Reason: {log.result.reason}</div>
                                 )}
                             </div>
                         )}

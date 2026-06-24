@@ -324,7 +324,7 @@ const AudioGraphInner: React.FC<Props> = ({ manifest, snapshotRef }) => {
     }, [snapshotRef, manifest, setNodes, setEdges, registerNode, unregisterNode]);
 
     return (
-        <div className="absolute inset-0 bg-zinc-950">
+        <div className="absolute inset-0 bg-background">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -334,7 +334,7 @@ const AudioGraphInner: React.FC<Props> = ({ manifest, snapshotRef }) => {
                 proOptions={{ hideAttribution: true }}
                 minZoom={0.2}
             >
-                <Background color="#27272a" gap={20} size={1} />
+                <Background color="var(--ring)" gap={20} size={1} />
             </ReactFlow>
         </div>
     );

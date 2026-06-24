@@ -1,0 +1,194 @@
+@import "tailwindcss";
+@import '@radix-ui/colors/slate.css';
+@import '@radix-ui/colors/slate-dark.css';
+@import '@radix-ui/colors/blue.css';
+@import '@radix-ui/colors/blue-dark.css';
+@import '@radix-ui/colors/green.css';
+@import '@radix-ui/colors/green-dark.css';
+@import '@radix-ui/colors/amber.css';
+@import '@radix-ui/colors/amber-dark.css';
+@import '@radix-ui/colors/red.css';
+@import '@radix-ui/colors/red-dark.css';
+@import '@radix-ui/colors/violet.css';
+@import '@radix-ui/colors/violet-dark.css';
+@import '@radix-ui/colors/teal.css';
+@import '@radix-ui/colors/teal-dark.css';
+
+@theme {
+    --color-border: var(--border-color);
+    --color-ring: var(--ring);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-foreground-muted: var(--foreground-muted);
+
+    --color-surface: var(--surface);
+    --color-surface-hover: var(--surface-hover);
+    --color-surface-active: var(--surface-active);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-danger: var(--danger);
+    --color-warning: var(--warning);
+    --color-success: var(--success);
+
+    --color-node-source-bg: var(--node-source-bg);
+    --color-node-source-border: var(--node-source-border);
+    --color-node-source-header: var(--node-source-header);
+
+    --color-node-bus-bg: var(--node-bus-bg);
+    --color-node-bus-border: var(--node-bus-border);
+    --color-node-bus-header: var(--node-bus-header);
+
+    --color-node-fx-bg: var(--node-fx-bg);
+    --color-node-fx-border: var(--node-fx-border);
+    --color-node-fx-header: var(--node-fx-header);
+
+    --color-node-master-bg: var(--node-master-bg);
+    --color-node-master-border: var(--node-master-border);
+    --color-node-master-header: var(--node-master-header);
+
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+}
+
+@layer base {
+    :root {
+        /* TYPOGRAPHY */
+        --font-family: 'Inter', system-ui, sans-serif;
+        --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        --line-height: 1.5;
+
+        /* GEOMETRY */
+        --radius-sm: 0.25rem;
+        --radius-md: 0.375rem;
+        --radius-lg: 0.5rem;
+        --border: 1px;
+        --animation-duration: 200ms;
+        --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* LIGHT THEME */
+        --background: var(--slate-1);
+        --surface: var(--slate-2);
+        --surface-hover: var(--slate-3);
+        --surface-active: var(--slate-4);
+        --foreground: var(--slate-12);
+        --foreground-muted: var(--slate-11);
+        --border-color: var(--slate-6);
+        --ring: var(--slate-7);
+        --primary: var(--blue-9);
+        --primary-foreground: white;
+        --success: var(--green-9);
+        --warning: var(--amber-9);
+        --danger: var(--red-9);
+        --info: var(--blue-9);
+
+        --node-source-bg: var(--slate-2);
+        --node-source-border: var(--slate-7);
+        --node-source-header: var(--blue-4);
+        --node-bus-bg: var(--slate-2);
+        --node-bus-border: var(--slate-7);
+        --node-bus-header: var(--teal-4);
+        --node-fx-bg: var(--slate-2);
+        --node-fx-border: var(--slate-7);
+        --node-fx-header: var(--amber-4);
+        --node-master-bg: var(--slate-3);
+        --node-master-border: var(--red-7);
+        --node-master-header: var(--red-5);
+    }
+
+    .dark {
+        /* DARK THEME (Radix Slate Dark) */
+        --background: var(--slate-1);
+        --surface: var(--slate-2);
+        --surface-hover: var(--slate-3);
+        --surface-active: var(--slate-4);
+        --foreground: var(--slate-12);
+        --foreground-muted: var(--slate-11);
+        --border-color: var(--slate-6);
+        --ring: var(--slate-7);
+        --primary: var(--blue-9);
+        --primary-foreground: white;
+        --success: var(--green-9);
+        --warning: var(--amber-9);
+        --danger: var(--red-9);
+        --info: var(--blue-9);
+
+        --node-source-bg: var(--slate-3);
+        --node-source-border: var(--blue-8);
+        --node-source-header: var(--blue-6);
+        --node-bus-bg: var(--slate-3);
+        --node-bus-border: var(--teal-8);
+        --node-bus-header: var(--teal-6);
+        --node-fx-bg: var(--slate-2);
+        --node-fx-border: var(--amber-7);
+        --node-fx-header: var(--amber-9);
+        --node-master-bg: var(--slate-3);
+        --node-master-border: var(--red-8);
+        --node-master-header: var(--red-6);
+    }
+
+    * {
+        @apply border-border outline-ring/50;
+        box-sizing: border-box;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        font-family: var(--font-family);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .node {
+        @apply rounded-lg shadow-lg flex flex-col overflow-hidden;
+        border: var(--border) solid var(--border-color);
+        transition: all var(--animation-duration) var(--animation-easing);
+    }
+
+    .node-header {
+        @apply px-4 py-3 font-bold text-[12px] uppercase tracking-wider flex justify-between items-center;
+    }
+
+    .node-body {
+        @apply p-4 flex flex-col gap-4;
+    }
+
+    .node-section {
+        @apply pt-3 mt-3 border-t border-border/30 first:mt-0 first:pt-0 first:border-0;
+    }
+
+    .node--source {
+        @apply bg-node-source-bg border-node-source-border;
+    }
+    .node--source .node-header {
+        @apply bg-node-source-header text-primary-foreground;
+    }
+
+    .node--bus {
+        @apply bg-node-bus-bg border-node-bus-border;
+    }
+    .node--bus .node-header {
+        @apply bg-node-bus-header text-primary-foreground;
+    }
+
+    .node--fx {
+        @apply bg-node-fx-bg border-node-fx-border;
+    }
+    .node--fx .node-header {
+        @apply bg-node-fx-header text-primary-foreground;
+    }
+
+    .node--master {
+        @apply bg-node-master-bg border-node-master-border;
+        border-width: 2px;
+    }
+    .node--master .node-header {
+        @apply bg-node-master-header text-primary-foreground;
+    }
+
+    .panel {
+        @apply rounded-lg shadow-md bg-surface border border-border;
+    }
+}
