@@ -16,6 +16,8 @@ Conceptually, it is a hybrid of:
 **Facade and Configuration Management (Engine API)**
 Interaction between the client application and the audio engine occurs through a single facade (`AudioEngine`). The system operates on a strict **Data-Driven** principle: all routing, macro, and bus settings are initialized via a centralized manifest registry. Decoupling playback logic from hardcoded values is what allows the DevTools to visualize and trace the audio graph before any sound is triggered.
 
+The engine natively supports **Hot Module Replacement (HMR)** via `_hotReloadConfig`, allowing developers to dynamically update buses, RTPC curves, and sound maps without destroying the active `AudioContext` or interrupting gameplay.
+
 ---
 
 ## 0. Architectural Philosophy: Ports & Adapters
@@ -28,37 +30,30 @@ To ensure long-term maintainability, testability, and **offline simulation capab
 
 ---
 
-### 1. Signal Flow Architecture
+### 1. Signal Flow & Data-Oriented Architecture
 
 **Core Principle**
-Signals follow a strict hierarchy:
-**Source → Individual Channel → Group Bus → Master**. No bypass routes are permitted. This strictness guarantees that the audio graph remains visually traceable in the debugger without "ghost" signals.
+Signals follow a strict hierarchy: **Source → Individual Channel → Group Bus → Master**. No bypass routes are permitted. This strictness guarantees that the audio graph remains visually traceable in the debugger without "ghost" signals.
 
-**Sources (Voices)**
-Each sound:
-- Is fully isolated with its own local processing chain.
-- Does not affect other voices.
-- Is managed by a **Zero-Allocation Object Pool** (free-list stack), ensuring O(1) access time and eliminating Garbage Collection (GC) spikes during heavy gameplay.
+**Sources (Voices) & Data-Oriented Design**
+Each sound is fully isolated with its own local processing chain.
+To eliminate Garbage Collection (GC) spikes during heavy gameplay, voices and tasks are managed using **Data-Oriented Design (DOD)** principles. The system utilizes pre-allocated flat arrays and a "swap-and-pop" algorithm for O(1) registration and cleanup, bypassing traditional object allocations entirely.
 
-This guarantees an absence of phase conflicts, stable dynamic processing, and predictable routing.
-
-**Voice Culling (Deterministic Polyphony)**
-A Voice Culling mechanism is implemented at the core level. The `PlaybackScheduler` and domain-driven `VoiceCullingArbiter` continuously monitor active voice limits. To prevent Audio Thread overload, the `CullingRunner` seamlessly virtualizes the lowest-priority or quietest sounds (computing them in the background), maintaining strictly deterministic CPU load and a clean debug trace.
+**Voice Culling (Deterministic Polyphony & Hysteresis)**
+A Voice Culling mechanism is implemented at the core level. The domain-driven `VoiceCullingArbiter` continuously monitors active voice limits and applies a **hysteresis window** to prevent rapid virtualization/devirtualization flickering during minor volume fluctuations. Sounds maintain distinct **logical states** (`playing` vs. `paused`), ensuring that a paused sound remains safely virtualized even if its underlying volume conditions change.
 
 **Audio Buses**
 Buses function like **console group channels**.
-Key properties:
+
 - Fixed channel strip structure.
 - Routing is defined only once at the sound's start.
 - If no route is defined, the signal is blocked.
 
-This eliminates accidental connections, double-summing, and uncontrolled output to the master.
-
 **Master Section**
 The sole exit point to the audio device. It contains:
-- Master fader
-- Brickwall limiter
-- A dedicated **`silentTail`** (zero volume) that ensures continuous operation of DSP processors (sidechain detectors and analyzers) without leaking their audio into the mix.
+
+- Master fader & Brickwall limiter
+- A dedicated **`silentTail`** (zero volume) that ensures continuous operation of DSP processors without leaking their audio into the mix.
 
 ![image](./audio-flow.svg)
 
@@ -66,24 +61,24 @@ The sole exit point to the audio device. It contains:
 
 ### 2. Bus Channel Strip Structure
 
-Each bus features a standard processing path:
+Each bus features a standard processing path with explicit tap nodes to guarantee accurate observability regardless of dynamic FX swapping:
 
-1.  **Input Gain (`inputGain`)**: The main fader; the point for automation (snapshots, RTPC), sidechain control, and primary level management.
-2.  **Pre-Filter / Lookahead (`preFilterGain`)**: An insertion point for micro-delay used in predictive sidechaining. Ensures clean compression attack without digital clicks.
-3.  **Insert Filter (`filter`)**: A universal filter (equivalent to an insert EQ). Implemented via an isolated **plugin architecture (`FiltersPlugin`)** supporting "Safe Swaps" without artifacts and smooth graph reconfiguration.
-4.  **Post-Gain (`postFilterGain`)**: The final stabilization stage; serves as the **Tap Point** for the Sends system and telemetry collection for visualizers.
+1. **Input Gain (`inputGain`)**: The main fader; the point for automation, RTPC, and primary level management.
+2. **Pre-Filter / Lookahead (`duckerTapNode`)**: The insertion point for sidechain analysis. Tapping the signal _before_ the filter ensures clean compression tracking uncolored by EQ changes.
+3. **Insert Filter (`filter`)**: A universal filter (equivalent to an insert EQ). Implemented via an isolated **plugin architecture** supporting asynchronous "Safe Swaps" to prevent audio artifacts during concurrent filter changes.
+4. **Post-Gain (`postFilterGain` & `analyzerTapNode`)**: The final stabilization stage. Serves as the tap point for auxiliary Sends and DevTools visualizers.
 
 ---
 
-### 3. Sidechain and Dynamic Processing
+### 3. Automated Sidechain & Dynamic Processing
 
-The system supports **lookahead bus ducking** powered by `AudioWorklet`, featuring built-in cascade protection that runs entirely on the audio thread.
+Sidechain topology is fully data-driven. `createSidechain` is intentionally omitted from the public API; instead, sidechains are automatically instantiated based on the `sidechain.enabled` flag within the bus manifest.
 
 **Operational Features**
-- **Trigger Summing**: Multiple trigger signals are summed in the **`mergeGain`** node.
-- **Hard Clipping Protection**: To prevent math breakdowns during heavy cascade events (e.g., simultaneous explosions), a **`WaveShaperNode`** safely clamps overlapping triggers to a strict [-1.0, 1.0] range before analysis.
-- **Envelope Analysis**: A specialized **`ducker-processor`** calculates the RMS envelope of the clamped signal.
-- **Predictive Attenuation**: When sidechaining is active, a **`DelayNode`** (Lookahead) is dynamically inserted into the bus path. Suppression occurs **before the peak**, resulting in a clean attack without digital pops.
+
+- **Per-Source Intensity:** Different sounds can trigger the compression envelope at different strengths via a customizable intensity gain mapping.
+- **Hard Clipping Protection**: A `WaveShaperNode` safely clamps overlapping triggers to a strict [-1.0, 1.0] range before analysis to prevent math breakdowns during heavy cascade events.
+- **Predictive Attenuation (Lookahead)**: A `DelayNode` is dynamically inserted into the bus path. Suppression occurs **before the peak**, resulting in a clean attack without digital pops.
 
 ---
 
@@ -118,7 +113,13 @@ They allow independent management of: music, SFX, UI sounds, and various game co
 
 ---
 
-### 6. Deterministic Orchestration (Horizontal vs. Vertical)
+### 6. Memory Management: Bank System
+
+Relying solely on loading individual audio buffers leads to memory bloat. The engine enforces memory hygiene through a **Bank Loading System** (`BankManagerAdapter`). Developers group audio assets into logical Banks, allowing for bulk asynchronous loading (with fallback dummy buffers for decode errors) and safe, deterministic unloading when a context or scene is destroyed.
+
+---
+
+### 7. Deterministic Orchestration (Horizontal vs. Vertical)
 
 The system natively supports professional interactive music patterns, strictly separating horizontal sequencing from vertical intensity to ensure the mix state remains predictable for the DevTools.
 
@@ -146,7 +147,7 @@ Dynamic intensity is **not** handled by the Sequencer. Vertical music is achieve
 
 ---
 
-### 7. Event Orchestration & Logical Resolution
+### 8. Event Orchestration & Recursive Resolution
 
 In a true Enterprise-grade audio engine, the game client should never hardcode complex audio behaviors. SceneGrid strictly decouples gameplay triggers from audio execution through a two-tiered resolution pipeline: **Event Orchestration** (Macros) and **Container Resolution** (Assets).
 
@@ -174,7 +175,12 @@ To maximize asset reusability and prevent auditory fatigue, the engine applies r
 * **Seeded Reproducibility:** All randomization is powered by a central `SeededPRNG` rather than the native `Math.random()`. This guarantees that variations are entirely deterministic, allowing for mathematically reproducible audio generation during testing and debugging.
 * **Architecture Alignment:** This variability is calculated purely mathematically in the Domain layer and passed as initialization properties to the `SoundInstance`, preventing unnecessary DSP overhead and ensuring modifiers are fully visible in the DevTools Debugger.
 
-### 8. Static Graph Analysis & AOT Validation (`ConsistencyChecker`)
+**Strict Determinism**
+All randomization (spatial spread, pitch variation, container selection) is powered by a central **`SeededPRNG`**. This guarantees that variations are mathematically deterministic and identically reproducible for automated testing.
+
+---
+
+### 9. Static Graph Analysis & AOT Validation (`ConsistencyChecker`)
 
 In a purely Data-Driven audio engine, misconfigurations (such as routing feedback loops or missing audio targets) can lead to silent runtime failures. SceneGrid eliminates this risk by employing an **Ahead-of-Time (AOT) Consistency Checker** — a static analyzer for your audio manifests that runs during system initialization.
 
@@ -200,7 +206,7 @@ By treating audio configurations as compilable code, the `ConsistencyChecker` ac
 
 ---
 
-### 9. Sends and Parallel Routing (Auxiliary Sends)
+### 10. Sends and Parallel Routing (Auxiliary Sends)
 
 In addition to direct hierarchical routing, the system provides a parallel routing mechanism via Sends, acting as the DAW equivalent of **Aux Sends**.
 
@@ -215,7 +221,7 @@ Within the strict isolation of the graph, the Sends system maintains the core in
 
 ---
 
-### 10. Real-Time Parameter Control (RTPCManager)
+### 11. Centralized Scheduling & RTPC (Pull Model)
 
 The RTPC mechanism acts as a **virtual patchbay** for control signals (Control Voltage / Macros). It links "dry" game data (speed, distance, health) to the physical parameters of the audio path in real-time, utilizing advanced performance throttling.
 
@@ -232,17 +238,19 @@ The system uses an advanced `MathCurveDefinition` evaluator for mapping values:
 
 ---
 
-### 11. Observability, Telemetry & Analysis
+### 12. Multi-Tiered Observability & Telemetry
 
-The system supports RMS meters, spectrum analyzers, and DSP detectors (forming the foundation of the **SceneGrid DevTools**). These are implemented as independent **AudioWorklet Plugins** (e.g., `MeterProcessor`) operating via the `silentTail` path:
-- They do not color the sound.
-- They do not affect phase.
-- They do not increase main mix latency.
-- They provide 100% accurate telemetry for visual debugging.
+SceneGrid features a full-fledged observability pipeline designed to feed the Inspector without causing GC pauses.
+
+- **AudioGraph & Inspector:** The engine emits a structural manifest upon initialization, allowing external React-based dev tools (using ELK.js) to render a live, topological view of the active mix.
+- **Zero-Allocation Telemetry:** Telemetry objects (Snapshots, Lifecycle events, Cause Chains) are heavily pooled via `CyclePool` to prioritize reuse over allocation.
+- **Broadcast Transport:** Telemetry is dispatched via `BroadcastTelemetryTransport`, allowing developers to run the Inspector in a separate browser tab/window without dragging down the game's performance.
+- **Deep Tracing:** Emits `LIFECYCLE` events (start, pause, virtualize) and `CAUSE_CHAIN` events to trace exactly why a specific action was blocked or culled.
+- **DSP Worklets:** Hardware-level RMS meters and spectrum analyzers run entirely on the `silentTail` AudioWorklets, ensuring zero main-thread overhead.
 
 ---
 
-### 12. Stability Guarantees (System Invariants)
+### 13. Stability Guarantees (System Invariants)
 
 To maintain a single source of truth for the debugger, the following are **strictly prohibited**:
 
@@ -258,7 +266,7 @@ The principle of immutability **does not apply** to the dynamic runtime state (*
 
 ---
 
-### 13. Architectural Gotcha: The Multiplicative Veto
+### 14. Architectural Gotcha: The Multiplicative Veto
 
 Due to the transition to a multiplicative parameter resolution model (`Final Gain = Base Gain × RTPC Modifier`), the engine enforces a strict separation of orchestrator responsibilities. This strictness is what allows the DevTools to mathematically trace why a sound is muted.
 
