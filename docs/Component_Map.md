@@ -1,81 +1,91 @@
-# Карта компонентов проекта
+# Project Component Map
 
-> **Назначение.** Маршрутизатор «файл → назначение по доменам». Главная экономия токенов: агент идёт сюда **до** любого `Glob`/`Grep`/`Read` по коду и часто находит нужный файл сразу.
+> **Purpose.** Router "file → assignment by domains". Main token saver: the agent goes here **before** any `Glob`/`Grep`/`Read` over the code and often finds the necessary file immediately.
 
-> После каждой задачи, где появились новые ключевые файлы — точечно дописывай нужный раздел. Не переписывай карту целиком.
+> After each task where new key files appear — point-update the necessary section. Do not rewrite the map entirely.
 
-> **Формат записи.** Таблица «Файл → Назначение, 5-12 слов на запись». Не сочинения, а сухие маршруты.
+> **Record format.** Table "File → Purpose, 5-12 words per record". Not essays, but dry routes.
 
 ---
 
-## Пакет `@scene-grid/shared` (Фундамент / Общие типы)
-*Локация: `packages/shared/src/`*
+## `@scene-grid/shared` Package (Foundation / Shared Types)
 
-| Файл | Назначение |
-|------|-----------|
-| `Types/Branded.ts` | Брендированные типы (`SoundId`, `PlaybackId`) для строгой защиты от невалидных состояний |
-| `Types/Condition.ts` | Алгебраические типы операторов и единые DTO контракты доменных условий |
-| `Math/SeededPRNG.ts` | Детерминированный генератор псевдослучайных чисел, безопасный для воспроизводимости оффлайн-рендера |
-| `Telemetry/TelemetryBatch.ts` | DTO и контракты пакетной передачи Zero-Allocation телеметрии в DevTools |
+*Location: `packages/shared/src/`*
 
-## Пакет `@scene-grid/engine` — Слой Application (Точка сборки)
-*Локация: `packages/engine/src/Application/`*
+| File                          | Purpose                                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| `Types/Branded.ts`            | Branded types (`SoundId`, `PlaybackId`) for strict protection against invalid states  |
+| `Types/Condition.ts`          | Algebraic operator types and unified DTO contracts for domain conditions              |
+| `Math/SeededPRNG.ts`          | Deterministic pseudo-random number generator, safe for reproducible offline rendering |
+| `Telemetry/TelemetryBatch.ts` | DTOs and contracts for batched Zero-Allocation telemetry transmission to DevTools     |
 
-| Файл | Назначение |
-|------|-----------|
-| `AudioEngine.ts` | Главный фасад (Composition Root), точка инициализации графа и инъекции зависимостей |
-| `Ports/IAudioEngine.ts` | Строгий публичный контракт API (Deep Module) для игрового клиента |
+## `@scene-grid/engine` Package — Application Layer (Composition Root)
 
-## Пакет `@scene-grid/engine` — Слой Domain (Бизнес-логика)
-*Локация: `packages/engine/src/Domain/`*
+*Location: `packages/engine/src/Application/`*
 
-| Файл | Назначение |
-|------|-----------|
-| `Configuration/SoundRegistry.ts` | Доменное хранилище метаданных и конфигураций звуков без привязки к инфраструктуре |
-| `Orchestration/AudioEventOrchestrator.ts` | Stateless-машина выполнения Data-Driven макросов и событий с темпоральной логикой |
-| `Orchestration/Sequencer.ts` | Оркестратор интерактивной музыки (Smart Loops) и горизонтального фазового секвенсинга |
-| `Orchestration/SmartLoopTransitionPolicy.ts`| Вычисление и валидация переходов между магнитами (Magnet Regions) секвенсора |
-| `Mixer/MixerTransitionEngine.ts` | Математика VCA-микшера и интерполяции кроссфейдов между состояниями шин |
-| `Mixer/MixerSnapshotManager.ts` | Управление независимыми слоями (Layers) и снимками стейтов микшера |
-| `Router/AudioRouter.ts` | Маршрутизатор запуска аудио-ресурсов и резолвер сложных логических контейнеров |
-| `Managers/ContainerPlaybackPolicy.ts` | Чистая логика выбора вариаций (Random/Sequence) с поддержкой No-Repeat гистерезиса |
-| `Managers/SwitchPlaybackPolicy.ts` | Детерминированная логика переключения стейтов (Switch) с алгоритмом мертвой зоны |
-| `Shared/Evaluators/ConditionEvaluator.ts`| Чистая функция оценки условий (Триггер Шмитта) без побочных эффектов |
-| `Validation/ConsistencyChecker.ts` | AOT-анализатор графа зависимостей для выявления петель и невалидных роутов |
+| File                    | Purpose                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------ |
+| `AudioEngine.ts`        | Main facade (Composition Root), graph initialization point, and dependency injection |
+| `Ports/IAudioEngine.ts` | Strict public API contract (Deep Module) for the game client                         |
 
-## Пакет `@scene-grid/engine` — Слой Infrastructure (Web Audio & State)
-*Локация: `packages/engine/src/Infrastructure/`*
+## `@scene-grid/engine` Package — Domain Layer (Business Logic)
 
-| Файл | Назначение |
-|------|-----------|
-| `busSystem/AudioBusSystem.ts` | Физическое управление Web Audio графом шин, эффектами и sidechain-компрессией |
-| `instance/SoundPoolManager.ts`| Zero-Allocation пул голосов (`SoundInstance`) для жесткого контроля полифонии и памяти |
-| `instance/SoundInstance.ts` | Обертка узлов `AudioBufferSourceNode`, управляющая жизненным циклом одного физического голоса |
-| `loader/AudioBufferLoader.ts` | In-memory кэш-загрузчик бинарных аудио-ресурсов с поддержкой batch-запросов |
-| `loader/BankManagerAdapter.ts`| Управление in-memory ресурсами, инвалидация пулов и сборка мусора (GC) |
-| `loader/SoundController.ts` | Инфраструктурный исполнитель команд роутера и источник событий Lifecycle-телеметрии |
-| `state/SwitchHistoryRegistry.ts`| Плоский Data-Oriented кэш истории состояний свитчей для работы гистерезиса |
-| `state/ContainerHistoryRegistry.ts`| Хранилище истории воспроизведения контейнеров для защиты от эффекта пулемета |
-| `scheduling/EngineTicker.ts` | Центральный 16-мс цикл (Time Injection) для всех ITickable подсистем движка |
-| `telemetry/TelemetryDispatcher.ts`| Центральный сборщик батчей телеметрии с In-Place мутацией (Zero-Allocation паттерн) |
-| `telemetry/TelemetrySnapshotter.ts`| Снятие слепков состояний (RTPC, Playbacks) через преаллоцированные пулы объектов |
-| `telemetry/BrowserTelemetryTransport.ts`| Адаптер транспорта метрик в инспектор (DevTools) через API `postMessage` |
-| `nodes/MasterOutput.ts` | Выходная точка аудиографа с brickwall-лимитером и веткой `silentTail` |
+*Location: `packages/engine/src/Domain/`*
 
-## Пакет `@scene-grid/engine` — Слой Kernel (Математическое ядро)
-*Локация: `packages/engine/src/Kernel/`*
+| File                                         | Purpose                                                                                |
+| -------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `Configuration/SoundRegistry.ts`             | Domain repository for metadata and sound configurations independent of infrastructure  |
+| `Orchestration/AudioEventOrchestrator.ts`    | Stateless execution machine for Data-Driven macros and temporal logic events           |
+| `Orchestration/Sequencer.ts`                 | Orchestrator for interactive music (Smart Loops) and horizontal phase sequencing       |
+| `Orchestration/SmartLoopTransitionPolicy.ts` | Calculation and validation of transitions between sequencer magnet regions             |
+| `Mixer/MixerTransitionEngine.ts`             | VCA mixer mathematics and crossfade interpolation between bus states                   |
+| `Mixer/MixerSnapshotManager.ts`              | Management of independent layers and mixer state snapshots                             |
+| `Router/AudioRouter.ts`                      | Router for triggering audio resources and resolving complex logic containers           |
+| `Managers/ContainerPlaybackPolicy.ts`        | Pure logic for variation selection (Random/Sequence) with No-Repeat hysteresis support |
+| `Managers/SwitchPlaybackPolicy.ts`           | Deterministic state switching logic (Switch) with a dead zone algorithm                |
+| `Shared/Evaluators/ConditionEvaluator.ts`    | Pure function for evaluating conditions (Schmitt Trigger) without side effects         |
+| `Validation/ConsistencyChecker.ts`           | AOT dependency graph analyzer for detecting loops and invalid routes                   |
 
-| Файл | Назначение |
-|------|-----------|
-| `RTPC/RTPCManager.ts` | DOD-процессор макро-параметров (Control Voltage) с интерполяцией и slew rates |
+## `@scene-grid/engine` Package — Infrastructure Layer (Web Audio & State)
 
-## Пакет `@scene-grid/inspector` (DevTools 2.0)
-*Локация: `packages/inspector/src/`*
+Location: `packages/engine/src/Infrastructure/`*
 
-| Файл | Назначение |
-|------|-----------|
-| `AudioDebugger.ts` | Ядро DevTools 2.0, связывающее UI-инспектор с потоком телеметрии движка |
-| `AudioDebugPanel.ts` | Панель управления (Tweakpane) для визуального дебага микшера и RTPC |
-| `AudioProfiler.ts` | Агрегатор метрик производительности и статистики активных/виртуальных голосов пула |
-| `visualizers.ts` | WebGL-отрисовка анализаторов спектра и RMS-метров для инспектора |
-| `worklets/meter.processor.ts`| `AudioWorklet` для аппаратного снятия уровней громкости (RMS) без нагрузки на UI |
+| File                                     | Purpose                                                                                      |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `busSystem/AudioBusSystem.ts`            | Physical management of the Web Audio bus graph, effects, and sidechain compression           |
+| `instance/SoundPoolManager.ts`           | Zero-Allocation voice pool (`SoundInstance`) for strict polyphony and memory control         |
+| `instance/SoundInstance.ts`              | Wrapper for `AudioBufferSourceNode` nodes, managing the lifecycle of a single physical voice |
+| `loader/AudioBufferLoader.ts`            | In-memory cache loader for binary audio resources with batch request support                 |
+| `loader/BankManagerAdapter.ts`           | Management of in-memory resources, pool invalidation, and garbage collection (GC)            |
+| `loader/SoundController.ts`              | Infrastructure executor for router commands and source of Lifecycle telemetry events         |
+| `state/SwitchHistoryRegistry.ts`         | Flat Data-Oriented cache of switch state history for hysteresis operation                    |
+| `state/ContainerHistoryRegistry.ts`      | Storage for container playback history to prevent the machine-gun effect                     |
+| `scheduling/EngineTicker.ts`             | Central 16ms loop (Time Injection) for all ITickable engine subsystems                       |
+| `telemetry/TelemetryDispatcher.ts`       | Central collector of telemetry batches with In-Place mutation (Zero-Allocation pattern)      |
+| `telemetry/TelemetrySnapshotter.ts`      | Capturing state snapshots (RTPC, Playbacks) via preallocated object pools                    |
+| `telemetry/BrowserTelemetryTransport.ts` | Adapter for transporting metrics to the inspector (DevTools) via `postMessage` API           |
+| `nodes/MasterOutput.ts`                  | Audio graph output point with a brickwall limiter and `silentTail` branch                    |
+
+## `@scene-grid/engine` Package — Kernel Layer (Mathematical Core)
+
+*Location: `packages/engine/src/Kernel/`*
+
+| File                  | Purpose                                                                                |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| `RTPC/RTPCManager.ts` | DOD processor for macro-parameters (Control Voltage) with interpolation and slew rates |
+
+## `@scene-grid/inspector` Package (DevTools 2.0)
+
+*Location: `packages/inspector/src/`*
+
+> **Update Note:** This section has been expanded to reflect recent architectural shifts (Phase 11-13), including the introduction of visual graph routing, BroadcastChannel telemetry, and modern UI tokens.
+
+| File                          | Purpose                                                                           |
+|-------------------------------| --------------------------------------------------------------------------------- |
+| `AudioDebugger.ts`            | DevTools 2.0 core, connecting the UI inspector with the engine's telemetry stream |
+| `AudioDebugPanel.ts`          | Control panel (Tweakpane) for visual debugging of the mixer and RTPC              |
+| `AudioProfiler.ts`            | Aggregator of performance metrics and active/virtual voice pool statistics        |
+| `visualizers.ts`              | WebGL rendering of spectrum analyzers and RMS meters for the inspector            |
+| `worklets/meter.processor.ts` | `AudioWorklet` for hardware-level volume (RMS) metering without UI blocking       |
+| `ui/AudioGraph.tsx`           | Real-time signal graph and routing visualization based on React Flow              |
+
