@@ -1,15 +1,42 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import React from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { clsx } from 'clsx';
 import type { ITelemetryCauseChain, ITelemetryLifecycleEvent } from '@scene-grid/shared';
 
 interface RawLoggerProps {
     logs: Array<ITelemetryLifecycleEvent | ITelemetryCauseChain>;
+    onLogClick?: (targetTime: number) => void;
+    isLive?: boolean;
+    inspectedTime?: number | null;
 }
 
-export const RawLogger: React.FC<RawLoggerProps> = ({ logs }) => {
+export const RawLogger: React.FC<RawLoggerProps> = ({ logs, onLogClick, isLive = true, inspectedTime }) => {
+    const activeLogRef = useRef<HTMLDivElement>(null);
+
+    const closestTime = useMemo(() => {
+        if (inspectedTime == null || logs.length === 0) return null;
+
+        const closest = logs.reduce((prev, curr) => {
+            const prevDiff = Math.abs(prev.timestampMs - inspectedTime);
+            const currDiff = Math.abs(curr.timestampMs - inspectedTime);
+            return currDiff < prevDiff ? curr : prev;
+        });
+
+        if (Math.abs(closest.timestampMs - inspectedTime) > 500) {
+            return null;
+        }
+
+        return closest.timestampMs;
+    }, [inspectedTime, logs]);
+
+    useEffect(() => {
+        if (!isLive && activeLogRef.current) {
+            activeLogRef.current.scrollIntoView({ block: 'center', behavior: 'auto' });
+        }
+    }, [closestTime, isLive]);
+
     // oxlint-disable-next-line unicorn/consistent-function-scoping
     const renderInitiator = (initiator: ITelemetryCauseChain['initiator']) => {
         switch (initiator.type) {
@@ -41,15 +68,21 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs }) => {
             {logs.map((log, i) => {
                 const isCause = log.type === 'CAUSE_CHAIN';
                 const isBlocked = isCause && log.result.type === 'BLOCKED';
+                const isActive = !isLive && closestTime === log.timestampMs;
 
                 return (
                     <div
                         key={i}
+                        ref={isActive ? activeLogRef : undefined}
+                        onClick={() => onLogClick?.(log.timestampMs)}
                         className={clsx(
-                            'p-2 rounded-sm border-l-4 transition-colors',
-                            isBlocked ? 'bg-danger/20 border-danger' : 'bg-surface border-border',
-                            isCause && !isBlocked && 'border-primary',
-                            !isCause && 'border-success'
+                            'p-2 rounded-sm border-l-4 transition-all cursor-pointer',
+                            isActive
+                                ? 'bg-surface-active ring-1 ring-primary shadow-md'
+                                : isBlocked
+                                  ? 'bg-danger/20'
+                                  : 'bg-surface hover:bg-surface-hover',
+                            isBlocked ? 'border-danger' : isCause ? 'border-primary' : 'border-success'
                         )}
                     >
                         <div className="text-[10px] text-foreground-muted mb-1">{log.timestampMs.toFixed(2)}ms</div>

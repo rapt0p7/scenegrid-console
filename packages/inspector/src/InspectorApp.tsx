@@ -5,9 +5,22 @@ import { PolyphonyCounter } from './ui/PolyphonyCounter.jsx';
 import { PerformanceGraph } from './ui/PerformanceGraph.jsx';
 import { useTelemetryBus } from './hooks/useTelemetryBus.js';
 import { AudioGraph } from './ui/AudioGraph/AudioGraph.js';
+import { useSnapshotTimeline } from './hooks/useSnapshotTimeline';
+import { TimelineScrubber } from './ui/TimelineScrubber';
 
 export const InspectorApp: React.FC = () => {
     const { logs, latestSnapshot, manifest } = useTelemetryBus();
+
+    const {
+        displayRef,
+        isLive,
+        inspectedIndex,
+        bufferSize,
+        exactInspectedTime,
+        pauseAndInspect,
+        scrubToIndex,
+        resumeLive
+    } = useSnapshotTimeline(latestSnapshot);
 
     return (
         <div className="flex flex-col h-screen w-screen bg-background text-foreground font-mono text-xs overflow-hidden select-none">
@@ -19,7 +32,7 @@ export const InspectorApp: React.FC = () => {
                     </span>
                     <div className="h-4 w-px bg-border" />
                     <span className="text-foreground-muted">
-                        Polyphony: <PolyphonyCounter snapshotRef={latestSnapshot} />
+                        Polyphony: <PolyphonyCounter snapshotRef={displayRef} />
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -40,7 +53,12 @@ export const InspectorApp: React.FC = () => {
                     <div className="flex-none h-8 bg-surface-hover/50 border-b border-border flex items-center px-3 text-foreground-muted font-semibold uppercase tracking-wider text-[10px]">
                         Event Stream
                     </div>
-                    <RawLogger logs={logs} />
+                    <RawLogger
+                        logs={logs}
+                        onLogClick={pauseAndInspect}
+                        isLive={isLive}
+                        inspectedTime={exactInspectedTime ?? (!isLive ? displayRef.current?.timestampMs : null)}
+                    />
                 </aside>
 
                 {/* Workspace */}
@@ -50,7 +68,7 @@ export const InspectorApp: React.FC = () => {
                             Performance & Polyphony
                         </div>
                         <div className="flex-1 overflow-hidden relative">
-                            <PerformanceGraph snapshotRef={latestSnapshot} />
+                            <PerformanceGraph snapshotRef={displayRef} />
                         </div>
                     </div>
 
@@ -60,13 +78,22 @@ export const InspectorApp: React.FC = () => {
                         </div>
                         <div className="flex-1 relative">
                             {manifest ? (
-                                <AudioGraph snapshotRef={latestSnapshot} manifest={manifest} />
+                                <AudioGraph snapshotRef={displayRef} manifest={manifest} />
                             ) : (
                                 <div className="absolute inset-0 flex items-center justify-center text-foreground-muted animate-pulse">
                                     Waiting for Engine Manifest...
                                 </div>
                             )}
                         </div>
+
+                        <TimelineScrubber
+                            isLive={isLive}
+                            currentIndex={inspectedIndex}
+                            currentTimeMs={displayRef.current?.timestampMs ?? 0}
+                            bufferSize={bufferSize}
+                            onScrub={scrubToIndex}
+                            onResume={resumeLive}
+                        />
                     </div>
                 </main>
             </div>
