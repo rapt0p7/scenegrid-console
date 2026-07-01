@@ -68,6 +68,7 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs, onLogClick, isLive =
             {logs.map((log, i) => {
                 const isCause = log.type === 'CAUSE_CHAIN';
                 const isBlocked = isCause && log.result.type === 'BLOCKED';
+                const isSnapshotChange = isCause && log.result.type === 'SET_MIX_SNAPSHOT';
                 const isActive = !isLive && closestTime === log.timestampMs;
 
                 return (
@@ -81,8 +82,16 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs, onLogClick, isLive =
                                 ? 'bg-surface-active ring-1 ring-primary shadow-md'
                                 : isBlocked
                                   ? 'bg-danger/20'
-                                  : 'bg-surface hover:bg-surface-hover',
-                            isBlocked ? 'border-danger' : isCause ? 'border-primary' : 'border-success'
+                                  : isSnapshotChange
+                                    ? 'bg-info/10'
+                                    : 'bg-surface hover:bg-surface-hover',
+                            isBlocked
+                                ? 'border-danger'
+                                : isSnapshotChange
+                                  ? 'border-info'
+                                  : isCause
+                                    ? 'border-primary'
+                                    : 'border-success'
                         )}
                     >
                         <div className="text-[10px] text-foreground-muted mb-1">{log.timestampMs.toFixed(2)}ms</div>
@@ -98,7 +107,21 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs, onLogClick, isLive =
                             </div>
                         )}
 
-                        {log.type === 'CAUSE_CHAIN' && (
+                        {log.type === 'CAUSE_CHAIN' && log.result.type === 'SET_MIX_SNAPSHOT' && (
+                            <div className="leading-tight flex items-center gap-2 py-1">
+                                <strong className="text-info tracking-wider">MIX SNAPSHOT APPLIED</strong>
+                                <span className="text-foreground font-bold bg-background px-1.5 rounded text-[10px]">
+                                    {log.result.snapshotId}
+                                </span>
+                                {log.result.fadeTimeMs > 0 && (
+                                    <span className="text-foreground-muted text-[10px]">
+                                        ({log.result.fadeTimeMs}ms fade)
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {log.type === 'CAUSE_CHAIN' && log.result.type !== 'SET_MIX_SNAPSHOT' && (
                             <div className="leading-tight">
                                 <strong className={clsx(isBlocked ? 'text-danger' : 'text-primary')}>
                                     [{renderInitiator(log.initiator)}]
