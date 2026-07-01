@@ -380,7 +380,13 @@ export class AudioEngine implements IAudioEngine {
 
             const mixerTransitionEngine = new MixerTransitionEngine(this.#busSystem, this.#rtpcManager);
             const coordinator = new MixerCoordinator(layerStack, mixerTransitionEngine);
-            this.#snapshotManager = new MixerSnapshotManager(layerStack, this.config.snapshots, coordinator);
+            this.#snapshotManager = new MixerSnapshotManager(
+                layerStack,
+                this.config.snapshots,
+                coordinator,
+                telemetry,
+                this.#soundController
+            );
 
             this.#bankManager = new BankManagerAdapter(
                 this.config.banks,

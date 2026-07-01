@@ -1,16 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 
 import MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
 
 import type MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
 import type { LayerId, SnapshotId } from '@scene-grid/shared';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 describe('MixerSnapshotManager', () => {
     let manager: MixerSnapshotManager;
     let mockLayerStack: any;
     let mockCoordinator: any;
     let mockSnapshots: Record<string, any>;
+    let mockController: Mocked<ISoundController>;
+    let mockTelemetry: Mocked<ITelemetryDispatcher>;
     let emitSpy: any;
 
     beforeEach(() => {
@@ -20,6 +24,14 @@ describe('MixerSnapshotManager', () => {
             removeLayer: vi.fn(),
             hasLayer: vi.fn()
         };
+
+        mockController = {
+            getCurrentTime: vi.fn().mockReturnValue(1.5)
+        } as unknown as Mocked<ISoundController>;
+
+        mockTelemetry = {
+            dispatch: vi.fn()
+        } as unknown as Mocked<ITelemetryDispatcher>;
 
         mockCoordinator = {
             // oxlint-disable-next-line unicorn/no-useless-undefined
@@ -34,7 +46,9 @@ describe('MixerSnapshotManager', () => {
         manager = new MixerSnapshotManager(
             mockLayerStack as unknown as MixerLayerStack,
             mockSnapshots,
-            mockCoordinator as unknown as MixerCoordinator
+            mockCoordinator as unknown as MixerCoordinator,
+            mockTelemetry,
+            mockController
         );
 
         emitSpy = vi.spyOn(manager.events, 'emit');
@@ -114,6 +128,18 @@ describe('MixerSnapshotManager', () => {
 });
 
 describe('MixerSnapshotManager - HMR (updateSnapshotsConfig)', () => {
+    let mockController: Mocked<ISoundController>;
+    let mockTelemetry: Mocked<ITelemetryDispatcher>;
+    beforeEach(() => {
+        mockController = {
+            getCurrentTime: vi.fn().mockReturnValue(1.5)
+        } as unknown as Mocked<ISoundController>;
+
+        mockTelemetry = {
+            dispatch: vi.fn()
+        } as unknown as Mocked<ITelemetryDispatcher>;
+    });
+
     it('should inject fresh snapshot data into active layers matching by snapshotId', () => {
         const mockLayerStack = {
             getLayers: vi.fn(),
@@ -128,7 +154,9 @@ describe('MixerSnapshotManager - HMR (updateSnapshotsConfig)', () => {
         const manager = new MixerSnapshotManager(
             mockLayerStack as any,
             initialSnapshots as any,
-            mockCoordinator as any
+            mockCoordinator as any,
+            mockTelemetry,
+            mockController
         );
 
         mockLayerStack.getLayers.mockReturnValue([

@@ -70,7 +70,8 @@ export type CauseResult =
     | { readonly type: 'ACTION_EXECUTED'; readonly action: IActionTelemetryDTO }
     | { readonly type: 'BLOCKED'; readonly reason: string }
     | { readonly type: 'VIRTUALIZE'; readonly target: PlaybackId }
-    | { readonly type: 'KILL'; readonly target: PlaybackId };
+    | { readonly type: 'KILL'; readonly target: PlaybackId }
+    | { readonly type: 'SET_MIX_SNAPSHOT'; readonly snapshotId: string | number; readonly fadeTimeMs: number };
 
 export interface IConditionTrace {
     readonly param: GameParamId;
