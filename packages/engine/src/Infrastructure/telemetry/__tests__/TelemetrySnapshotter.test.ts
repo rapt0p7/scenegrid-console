@@ -196,20 +196,28 @@ describe('TelemetrySnapshotter', () => {
 
         expect(dispatchCall.buses).toHaveLength(2);
 
-        expect(dispatchCall.buses[0]).toEqual({
-            busId: 'main',
-            logicalGain: 0.8,
-            rtpcGain: 0.9,
-            finalGain: 0.72,
-            sidechainGain: 0.5
-        });
+        expect(dispatchCall.buses).toHaveLength(2);
 
-        expect(dispatchCall.buses[1]).toEqual({
-            busId: 'sfx',
-            logicalGain: 1,
-            rtpcGain: 1,
-            finalGain: 1,
-            sidechainGain: undefined
-        });
+        expect(dispatchCall.buses[0]).toEqual(
+            expect.objectContaining({
+                busId: 'main',
+                logicalGain: 0.8,
+                rtpcGain: 0.9,
+                finalGain: 0.72,
+                sidechainGain: 0.5,
+                modifiersCount: 0
+            })
+        );
+
+        expect(dispatchCall.buses[1]).toEqual(
+            expect.objectContaining({
+                busId: 'sfx',
+                logicalGain: 1,
+                rtpcGain: 1,
+                finalGain: 1,
+                sidechainGain: undefined,
+                modifiersCount: 0
+            })
+        );
     });
 });

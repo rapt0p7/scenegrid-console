@@ -58,8 +58,8 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
         expect(mockArbiter.evaluate).toHaveBeenCalledWith(mockContext, 500);
 
         expect(mockController.virtualize).toHaveBeenCalledTimes(2);
-        expect(mockController.virtualize).toHaveBeenCalledWith(101);
-        expect(mockController.virtualize).toHaveBeenCalledWith(102);
+        expect(mockController.virtualize).toHaveBeenCalledWith(101, 'DEAF_BUS');
+        expect(mockController.virtualize).toHaveBeenCalledWith(102, 'DEAF_BUS');
 
         expect(mockTelemetry.dispatch).toHaveBeenCalledTimes(2);
         expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
