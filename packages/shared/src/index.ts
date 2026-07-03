@@ -1,6 +1,7 @@
 export type * from './Types/Branded.js';
 export type * from './Types/Musical.js';
 export type * from './Types/Condition.js';
+export type * from './Types/CullingReasons.js';
 export type { DeepReadonly } from './DeepReadonly.js';
 export type { Point2D, MathCurveType, MathCurvePresetDefinition, MathCurveDefinition } from './Math/MathCurve.js';
 export type { IPRNG } from './Math/SeededPRNG.js';

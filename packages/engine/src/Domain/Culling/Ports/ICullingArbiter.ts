@@ -1,4 +1,4 @@
-import type { PlaybackId, SoundId, BusId } from '@scene-grid/shared';
+import type { PlaybackId, SoundId, BusId, ArbiterCullReason } from '@scene-grid/shared';
 
 export interface ICullingContext {
     readonly activePlaybacks: PlaybackId[];
@@ -12,7 +12,7 @@ export interface ICullingContext {
 
 export interface IVirtualizeDecision {
     readonly playbackId: PlaybackId;
-    readonly reason: 'GLOBAL_LIMIT' | 'PRIORITY_STEAL' | 'DEAF_BUS';
+    readonly reason: ArbiterCullReason;
 }
 
 export interface CullingDecisions {

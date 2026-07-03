@@ -221,13 +221,53 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
     public getBusFinalGain(busId: BusId): number | undefined {
         const bus = this.buses.get(busId);
-        return bus?.getLogicalTargetGain();
+        if (!bus) return undefined;
+
+        const logicalTarget = bus.getLogicalTargetGain();
+        const sidechainGain = this.getSidechainGain(busId);
+
+        return logicalTarget * sidechainGain;
     }
 
     public getSidechainGain(busId: BusId): number {
         const sidechain = this.getSidechain(busId);
 
         return 1 - (sidechain?.activeEnvelope ?? 0);
+    }
+
+    public fillActiveModifiers(
+        busId: BusId,
+        outModifiers: Array<{ type: string; value: number; source: string }>
+    ): number {
+        const bus = this.buses.get(busId);
+        if (!bus) return 0;
+
+        let count = 0;
+
+        const targetParams = bus.getTargetParamsGain();
+        if (targetParams.logical !== 1) {
+            outModifiers[count].type = 'LOGICAL';
+            outModifiers[count].value = targetParams.logical;
+            outModifiers[count].source = 'Mixer Snapshot';
+            count++;
+        }
+
+        if (targetParams.rtpc !== 1) {
+            outModifiers[count].type = 'RTPC';
+            outModifiers[count].value = targetParams.rtpc;
+            outModifiers[count].source = 'Game Parameter';
+            count++;
+        }
+
+        const sidechainGain = this.getSidechainGain(busId);
+        if (sidechainGain < 1) {
+            outModifiers[count].type = 'SIDECHAIN';
+            outModifiers[count].value = sidechainGain;
+            outModifiers[count].source = 'Active Ducking';
+            count++;
+        }
+
+        return count;
     }
 
     /**

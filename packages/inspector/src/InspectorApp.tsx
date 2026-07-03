@@ -1,5 +1,5 @@
 // oxlint-disable max-lines-per-function
-import React from 'react';
+import React, { useState } from 'react';
 import { RawLogger } from './ui/RawLogger.jsx';
 import { PolyphonyCounter } from './ui/PolyphonyCounter.jsx';
 import { PerformanceGraph } from './ui/PerformanceGraph.jsx';
@@ -7,6 +7,7 @@ import { useTelemetryBus } from './hooks/useTelemetryBus.js';
 import { AudioGraph } from './ui/AudioGraph/AudioGraph.js';
 import { useSnapshotTimeline } from './hooks/useSnapshotTimeline';
 import { TimelineScrubber } from './ui/TimelineScrubber';
+import { NodeInspector, type SelectedNodeInfo } from './ui/AudioGraph/NodeInspector.jsx';
 
 export const InspectorApp: React.FC = () => {
     const { logs, latestSnapshot, manifest } = useTelemetryBus();
@@ -21,6 +22,8 @@ export const InspectorApp: React.FC = () => {
         scrubToIndex,
         resumeLive
     } = useSnapshotTimeline(latestSnapshot);
+
+    const [selectedNode, setSelectedNode] = useState<SelectedNodeInfo | null>(null);
 
     return (
         <div className="flex flex-col h-screen w-screen bg-background text-foreground font-mono text-xs overflow-hidden select-none">
@@ -78,7 +81,11 @@ export const InspectorApp: React.FC = () => {
                         </div>
                         <div className="flex-1 relative">
                             {manifest ? (
-                                <AudioGraph snapshotRef={displayRef} manifest={manifest} />
+                                <AudioGraph
+                                    snapshotRef={displayRef}
+                                    manifest={manifest}
+                                    onNodeClick={setSelectedNode}
+                                />
                             ) : (
                                 <div className="absolute inset-0 flex items-center justify-center text-foreground-muted animate-pulse">
                                     Waiting for Engine Manifest...
@@ -96,6 +103,15 @@ export const InspectorApp: React.FC = () => {
                         />
                     </div>
                 </main>
+                <aside className="w-[300px] flex flex-col border-l border-border bg-background/50 relative shrink-0 transition-all">
+                    <NodeInspector
+                        snapshot={displayRef.current}
+                        selectedNode={selectedNode}
+                        onClose={() => {
+                            setSelectedNode(null);
+                        }}
+                    />
+                </aside>
             </div>
         </div>
     );

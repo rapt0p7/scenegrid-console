@@ -1,5 +1,6 @@
 import type { GameParamId, SoundId, PlaybackId, EventId, RegionId, BankId, BusId } from '../Types/Branded.js';
 import type { ConditionOperator } from '../Types/Condition.js';
+import { ArbiterCullReason } from '../Types/CullingReasons.js';
 
 export interface IRtpcSnapshot {
     readonly param: GameParamId;
@@ -17,6 +18,7 @@ export interface IPlaybackSnapshot {
     readonly positionSec: number;
     readonly volume: number;
     readonly isVirtual: boolean;
+    readonly virtualReason?: 'UNDER_THRESHOLD' | 'DEAF_BUS' | 'VIRTUAL_BY_API';
 }
 
 export interface IBusSnapshot {
@@ -25,6 +27,8 @@ export interface IBusSnapshot {
     rtpcGain: number;
     sidechainGain: number;
     finalGain: number;
+    readonly activeModifiers: Array<{ type: string; value: number; source: string }>;
+    modifiersCount: number;
 }
 
 export interface ITelemetrySnapshot {
@@ -60,7 +64,7 @@ export type CauseInitiator =
     | { readonly type: 'EVENT'; readonly eventId: EventId }
     | { readonly type: 'MAGNET'; readonly sourceRegion: RegionId; readonly targetRegion: RegionId }
     | { readonly type: 'CONTAINER_POLICY'; readonly containerId: SoundId }
-    | { readonly type: 'CULLING_ARBITER'; readonly reason: 'GLOBAL_LIMIT' | 'PRIORITY_STEAL' | 'DEAF_BUS' };
+    | { readonly type: 'CULLING_ARBITER'; readonly reason: ArbiterCullReason };
 
 export type CauseResult =
     | { readonly type: 'PLAY'; readonly target: SoundId }

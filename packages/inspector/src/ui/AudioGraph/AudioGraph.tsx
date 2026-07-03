@@ -19,13 +19,9 @@ import ELK from 'elkjs/lib/elk.bundled.js';
 import type { ITelemetrySnapshot } from '@scene-grid/shared';
 import type { IEngineManifestDTO } from '../../types/ManifestDTO.js';
 import { AudioNodeComponent } from './AudioNodeComponent.jsx';
+import { SelectedNodeInfo } from './NodeInspector.jsx';
 
 const nodeTypes = { audio: AudioNodeComponent };
-
-interface Props {
-    manifest: IEngineManifestDTO;
-    snapshotRef: React.MutableRefObject<ITelemetrySnapshot | null>;
-}
 
 const elk = new ELK();
 
@@ -72,9 +68,10 @@ const getLayoutedElements = async (nodes: Node[], edges: Edge[]) => {
 interface Props {
     manifest: IEngineManifestDTO;
     snapshotRef: React.MutableRefObject<ITelemetrySnapshot | null>;
+    onNodeClick?: (info: SelectedNodeInfo) => void;
 }
 
-const AudioGraphInner: React.FC<Props> = ({ manifest, snapshotRef }) => {
+const AudioGraphInner: React.FC<Props> = ({ manifest, snapshotRef, onNodeClick }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     // oxlint-disable-next-line typescript/no-unnecessary-type-arguments
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -109,7 +106,7 @@ const AudioGraphInner: React.FC<Props> = ({ manifest, snapshotRef }) => {
                 id: `bus:${busId}`,
                 type: 'audio',
                 position: { x: 0, y: 0 },
-                data: { title: `BUS: ${busId}`, type: 'bus', registerNode, unregisterNode }
+                data: { title: `BUS: ${busId}`, type: 'bus', registerNode, unregisterNode, originalId: busId }
             });
             initEdges.push({
                 id: `e-bus:${busId}-master`,
@@ -275,7 +272,13 @@ const AudioGraphInner: React.FC<Props> = ({ manifest, snapshotRef }) => {
                         id: voiceNodeId,
                         type: 'audio',
                         position: { x: 0, y: 0 },
-                        data: { title: p.soundId, type: 'voice', registerNode, unregisterNode }
+                        data: {
+                            title: p.soundId,
+                            type: 'voice',
+                            registerNode,
+                            unregisterNode,
+                            originalId: p.playbackId
+                        }
                     });
 
                     const targetBus = manifest.soundMap[p.soundId]?.busId || 'master';
@@ -330,6 +333,16 @@ const AudioGraphInner: React.FC<Props> = ({ manifest, snapshotRef }) => {
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
+                onNodeClick={(event, node) => {
+                    const isBus = node.data.type === 'bus';
+                    const originalId = node.data.originalId;
+
+                    if (isBus) {
+                        onNodeClick?.({ type: 'BUS', id: originalId as string });
+                    } else {
+                        onNodeClick?.({ type: 'PLAYBACK', id: originalId as number });
+                    }
+                }}
                 nodeTypes={nodeTypes}
                 proOptions={{ hideAttribution: true }}
                 minZoom={0.2}

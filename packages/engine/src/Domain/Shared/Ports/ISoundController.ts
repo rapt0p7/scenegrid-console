@@ -1,4 +1,4 @@
-import type { BusId, PlaybackId, SoundId } from '@scene-grid/shared';
+import type { BusId, PlaybackId, SoundId, ArbiterCullReason } from '@scene-grid/shared';
 
 export interface IControllerPlayOptions {
     readonly when?: number;
@@ -12,6 +12,8 @@ export interface IControllerPlayOptions {
 export type RTPCParameterTarget = 'gain' | 'pitch' | 'pan' | 'filterFrequency';
 
 export type PlaybackState = 'playing' | 'virtual' | 'stopped';
+
+export type VirtualReason = ArbiterCullReason | 'VIRTUAL_BY_API';
 
 export interface ISoundController {
     play(soundId: SoundId, options: IControllerPlayOptions): PlaybackId | null;
@@ -42,10 +44,11 @@ export interface ISoundController {
     getPlaybackPositionSec(id: PlaybackId): number;
     getCurrentVolume(id: PlaybackId): number;
     getLogicalState(id: PlaybackId): 'playing' | 'paused' | undefined;
+    getVirtualReason(playbackId: PlaybackId): VirtualReason | undefined;
     routeToBus(playbackId: PlaybackId, busId: BusId): void;
     addSidechainTrigger(playbackId: PlaybackId, busId: BusId, intensity: number): void;
     removeSidechainTrigger(playbackId: PlaybackId, busId: BusId): void;
-    virtualize(id: PlaybackId): void;
+    virtualize(id: PlaybackId, reason: VirtualReason): void;
     devirtualize(id: PlaybackId): void;
     playVirtual(soundId: SoundId): PlaybackId;
     isGhostVoice(id: PlaybackId): boolean;

@@ -26,7 +26,7 @@ export class CullingRunner {
                 result: { type: 'VIRTUALIZE', target: decision.playbackId }
             });
 
-            this.controller.virtualize(decision.playbackId);
+            this.controller.virtualize(decision.playbackId, decision.reason);
         }
 
         for (let i = 0; i < decisions.devirtualizeCount; i++) {

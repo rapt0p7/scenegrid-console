@@ -15,6 +15,7 @@ export interface IAudioBusSystem {
     getBusFinalGain(busId: BusId): number | undefined;
     getBaseBusConfig(busId: BusId): IBus | undefined;
     getSidechainGain(busId: BusId): number;
+    fillActiveModifiers(busId: BusId, outModifiers: Array<{ type: string; value: number; source: string }>): number;
     tickRTPC(rtpcAdapter: IRTPCAdapter): void;
     updateConfig(newConfig: IBuses): Promise<void>;
 }

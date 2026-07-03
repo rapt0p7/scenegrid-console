@@ -1,7 +1,7 @@
 // oxlint-disable no-underscore-dangle
 // noinspection D
 
-import type { IControllerPlayOptions, ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { IControllerPlayOptions, ISoundController, VirtualReason } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type { BusId, PlaybackId, SoundId, LifecycleAction, ITelemetryLifecycleEvent } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
@@ -299,7 +299,7 @@ export class SoundController implements ISoundController {
         }
     }
 
-    public playVirtual(soundId: SoundId): PlaybackId {
+    public playVirtual(soundId: SoundId, reason: VirtualReason = 'VIRTUAL_BY_API'): PlaybackId {
         const playbackId = this.nextPlaybackId++ as PlaybackId;
 
         const logicalVoice = {
@@ -310,12 +310,13 @@ export class SoundController implements ISoundController {
             startedAtContextTime: this.context.currentTime,
             startOffset: 0,
             physicalInstance: null as any,
-            isVirtualNode: true
+            isVirtualNode: true,
+            virtualReason: reason
         } as unknown as ILogicalVoice;
 
         this.activeVoices.set(playbackId, logicalVoice);
 
-        this.pushLifecycle('VIRTUALIZE', playbackId, soundId);
+        this.pushLifecycle('VIRTUALIZE', playbackId, soundId, reason);
 
         return playbackId;
     }
@@ -356,6 +357,12 @@ export class SoundController implements ISoundController {
         return voice.physicalInstance?.gainParam?.value ?? 1;
     }
 
+    public getVirtualReason(id: PlaybackId): VirtualReason | undefined {
+        const voice = this.activeVoices.get(id);
+        if (!voice) return undefined;
+        return (voice as any).virtualReason;
+    }
+
     setVolume(id: PlaybackId, targetVolume: number): void {
         const voice = this.activeVoices.get(id);
         if (voice?.physicalInstance?.gainParam) {
@@ -381,7 +388,7 @@ export class SoundController implements ISoundController {
         return this.activeVoices.get(id)?.logicalState;
     }
 
-    virtualize(id: PlaybackId): void {
+    virtualize(id: PlaybackId, reason: VirtualReason = 'VIRTUAL_BY_API'): void {
         const voice = this.activeVoices.get(id);
         if (voice?.logicalState === 'paused') return;
         if (voice?.physicalInstance && 'virtualize' in voice.physicalInstance) {
@@ -404,7 +411,9 @@ export class SoundController implements ISoundController {
 
             instance.virtualize();
 
-            this.pushLifecycle('VIRTUALIZE', id, voice.soundId);
+            (voice as any).virtualReason = reason;
+
+            this.pushLifecycle('VIRTUALIZE', id, voice.soundId, reason);
         }
     }
 
@@ -416,6 +425,8 @@ export class SoundController implements ISoundController {
 
             const instance = voice.physicalInstance;
             instance.devirtualize();
+
+            (voice as any).virtualReason = undefined;
 
             const poolIndex = (instance as any)._poolIndex;
             const targetBuses = this.#sidechainLinks[poolIndex];

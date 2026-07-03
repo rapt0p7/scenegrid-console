@@ -47,7 +47,8 @@ export class TelemetrySnapshotter implements ITickable {
             soundId: '' as SoundId,
             positionSec: 0,
             volume: 0,
-            isVirtual: false
+            isVirtual: false,
+            virtualReason: undefined
         }));
 
         this.busPool = Array.from({ length: busKeys.length }, () => ({
@@ -55,7 +56,13 @@ export class TelemetrySnapshotter implements ITickable {
             logicalGain: 1,
             rtpcGain: 1,
             finalGain: 1,
-            sidechainGain: 1
+            sidechainGain: 1,
+            activeModifiers: [
+                { type: '', value: 0, source: '' },
+                { type: '', value: 0, source: '' },
+                { type: '', value: 0, source: '' }
+            ],
+            modifiersCount: 0
         }));
 
         this.snapshotDto = {
@@ -97,6 +104,8 @@ export class TelemetrySnapshotter implements ITickable {
             const rtpc = this.busSystem.getBusRtpcGain(busId) ?? 1;
             const final = this.busSystem.getBusFinalGain(busId) ?? 1;
             const sidechainGain = this.busSystem.getSidechainGain(busId);
+            // oxlint-disable-next-line typescript/no-explicit-any
+            const count = (this.busSystem as any).fillActiveModifiers?.(busId, poolItem.activeModifiers) ?? 0;
 
             // oxlint-disable-next-line typescript/no-explicit-any
             (poolItem as any).busId = busId;
@@ -108,6 +117,8 @@ export class TelemetrySnapshotter implements ITickable {
             (poolItem as any).finalGain = final;
             // oxlint-disable-next-line typescript/no-explicit-any
             (poolItem as any).sidechainGain = sidechainGain;
+            // oxlint-disable-next-line typescript/no-explicit-any
+            (poolItem as any).modifiersCount = count;
 
             out[i] = poolItem;
         }
@@ -168,18 +179,23 @@ export class TelemetrySnapshotter implements ITickable {
             if (!soundId) continue;
 
             const state = this.soundController.getPlaybackState(id);
+            const isVirtual = state === 'virtual';
             const poolItem = this.playbackPool[activeCount];
+            // oxlint-disable-next-line typescript/no-explicit-any
+            const virtualReason = isVirtual ? (this.soundController as any).getVirtualReason?.(id) : undefined;
 
             // oxlint-disable-next-line typescript/no-explicit-any
             (poolItem as any).playbackId = id;
             // oxlint-disable-next-line typescript/no-explicit-any
             (poolItem as any).soundId = soundId;
             // oxlint-disable-next-line typescript/no-explicit-any
-            (poolItem as any).isVirtual = state === 'virtual';
+            (poolItem as any).isVirtual = isVirtual;
             // oxlint-disable-next-line typescript/no-explicit-any
             (poolItem as any).positionSec = this.soundController.getPlaybackPositionSec?.(id) ?? 0;
             // oxlint-disable-next-line typescript/no-explicit-any
             (poolItem as any).volume = this.soundController.getCurrentVolume?.(id) ?? 1;
+            // oxlint-disable-next-line typescript/no-explicit-any
+            (poolItem as any).virtualReason = virtualReason;
 
             out[activeCount++] = poolItem;
         }
