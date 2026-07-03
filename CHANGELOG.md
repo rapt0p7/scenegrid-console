@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Add node inspector for detailed bus and playback states
+
+- Add telemetry for mixer snapshot changes
+
+- Add timeline scrubbing and inspection
+
+- Add dev journal and component map for project overview
+
 - Add test for bus gain collection and fallback
 
 - Add bus snapshotting and manifest dispatch
@@ -130,6 +138,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Update diagram
+
+- Highlight mixer snapshot changes in logs
+
+- Enhance architecture documentation
+
 - Update diagram
 
 - Update inspector `UI` with new theme and styling
@@ -506,6 +520,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Fixed
+- Adjust `CullingRunner` and telemetry bus data expectations
+
 - Adjust html doctype declaration and add favicon link
 
 - Use modulo for accumulator reset in `EngineTicker`

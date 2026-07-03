@@ -278,6 +278,23 @@
 
 ---
 
+## [Phase 19] Focus: Cause Chain Timeline, Deep Node Inspection & Observability Polish
+
+* **Context/Problem:** As outlined in the "Next step" of Phase 12, developers needed a "Cause Chain Timeline" — a way to travel back in time and inspect the system's state to trace transient bugs. Additionally, the `AudioGraph` visualized connections well but lacked granular, node-level insight into exactly *why* a sound was culled, or what exact gain modifiers (logical, RTPC, sidechain) were currently applied to a specific bus.
+* **Solution:**
+* **Timeline Scrubbing:** Introduced a new `TimelineScrubber` component and `useSnapshotTimeline` hook. Users can now pause the live telemetry feed, scrub back and forth through historical snapshots, and inspect specific events across both the `PerformanceGraph` and the `AudioGraph`.
+* **Node Inspector:** Built a dedicated `NodeInspector` panel into the `InspectorApp`. Clicking on playback or bus nodes now reveals detailed real-time (or historical, via timeline) state data.
+* **Deep Telemetry:** Extended core domain models to track new data points for telemetry: `SoundController` now exposes `VirtualReason` (including `ArbiterCullReason`), and `AudioBusSystem` reports its active gain `modifiers`. This data is aggregated in `TelemetrySnapshotter` and displayed in the Node Inspector. Also added telemetry tracking and highlighting in logs for mixer snapshot changes.
+* **Architecture Documentation Update:** Systematized recent progress by updating `ARCHITECTURE.md` (and RU version) to explicitly detail HMR capabilities, the Bank Loading system, Data-Oriented Design (DOD) optimizations (swap-and-pop), and voice culling hysteresis windows. Diagram updates were also synced.
+
+*Manual notes (to be filled):*
+
+* **❌ What didn't work:**
+* **⚖️ Trade-off:**
+* **🎯 Next step:** `What if simulator` - a way to tweak and call methods on audio engine through Inspector 2.0.
+
+---
+
 ## [Architectural Invariants] Documented Rules (from docs/architecture commits)
 
 The following explicit rules have been locked in the documentation:
