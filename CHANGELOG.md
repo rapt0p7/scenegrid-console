@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Add test for set of components edge cases
+
 - Add node inspector for detailed bus and playback states
 
 - Add telemetry for mixer snapshot changes
@@ -18,11 +20,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add test for bus gain collection and fallback
 
+- Implement audio graph visualization
+
 - Add bus snapshotting and manifest dispatch
+
+- Expose bus gain and sidechain information
+
+- Introduce cycle pools for telemetry objects
+
+- Introduce pooled lifecycle events for telemetry
 
 - Add repomix for documentation updates as hook
 
+- Implement telemetry dispatcher and snapshotter
+
+- Implement hysteresis for conditions and switch policies
+
+- Implement bank loading and unloading system
+
 - Add delay, probability, and conditional logic to actions
+
+- Introduce `IAudioEngine` interface and implement it
+
+- Introduce seeded prng for deterministic variations
+
+- Implement scatterer sound type
 
 - Add nested event triggering and validation
 
@@ -32,17 +54,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `offsetMode` to transitions and magnets
 
+- Implement smart loop transition policy and magnets
+
 - Add pre-entry and tail duration to regions
 
 - Add `soundId` and eventmap types to index
 
 - Add event map consistency checks
 
+- Implement event orchestrator and router integration
+
+- Implement switch sound type and validation
+
+- Introduce hysteresis for voice culling decisions
+
 - Add voice list to profiler and debug panel
 
 - Add voice meter widget to profiler
 
 - Add micro-fade-out to sound instance stop
+
+- Implement pause/resume logic
+
+- Implement hot module replacement for audio configuration
 
 - Add more assertions to sound controller tests
 
@@ -52,11 +86,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `moduleDetection`: force to tsconfig
 
+- Expose base bus config and improve snapshot handling
+
+- Introduce panner and filter caching and mutation
+
+- Introduce routing and gain param to `SoundInstance`
+
+- Introduce zero-allocation node chain with filter pooling
+
 - Add `ITickable` interface and refactor `EngineTicker`
 
 - Add `IRTPCManifest` and `GameParamId` types
 
 - Add consistency check for multiplicative vetoes
+
+- Introduce instance rtpc binding
 
 - Add readonly to `ConsistencyChecker`
 
@@ -70,6 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add per-source intensity gain to sidechain ducking
 
+- Implement virtual voice auto-end and preserve sidechains
+
 - Add ghost ducking risk validation
 
 - Add method to get default gain of an audio bus
@@ -80,7 +126,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add jsdoc to shared guards and bus system filter equality
 
+- Introduce engine ticker for scheduling and orchestration
+
 - Add test for cold start audio leak in bus system
+
+- Introduce `EngineTicker` for scheduled tasks
 
 - Add scheduling delay for devirtualization
 
@@ -92,9 +142,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add panner configuration to sound instances after rebind
 
+- Expose debug pools and layer stack
+
 - Add `getCurrentRealGain` to `IAudioBusSystem`
 
+- Introduce `CullingContextProvider` for context injection
+
 - Add dummy buffer fallback for failed audio loads
+
+- Implement zero-allocation and fix virtualization
+
+- Introduce `EngineEventDispatcher` and event typings
 
 - Add `statechange` listener and improve spatial warnings
 
@@ -115,6 +173,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `debug` category to refactoring descriptions
 
 - Add initialization state to optimize transitions
+
+- Introduce explicit mixer state and modifier api
+
+- Implement gain multiplication and clamping
 
 - Add attrubution about ui icons used in debugger
 
@@ -138,6 +200,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Updated dev journal and document phase 19 features
+
 - Update diagram
 
 - Highlight mixer snapshot changes in logs
@@ -148,29 +212,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update inspector `UI` with new theme and styling
 
-- Implement audio graph visualization
-
-- Expose bus gain and sidechain information
-
 - Use `BroadcastTelemetryTransport` for telemetry
 
 - Update shared layer directory name in contributing guide
 
 - Update contribution guide with new path structure
 
-- Introduce cycle pools for telemetry objects
-
 - Update comment in `AudioBusSystem` test
-
-- Introduce pooled lifecycle events for telemetry
 
 - Improve sound acquisition error handling and telemetry
 
 - Update repomix config for documentation output
 
 - Unify time retrieval for cooldown and telemetry
-
-- Implement telemetry dispatcher and snapshotter
 
 - Update links to architecture documentation
 
@@ -184,19 +238,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Complete monorepo migration with npm workspaces
 
-- Implement hysteresis for conditions and switch policies
-
 - Extract condition evaluation logic to dedicated evaluator
 
-- Implement bank loading and unloading system
-
 - Update diagram for new file structure and description
-
-- Introduce `IAudioEngine` interface and implement it
-
-- Introduce seeded prng for deterministic variations
-
-- Implement scatterer sound type
 
 - Integrate sequencer and mixer actions into orchestrator
 
@@ -206,25 +250,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update diagram for new file structure
 
-- Implement smart loop transition policy and magnets
-
-- Implement event orchestrator and router integration
-
-- Implement switch sound type and validation
-
 - Enhance container sound playback and validation
 
-- Introduce hysteresis for voice culling decisions
-
 - Refactor tests to use standardized-audio-context-mock
-
-- Implement pause/resume logic
 
 - Update system positioning and architecture description
 
 - Update diagram for new file structure
-
-- Implement hot module replacement for audio configuration
 
 - Decouple debug ui initialization and attach logic
 
@@ -232,17 +264,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update diagram for new file structure
 
-- Expose base bus config and improve snapshot handling
-
 - Improve ducker and limiter processor efficiency
 
-- Introduce panner and filter caching and mutation
-
 - Refactor sound instance routing and sidechain logic
-
-- Introduce routing and gain param to `SoundInstance`
-
-- Introduce zero-allocation node chain with filter pooling
 
 - Update diagram for new file structure
 
@@ -259,8 +283,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Relocate branded types to shared layer
 
 - Modernize vite config for path resolution
-
-- Introduce instance rtpc binding
 
 - Inject instance rtpc binder into audio router
 
@@ -330,8 +352,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update diagram for new file structure
 
-- Implement virtual voice auto-end and preserve sidechains
-
 - Update diagram for new file structure
 
 - Rename mixer state manager to transition engine
@@ -352,8 +372,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Change repomix output style to xml
 
-- Introduce engine ticker for scheduling and orchestration
-
 - Improve mixer state transition logic
 
 - Update `AudioRouter` tests for new `BusSystem`
@@ -368,8 +386,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Decouple tick processing from interval in `RTPCManager`
 
-- Introduce `EngineTicker` for scheduled tasks
-
 - Update import path for `ISoundController`
 
 - Refactor sidechain and routing in `AudioBusSystem`
@@ -378,13 +394,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update diagram for new file structure
 
-- Expose debug pools and layer stack
-
 - Use branded types for sound registry
 
 - Extract variation application to dedicated resolver
-
-- Introduce `CullingContextProvider` for context injection
 
 - Centralize mime type mapping in `AudioBufferLoader`
 
@@ -395,8 +407,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename processors and reorganize paths
 
 - Split `VoiceCullingSystem` into domain and infa parts
-
-- Implement zero-allocation and fix virtualization
 
 - Update `AudioDebugger` screenshot
 
@@ -429,8 +439,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhance `AudioEngine` demo with event-driven lifecycle
 
 - Integrate comprehensive event system across `AudioEngine`
-
-- Introduce `EngineEventDispatcher` and event typings
 
 - Improve `UnlockManager` unlock logic and tests
 
@@ -477,10 +485,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace `push` with `setState` and simplify bus snapshots
 
 - Unify parameter updates and optimize rtpc handling
-
-- Introduce explicit mixer state and modifier api
-
-- Implement gain multiplication and clamping
 
 - Update roadmap
 
