@@ -47,6 +47,12 @@ describe('Value Objects: isFilterEqual', () => {
         expect(isFilterEqual(b1, b2)).toBe(true);
         expect(isFilterEqual(b1, b3)).toBe(false);
     });
+
+    it('should return false if filter parameters differ', () => {
+        const a = { type: 'lowpass', frequency: 1000, Q: 1 } as IFilter;
+        const b = { type: 'lowpass', frequency: 1100, Q: 1 } as IFilter;
+        expect(isFilterEqual(a, b)).toBe(false);
+    });
 });
 
 describe('MixerTransitionEngine (Tick-based FSM)', () => {

@@ -93,5 +93,6 @@ describe('MixerLayerStack', () => {
         expect(mockResolver.resolve).toHaveBeenNthCalledWith(1, baseState, { id: 'base_snap' });
         expect(mockResolver.resolve).toHaveBeenNthCalledWith(2, expect.any(Object), { id: 'overlay_snap' });
         expect(mockResolver.resolve).toHaveBeenNthCalledWith(3, expect.any(Object), { id: 'modal_snap' });
+        expect(layerStack.getLayers()).toHaveLength(3);
     });
 });

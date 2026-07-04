@@ -723,6 +723,77 @@ describe('AudioBusSystem (Internal Edge Cases & 100% Coverage)', () => {
 
         warnSpy.mockRestore();
     });
+
+    describe('AudioBusSystem - fillActiveModifiers', () => {
+        let system: AudioBusSystem;
+
+        beforeEach(async () => {
+            system = new AudioBusSystem({
+                context: mockContext,
+                automation: mockAutomation,
+                masterOutput: mockMasterOutput,
+                busConfig: {
+                    sfx: { gain: 0.5 },
+                    music: { gain: 1.0 }
+                },
+                pluginFactory: mockPluginFactory
+            });
+
+            await system.initialize(mockTicker);
+        });
+
+        it('should fill modifiers correctly for a bus with logical, RTPC, and sidechain active', async () => {
+            const audioBusSystem = new AudioBusSystem({
+                context: mockContext,
+                automation: mockAutomation,
+                masterOutput: mockMasterOutput,
+                busConfig: {
+                    sfx: { gain: 0.5, sidechain: { enabled: true } }
+                },
+                pluginFactory: mockPluginFactory
+            });
+
+            mockPluginFactory.createSidechain.mockReturnValue({
+                activeEnvelope: 0.2,
+                dispose: vi.fn(),
+                start: vi.fn().mockResolvedValue(undefined),
+                insertLookahead: vi.fn()
+            });
+
+            await audioBusSystem.initialize(mockTicker);
+
+            const bus = audioBusSystem.getBus('sfx' as BusId)!;
+
+            bus.setGainImmediate(0.8);
+            bus.setRtpcGainModifier(0.9);
+            bus.processFrame(0);
+
+            const modifiers = [
+                { type: '', value: 0, source: '' },
+                { type: '', value: 0, source: '' },
+                { type: '', value: 0, source: '' }
+            ];
+
+            const count = audioBusSystem.fillActiveModifiers('sfx' as BusId, modifiers);
+
+            expect(count).toBe(3);
+            expect(modifiers[2].value).toBe(0.8);
+        });
+
+        it('should return 0 count if all values are default (1)', () => {
+            const modifiers = [{ type: '', value: 0, source: '' }];
+            const count = system.fillActiveModifiers('music' as BusId, modifiers);
+
+            expect(count).toBe(0);
+        });
+
+        it('should safely return 0 if busId does not exist', () => {
+            const modifiers = [{ type: '', value: 0, source: '' }];
+            const count = system.fillActiveModifiers('invalid_bus' as BusId, modifiers);
+
+            expect(count).toBe(0);
+        });
+    });
 });
 
 describe('AudioBusSystem - HMR (updateConfig)', () => {

@@ -155,6 +155,59 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
         expect(instAgain.rebind).toHaveBeenCalledWith('sfx_high', fakeBuffer, undefined);
         expect(instAgain.resetForReuse).toHaveBeenCalled();
     });
+
+    describe('SoundPoolManager (Edge Cases & Purge)', () => {
+        beforeEach(() => {
+            pool = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 3
+            });
+            fakeBuffer = {} as AudioBuffer;
+        });
+
+        it('should correctly report globalVoiceLimit', () => {
+            expect(pool.globalVoiceLimit).toBe(3);
+        });
+
+        it('should purge sound correctly', () => {
+            const inst1 = pool.acquire('test' as SoundId, fakeBuffer) as ISoundInstance;
+            const inst2 = pool.acquire('other' as SoundId, fakeBuffer) as ISoundInstance;
+
+            pool.purgeSound('test' as SoundId);
+
+            expect(inst1.stop).toHaveBeenCalled();
+            expect(inst1.rebind).toHaveBeenCalledWith('__RESERVED__', null as any);
+
+            expect(inst2.stop).not.toHaveBeenCalled();
+            expect(pool.getActiveVoices()).toContain(inst2);
+            expect(pool.getActiveVoices()).not.toContain(inst1);
+        });
+
+        it('should skip virtual instances during priority stealing', () => {
+            const configs: Record<string, IVoiceConfig> = {
+                low_prio: { priority: 200 },
+                high_prio: { priority: 50 },
+                new_sound: { priority: 50 }
+            };
+
+            pool = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 2,
+                voiceConfigResolver: id => configs[id]
+            });
+
+            const inst1 = pool.acquire('low_prio' as SoundId, fakeBuffer) as any;
+            inst1.state = 'playing';
+
+            const inst2 = pool.acquire('high_prio' as SoundId, fakeBuffer) as any;
+            inst2.state = 'virtual';
+
+            // oxlint-disable-next-line no-unused-vars
+            const inst3 = pool.acquire('new_sound' as SoundId, fakeBuffer);
+
+            expect(inst1.stop).toHaveBeenCalled();
+            expect(inst2.stop).not.toHaveBeenCalled();
+            expect(inst2.state).toBe('virtual');
+        });
+    });
 });
 
 describe('SoundPoolManager (Loop Stealing Immunity)', () => {

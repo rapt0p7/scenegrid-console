@@ -60,6 +60,17 @@ describe('AudioBufferLoader', () => {
             expect(mockContextManager.context.decodeAudioData).toHaveBeenCalled();
             expect(buffer).toBe(fakeAudioBuffer);
         });
+
+        it('should skip URLs with no extension and continue resolution', async () => {
+            mockAudioElement.canPlayType.mockImplementation((mime: string) => {
+                if (mime === 'audio/mpeg') return 'probably';
+                return '';
+            });
+
+            await loader.load(['my-sound', 'sound.mp3']);
+
+            expect(mockFetch).toHaveBeenCalledWith('sound.mp3');
+        });
     });
 
     describe('Batch Loading (loadBatch)', () => {
@@ -249,6 +260,29 @@ describe('AudioBufferLoader', () => {
             expect(buffer).toBe(dummyAudioBuffer);
 
             expect(mockFetch).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('Buffer Access & Purging', () => {
+        it('should return undefined from getBuffer if the resource is not cached', () => {
+            const buffer = loader.getBuffer('uncached.mp3');
+            expect(buffer).toBeUndefined();
+        });
+
+        it('should return cached buffer from getBuffer if previously loaded', async () => {
+            await loader.load('sound.mp3');
+            const buffer = loader.getBuffer('sound.mp3');
+            expect(buffer).toBe(fakeAudioBuffer);
+        });
+
+        it('should purge specific URLs from cache', async () => {
+            await loader.load('s1.mp3');
+            await loader.load('s2.mp3');
+
+            loader.purgeUrls(['s1.mp3', 's2.mp3']);
+
+            expect(loader.getBuffer('s1.mp3')).toBeUndefined();
+            expect(loader.getBuffer('s2.mp3')).toBeUndefined();
         });
     });
 });

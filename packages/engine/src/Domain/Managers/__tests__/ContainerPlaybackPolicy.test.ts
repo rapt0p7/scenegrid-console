@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 
 import type { IContainerSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { IPRNG } from '@scene-grid/shared';
+import type { IPRNG, SoundId } from '@scene-grid/shared';
 import type { Mocked } from 'vitest';
 
 describe('ContainerPlaybackPolicy (Pure Evaluator with Weights & History & PRNG)', () => {
@@ -122,6 +122,25 @@ describe('ContainerPlaybackPolicy (Pure Evaluator with Weights & History & PRNG)
 
             const result2 = policy.evaluateNext(config);
             expect(result2.soundId).toBe('rare.wav');
+        });
+
+        it('should fallback to index 0 if floating point imprecision bypasses the weight loop', () => {
+            mockPrng.next.mockReturnValueOnce(0.1);
+
+            const config: IContainerSoundConfig = {
+                mode: 'random',
+                isContainer: true,
+                sources: [
+                    { id: 'sound_a' as SoundId, weight: 1 },
+                    { id: 'sound_b' as SoundId, weight: 1 }
+                ]
+            };
+
+            const result = policy.evaluateNext(config);
+
+            expect(mockPrng.next).toHaveBeenCalledTimes(1);
+            expect(result.soundId).toBe('sound_a');
+            expect(result.nextState?.lastPlayedIndex).toBe(0);
         });
     });
 

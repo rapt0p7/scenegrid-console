@@ -250,6 +250,8 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
         dispatcher.postEvent('Pause_Menu_Open' as EventId);
         expect(mockRouter.pause).toHaveBeenCalledWith('bgm_level');
         expect(mockRouter.play).toHaveBeenCalledWith('ui_menu_open');
+        dispatcher.postEvent('Pause_Menu_Close' as EventId);
+        expect(mockRouter.resume).toHaveBeenCalledWith('bgm_level');
     });
 
     it('should pass options down to the router on stop action', () => {

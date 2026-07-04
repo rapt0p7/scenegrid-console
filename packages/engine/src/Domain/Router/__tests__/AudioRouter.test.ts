@@ -259,6 +259,41 @@ describe('AudioRouter (Command Dispatcher)', () => {
             expect(mockController.play).not.toHaveBeenCalled();
             expect(mockSwitchRegistry.updateHistory).toHaveBeenCalledWith('switch_sound', { currentSwitchKey: null });
         });
+
+        it('should apply config to all playbacks if switch resolves to an array (e.g. nested layered sound)', () => {
+            const applySpy = vi.spyOn(router, 'applyConfigToPlayback');
+
+            mockRtpcAdapter.getValue.mockReturnValue(0);
+
+            mockSwitchPolicy.evaluateNext.mockReturnValue({
+                soundId: 'layer_sound',
+                nextState: { currentSwitchKey: 0 }
+            });
+
+            mockController.play.mockReturnValueOnce(100 as PlaybackId).mockReturnValueOnce(101 as PlaybackId);
+
+            const result = router.play('switch_sound' as SoundId);
+
+            expect(result).toEqual([100, 101]);
+            expect(applySpy).toHaveBeenCalledWith(100, testSoundMap['switch_sound']);
+            expect(applySpy).toHaveBeenCalledWith(101, testSoundMap['switch_sound']);
+        });
+
+        it('should return null if recursive router.play fails (playbackResult is null)', () => {
+            mockRtpcAdapter.getValue.mockReturnValue(0);
+
+            mockSwitchPolicy.evaluateNext.mockReturnValue({
+                soundId: 'step_stone',
+                nextState: { currentSwitchKey: 0 }
+            });
+
+            mockController.play.mockReturnValue(null);
+
+            const result = router.play('switch_sound' as SoundId);
+
+            expect(result).toBeNull();
+            expect(mockTelemetry.dispatch).not.toHaveBeenCalled();
+        });
     });
 
     describe('Recursive Container Resolutions', () => {
@@ -426,6 +461,70 @@ describe('AudioRouter (Command Dispatcher)', () => {
 
             expect(result).toBeNull();
             expect(mockController.play).not.toHaveBeenCalled();
+        });
+
+        it('should return null and dispatch error if recursive router.play fails for a container source', () => {
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: 'does_not_exist',
+                nextState: { lastPlayedIndex: 0 }
+            });
+
+            const result = router.play('container_sound' as SoundId);
+
+            expect(result).toBeNull();
+            expect(mockController.play).not.toHaveBeenCalled();
+        });
+
+        it('should abort and dispatch telemetry if max recursion depth is reached', () => {
+            const result = (router as any).handleContainer('container_sound', testSoundMap['container_sound'], {}, 11);
+
+            expect(result).toBeNull();
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Max recursion depth reached'));
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    result: expect.objectContaining({
+                        type: 'BLOCKED',
+                        reason: expect.stringContaining('Max recursion depth')
+                    })
+                })
+            );
+        });
+
+        it('should apply config to all playbacks if container resolves to an array (e.g. nested layered sound)', () => {
+            const applySpy = vi.spyOn(router, 'applyConfigToPlayback');
+
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: 'layer_sound',
+                nextState: { lastPlayedIndex: 0 }
+            });
+
+            mockController.play.mockReturnValueOnce(42 as PlaybackId).mockReturnValueOnce(43 as PlaybackId);
+
+            const result = router.play('container_sound' as SoundId);
+
+            expect(result).toEqual([42, 43]);
+
+            expect(applySpy).toHaveBeenCalledWith(42, testSoundMap['container_sound']);
+            expect(applySpy).toHaveBeenCalledWith(43, testSoundMap['container_sound']);
+        });
+
+        it('should return null and dispatch telemetry if container resolves to empty source (nextSource is null)', () => {
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: null,
+                nextState: { lastPlayedIndex: -1 }
+            });
+
+            const result = router.play('container_sound' as SoundId);
+
+            expect(result).toBeNull();
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    result: expect.objectContaining({
+                        type: 'BLOCKED',
+                        reason: 'Container "container_sound" resolved to empty source.'
+                    })
+                })
+            );
         });
     });
 
