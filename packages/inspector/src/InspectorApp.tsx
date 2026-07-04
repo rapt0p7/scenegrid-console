@@ -1,4 +1,6 @@
 // oxlint-disable max-lines-per-function
+// noinspection D
+
 import React, { useState } from 'react';
 import { RawLogger } from './ui/RawLogger.jsx';
 import { PolyphonyCounter } from './ui/PolyphonyCounter.jsx';
@@ -10,7 +12,7 @@ import { TimelineScrubber } from './ui/TimelineScrubber';
 import { NodeInspector, type SelectedNodeInfo } from './ui/AudioGraph/NodeInspector.jsx';
 
 export const InspectorApp: React.FC = () => {
-    const { logs, latestSnapshot, manifest } = useTelemetryBus();
+    const { logs, latestSnapshot, manifest, consistencyReport } = useTelemetryBus();
 
     const {
         displayRef,
@@ -24,11 +26,45 @@ export const InspectorApp: React.FC = () => {
     } = useSnapshotTimeline(latestSnapshot);
 
     const [selectedNode, setSelectedNode] = useState<SelectedNodeInfo | null>(null);
+    const [isIssuesPanelOpen, setIsIssuesPanelOpen] = useState(false);
+
+    const renderConsistencyStatus = () => {
+        if (!consistencyReport) {
+            return <span className="text-foreground-muted text-[10px] uppercase tracking-wider">Validating...</span>;
+        }
+
+        const errorCount = consistencyReport.errors.length;
+        const warningCount = consistencyReport.warnings.length;
+
+        if (errorCount === 0 && warningCount === 0) {
+            return (
+                <span
+                    className="text-success cursor-pointer hover:text-success/80 transition-colors flex items-center gap-1"
+                    onClick={() => {
+                        setIsIssuesPanelOpen(!isIssuesPanelOpen);
+                    }}
+                >
+                    ✓ Config OK
+                </span>
+            );
+        }
+
+        return (
+            <div
+                className="flex items-center gap-2 cursor-pointer hover:bg-surface-active px-2 py-1 rounded transition-colors"
+                onClick={() => {
+                    setIsIssuesPanelOpen(!isIssuesPanelOpen);
+                }}
+            >
+                {errorCount > 0 && <span className="text-danger font-bold text-xs">🛑 {errorCount}</span>}
+                {warningCount > 0 && <span className="text-warning font-bold text-xs">⚠️ {warningCount}</span>}
+            </div>
+        );
+    };
 
     return (
         <div className="flex flex-col h-screen w-screen bg-background text-foreground font-mono text-xs overflow-hidden select-none">
-            {/* Header */}
-            <header className="flex-none h-10 bg-surface border-b border-border flex items-center justify-between px-4">
+            <header className="flex-none h-10 bg-surface border-b border-border flex items-center justify-between px-4 relative">
                 <div className="flex items-center gap-4">
                     <span className="font-bold text-foreground tracking-wider">
                         SCENEGRID <span className="text-primary">INSPECTOR</span>
@@ -38,7 +74,12 @@ export const InspectorApp: React.FC = () => {
                         Polyphony: <PolyphonyCounter snapshotRef={displayRef} />
                     </span>
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div className="flex items-center gap-4">
+                    {renderConsistencyStatus()}
+
+                    <div className="h-4 w-px bg-border" />
+
                     <div className="flex items-center gap-2">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
@@ -47,6 +88,49 @@ export const InspectorApp: React.FC = () => {
                         <span className="text-success">Connected</span>
                     </div>
                 </div>
+                {isIssuesPanelOpen && consistencyReport && (
+                    <div className="absolute top-[40px] right-4 w-[500px] max-h-[600px] bg-surface border border-border rounded-b shadow-2xl z-50 flex flex-col overflow-hidden">
+                        <div className="flex-none bg-surface-hover/50 p-2 border-b border-border flex justify-between items-center">
+                            <strong className="text-foreground tracking-wider uppercase text-[10px]">
+                                Config Consistency Issues
+                            </strong>
+                            <button
+                                onClick={() => {
+                                    setIsIssuesPanelOpen(false);
+                                }}
+                                className="text-foreground-muted hover:text-foreground hover:bg-surface-active px-2 rounded transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-2 space-y-2 font-mono">
+                            {consistencyReport.errors.map((err, i) => (
+                                <div
+                                    key={`err-${i}`}
+                                    className="p-2 bg-danger/10 border border-danger/30 rounded text-danger text-[11px] leading-tight flex items-start gap-2"
+                                >
+                                    <span className="font-bold mt-0.5">ERR</span>
+                                    <span>{err}</span>
+                                </div>
+                            ))}
+                            {consistencyReport.warnings.map((warn, i) => (
+                                <div
+                                    key={`warn-${i}`}
+                                    className="p-2 bg-warning/10 border border-warning/30 rounded text-warning text-[11px] leading-tight flex items-start gap-2"
+                                >
+                                    <span className="font-bold mt-0.5">WARN</span>
+                                    <span>{warn}</span>
+                                </div>
+                            ))}
+                            {consistencyReport.isConsistent && consistencyReport.warnings.length === 0 && (
+                                <div className="p-4 text-center text-success italic text-[11px]">
+                                    No issues found. Engine configuration is perfect!
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* Main Content */}

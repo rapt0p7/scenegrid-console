@@ -16,6 +16,8 @@ import {
 import Sequencer from '@domain/Orchestration/Sequencer.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
+import { ConsoleReporter } from '@domain/Validation/Reporters/ConsoleReporter.js';
+import { TelemetryConsistencyReporter } from '@domain/Validation/Reporters/TelemetryConsistencyReporter.js';
 import {
     AudioBufferLoader,
     AudioBusSystem,
@@ -71,6 +73,7 @@ import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransition
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
 import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngine.js';
 import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
+import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
 
 export class AudioEngine implements IAudioEngine {
     #contextManager!: AudioContextManager;
@@ -89,6 +92,8 @@ export class AudioEngine implements IAudioEngine {
     #scattererOrchestrator!: ScattererOrchestrator;
     #prng!: SeededPRNG;
     #bankManager!: BankManagerAdapter;
+    #telemetry!: TelemetryDispatcher;
+    #reporters!: IConsistencyReporter[];
     #isInitialized = false;
 
     public readonly events = {
@@ -210,7 +215,13 @@ export class AudioEngine implements IAudioEngine {
     public async init(parameters?: InitParameters): Promise<void> {
         if (this.#isInitialized) return;
 
-        const isConfigValid = ConsistencyChecker.validate(this.config);
+        const transport = new BroadcastTelemetryTransport();
+        this.#telemetry = new TelemetryDispatcher(transport);
+        this.#reporters = [new ConsoleReporter(), new TelemetryConsistencyReporter(this.#telemetry)];
+
+        const isConfigValid = ConsistencyChecker.validate(this.config, {
+            reporters: this.#reporters
+        });
         if (!isConfigValid) {
             if (parameters?.isStrictValidation) {
                 this.#dispatcher.emit('engine:error', { code: 'INIT_FAILED', message: 'Strict validation failed' });
@@ -235,8 +246,6 @@ export class AudioEngine implements IAudioEngine {
 
             const seed = this.config.seed ?? Date.now();
             this.#prng = new SeededPRNG(seed);
-            const transport = new BroadcastTelemetryTransport();
-            const telemetry = new TelemetryDispatcher(transport);
             const automation = new AutomationEngine(this.#contextManager.context, this.#engineTicker);
             this.#contextManager.initSpatial(automation);
             const nodeFactory = new AudioNodeFactory(this.#contextManager);
@@ -338,7 +347,7 @@ export class AudioEngine implements IAudioEngine {
                 soundRegistry.registry,
                 this.#busSystem,
                 (url: string | string[]) => bufferLoader.getBuffer(url),
-                telemetry
+                this.#telemetry
             );
 
             this.#instanceRTPCBinder = new InstanceRTPCBinder(this.#rtpcManager, this.#soundController);
@@ -360,7 +369,7 @@ export class AudioEngine implements IAudioEngine {
                 switchPolicy,
                 switchHistoryRegistry,
                 prng: this.#prng,
-                telemetry
+                telemetry: this.#telemetry
             });
 
             const smartLoopTransitionPolicy = new SmartLoopTransitionPolicy(this.#rtpcManager);
@@ -369,7 +378,7 @@ export class AudioEngine implements IAudioEngine {
                 this.#router,
                 this.#engineTicker,
                 smartLoopTransitionPolicy,
-                telemetry
+                this.#telemetry
             );
 
             const resolver = new MixerStateResolver({ defaultBusGain: 1 });
@@ -384,7 +393,7 @@ export class AudioEngine implements IAudioEngine {
                 layerStack,
                 this.config.snapshots,
                 coordinator,
-                telemetry,
+                this.#telemetry,
                 this.#soundController
             );
 
@@ -443,7 +452,7 @@ export class AudioEngine implements IAudioEngine {
             this.#router.setScattererOrchestrator(this.#scattererOrchestrator);
 
             const snapshotter = new TelemetrySnapshotter(
-                telemetry,
+                this.#telemetry,
                 this.#soundController,
                 this.#rtpcManager,
                 this.#busSystem,
@@ -462,9 +471,14 @@ export class AudioEngine implements IAudioEngine {
                 this.config.soundMap
             );
 
-            this.#cullingRunner = new CullingRunner(cullingArbiter, this.#soundController, cullingProvider, telemetry);
+            this.#cullingRunner = new CullingRunner(
+                cullingArbiter,
+                this.#soundController,
+                cullingProvider,
+                this.#telemetry
+            );
 
-            this.#engineTicker.add('telemetry' as TickerTaskId, telemetry.TICK_RATE_MS, telemetry);
+            this.#engineTicker.add('telemetry' as TickerTaskId, this.#telemetry.TICK_RATE_MS, this.#telemetry);
 
             this.#engineTicker.add('snapshotter' as TickerTaskId, snapshotter.TICK_RATE_MS, snapshotter);
 
@@ -505,7 +519,7 @@ export class AudioEngine implements IAudioEngine {
 
             this.#isInitialized = true;
 
-            telemetry.dispatchManifest(this.config);
+            this.#telemetry.dispatchManifest(this.config);
 
             this.#dispatcher.emit('engine:ready', {
                 timestamp: performance.now(),
@@ -577,7 +591,9 @@ export class AudioEngine implements IAudioEngine {
 
         console.log('[AudioEngine] 🔥 Initiating Hot Reload...');
 
-        const isValid = ConsistencyChecker.validate(newConfig);
+        const isValid = ConsistencyChecker.validate(newConfig, {
+            reporters: this.#reporters
+        });
         if (!isValid) {
             console.error('[AudioEngine] 🔥 Hot Reload aborted: Config validation failed.');
             return;

@@ -51,6 +51,20 @@ export interface ITelemetryLifecycleEvent {
     readonly reason?: string;
 }
 
+export interface IConsistencyReportData {
+    readonly errors: readonly string[];
+    readonly warnings: readonly string[];
+    readonly isConsistent: boolean;
+}
+
+export interface ITelemetryConsistencyReport {
+    readonly type: 'CONSISTENCY_REPORT';
+    readonly timestampMs: number;
+    readonly errors: string[];
+    readonly warnings: string[];
+    readonly isConsistent: boolean;
+}
+
 export interface IActionTelemetryDTO {
     readonly type: string;
     readonly target?: SoundId | EventId | BankId;

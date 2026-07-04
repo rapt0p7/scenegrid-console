@@ -1,6 +1,15 @@
-import type { ITelemetrySnapshot, ITelemetryLifecycleEvent, ITelemetryCauseChain } from './TelemetryEvents.js';
+import type {
+    ITelemetrySnapshot,
+    ITelemetryLifecycleEvent,
+    ITelemetryCauseChain,
+    ITelemetryConsistencyReport
+} from './TelemetryEvents.js';
 
-export type TelemetryPacket = ITelemetrySnapshot | ITelemetryLifecycleEvent | ITelemetryCauseChain;
+export type TelemetryPacket =
+    | ITelemetrySnapshot
+    | ITelemetryLifecycleEvent
+    | ITelemetryCauseChain
+    | ITelemetryConsistencyReport;
 
 export interface ITelemetryBatch {
     readonly batchId: number;

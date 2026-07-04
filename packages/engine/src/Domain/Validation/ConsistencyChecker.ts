@@ -2,7 +2,7 @@
 // oxlint-disable max-depth
 // noinspection D
 
-import { isAbsent, isDefined, typedEntries, typedKeys } from '@scene-grid/shared';
+import { type IConsistencyReportData, isAbsent, isDefined, typedEntries, typedKeys } from '@scene-grid/shared';
 
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type {
@@ -23,6 +23,8 @@ import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Port
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IBankManifest } from '@domain/Configuration/Ports/IBankConfig.js';
+import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
+import { ConsoleReporter } from '@domain/Validation/Reporters/ConsoleReporter.js';
 
 export interface IConsistencyCheckerPayload {
     readonly soundMap?: ISoundMap;
@@ -34,6 +36,10 @@ export interface IConsistencyCheckerPayload {
     readonly banks?: IBankManifest;
 }
 
+export interface IConsistencyCheckerOptions {
+    readonly reporters?: IConsistencyReporter[];
+}
+
 type TypeMap = {
     string: string;
     number: number;
@@ -43,21 +49,26 @@ type TypeMap = {
 };
 
 export default class ConsistencyChecker {
-    public static validate(config: IConsistencyCheckerPayload): boolean {
+    public static validate(config: IConsistencyCheckerPayload, options?: IConsistencyCheckerOptions): boolean {
         if (isAbsent(config) || typeof config !== 'object') {
             console.error('[AudioSystem] ConsistencyChecker: config is missing or not an object');
             return false;
         }
 
-        const checker = new ConsistencyChecker({
-            soundMapConfig: config.soundMap ?? {},
-            soundManifest: config.manifest ?? {},
-            busSystemConfig: config.buses ?? {},
-            snapshotsConfig: config.snapshots ?? {},
-            rtpcManifest: config.rtpcManifest ?? {},
-            eventsConfig: config.events ?? {},
-            banksConfig: config.banks ?? {}
-        });
+        const reporters = options?.reporters ?? [new ConsoleReporter()];
+
+        const checker = new ConsistencyChecker(
+            {
+                soundMapConfig: config.soundMap ?? {},
+                soundManifest: config.manifest ?? {},
+                busSystemConfig: config.buses ?? {},
+                snapshotsConfig: config.snapshots ?? {},
+                rtpcManifest: config.rtpcManifest ?? {},
+                eventsConfig: config.events ?? {},
+                banksConfig: config.banks ?? {}
+            },
+            reporters
+        );
 
         try {
             checker.run();
@@ -66,7 +77,7 @@ export default class ConsistencyChecker {
             return false;
         }
 
-        return checker.errors.length === 0;
+        return checker.getIsConsistent();
     }
 
     private readonly soundMap: DeepReadonly<ISoundMap>;
@@ -76,27 +87,31 @@ export default class ConsistencyChecker {
     private readonly rtpcManifest: DeepReadonly<IRTPCManifest>;
     private readonly events: DeepReadonly<IEventMap>;
     private readonly banks: DeepReadonly<IBankManifest>;
+    private readonly reporters: IConsistencyReporter[];
 
     private readonly errors: string[] = [];
     private readonly warnings: string[] = [];
 
-    constructor({
-        soundMapConfig,
-        soundManifest,
-        busSystemConfig,
-        snapshotsConfig,
-        rtpcManifest,
-        eventsConfig,
-        banksConfig
-    }: {
-        soundMapConfig: DeepReadonly<ISoundMap>;
-        soundManifest: DeepReadonly<ISpriteSoundManifest>;
-        busSystemConfig: DeepReadonly<IBuses>;
-        snapshotsConfig: DeepReadonly<ISnapshots>;
-        rtpcManifest: DeepReadonly<IRTPCManifest>;
-        eventsConfig: DeepReadonly<IEventMap>;
-        banksConfig: DeepReadonly<IBankManifest>;
-    }) {
+    constructor(
+        {
+            soundMapConfig,
+            soundManifest,
+            busSystemConfig,
+            snapshotsConfig,
+            rtpcManifest,
+            eventsConfig,
+            banksConfig
+        }: {
+            soundMapConfig: DeepReadonly<ISoundMap>;
+            soundManifest: DeepReadonly<ISpriteSoundManifest>;
+            busSystemConfig: DeepReadonly<IBuses>;
+            snapshotsConfig: DeepReadonly<ISnapshots>;
+            rtpcManifest: DeepReadonly<IRTPCManifest>;
+            eventsConfig: DeepReadonly<IEventMap>;
+            banksConfig: DeepReadonly<IBankManifest>;
+        },
+        reporters: IConsistencyReporter[]
+    ) {
         this.soundMap = soundMapConfig;
         this.manifest = soundManifest;
         this.buses = busSystemConfig;
@@ -104,6 +119,11 @@ export default class ConsistencyChecker {
         this.rtpcManifest = rtpcManifest;
         this.events = eventsConfig;
         this.banks = banksConfig;
+        this.reporters = reporters;
+    }
+
+    public getIsConsistent(): boolean {
+        return this.errors.length === 0;
     }
 
     private run(): void {
@@ -1249,20 +1269,14 @@ export default class ConsistencyChecker {
     }
 
     private report(): void {
-        if (this.errors.length > 0) {
-            console.groupCollapsed('%c[AudioSystem] ConsistencyChecker: ERRORS', 'color:red;font-weight:bold');
-            for (const error of this.errors) console.error(error);
-            console.groupEnd();
-        }
+        const data: IConsistencyReportData = {
+            errors: [...this.errors],
+            warnings: [...this.warnings],
+            isConsistent: this.getIsConsistent()
+        };
 
-        if (this.warnings.length > 0) {
-            console.groupCollapsed('%c[AudioSystem] ConsistencyChecker: warnings', 'color:orange');
-            for (const w of this.warnings) console.warn(w);
-            console.groupEnd();
-        }
-
-        if (this.errors.length === 0) {
-            console.log('%c[AudioSystem] ConsistencyChecker: OK ✓', 'color:green');
+        for (const reporter of this.reporters) {
+            reporter.report(data);
         }
     }
 }
