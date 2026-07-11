@@ -295,6 +295,23 @@
 
 ---
 
+## [Phase 20] Focus: What-If Simulator, Debug API, and Consistency Reporting UI
+
+* **Context/Problem:** As outlined in Phase 19, there was no way to dynamically interact with the audio engine from the Inspector. Testing specific audio states (changing RTPCs, firing events, or forcing Switch states) required manual in-game setup or hardcoding values. Additionally, while the `ConsistencyChecker` validated the engine configuration, its results were confined to the engine side and not clearly visible to developers using the DevTools, risking silent configuration failures.
+* **Solution:**
+* **Inspector Debug API & IPC:** Established two-way communication by introducing `IInspectorDebugPort` in the Domain Shared layer and `InspectorCommand` types in the Shared package. Implemented `CommandReceiver` in Infrastructure via `BroadcastIpcAdapter` to process incoming debug instructions.
+* **Engine Overrides:** Extended `RTPCManager` and `SwitchHistoryRegistry` to support state overrides, integrating these temporary debug modifications directly into the `AudioRouter` logic. Refactored `mixer.setState` to support optional crossfade durations.
+* **What-If Simulator UI:** Built a new panel in the `InspectorApp` that uses the `useCommandTransmitter` hook to dispatch commands. Developers can now manually trigger `events`, tweak `RTPC` parameters, override `Switch` states, and use global transport controls (`STOP_ALL`, `PAUSE_ALL`, `RESUME_ALL`, clear overrides). Expanded `IEngineManifestDTO` to expose events and the RTPC manifest to the UI.
+* **Consistency Reporting:** Created the `IConsistencyReporter` port with `ConsoleReporter` and `TelemetryConsistencyReporter` implementations. The `ConsistencyChecker` now dispatches validation reports via the telemetry bus during setup and hot-reloads. The Inspector consumes these via `useTelemetryBus` and displays a collapsible status panel in the header, bringing critical configuration errors and warnings to the immediate attention of the user.
+
+*Manual notes (to be filled):*
+
+* **❌ What didn't work:**
+* **⚖️ Trade-off:**
+* **🎯 Next step:** Finalization v1.1 milestone.
+
+---
+
 ## [Architectural Invariants] Documented Rules (from docs/architecture commits)
 
 The following explicit rules have been locked in the documentation:

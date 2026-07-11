@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Add what-if simulator to inspector app
+
+- Add inspector debug api and command integration
+
+- Add engine config consistency reporting and inspector ui
+
 - Add test for set of components edge cases
 
 - Add node inspector for detailed bus and playback states
@@ -200,6 +206,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Updated changelog
+
 - Updated dev journal and document phase 19 features
 
 - Update diagram
