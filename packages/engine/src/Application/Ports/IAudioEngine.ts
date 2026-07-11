@@ -2,8 +2,9 @@ import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.j
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { PlaybackId, SoundId, DeepReadonly, QuantizeType } from '@scene-grid/shared';
+import type { PlaybackId, SoundId, DeepReadonly, QuantizeType, BankId } from '@scene-grid/shared';
 import type { Handler } from 'mitt';
+import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
 
 export interface InitParameters {
     readonly isStrictValidation?: boolean;
@@ -31,7 +32,12 @@ export interface IAudioEngine {
         once: <K extends keyof AudioEngineEvents>(type: K, handler: Handler<AudioEngineEvents[K]>) => void;
         clear: () => void;
     };
-    params: { set: (parameterName: string, value: number) => void; get: (parameterName: string) => any };
+
+    params: {
+        set: (parameterName: string, value: number) => void;
+        get: (parameterName: string) => number | undefined;
+    };
+
     /**
      * Mixer control interface (VCA snapshot system).
      *
@@ -43,21 +49,22 @@ export interface IAudioEngine {
          * @param snapshotName Snapshot identifier.
          * @param durationMs Optional crossfade duration in milliseconds.
          */
-        setState: (snapshotName: string) => void;
+        setState: (snapshotName: string, durationMs?: number) => void;
+
         /**
          * Applies an overlay snapshot layer on top of the current mix state.
          *
          * Useful for transient gameplay states (e.g. stun, pause, distortion effects).
          *
-         * @param snapshotId - Snapshot modifier identifier.
-         * @param modifierId - Unique layer identifier for later removal.
+         * @param snapshotName - Snapshot modifier identifier.
+         * @param id - Unique layer identifier for later removal.
          * @param priority - Layer priority (defaults to OVERLAY).
          */
         addModifier: (snapshotName: string, id: string, priority?: 100) => void;
         /**
          * Removes a previously applied snapshot modifier layer.
          *
-         * @param modifierId - Identifier of the modifier layer to remove.
+         * @param id - Identifier of the modifier layer to remove.
          */
         removeModifier: (id: string) => void;
     };
@@ -75,24 +82,31 @@ export interface IAudioEngine {
          * @param region - Initial playback region identifier.
          */
         playLoop: (soundId: string, region: string) => void;
+
         /**
          * Stops a looping music track.
+         *
          * @param soundId Music track identifier.
          */
         stopLoop: (soundId: string) => void;
+
         /**
          * Plays a stinger with optional quantization and reference track.
+         *
          * @param stingerId Stinger identifier.
          * @param quantize Quantization mode.
          * @param referenceTrackId Optional reference track.
          */
         playStinger: (stingerId: string, quantize: QuantizeType, referenceTrackId?: SoundId) => void;
+
         /**
          * Performs a quantized transition between music regions.
+         *
          * @param options Transition configuration.
          */
         transitionTo: (options: ITransitionToParameters) => void;
     };
+
     /**
      * 3D spatial audio interface.
      */
@@ -101,29 +115,67 @@ export interface IAudioEngine {
          * Sets listener world position.
          */
         setListenerPosition: (x: number, y: number, z: number) => void;
+
         /**
          * Sets listener orientation vectors.
          */
-        setListenerOrientation: ({
-            fx,
-            fy,
-            fz,
-            ux,
-            uy,
-            uz
-        }: DeepReadonly<{
-            fx: number;
-            fy: number;
-            fz: number;
-            ux: number;
-            uy: number;
-            uz: number;
-        }>) => void;
+        setListenerOrientation: (
+            orientation: DeepReadonly<{
+                fx: number;
+                fy: number;
+                fz: number;
+                ux: number;
+                uy: number;
+                uz: number;
+            }>
+        ) => void;
+
+        /**
+         * Sets world position for a playing sound instance.
+         *
+         * Supports both single playback instances and polyphonic playback groups.
+         *
+         * @param playbackId Playback instance identifier.
+         * @param x World X coordinate.
+         * @param y World Y coordinate.
+         * @param z World Z coordinate.
+         */
+        setSoundPosition: (options: { playbackId: PlaybackId | PlaybackId[]; x: number; y: number; z: number }) => void;
     };
+
+    /**
+     * Bank loading and lifecycle management API.
+     *
+     * Provides dynamic audio resource streaming control.
+     */
+    readonly banks: {
+        /**
+         * Loads an audio bank.
+         *
+         * @param bankId Bank identifier.
+         */
+        load: (bankId: BankId) => Promise<void>;
+
+        /**
+         * Unloads an audio bank and releases associated resources.
+         *
+         * @param bankId Bank identifier.
+         */
+        unload: (bankId: BankId) => void;
+
+        /**
+         * Returns current bank loading state.
+         *
+         * @param bankId Bank identifier.
+         */
+        getState: (bankId: BankId) => BankState;
+    };
+
     /**
      * Immutable engine configuration snapshot.
      */
     config: Readonly<IAudioEngineConfig>;
+
     /**
      * Initializes the audio engine.
      *
@@ -132,14 +184,17 @@ export interface IAudioEngine {
      * @param parameters Optional initialization parameters.
      */
     init(parameters?: InitParameters): Promise<void>;
+
     /**
      * Resumes audio context (user gesture unlock flow).
      */
     unlock(): Promise<void>;
+
     /**
      * Suspends audio context.
      */
     suspend(): Promise<void>;
+
     /**
      * Low-level API for triggering a specific audio asset directly.
      * Prefer using postEvent() for higher-level gameplay logic and orchestration.
@@ -151,22 +206,26 @@ export interface IAudioEngine {
      * or null if the sound is rejected by the voice management / culling system.
      */
     play(soundId: string, options?: DeepReadonly<IPlayOptions>): PlaybackId | PlaybackId[] | null;
+
     /**
      * Stops playback by instance or sound identifier.
      *
      * @param playbackIdOrSoundId - Branded identifier of a sound defined in the manifest.
      */
     stop(playbackIdOrSoundId: PlaybackId | PlaybackId[] | string): void;
+
     /**
      * Pauses playback by instance or sound identifier.
      */
     pause(playbackIdOrSoundId: PlaybackId | PlaybackId[] | SoundId): void;
+
     /**
      * Resumes playback by instance or sound identifier.
      *
      * @param playbackIdOrSoundId - Branded identifier of a sound defined in the manifest.
      */
     resume(playbackIdOrSoundId: PlaybackId | PlaybackId[] | SoundId): void;
+
     /**
      * Primary entry point for dispatching gameplay audio events (data-driven event system).
      * Delegates execution to the AudioEventOrchestrator domain service, ensuring command-only semantics (CQS).

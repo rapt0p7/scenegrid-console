@@ -36,9 +36,11 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
 
         it('should clear all values and reset state on reset()', () => {
             manager.setValue('MUSIC_VOLUME' as GameParamId, 1);
+            manager.setOverride('MUSIC_VOLUME' as GameParamId, 0.5, true);
             manager.reset();
 
             expect(manager.getValue('MUSIC_VOLUME' as GameParamId, -1)).toBe(-1);
+            expect(manager.getValue('MUSIC_VOLUME' as GameParamId, 0)).toBe(0);
         });
     });
 
@@ -145,6 +147,82 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
             expect(manager.getValue('HP' as GameParamId)).toBe(10);
 
             expect((manager as any).isInterpolating).toBe(false);
+        });
+
+        it('should early exit from setValue if value matches current target', () => {
+            manager.setValue('HP' as GameParamId, 50);
+            manager.setValue('HP' as GameParamId, 50);
+            expect(manager.getValue('HP' as GameParamId)).toBe(50);
+        });
+    });
+
+    describe('Debug Overrides Logic', () => {
+        it('should hijack value access when an override is active', () => {
+            manager.setValue('P1' as GameParamId, 10);
+            manager.setOverride('P1' as GameParamId, 99, true);
+
+            expect(manager.getValue('P1' as GameParamId)).toBe(99);
+        });
+
+        it('should restore normal value access when override is disabled', () => {
+            manager.setValue('P1' as GameParamId, 10);
+            manager.setOverride('P1' as GameParamId, 99, true);
+            manager.setOverride('P1' as GameParamId, 99, false);
+
+            expect(manager.getValue('P1' as GameParamId)).toBe(10);
+        });
+
+        it('should wake up the interpolator when disabling override if game state shifted in the background', () => {
+            manager.configureParam('P1' as GameParamId, 1000, 1000);
+            manager.setValue('P1' as GameParamId, 10);
+
+            manager.setOverride('P1' as GameParamId, 99, true);
+            manager.setValue('P1' as GameParamId, 50);
+
+            expect((manager as any).isInterpolating).toBe(true);
+            (manager as any).isInterpolating = false;
+
+            manager.setOverride('P1' as GameParamId, 99, false);
+
+            expect((manager as any).isInterpolating).toBe(true);
+        });
+
+        it('should not wake up the interpolator when disabling override if game state matches current value', () => {
+            manager.setValue('P1' as GameParamId, 10);
+            manager.setOverride('P1' as GameParamId, 99, true);
+
+            (manager as any).isInterpolating = false;
+
+            manager.setOverride('P1' as GameParamId, 99, false);
+            expect((manager as any).isInterpolating).toBe(false);
+        });
+
+        it('should clear all active overrides via resetOverrides()', () => {
+            manager.setValue('P1' as GameParamId, 10);
+            manager.setValue('P2' as GameParamId, 20);
+
+            manager.setOverride('P1' as GameParamId, 88, true);
+            manager.setOverride('P2' as GameParamId, 88, true);
+
+            expect(manager.getValue('P1' as GameParamId)).toBe(88);
+            expect(manager.getValue('P2' as GameParamId)).toBe(88);
+
+            manager.resetOverrides();
+
+            expect(manager.getValue('P1' as GameParamId)).toBe(10);
+            expect(manager.getValue('P2' as GameParamId)).toBe(20);
+        });
+
+        it('should trigger wake up from resetOverrides() if background drift exists', () => {
+            manager.configureParam('P1' as GameParamId, 1000, 1000);
+            manager.setValue('P1' as GameParamId, 10);
+            manager.setOverride('P1' as GameParamId, 88, true);
+            manager.setValue('P1' as GameParamId, 50);
+            (manager as any).isInterpolating = false;
+
+            manager.resetOverrides();
+
+            expect((manager as any).isInterpolating).toBe(true);
         });
     });
 });

@@ -1,4 +1,4 @@
-// oxlint-disable unicorn/no-useless-undefined
+// oxlint-disable unicorn/no-useless-undefined no-underscore-dangle
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -529,9 +529,9 @@ describe('AudioEngine', () => {
             const debugObject = engine._debug;
             const activateSpy = vi.spyOn(debugObject.snapshotManager, 'activateSnapshot').mockImplementation(() => {});
 
-            engine.mixer.setState('main_menu');
+            engine.mixer.setState('main_menu', 500);
 
-            expect(activateSpy).toHaveBeenCalledWith('main_menu', 'scene_main', PRIORITY.BASE);
+            expect(activateSpy).toHaveBeenCalledWith('main_menu', 'scene_main', PRIORITY.BASE, 500);
             activateSpy.mockRestore();
         });
     });

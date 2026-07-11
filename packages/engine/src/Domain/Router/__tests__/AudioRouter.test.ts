@@ -129,7 +129,10 @@ describe('AudioRouter (Command Dispatcher)', () => {
             // oxlint-disable-next-line unicorn/no-useless-undefined
             getHistory: vi.fn().mockReturnValue(undefined),
             updateHistory: vi.fn(),
-            clear: vi.fn()
+            clear: vi.fn(),
+            setOverride: vi.fn(),
+            resetOverrides: vi.fn(),
+            getOverride: vi.fn()
         };
 
         mockRtpcAdapter = {
@@ -293,6 +296,54 @@ describe('AudioRouter (Command Dispatcher)', () => {
 
             expect(result).toBeNull();
             expect(mockTelemetry.dispatch).not.toHaveBeenCalled();
+        });
+
+        it('should bypass RTPC adapter and use override value when switch registry returns a localized override', () => {
+            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+            mockSwitchRegistry.getOverride.mockReturnValue('metal');
+            mockRtpcAdapter.getValue.mockReturnValue(1);
+
+            mockSwitchRegistry.getHistory.mockReturnValue({ currentSwitchKey: 'wood' });
+            mockSwitchPolicy.evaluateNext.mockReturnValue({
+                soundId: 'step_stone',
+                nextState: { currentSwitchKey: 'metal' }
+            });
+
+            mockController.play.mockReturnValueOnce(1 as PlaybackId);
+
+            const result = router.play('switch_sound' as SoundId);
+
+            expect(mockSwitchRegistry.getOverride).toHaveBeenCalledWith('switch_sound');
+            expect(mockRtpcAdapter.getValue).not.toHaveBeenCalled();
+            expect(mockSwitchPolicy.evaluateNext).toHaveBeenCalledWith(testSoundMap['switch_sound'], 'metal', {
+                currentSwitchKey: 'wood'
+            });
+
+            expect(mockSwitchRegistry.updateHistory).toHaveBeenCalledWith('switch_sound', {
+                currentSwitchKey: 'metal'
+            });
+            expect(mockController.play).toHaveBeenCalledWith('step_stone', expect.any(Object));
+            expect(result).toBe(1);
+
+            applyConfigSpy.mockRestore();
+        });
+
+        it('should fall back to RTPC adapter when switch registry returns undefined for override', () => {
+            // oxlint-disable-next-line unicorn/no-useless-undefined
+            mockSwitchRegistry.getOverride.mockReturnValue(undefined);
+            mockRtpcAdapter.getValue.mockReturnValue(1);
+            // oxlint-disable-next-line unicorn/no-useless-undefined
+            mockSwitchRegistry.getHistory.mockReturnValue(undefined);
+            mockSwitchPolicy.evaluateNext.mockReturnValue({
+                soundId: 'step_grass_asset',
+                nextState: { currentSwitchKey: 'grass' }
+            });
+
+            router.play('switch_sound' as SoundId);
+
+            expect(mockSwitchRegistry.getOverride).toHaveBeenCalledWith('switch_sound');
+            expect(mockRtpcAdapter.getValue).toHaveBeenCalledWith('surface');
+            expect(mockSwitchPolicy.evaluateNext).toHaveBeenCalledWith(testSoundMap['switch_sound'], 1, undefined);
         });
     });
 

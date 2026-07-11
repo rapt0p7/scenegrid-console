@@ -4,6 +4,7 @@ import type { SoundId } from '@scene-grid/shared';
 
 export class SwitchHistoryRegistry implements ISwitchHistoryRegistry {
     private readonly history = new Map<SoundId, ISwitchPlaybackState>();
+    private readonly overrides = new Map<SoundId, string | number>();
 
     public getHistory(switchId: SoundId): ISwitchPlaybackState | undefined {
         return this.history.get(switchId);
@@ -15,5 +16,22 @@ export class SwitchHistoryRegistry implements ISwitchHistoryRegistry {
 
     public clear(): void {
         this.history.clear();
+        this.overrides.clear();
+    }
+
+    public setOverride(switchId: SoundId, value: string | number, isOverride: boolean): void {
+        if (isOverride) {
+            this.overrides.set(switchId, value);
+        } else {
+            this.overrides.delete(switchId);
+        }
+    }
+
+    public getOverride(switchId: SoundId): string | number | undefined {
+        return this.overrides.get(switchId);
+    }
+
+    public resetOverrides(): void {
+        this.overrides.clear();
     }
 }

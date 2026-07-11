@@ -40,7 +40,8 @@ import {
     SwitchHistoryRegistry,
     TelemetryDispatcher,
     BroadcastTelemetryTransport,
-    TelemetrySnapshotter
+    TelemetrySnapshotter,
+    CommandReceiver
 } from '@infrastructure';
 import type { IPluginFactory } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
@@ -74,6 +75,7 @@ import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrat
 import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngine.js';
 import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
+import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
 
 export class AudioEngine implements IAudioEngine {
     #contextManager!: AudioContextManager;
@@ -119,8 +121,13 @@ export class AudioEngine implements IAudioEngine {
     };
 
     public readonly mixer = {
-        setState: (snapshotName: string) => {
-            this.#snapshotManager.activateSnapshot(snapshotName as SnapshotId, 'scene_main' as LayerId, PRIORITY.BASE);
+        setState: (snapshotName: string, durationMs?: number) => {
+            this.#snapshotManager.activateSnapshot(
+                snapshotName as SnapshotId,
+                'scene_main' as LayerId,
+                PRIORITY.BASE,
+                durationMs
+            );
         },
         addModifier: (snapshotName: string, id: string, priority = PRIORITY.OVERLAY) => {
             this.#snapshotManager.activateSnapshot(snapshotName as SnapshotId, id as LayerId, priority);
@@ -520,6 +527,49 @@ export class AudioEngine implements IAudioEngine {
             this.#isInitialized = true;
 
             this.#telemetry.dispatchManifest(this.config);
+
+            if (process.env.NODE_ENV !== 'production') {
+                const debugPort: IInspectorDebugPort = {
+                    fireEvent: eventId => {
+                        this.#eventOrchestrator.postEvent(eventId);
+                    },
+                    applySnapshot: (snapshotId, fade) => {
+                        this.#snapshotManager.activateSnapshot(
+                            snapshotId,
+                            'scene_main' as LayerId,
+                            PRIORITY.BASE,
+                            fade
+                        );
+                    },
+                    setRtpcOverride: (param, val, isOverride) => {
+                        this.#rtpcManager.setOverride(param, val, isOverride);
+                    },
+                    setSwitchOverride: (switchId, key, isOverride) => {
+                        switchHistoryRegistry.setOverride(switchId, key, isOverride);
+                    },
+                    stopAll: () => {
+                        this.#soundController.stopAll();
+                    },
+                    pauseAll: () => {
+                        this.#soundController.pauseAll();
+                    },
+                    resumeAll: () => {
+                        this.#soundController.resumeAll();
+                    },
+                    clearAllOverrides: () => {
+                        this.#rtpcManager.resetOverrides();
+                        switchHistoryRegistry.resetOverrides();
+                    }
+                };
+
+                const receiver = new CommandReceiver(debugPort);
+
+                this.#engineTicker.add(
+                    'inspector-command-receiver' as TickerTaskId,
+                    CommandReceiver.TICK_RATE_MS,
+                    receiver
+                );
+            }
 
             this.#dispatcher.emit('engine:ready', {
                 timestamp: performance.now(),

@@ -342,7 +342,8 @@ export default class AudioRouter implements IAudioRouter {
         options: IPlayOptions,
         depth: number
     ): PlaybackId | PlaybackId[] | null {
-        const currentValue = this.rtpcAdapter.getValue(config.switchGroup);
+        const overrideValue = this.switchHistoryRegistry.getOverride(name);
+        const currentValue = overrideValue ?? this.rtpcAdapter.getValue(config.switchGroup);
         const currentState = this.switchHistoryRegistry.getHistory(name);
         const { soundId: nextSource, nextState } = this.switchPolicy.evaluateNext(config, currentValue, currentState);
 

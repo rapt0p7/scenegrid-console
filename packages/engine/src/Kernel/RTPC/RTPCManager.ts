@@ -19,6 +19,9 @@ export default class RTPCManager implements IRTPCManager {
     private attack = new Float32Array(MAX_PARAMS);
     private release = new Float32Array(MAX_PARAMS);
 
+    private overrideFlags = new Uint8Array(MAX_PARAMS);
+    private overrideValues = new Float32Array(MAX_PARAMS);
+
     public configureParam(name: GameParamId, attackMs: number = 0, releaseMs: number = 0): void {
         const index = this.getParamIndex(name);
         this.attack[index] = attackMs;
@@ -38,9 +41,43 @@ export default class RTPCManager implements IRTPCManager {
         }
     }
 
+    public setOverride(name: GameParamId, value: number, isOverride: boolean): void {
+        const index = this.getParamIndex(name);
+
+        if (isOverride) {
+            this.overrideFlags[index] = 1;
+            this.overrideValues[index] = value;
+        } else {
+            this.overrideFlags[index] = 0;
+            if (Math.abs(this.current[index] - this.target[index]) > 1e-4) {
+                this.isInterpolating = true;
+            }
+        }
+    }
+
+    public resetOverrides(): void {
+        let needsWakeUp = false;
+
+        for (let index = 0; index < this.nextFreeIndex; index++) {
+            if (this.overrideFlags[index] === 1) {
+                this.overrideFlags[index] = 0;
+
+                if (Math.abs(this.current[index] - this.target[index]) > 1e-4) {
+                    needsWakeUp = true;
+                }
+            }
+        }
+
+        if (needsWakeUp) {
+            this.isInterpolating = true;
+        }
+    }
+
     public getValue(name: GameParamId, defaultValue: number = 0): number {
         const index = this.paramToIndex.get(name);
-        return index === undefined ? defaultValue : this.current[index];
+        if (index === undefined) return defaultValue;
+
+        return this.overrideFlags[index] === 1 ? this.overrideValues[index] : this.current[index];
     }
 
     public setValues(parameters: Record<GameParamId, number>): void {
@@ -55,6 +92,7 @@ export default class RTPCManager implements IRTPCManager {
         this.paramToIndex.clear();
         this.nextFreeIndex = 0;
         this.isInterpolating = false;
+        this.overrideFlags.fill(0);
     }
 
     public tick(currentTime: number, deltaTimeMs: number): void {
