@@ -5,11 +5,13 @@ import React, { useState } from 'react';
 import { RawLogger } from './ui/RawLogger.jsx';
 import { PolyphonyCounter } from './ui/PolyphonyCounter.jsx';
 import { PerformanceGraph } from './ui/PerformanceGraph.jsx';
+import { SimulatorDrawer } from './ui/SimulatorDrawer.js';
 import { useTelemetryBus } from './hooks/useTelemetryBus.js';
 import { AudioGraph } from './ui/AudioGraph/AudioGraph.js';
 import { useSnapshotTimeline } from './hooks/useSnapshotTimeline';
 import { TimelineScrubber } from './ui/TimelineScrubber';
 import { NodeInspector, type SelectedNodeInfo } from './ui/AudioGraph/NodeInspector.jsx';
+import clsx from 'clsx';
 
 export const InspectorApp: React.FC = () => {
     const { logs, latestSnapshot, manifest, consistencyReport } = useTelemetryBus();
@@ -27,6 +29,7 @@ export const InspectorApp: React.FC = () => {
 
     const [selectedNode, setSelectedNode] = useState<SelectedNodeInfo | null>(null);
     const [isIssuesPanelOpen, setIsIssuesPanelOpen] = useState(false);
+    const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
 
     const renderConsistencyStatus = () => {
         if (!consistencyReport) {
@@ -131,6 +134,19 @@ export const InspectorApp: React.FC = () => {
                         </div>
                     </div>
                 )}
+                <button
+                    onClick={() => {
+                        setIsSimulatorOpen(!isSimulatorOpen);
+                    }}
+                    className={clsx(
+                        'px-3 py-1 text-[10px] font-bold uppercase rounded transition-colors',
+                        isSimulatorOpen
+                            ? 'bg-primary text-background'
+                            : 'bg-surface-active text-foreground hover:bg-surface-hover'
+                    )}
+                >
+                    Simulator
+                </button>
             </header>
 
             {/* Main Content */}
@@ -197,6 +213,14 @@ export const InspectorApp: React.FC = () => {
                     />
                 </aside>
             </div>
+            {isSimulatorOpen && manifest && (
+                <SimulatorDrawer
+                    manifest={manifest}
+                    onClose={() => {
+                        setIsSimulatorOpen(false);
+                    }}
+                />
+            )}
         </div>
     );
 };

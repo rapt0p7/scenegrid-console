@@ -45,5 +45,23 @@ export default {
         sources: ['tick'],
         spawnRateMs: [1000, 2000],
         maxPolyphony: 5
+    },
+
+    'kick': {
+        isSwitch: true,
+        busId: 'sfx',
+        switchGroup: 'kickType',
+        switches: {
+            0: 'kickDrum',
+            1: 'kickDrum2'
+        },
+        defaultSwitch: 'kickDrum'
+    },
+
+    'kicks': {
+        isContainer: true,
+        busId: 'sfx',
+        mode: 'random_no_repeat',
+        sources: ['kickDrum', 'kickDrum2', 'kbKickMetallic', 'hardstyleKick']
     }
 };

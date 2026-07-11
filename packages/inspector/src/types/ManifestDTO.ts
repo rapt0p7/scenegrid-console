@@ -16,4 +16,6 @@ export interface IEngineManifestDTO {
             };
         }
     >;
+    readonly events?: Record<string, any>;
+    readonly rtpcManifest?: Record<string, { readonly defaultValue?: number }>;
 }
