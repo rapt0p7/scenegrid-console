@@ -1,0 +1,25 @@
+schema: spec-driven
+
+context: |
+    Project: SceneGrid Console — a high-performance virtual digital mixing console and audio engine.
+    Architecture: Hexagonal Architecture (Ports & Adapters) and Domain-Driven Design (DDD).
+    Core Principle: Strict isolation of 5 layers (Domain, Kernel, Application, Infrastructure, Inspector).
+    Domain Rules: The Domain layer must have zero side-effects and absolute isolation. No imports from Infrastructure (e.g., AudioNode, AudioContext).
+    Identity Principle: Primitive identity is strictly forbidden. Branded Types must be used exclusively (PlaybackId, SoundId, BusId).
+    Tech Stack: TypeScript, Vite, Web Audio API, React Flow, oxc.
+    Performance: Data-Oriented Design (DOD) optimizations in data planes.
+
+rules:
+    proposal:
+        - Identify exactly which of the 5 architectural layers the proposed change affects.
+        - Explicitly confirm that the dependency rule (inward to Domain) remains unbroken.
+    design:
+        - Define exact Ports (interfaces) for any external communication.
+        - Separate control-plane structures from data-plane mutations.
+    specs:
+        - Use Given/When/Then format for behavior scenarios.
+        - Detail specific metrics and conditions for DSP-related state changes (e.g., condition-driven transitions).
+    tasks:
+        - Break work into highly granular, independent steps.
+        - The first task of any logical block MUST be writing a reproducing or failing test.
+        - Include explicit steps for verifying results and clearing oxc linting warnings.
