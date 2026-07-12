@@ -1,3 +1,4 @@
+// oxlint-disable no-underscore-dangle
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
@@ -385,6 +386,121 @@ describe('Sequencer (Interactive Music)', () => {
             });
 
             expect(result).toBeNull();
+        });
+
+        it('should correctly process ExactPulse quantization using AudioGrid PPQN math', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+
+            const customGrid = {
+                getPulseAtTime: vi.fn().mockReturnValue(960),
+                getTimeAtPulse: vi.fn().mockReturnValue(0.75),
+                getNextBeatTime: vi.fn(),
+                getNextBarTime: vi.fn()
+            } as any;
+
+            simulatedTime = 0.5;
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main' as RegionId,
+                options: {
+                    quantize: { type: 'ExactPulse', pulseOffset: 480 },
+                    grid: customGrid
+                }
+            });
+
+            expect(customGrid.getPulseAtTime).toHaveBeenCalledTimes(1);
+            expect(customGrid.getPulseAtTime).toHaveBeenCalledWith(0.5);
+
+            expect(customGrid.getTimeAtPulse).toHaveBeenCalledTimes(1);
+            expect(customGrid.getTimeAtPulse).toHaveBeenCalledWith(1440);
+
+            const track = (manager as any).getTrackContext('battle_music');
+            expect(track.nextScheduleTime).toBe(0.75);
+        });
+    });
+
+    describe('Quantization Types Pattern Matching (PPQN Data-Plane)', () => {
+        let customGrid: any;
+
+        beforeEach(() => {
+            customGrid = {
+                ppqn: 960,
+                getPulseAtTime: vi.fn().mockReturnValue(960),
+                getTimeAtPulse: vi.fn().mockImplementation(pulse => pulse / 1000),
+                getNextBeatTime: vi.fn(),
+                getNextBarTime: vi.fn()
+            };
+
+            mockController.getCurrentTime.mockReturnValue(0.96);
+        });
+
+        describe('transitionTo() PPQN Math', () => {
+            beforeEach(() => {
+                manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            });
+
+            it('should calculate 1/8 note division correctly pushing to the next boundary', () => {
+                manager.transitionTo({
+                    soundId: 'battle_music' as SoundId,
+                    targetRegion: 'main' as RegionId,
+                    options: {
+                        quantize: { type: 'NextGridDivision', division: '1/8' },
+                        grid: customGrid
+                    }
+                });
+
+                expect(customGrid.getPulseAtTime).toHaveBeenCalledWith(0.96);
+                expect(customGrid.getTimeAtPulse).toHaveBeenCalledWith(1440);
+
+                const track = (manager as any).getTrackContext('battle_music');
+                expect(track.nextScheduleTime).toBe(1.44);
+            });
+
+            it('should calculate 1/32 note division correctly', () => {
+                manager.transitionTo({
+                    soundId: 'battle_music' as SoundId,
+                    targetRegion: 'main' as RegionId,
+                    options: {
+                        quantize: { type: 'NextGridDivision', division: '1/32' },
+                        grid: customGrid
+                    }
+                });
+
+                expect(customGrid.getTimeAtPulse).toHaveBeenCalledWith(1080);
+
+                const track = (manager as any).getTrackContext('battle_music');
+                expect(track.nextScheduleTime).toBe(1.08);
+            });
+        });
+
+        describe('playStinger() PPQN Math', () => {
+            beforeEach(() => {
+                vi.spyOn(manager, 'getPlaybackInfo').mockReturnValue({
+                    grid: customGrid
+                } as any);
+
+                manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+                mockRouter.play.mockClear();
+            });
+
+            it('should schedule stinger strictly using ExactPulse offset', () => {
+                manager.playStinger('victory_chord' as SoundId, { type: 'ExactPulse', pulseOffset: 300 });
+
+                expect(customGrid.getTimeAtPulse).toHaveBeenCalledWith(1260);
+                expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', {
+                    delayMs: Math.max(0, (1.26 - 0.96) * 1000)
+                });
+            });
+
+            it('should schedule stinger to the Next 1/16 Grid Division', () => {
+                manager.playStinger('victory_chord' as SoundId, { type: 'NextGridDivision', division: '1/16' });
+                expect(customGrid.getTimeAtPulse).toHaveBeenCalledWith(1200);
+
+                expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', {
+                    delayMs: Math.max(0, (1.2 - 0.96) * 1000)
+                });
+            });
         });
     });
 

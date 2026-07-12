@@ -385,6 +385,7 @@ export class AudioEngine implements IAudioEngine {
                 this.#router,
                 this.#engineTicker,
                 smartLoopTransitionPolicy,
+                this.config.sequencer?.ppqn,
                 this.#telemetry
             );
 

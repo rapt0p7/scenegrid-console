@@ -47,6 +47,7 @@ export default class Sequencer implements ISequencer {
         private readonly router: IAudioRouter,
         private readonly ticker: IEngineTicker,
         private readonly transitionPolicy: SmartLoopTransitionPolicy,
+        private readonly ppqn: number = 960,
         private readonly telemetry?: ITelemetryDispatcher
     ) {
         this.startScheduler();
@@ -122,21 +123,44 @@ export default class Sequencer implements ISequencer {
                 }
             }
 
-            if (isDefined(options.grid)) {
-                targetTime =
-                    options.quantize === 'NextBeat'
-                        ? options.grid.getNextBeatTime(now, interval)
-                        : options.grid.getNextBarTime(now, interval);
-            } else if (isDefined(track.gridStartTime)) {
-                const grid = new AudioGrid(
+            const grid =
+                options.grid ??
+                new AudioGrid(
                     config.smartLoop.bpm ?? 60,
                     config.smartLoop.beatsPerBar ?? 4,
-                    currentAnchorTime
+                    currentAnchorTime,
+                    this.ppqn ?? 960
                 );
+
+            if (typeof options.quantize === 'string') {
                 targetTime =
                     options.quantize === 'NextBeat'
                         ? grid.getNextBeatTime(now, interval)
                         : grid.getNextBarTime(now, interval);
+            } else if (options.quantize.type === 'ExactPulse') {
+                const currentPulse = grid.getPulseAtTime(now);
+                const targetPulse = currentPulse + options.quantize.pulseOffset;
+                targetTime = grid.getTimeAtPulse(targetPulse);
+            } else if (options.quantize.type === 'NextGridDivision') {
+                let divisionFactor = 1;
+                switch (options.quantize.division) {
+                    case '1/8':
+                        divisionFactor = 2;
+                        break;
+                    case '1/16':
+                        divisionFactor = 4;
+                        break;
+                    case '1/32':
+                        divisionFactor = 8;
+                        break;
+                }
+
+                const pulsesPerDivision = Math.floor(grid.ppqn / divisionFactor);
+                const currentPulse = grid.getPulseAtTime(now);
+                const intervalsElapsed = Math.ceil((currentPulse + 1) / pulsesPerDivision);
+                const targetPulse = intervalsElapsed * pulsesPerDivision;
+
+                targetTime = grid.getTimeAtPulse(targetPulse);
             }
         }
 
@@ -242,7 +266,36 @@ export default class Sequencer implements ISequencer {
         }
 
         const { grid } = playbackInfo;
-        const targetTime = quantize === 'NextBar' ? grid.getNextBarTime(now) : grid.getNextBeatTime(now);
+        let targetTime = now;
+
+        if (typeof quantize === 'string') {
+            targetTime = quantize === 'NextBar' ? grid.getNextBarTime(now) : grid.getNextBeatTime(now);
+        } else if (quantize.type === 'ExactPulse') {
+            const currentPulse = grid.getPulseAtTime(now);
+            targetTime = grid.getTimeAtPulse(currentPulse + quantize.pulseOffset);
+        } else if (quantize.type === 'NextGridDivision') {
+            let divisionFactor = 1;
+            switch (quantize.division) {
+                case '1/8':
+                    divisionFactor = 2;
+                    break;
+                case '1/16':
+                    divisionFactor = 4;
+                    break;
+                case '1/32':
+                    divisionFactor = 8;
+                    break;
+            }
+
+            const pulsesPerDivision = Math.floor(grid.ppqn / divisionFactor);
+            const currentPulse = grid.getPulseAtTime(now);
+
+            const intervalsElapsed = Math.ceil((currentPulse + 1) / pulsesPerDivision);
+            const targetPulse = intervalsElapsed * pulsesPerDivision;
+
+            targetTime = grid.getTimeAtPulse(targetPulse);
+        }
+
         const delaySec = Math.max(0, targetTime - now);
 
         this.router.play(stingerId, { delayMs: delaySec * 1000 });
@@ -264,7 +317,7 @@ export default class Sequencer implements ISequencer {
         const beatsPerBar = config.smartLoop.beatsPerBar ?? 4;
 
         return {
-            grid: new AudioGrid(bpm, beatsPerBar, track.gridStartTime)
+            grid: new AudioGrid(bpm, beatsPerBar, track.gridStartTime, this.ppqn)
         };
     }
 

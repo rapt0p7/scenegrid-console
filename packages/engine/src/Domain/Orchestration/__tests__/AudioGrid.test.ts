@@ -61,4 +61,31 @@ describe('AudioGrid', () => {
             expect(grid.getNextBarTime(10, 2)).toBe(13);
         });
     });
+
+    describe('PPQN & Drift-Free Pulse Math', () => {
+        const grid = new AudioGrid(120, 4, 0, 960);
+
+        it('should calculate exact time for a small pulse index without float imprecision', () => {
+            expect(grid.getTimeAtPulse(960)).toBe(0.5);
+            expect(grid.getTimeAtPulse(480)).toBe(0.25);
+        });
+
+        it('should remain drift-free for extremely large pulse indices (e.g. 1 hour of playback)', () => {
+            const pulsesInOneHour = 6912000;
+            expect(grid.getTimeAtPulse(pulsesInOneHour)).toBe(3600);
+        });
+
+        it('should correctly resolve pulse index from an exact timestamp', () => {
+            expect(grid.getPulseAtTime(0.5)).toBe(960);
+            expect(grid.getPulseAtTime(3600)).toBe(6912000);
+        });
+
+        it('should handle pulse calculations with a non-zero startTime offset', () => {
+            const offsetGrid = new AudioGrid(120, 4, 5.5, 960);
+            expect(offsetGrid.getTimeAtPulse(0)).toBe(5.5);
+            expect(offsetGrid.getTimeAtPulse(960)).toBe(6.0);
+            expect(offsetGrid.getPulseAtTime(6.0)).toBe(960);
+            expect(offsetGrid.getPulseAtTime(2.0)).toBe(0);
+        });
+    });
 });
