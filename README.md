@@ -5,7 +5,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Tested with Vitest](https://img.shields.io/badge/tested_with-Vitest-729B1B.svg?style=flat-square&logo=vitest)](https://vitest.dev/)
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg?style=flat-square)](https://github.com/rapt0p7/scenegrid-console)
-[![Code Style: Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://prettier.io/)
+[![Powered by Oxlint](https://img.shields.io/badge/powered%20by-Oxlint-blue)](https://oxc.rs)
+[![Formatted with Oxfmt](https://img.shields.io/badge/formatted%20with-Oxfmt-blue)](https://oxc.rs)
 [![License: PolyForm](https://img.shields.io/badge/License-PolyForm%20Noncommercial-purple.svg?style=flat-square)](./LICENSE.md)
 [![Web Audio API](https://img.shields.io/badge/Web_Audio-API-ffb244.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 
@@ -125,10 +126,10 @@ _Note: Core stability and Parameter Resolution Pipeline are part of the v1.0 mil
 
 ### 🔴 Phase 1: Observability & "Hot Swap" DX (v1.1)
 
-- **In-Game Inspector 2.0 (SceneGrid DevTools):** Enhancing the current `@scene-grid/inspector` into a deep interactive overlay. Developers can visually trace voice culling decisions, tweak RTPCs, test snapshots, and adjust bus gains in real-time over the game canvas.
-- **Anti-Flutter Voice Culling (Hysteresis):** Adding a time buffer to the virtualization logic to prevent rapid fade-in/fade-out ("flutter") during stress tests, keeping the debug trace clean.
-- **Event-Driven State Machine:** Moving beyond `play(sound)`. Exposing autonomous behaviors (`onPlay`, `onStop`, tails) so DevTools can track the entire lifecycle of an audio entity.
-- **Hot Swap Architecture:** Soft-reloading of JSON configurations via state diffing without page reloads.
+- ✅ **In-Game Inspector 2.0 (SceneGrid DevTools):** Enhancing the current `@scene-grid/inspector` into a deep interactive overlay. Developers can visually trace voice culling decisions, tweak RTPCs, test snapshots, and adjust bus gains in real-time over the game canvas.
+- ✅ **Anti-Flutter Voice Culling (Hysteresis):** Adding a time buffer to the virtualization logic to prevent rapid fade-in/fade-out ("flutter") during stress tests, keeping the debug trace clean.
+- ✅ **Event-Driven State Machine:** Moving beyond `play(sound)`. Exposing autonomous behaviors (`onPlay`, `onStop`, tails) so DevTools can track the entire lifecycle of an audio entity.
+- ✅ **Hot Swap Architecture:** Soft-reloading of JSON configurations via state diffing without page reloads.
 
 ### 🟡 Phase 2: Telemetry & Live Bridge (v1.2)
 
