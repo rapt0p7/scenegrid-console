@@ -113,6 +113,7 @@ export interface IPlayOptions {
     readonly volume?: number;
     readonly seek?: number;
     readonly delayMs?: number;
+    readonly when?: number;
 }
 
 export interface IScattererSyncConfig {

@@ -1,4 +1,6 @@
-// noinspection D
+// oxlint-disable max-lines-per-function
+/* eslint-disable @typescript-eslint/naming-convention */
+// noinspection D,JSUnusedLocalSymbols
 
 import mitt from 'mitt';
 
@@ -52,6 +54,7 @@ export class SoundInstance implements ISoundInstance {
     #endedByStop: boolean = false;
     private readonly SCHEDULE_DELAY = 0.05;
     private readonly MICRO_FADE_SEC = 0.015;
+    private readonly LISTENER_OPTIONS = { once: true };
 
     // eslint-disable-next-line max-params
     constructor(
@@ -176,7 +179,8 @@ export class SoundInstance implements ISoundInstance {
             }
 
             default: {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/naming-convention
+                // eslint-disable-next-line, no-underscore-dangle
+                // oxlint-disable-next-line no-underscore-dangle
                 const _exhaustiveCheck: never = target;
             }
         }
@@ -223,9 +227,7 @@ export class SoundInstance implements ISoundInstance {
         const stopTime = when > 0 ? Math.max(now, when) : now;
         const actualStopTime = stopTime + this.MICRO_FADE_SEC;
 
-        this.#endedByStop = true;
         const sourceToStop = this.#source;
-        this.#source = null;
 
         try {
             const gainParam = this.#chain.gainParam;
@@ -239,9 +241,18 @@ export class SoundInstance implements ISoundInstance {
         }
 
         this.#pauseOffset = 0;
-        this.#setState('stopped');
-        this.#emitter.emit('stopped', this);
-        this.#emitter.emit('ended', this);
+        const EPS = 0.005;
+
+        if (stopTime <= now + EPS) {
+            this.#endedByStop = true;
+            this.#source = null;
+            this.#setState('stopped');
+            this.#emitter.emit('stopped', this);
+            this.#emitter.emit('ended', this);
+        } else {
+            this.#endedByStop = true;
+            sourceToStop.addEventListener('ended', this.#onDelayedSourceEnded, this.LISTENER_OPTIONS);
+        }
     }
 
     public forceNaturalEnd(): void {
@@ -313,6 +324,7 @@ export class SoundInstance implements ISoundInstance {
         this.#endedByStop = true;
 
         this.#source.removeEventListener('ended', this.#onSourceEnded);
+        this.#source.removeEventListener('ended', this.#onDelayedSourceEnded);
 
         try {
             this.#source.stop(0);
@@ -440,6 +452,13 @@ export class SoundInstance implements ISoundInstance {
 
         this.#source = null;
         this.#setState('idle');
+        this.#emitter.emit('ended', this);
+    };
+
+    #onDelayedSourceEnded = (): void => {
+        this.#source = null;
+        this.#setState('stopped');
+        this.#emitter.emit('stopped', this);
         this.#emitter.emit('ended', this);
     };
 

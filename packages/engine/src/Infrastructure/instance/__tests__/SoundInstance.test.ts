@@ -766,3 +766,175 @@ describe('SoundInstance Rebinding Lifecycle', () => {
         expect(instance.id).toBe('explosion');
     });
 });
+
+describe('SoundInstance Lifecycle and Pooling', () => {
+    let env: ReturnType<typeof setupStandardizedContext>;
+    let mockContextManager: any;
+    let mockFactory: any;
+    let mockAutomation: any;
+    let mockBuffer: any;
+
+    beforeEach(() => {
+        env = setupStandardizedContext();
+
+        mockContextManager = {
+            context: env.mockContext
+        };
+
+        mockFactory = {
+            createGain: () => env.mockContext.createGain(),
+            createStereoPanner: () => env.mockContext.createStereoPanner(),
+            createPanner: () => env.mockContext.createPanner(),
+            createFilter: () => env.mockContext.createBiquadFilter(),
+            create3DPanner: () => env.mockContext.createPanner()
+        } as unknown as AudioNodeFactory;
+
+        mockAutomation = {
+            ramp: vi.fn()
+        };
+
+        mockBuffer = env.realMockContext.createBuffer(2, 441000, 44100) as unknown as AudioBuffer;
+    });
+
+    afterEach(() => {
+        registrar.reset(env.mockContext as any);
+    });
+
+    const createInstance = () => {
+        return new SoundInstance('sound-1' as any, mockContextManager, mockFactory, mockBuffer, mockAutomation);
+    };
+
+    const triggerSourceEnded = (sourceIndex: number = -1) => {
+        const idx = sourceIndex === -1 ? env.createdSources.length - 1 : sourceIndex;
+        const source = env.createdSources[idx];
+        if (!source) return;
+
+        const addedHandlers = source.addEventListener.mock.calls
+            .filter((call: any[]) => call[0] === 'ended')
+            .map((call: any[]) => call[1]);
+
+        // oxlint-disable-next-line unicorn/prefer-set-has
+        const removedHandlers = source.removeEventListener.mock.calls
+            // oxlint-disable-next-line typescript/prefer-readonly-parameter-types
+            .filter((call: any[]) => call[0] === 'ended')
+            // oxlint-disable-next-line typescript/no-unsafe-return typescript/prefer-readonly-parameter-types
+            .map((call: any[]) => call[1]);
+
+        addedHandlers.forEach((handler: any) => {
+            if (!removedHandlers.includes(handler)) handler();
+        });
+    };
+
+    it('should transition to idle and emit ended on natural playback completion', () => {
+        const instance = createInstance();
+        const endedSpy = vi.fn();
+        instance.on('ended', endedSpy);
+
+        instance.play();
+        expect(instance.state).toBe('playing');
+
+        triggerSourceEnded();
+
+        expect(instance.state).toBe('idle');
+        expect(endedSpy).toHaveBeenCalledTimes(1);
+        expect(endedSpy).toHaveBeenCalledWith(instance);
+    });
+
+    it('should transition to idle and emit ended when forceNaturalEnd is called from virtual state', () => {
+        const instance = createInstance();
+        const endedSpy = vi.fn();
+        instance.on('ended', endedSpy);
+
+        instance.play();
+        instance.virtualize();
+        expect(instance.state).toBe('virtual');
+
+        instance.forceNaturalEnd();
+
+        expect(instance.state).toBe('idle');
+        expect(endedSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should immediately transition to stopped and emit events on immediate stop', () => {
+        const instance = createInstance();
+        const stoppedSpy = vi.fn();
+        const endedSpy = vi.fn();
+        instance.on('stopped', stoppedSpy);
+        instance.on('ended', endedSpy);
+
+        instance.play();
+        instance.stop(0);
+
+        const source = env.createdSources[0];
+        expect(instance.state).toBe('stopped');
+        expect(source.stop).toHaveBeenCalled();
+        expect(stoppedSpy).toHaveBeenCalledTimes(1);
+        expect(endedSpy).toHaveBeenCalledTimes(1);
+
+        triggerSourceEnded();
+
+        expect(instance.state).toBe('stopped');
+        expect(endedSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should trigger events asynchronously on delayed stop', () => {
+        const instance = createInstance();
+        const stoppedSpy = vi.fn();
+        const endedSpy = vi.fn();
+        instance.on('stopped', stoppedSpy);
+        instance.on('ended', endedSpy);
+
+        instance.play();
+
+        const stopTime = 105;
+        instance.stop(stopTime);
+
+        expect(instance.state).toBe('playing');
+        expect(stoppedSpy).not.toHaveBeenCalled();
+        expect(endedSpy).not.toHaveBeenCalled();
+
+        const source = env.createdSources[0];
+        expect(source.stop).toHaveBeenCalledWith(stopTime + 0.015);
+
+        triggerSourceEnded();
+
+        expect(instance.state).toBe('stopped');
+        expect(stoppedSpy).toHaveBeenCalledTimes(1);
+        expect(endedSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should prevent ghost events when slot is reset during an active delayed stop', () => {
+        const instance = createInstance();
+
+        instance.play();
+        instance.stop(110);
+
+        instance.resetForReuse();
+
+        expect(instance.state).toBe('idle');
+        const oldSource = env.createdSources[0];
+        expect(oldSource.removeEventListener).toHaveBeenCalled();
+
+        instance.rebind('sound-2' as any, mockBuffer);
+        instance.play();
+
+        expect(instance.state).toBe('playing');
+
+        triggerSourceEnded(0);
+
+        expect(instance.state).toBe('playing');
+    });
+
+    it('should not throw and safely abort if canceled before natural end', () => {
+        const instance = createInstance();
+        instance.play();
+
+        instance.cancelScheduled();
+
+        expect(instance.state).toBe('stopped');
+        const source = env.createdSources[0];
+        expect(source.removeEventListener).toHaveBeenCalled();
+        expect(source.stop).toHaveBeenCalledWith(0);
+        expect(source.disconnect).toHaveBeenCalled();
+    });
+});

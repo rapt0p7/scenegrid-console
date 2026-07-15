@@ -32,12 +32,17 @@ export class PlaybackScheduler {
     };
 
     // eslint-disable-next-line max-params
-    public schedulePlay(instance: ISoundInstance, delay: number = 0, offset: number = 0, duration?: number): number {
+    public schedulePlay(
+        instance: ISoundInstance,
+        targetTime: number = 0,
+        offset: number = 0,
+        duration?: number
+    ): number {
         const slot = this.#findFreeSlot();
         if (slot === -1) return -1;
 
         const id = this.#nextInternalId++;
-        const when = this.#ctx.context.currentTime + delay;
+        const when = targetTime > 0 ? targetTime : this.#ctx.context.currentTime;
 
         instance.play(when, offset, duration);
 
@@ -50,11 +55,11 @@ export class PlaybackScheduler {
         return id;
     }
 
-    public scheduleStop(instance: ISoundInstance, delay: number = 0): number {
+    public scheduleStop(instance: ISoundInstance, targetTime: number = 0): number {
         const id = this.#nextInternalId++;
-        const when = this.#ctx.context.currentTime + delay;
+        const when = targetTime > 0 ? targetTime : this.#ctx.context.currentTime;
 
-        instance.stop(delay);
+        instance.stop(when);
 
         const existingSlot = this.#findSlotByInstance(instance);
         if (existingSlot !== -1) {

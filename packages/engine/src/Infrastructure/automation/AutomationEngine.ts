@@ -1,3 +1,4 @@
+// oxlint-disable max-lines-per-function
 // noinspection D
 
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
@@ -161,7 +162,7 @@ export default class AutomationEngine {
                 const endTime = now + remaining;
 
                 if (type === 'equal-power') {
-                    this.applyEqualPowerCurve(param, currentValue, target, startTime, duration);
+                    this.applyEqualPowerCurve(param, currentValue, target, now, remaining);
                 } else if (type === 'exponential') {
                     this.safeExponentialRamp(param, target, endTime, now);
                 } else {

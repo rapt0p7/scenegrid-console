@@ -144,8 +144,11 @@ export default class AudioRouter implements IAudioRouter {
 
         const finalOptions = VariationResolver.apply(config, options, this.prng);
 
+        const relativeDelaySec = options.when ?? (finalOptions.delayMs ?? 0) / 1000;
+        const absoluteTargetTime = relativeDelaySec > 0 ? this.soundController.getCurrentTime() + relativeDelaySec : 0;
+
         const playbackId = this.soundController.play(name, {
-            when: (finalOptions.delayMs ?? 0) / 1000,
+            when: absoluteTargetTime,
             offset: (finalOptions.seek ?? 0) / 1000,
             loop: finalOptions.isLoop,
             rate: finalOptions.rate,
@@ -317,8 +320,12 @@ export default class AudioRouter implements IAudioRouter {
                 this.prng
             );
 
+            const relativeDelaySec = (layer.delayMs ?? 0) / 1000;
+            const absoluteTargetTime =
+                relativeDelaySec > 0 ? this.soundController.getCurrentTime() + relativeDelaySec : 0;
+
             const playbackId = this.soundController.play(layer.src, {
-                when: (layer.delayMs ?? 0) / 1000,
+                when: absoluteTargetTime,
                 offset: ((finalOptions.seek ?? 0) || 0) / 1000,
                 loop: finalOptions.isLoop,
                 rate: finalOptions.rate,

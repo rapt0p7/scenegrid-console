@@ -38,12 +38,19 @@ describe('PlaybackScheduler', () => {
         scheduler = new PlaybackScheduler(mockContextManager, 128);
     });
 
-    it('should schedule play accurately using context currentTime', () => {
-        const id = scheduler.schedulePlay(mockInstance, 2.5, 1, 5);
+    it('should schedule play accurately using absolute targetTime', () => {
+        const targetTime = 102.5;
+        const id = scheduler.schedulePlay(mockInstance, targetTime, 1, 5);
 
         expect(id).toBe(1);
-        expect(mockInstance.play).toHaveBeenCalledWith(102.5, 1, 5);
+        expect(mockInstance.play).toHaveBeenCalledWith(targetTime, 1, 5);
         expect(mockInstance.on).toHaveBeenCalledWith('ended', expect.any(Function));
+    });
+
+    it('should fallback to context currentTime if targetTime is 0', () => {
+        scheduler.schedulePlay(mockInstance, 0, 1, 5);
+
+        expect(mockInstance.play).toHaveBeenCalledWith(100, 1, 5);
     });
 
     it('should schedule stop by passing relative delay to instance', () => {
