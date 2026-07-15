@@ -5,6 +5,7 @@ import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IBankManifest } from '@domain/Configuration/Ports/IBankConfig.js';
+import type { IMusicFSMConfig } from '@domain/Configuration/Ports/IMusicFSMConfig';
 
 export interface IAudioEngineConfig {
     readonly manifest: ISpriteSoundManifest;
@@ -13,6 +14,7 @@ export interface IAudioEngineConfig {
     readonly soundMap: ISoundMap;
     readonly rtpcManifest?: IRTPCManifest;
     readonly events: IEventMap;
+    readonly musicFSM?: IMusicFSMConfig;
     readonly banks: IBankManifest;
     readonly globalVoiceLimit?: number;
     readonly seed?: number;

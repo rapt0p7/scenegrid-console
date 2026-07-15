@@ -19,11 +19,14 @@ export type {
     RegionId,
     EventId,
     PlaybackId,
-    BankId
+    BankId,
+    MusicStateId,
+    ConditionOperator
 } from '@scene-grid/shared';
 export type { IRTPCManifest } from './Kernel/RTPC/Ports/IRTPCManifest.js';
 export type { IEventMap } from './Domain/Configuration/Ports/IEventConfig.js';
 export type { IBankManifest } from './Domain/Configuration/Ports/IBankConfig.js';
+export type { IMusicFSMConfig } from './Domain/Configuration/Ports/IMusicFSMConfig.js';
 export type {
     ISoundInstance,
     AudioWorkletNodeLike,

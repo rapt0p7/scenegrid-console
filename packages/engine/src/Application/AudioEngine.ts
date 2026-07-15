@@ -72,6 +72,7 @@ import SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestrator.js';
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
+import { MusicConductor } from '@domain/Orchestration/MusicConductor.js';
 import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngine.js';
 import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
@@ -92,6 +93,7 @@ export class AudioEngine implements IAudioEngine {
     #instanceRTPCBinder!: InstanceRTPCBinder;
     #eventOrchestrator!: AudioEventOrchestrator;
     #scattererOrchestrator!: ScattererOrchestrator;
+    #conductor?: MusicConductor;
     #prng!: SeededPRNG;
     #bankManager!: BankManagerAdapter;
     #telemetry!: TelemetryDispatcher;
@@ -150,6 +152,12 @@ export class AudioEngine implements IAudioEngine {
         },
         transitionTo: (options: ITransitionToParameters) => {
             this.#sequencer.transitionTo(options);
+        }
+    };
+
+    public readonly conductor = {
+        start: (): void => {
+            this.#conductor?.start();
         }
     };
 
@@ -459,6 +467,11 @@ export class AudioEngine implements IAudioEngine {
             );
             this.#router.setScattererOrchestrator(this.#scattererOrchestrator);
 
+            if (this.config.musicFSM) {
+                this.#conductor = new MusicConductor(this.#sequencer, this.#snapshotManager, this.#rtpcManager);
+                this.#conductor.init(this.config.musicFSM);
+            }
+
             const snapshotter = new TelemetrySnapshotter(
                 this.#telemetry,
                 this.#soundController,
@@ -524,6 +537,14 @@ export class AudioEngine implements IAudioEngine {
                 this.#scattererOrchestrator.TICK_RATE_MS,
                 this.#scattererOrchestrator
             );
+
+            if (this.#conductor) {
+                this.#engineTicker.add(
+                    'music-conductor' as TickerTaskId,
+                    this.#conductor.TICK_RATE_MS,
+                    this.#conductor
+                );
+            }
 
             this.#isInitialized = true;
 

@@ -18,6 +18,10 @@ export default class AudioGrid implements IAudioGrid {
         return this.#ppqn;
     }
 
+    public get beatsPerBar(): number {
+        return this.#beatsPerBar;
+    }
+
     public getNextBeatTime(currentTime: number, interval: number = 1): number {
         const secondsPerBeat = 60 / this.#bpm;
         const secondsPerInterval = secondsPerBeat * interval;

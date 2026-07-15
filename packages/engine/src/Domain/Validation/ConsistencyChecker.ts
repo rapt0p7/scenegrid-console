@@ -2,7 +2,14 @@
 // oxlint-disable max-depth
 // noinspection D
 
-import { type IConsistencyReportData, isAbsent, isDefined, typedEntries, typedKeys } from '@scene-grid/shared';
+import {
+    type IConsistencyReportData,
+    isAbsent,
+    isDefined,
+    MusicStateId,
+    typedEntries,
+    typedKeys
+} from '@scene-grid/shared';
 
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type {
@@ -25,8 +32,14 @@ import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IBankManifest } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
 import { ConsoleReporter } from '@domain/Validation/Reporters/ConsoleReporter.js';
+import type {
+    IMusicFSMConfig,
+    IMusicStateNode,
+    IMusicTransitionEdge
+} from '@domain/Configuration/Ports/IMusicFSMConfig.js';
 
 export interface IConsistencyCheckerPayload {
+    readonly musicFSM?: DeepReadonly<IMusicFSMConfig>;
     readonly soundMap?: ISoundMap;
     readonly manifest?: ISpriteSoundManifest;
     readonly buses?: IBuses;
@@ -65,7 +78,8 @@ export default class ConsistencyChecker {
                 snapshotsConfig: config.snapshots ?? {},
                 rtpcManifest: config.rtpcManifest ?? {},
                 eventsConfig: config.events ?? {},
-                banksConfig: config.banks ?? {}
+                banksConfig: config.banks ?? {},
+                musicFSM: config.musicFSM
             },
             reporters
         );
@@ -87,6 +101,7 @@ export default class ConsistencyChecker {
     private readonly rtpcManifest: DeepReadonly<IRTPCManifest>;
     private readonly events: DeepReadonly<IEventMap>;
     private readonly banks: DeepReadonly<IBankManifest>;
+    private readonly musicFSM?: DeepReadonly<IMusicFSMConfig>;
     private readonly reporters: IConsistencyReporter[];
 
     private readonly errors: string[] = [];
@@ -100,7 +115,8 @@ export default class ConsistencyChecker {
             snapshotsConfig,
             rtpcManifest,
             eventsConfig,
-            banksConfig
+            banksConfig,
+            musicFSM
         }: {
             soundMapConfig: DeepReadonly<ISoundMap>;
             soundManifest: DeepReadonly<ISpriteSoundManifest>;
@@ -109,6 +125,7 @@ export default class ConsistencyChecker {
             rtpcManifest: DeepReadonly<IRTPCManifest>;
             eventsConfig: DeepReadonly<IEventMap>;
             banksConfig: DeepReadonly<IBankManifest>;
+            musicFSM?: DeepReadonly<IMusicFSMConfig>;
         },
         reporters: IConsistencyReporter[]
     ) {
@@ -120,6 +137,7 @@ export default class ConsistencyChecker {
         this.events = eventsConfig;
         this.banks = banksConfig;
         this.reporters = reporters;
+        this.musicFSM = musicFSM;
     }
 
     public getIsConsistent(): boolean {
@@ -137,6 +155,7 @@ export default class ConsistencyChecker {
         this.checkRTPCManifest();
         this.checkBankSystem();
         this.checkEvents();
+        this.checkMusicFSM();
 
         this.report();
     }
@@ -759,7 +778,7 @@ export default class ConsistencyChecker {
                     referenced.add(cfg.defaultSwitch);
                 }
             } else if (this.isSmartLoop(cfg)) {
-                // Smart loops generally reference their own key
+                referenced.add(key);
             } else if ('src' in cfg && isDefined(cfg.src)) {
                 referenced.add(cfg.src);
             } else if (key in (this.manifest || {})) {
@@ -1264,6 +1283,155 @@ export default class ConsistencyChecker {
 
             if (targetId && !this.manifest[targetId as any] && !this.soundMap[targetId as any]) {
                 this.warnings.push(`Source item at "${itemPath}" references missing sound "${targetId}".`);
+            }
+        }
+    }
+
+    private checkMusicFSM(): void {
+        if (isAbsent(this.musicFSM)) return;
+
+        const fsm = this.musicFSM;
+        const pathBase = 'musicFSM';
+
+        if (!this.assertRequiredType(`${pathBase}.initialState`, fsm.initialState, 'string')) return;
+        this.assertArray(`${pathBase}.globalEdges`, fsm.globalEdges, false);
+
+        if (isAbsent(fsm.states) || typeof fsm.states !== 'object') {
+            this.errors.push(`${pathBase}.states must be an object.`);
+            return;
+        }
+
+        if (!(fsm.initialState in fsm.states)) {
+            this.errors.push(`${pathBase}.initialState "${fsm.initialState}" is missing from states dictionary.`);
+        }
+
+        if (fsm.globalEdges) {
+            const globalLen = fsm.globalEdges.length;
+            for (let i = 0; i < globalLen; i++) {
+                this.validateMusicEdge(`${pathBase}.globalEdges[${i}]`, fsm.globalEdges[i], fsm.states);
+            }
+        }
+
+        const stateIds = Object.keys(fsm.states) as MusicStateId[];
+        const statesLen = stateIds.length;
+
+        for (let i = 0; i < statesLen; i++) {
+            const stateId = stateIds[i];
+            const node = fsm.states[stateId];
+            const nodePath = `${pathBase}.states.${stateId}`;
+
+            if (isAbsent(node) || typeof node !== 'object') {
+                this.errors.push(`${nodePath} must be an object.`);
+                continue;
+            }
+
+            if (this.assertRequiredType(`${nodePath}.soundId`, node.soundId, 'string')) {
+                const soundCfg = this.soundMap[node.soundId];
+                if (isAbsent(soundCfg)) {
+                    this.errors.push(`${nodePath}.soundId "${node.soundId}" does not exist in soundMap.`);
+                } else if (!this.isSmartLoop(soundCfg)) {
+                    this.errors.push(
+                        `${nodePath}.soundId "${node.soundId}" is linked to MusicFSM, but its config type in soundMap is NOT smartLoop.`
+                    );
+                } else {
+                    if (this.assertRequiredType(`${nodePath}.sequencerRegion`, node.sequencerRegion, 'string')) {
+                        if (isAbsent(soundCfg.smartLoop.regions[node.sequencerRegion])) {
+                            this.errors.push(
+                                `${nodePath}.sequencerRegion "${node.sequencerRegion}" is missing from smartLoop.regions inside sound "${node.soundId}".`
+                            );
+                        }
+                    }
+                }
+            }
+
+            if (node.activeSnapshot !== undefined) {
+                if (this.assertRequiredType(`${nodePath}.activeSnapshot`, node.activeSnapshot, 'string')) {
+                    if (isAbsent(this.snapshots[node.activeSnapshot])) {
+                        this.errors.push(
+                            `${nodePath}.activeSnapshot "${node.activeSnapshot}" does not exist in global snapshots configuration.`
+                        );
+                    }
+                }
+            }
+
+            if (this.assertArray(`${nodePath}.edges`, node.edges, true) && node.edges) {
+                const localEdgesLen = node.edges.length;
+                for (let j = 0; j < localEdgesLen; j++) {
+                    this.validateMusicEdge(`${nodePath}.edges[${j}]`, node.edges[j], fsm.states);
+                }
+            }
+        }
+    }
+
+    private validateMusicEdge(
+        path: string,
+        edge: DeepReadonly<IMusicTransitionEdge>,
+        states: DeepReadonly<Record<MusicStateId, IMusicStateNode>>
+    ): void {
+        if (isAbsent(edge) || typeof edge !== 'object') {
+            this.errors.push(`${path} must be an object.`);
+            return;
+        }
+
+        if (!this.assertRequiredType(`${path}.targetState`, edge.targetState, 'string')) return;
+
+        const targetNode = states[edge.targetState];
+        if (isAbsent(targetNode)) {
+            this.errors.push(`${path}.targetState "${edge.targetState}" points to a non-existent state node.`);
+            return;
+        }
+
+        if (edge.transitionRegionName !== undefined && edge.transitionRegionName !== '') {
+            if (isAbsent(targetNode.soundId)) {
+                this.errors.push(
+                    `${path}.transitionRegionName is set, but target state "${edge.targetState}" is missing soundId.`
+                );
+            } else {
+                const targetSoundCfg = this.soundMap[targetNode.soundId];
+
+                if (isAbsent(targetSoundCfg)) {
+                    this.errors.push(
+                        `${path}.transitionRegionName points to soundId "${targetNode.soundId}" which does not exist in soundMap.`
+                    );
+                } else if (!this.isSmartLoop(targetSoundCfg)) {
+                    this.errors.push(
+                        `${path}.transitionRegionName requires target sound "${targetNode.soundId}" to be a smartLoop.`
+                    );
+                } else {
+                    const regions = targetSoundCfg.smartLoop.regions;
+                    if (isAbsent(regions) || isAbsent(regions[edge.transitionRegionName])) {
+                        this.errors.push(
+                            `${path}.transitionRegionName "${edge.transitionRegionName}" is missing from smartLoop.regions inside sound "${targetNode.soundId}".`
+                        );
+                    }
+                }
+            }
+        }
+
+        if (edge.stingerId !== undefined) {
+            if (this.assertRequiredType(`${path}.stingerId`, edge.stingerId, 'string')) {
+                if (isAbsent(this.soundMap[edge.stingerId])) {
+                    this.errors.push(`${path}.stingerId "${edge.stingerId}" does not exist in soundMap.`);
+                }
+            }
+        }
+
+        if (this.assertArray(`${path}.conditions`, edge.conditions, false) && edge.conditions) {
+            const condsLen = edge.conditions.length;
+            for (let i = 0; i < condsLen; i++) {
+                const cond = edge.conditions[i];
+                const condPath = `${path}.conditions[${i}]`;
+
+                if (isAbsent(cond) || typeof cond !== 'object') {
+                    this.errors.push(`${condPath} must be an object.`);
+                    continue;
+                }
+
+                if (this.assertRequiredType(`${condPath}.param`, cond.param, 'string')) {
+                    if (isAbsent(this.rtpcManifest[cond.param])) {
+                        this.errors.push(`${condPath}.param "${cond.param}" is missing from global RTPCManifest.`);
+                    }
+                }
             }
         }
     }

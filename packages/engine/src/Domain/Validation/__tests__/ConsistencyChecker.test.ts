@@ -2213,4 +2213,396 @@ describe('ConsistencyChecker', () => {
             );
         });
     });
+
+    describe('MusicFSM Configuration Validations', () => {
+        beforeEach(() => {
+            vi.clearAllMocks();
+            vi.spyOn(console, 'error').mockImplementation(() => {});
+            vi.spyOn(console, 'warn').mockImplementation(() => {});
+        });
+
+        it('should pass a fully valid MusicFSM config with all references matching', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: { music_phase: { defaultValue: 1 } },
+                events: {},
+                manifest: {},
+                soundMap: {
+                    smartLoop: {
+                        busId: 'master',
+                        smartLoop: {
+                            bpm: 120,
+                            regions: {
+                                A: [0, 1000],
+                                B: [1000, 2000],
+                                A_TO_B: [2000, 2500]
+                            }
+                        }
+                    },
+                    stinger_sound: { busId: 'master' }
+                },
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'A',
+                            activeSnapshot: 'snapshot_idle',
+                            edges: [
+                                {
+                                    targetState: 'phase_B',
+                                    conditions: [{ param: 'music_phase', operator: '==', value: 2 }],
+                                    syncRule: 'NextBar',
+                                    crossfadeDurationMs: 4000,
+                                    transitionRegionName: 'A_TO_B',
+                                    stingerId: 'stinger_sound',
+                                    interruptable: true
+                                }
+                            ]
+                        },
+                        phase_B: {
+                            id: 'phase_B',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'B',
+                            edges: []
+                        }
+                    }
+                },
+                snapshots: {
+                    snapshot_idle: { layers: {} }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(true);
+        });
+
+        it('should fail if initialState points to a non-existent state node', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                soundMap: {},
+                snapshots: {},
+                musicFSM: {
+                    initialState: 'ghost_state',
+                    globalEdges: [],
+                    states: {
+                        real_state: { id: 'real_state', soundId: 's', sequencerRegion: 'R', edges: [] }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+
+        it('should fail if state node references a missing soundId in soundMap', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                soundMap: {},
+                snapshots: {},
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'ghost_sound',
+                            sequencerRegion: 'A',
+                            edges: []
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+
+        it('should fail if state node soundId is not configured as smartLoop', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                snapshots: {},
+                soundMap: {
+                    standard_sfx: { busId: 'master' }
+                },
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'standard_sfx',
+                            sequencerRegion: 'A',
+                            edges: []
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+
+        it('should fail if state node sequencerRegion is missing from smartLoop regions list', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                snapshots: {},
+                soundMap: {
+                    smartLoop: {
+                        busId: 'master',
+                        smartLoop: { bpm: 120, regions: { A: [0, 1000] } }
+                    }
+                },
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'GHOST_REGION',
+                            edges: []
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+
+        it('should fail if activeSnapshot references a missing snapshot', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                snapshots: {},
+                soundMap: {
+                    smartLoop: {
+                        busId: 'master',
+                        smartLoop: { bpm: 120, regions: { A: [0, 1000] } }
+                    }
+                },
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'A',
+                            activeSnapshot: 'ghost_snapshot',
+                            edges: []
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+
+        it('should fail if a local edge targetState references a non-existent state node', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                snapshots: {},
+                soundMap: {
+                    smartLoop: {
+                        busId: 'master',
+                        smartLoop: { bpm: 120, regions: { A: [0, 1000] } }
+                    }
+                },
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'A',
+                            edges: [
+                                {
+                                    targetState: 'ghost_target_state',
+                                    conditions: [],
+                                    syncRule: 'Immediate',
+                                    interruptable: true
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+
+        it('should fail if an edge transitionRegionName is missing from target smartLoop regions list', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                snapshots: {},
+                soundMap: {
+                    smartLoop: {
+                        busId: 'master',
+                        smartLoop: { bpm: 120, regions: { A: [0, 1000], B: [1000, 2000] } }
+                    }
+                },
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'A',
+                            edges: [
+                                {
+                                    targetState: 'phase_B',
+                                    conditions: [],
+                                    syncRule: 'NextBar',
+                                    transitionRegionName: 'A_TO_D',
+                                    interruptable: true
+                                }
+                            ]
+                        },
+                        phase_B: {
+                            id: 'phase_B',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'B',
+                            edges: []
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+
+        it('should fail if an edge stingerId references a missing sound in soundMap', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                snapshots: {},
+                soundMap: {
+                    smartLoop: {
+                        busId: 'master',
+                        smartLoop: { bpm: 120, regions: { A: [0, 1000] } }
+                    }
+                },
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'A',
+                            edges: [
+                                {
+                                    targetState: 'phase_A',
+                                    conditions: [],
+                                    syncRule: 'Immediate',
+                                    stingerId: 'ghost_stinger',
+                                    interruptable: true
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+
+        it('should fail if an edge condition references a missing parameter in rtpcManifest', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                snapshots: {},
+                soundMap: {
+                    smartLoop: {
+                        busId: 'master',
+                        smartLoop: { bpm: 120, regions: { A: [0, 1000] } }
+                    }
+                },
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'A',
+                            edges: [
+                                {
+                                    targetState: 'phase_A',
+                                    conditions: [{ param: 'ghost_rtpc_param', operator: '==', value: 1 }],
+                                    syncRule: 'Immediate',
+                                    interruptable: true
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+
+        it('should evaluate and fail globalEdges with the exact same rules as local edges', () => {
+            const config: any = {
+                buses: { master: {} },
+                rtpcManifest: {},
+                events: {},
+                manifest: {},
+                snapshots: {},
+                soundMap: {
+                    smartLoop: {
+                        busId: 'master',
+                        smartLoop: { bpm: 120, regions: { A: [0, 1000] } }
+                    }
+                },
+                musicFSM: {
+                    initialState: 'phase_A',
+                    globalEdges: [
+                        {
+                            targetState: 'ghost_global_target',
+                            conditions: [{ param: 'ghost_global_param', operator: '==', value: 1 }],
+                            syncRule: 'Immediate',
+                            stingerId: 'ghost_global_stinger',
+                            interruptable: true
+                        }
+                    ],
+                    states: {
+                        phase_A: {
+                            id: 'phase_A',
+                            soundId: 'smartLoop',
+                            sequencerRegion: 'A',
+                            edges: []
+                        }
+                    }
+                }
+            };
+
+            expect(ConsistencyChecker.validate(config)).toBe(false);
+        });
+    });
 });

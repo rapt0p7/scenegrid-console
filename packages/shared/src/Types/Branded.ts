@@ -18,3 +18,5 @@ export type TickerTaskId = string & { readonly __brand: unique symbol };
 export type EventId = string & { readonly __brand: unique symbol };
 
 export type BankId = string & { readonly __brand: unique symbol };
+
+export type MusicStateId = string & { readonly __brand: unique symbol };
