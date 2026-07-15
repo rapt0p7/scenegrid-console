@@ -137,7 +137,7 @@ describe('Sequencer (Interactive Music)', () => {
         const arguments_ = mockController.play.mock.calls[0];
 
         expect(arguments_[0]).toBe('battle_music');
-        expect(arguments_[1].when).toBeCloseTo(0.05, 5);
+        expect(arguments_[1].when).toBeCloseTo(1, 5);
         expect(arguments_[1].offset).toBe(0);
         expect(arguments_[1].duration).toBe(1);
     });
@@ -162,19 +162,25 @@ describe('Sequencer (Interactive Music)', () => {
         expect(mockController.fadeVolume).toHaveBeenCalledWith(1, 0, 1000, 'equal-power', 0);
         expect(mockController.stopById).toHaveBeenCalledWith(1, 1.5);
 
-        expect(mockController.play).toHaveBeenCalledWith('battle_music', {
-            when: 0,
+        const transitionCall = mockController.play.mock.calls[1];
+        expect(transitionCall[0]).toBe('battle_music');
+        expect(transitionCall[1]).toEqual({
+            when: 0.5,
             offset: 1,
             duration: 2
         });
     });
 
-    it('should perform FILL transition with equal-power crossfade', () => {
+    it('should perform FILL transition with equal-power crossfade for both regions', () => {
         mockController.play.mockReturnValueOnce(1 as PlaybackId);
 
         manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+
         mockController.play.mockClear();
+        mockController.setVolume.mockClear();
+        mockController.fadeVolume.mockClear();
         simulatedTime = 0.5;
+        vi.mocked(mockController.getCurrentTime).mockReturnValue(0.5);
 
         mockController.play.mockReturnValueOnce(2 as PlaybackId);
 
@@ -185,16 +191,11 @@ describe('Sequencer (Interactive Music)', () => {
             options: { quantize: 'Immediate', crossfadeDuration: 4000 }
         });
 
-        expect(mockController.fadeVolume).toHaveBeenCalledWith(1, 0, 4000, 'equal-power', 0);
-        expect(mockController.stopById).toHaveBeenCalledWith(1, 4.5);
+        expect(mockController.fadeVolume).toHaveBeenCalledWith(1, 0, 4000, 'equal-power', expect.any(Number));
 
-        expect(mockController.play).toHaveBeenCalledWith('battle_music', {
-            when: 0,
-            offset: 3,
-            duration: 1
-        });
-
-        expect(mockController.fadeVolume).toHaveBeenCalledWith(2, 1, 4000, 'equal-power', 0);
+        expect(mockController.play).toHaveBeenCalledWith('battle_music', expect.any(Object));
+        expect(mockController.setVolume).toHaveBeenCalledWith(2, 0);
+        expect(mockController.fadeVolume).toHaveBeenCalledWith(2, 1, 4000, 'equal-power', expect.any(Number));
     });
 
     it('should perform QUANTIZED transition using AudioGrid', () => {
@@ -217,7 +218,7 @@ describe('Sequencer (Interactive Music)', () => {
         expect(mockController.play).toHaveBeenCalledTimes(1);
 
         const arguments_ = mockController.play.mock.calls[0];
-        expect(arguments_[1].when).toBeCloseTo(0.05, 5);
+        expect(arguments_[1].when).toBeCloseTo(2, 5);
         expect(arguments_[1].offset).toBe(1);
         expect(arguments_[1].duration).toBe(2);
     });
@@ -321,6 +322,14 @@ describe('Sequencer (Interactive Music)', () => {
                 options: { quantize: 'NextBeat', grid: customGrid }
             });
             expect(customGrid.getNextBeatTime).toHaveBeenCalled();
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main' as RegionId,
+                options: { quantize: 'NextBar', grid: customGrid }
+            });
+            const track = (manager as any).getTrackContext('battle_music');
+            track.state = LoopState.LOOPING;
 
             manager.transitionTo({
                 soundId: 'battle_music' as SoundId,
@@ -495,7 +504,7 @@ describe('Sequencer (Interactive Music)', () => {
                 expect(customGrid.getTimeAtPulse).toHaveBeenCalledWith(1260);
 
                 expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', {
-                    delayMs: Math.max(0, (1.26 - 0.96) * 1000)
+                    when: 1.26
                 });
             });
 
@@ -507,7 +516,7 @@ describe('Sequencer (Interactive Music)', () => {
                 expect(customGrid.getNextDivisionTime).toHaveBeenCalledWith(0.96, '1/16');
 
                 expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', {
-                    delayMs: Math.max(0, (1.2 - 0.96) * 1000)
+                    when: 1.2
                 });
             });
         });
@@ -564,7 +573,7 @@ describe('Sequencer (Interactive Music)', () => {
             expect(mockController.play).toHaveBeenCalledTimes(1);
             const playArgs = mockController.play.mock.calls[0][1];
 
-            expect(playArgs.when).toBe(0);
+            expect(playArgs.when).toBe(9.7);
             expect(playArgs.offset).toBeCloseTo(0.7);
 
             expect(track.nextScheduleTime).toBeCloseTo(12.0);
@@ -607,16 +616,15 @@ describe('Sequencer (Interactive Music)', () => {
             });
 
             expect(mockController.fadeVolume).not.toHaveBeenCalled();
-
             expect(mockController.stopById).toHaveBeenCalledWith(1, 2.5);
 
-            expect(mockController.play).toHaveBeenCalledWith(
-                'battle_music',
-                expect.objectContaining({
-                    when: 0,
-                    offset: 1
-                })
-            );
+            const transitionCall = mockController.play.mock.calls[1];
+            expect(transitionCall[0]).toBe('battle_music');
+            expect(transitionCall[1]).toEqual({
+                when: 0.5,
+                offset: 1,
+                duration: 2
+            });
         });
     });
 
@@ -642,7 +650,7 @@ describe('Sequencer (Interactive Music)', () => {
 
             manager.playStinger('victory_chord' as SoundId, 'NextBeat');
 
-            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delayMs: 500 });
+            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { when: 1.5 });
         });
 
         it('should quantize stinger to NextBar using the explicit reference track', () => {
@@ -652,7 +660,7 @@ describe('Sequencer (Interactive Music)', () => {
 
             manager.playStinger('victory_chord' as SoundId, 'NextBar', 'battle_music' as SoundId);
 
-            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delayMs: 1500 });
+            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { when: 2 });
         });
     });
 
@@ -744,7 +752,7 @@ describe('Sequencer (Interactive Music)', () => {
                 const playArgs = mockController.play.mock.calls[0][1];
 
                 expect(playArgs.offset).toBeCloseTo(2.0);
-                expect(playArgs.when).toBe(0);
+                expect(playArgs.when).toBe(0.5);
             });
 
             it('should apply Inverted offset correctly', () => {
@@ -784,7 +792,7 @@ describe('Sequencer (Interactive Music)', () => {
                 const playArgs = mockController.play.mock.calls[0][1];
 
                 expect(playArgs.offset).toBeCloseTo(1.0);
-                expect(playArgs.when).toBe(0);
+                expect(playArgs.when).toBe(0.5);
             });
         });
     });

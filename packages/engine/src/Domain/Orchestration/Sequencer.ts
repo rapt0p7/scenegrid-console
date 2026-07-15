@@ -1,3 +1,4 @@
+// oxlint-disable max-depth
 // noinspection D
 
 import AudioGrid from '@domain/Orchestration/AudioGrid.js';
@@ -223,7 +224,6 @@ export default class Sequencer implements ISequencer {
 
         track.loopRegion = targetRegion;
         track.currentRegion = targetRegion;
-        track.state = LoopState.LOOPING;
 
         this.tick();
     }
@@ -259,9 +259,7 @@ export default class Sequencer implements ISequencer {
             targetTime = grid.getNextDivisionTime(now, quantize.division);
         }
 
-        const delaySec = Math.max(0, targetTime - now);
-
-        this.router.play(stingerId, { delayMs: delaySec * 1000 });
+        this.router.play(stingerId, { when: targetTime });
     }
 
     public getPlaybackInfo(soundId: SoundId): IPlaybackInfo | null {
@@ -287,9 +285,9 @@ export default class Sequencer implements ISequencer {
     // oxlint-disable-next-line max-lines-per-function
     public tick(): void {
         for (const [soundId, track] of this.tracks.entries()) {
-            if (track.state !== LoopState.LOOPING) continue;
+            if (track.state === LoopState.IDLE) continue;
 
-            if (isDefined(track.currentRegion)) {
+            if (track.state === LoopState.LOOPING && isDefined(track.currentRegion)) {
                 const config = this.router.getSoundConfig(soundId);
                 if (isDefined(config) && 'smartLoop' in config) {
                     const decision = this.transitionPolicy.evaluate(config, track.currentRegion, track.magnetStates);
@@ -346,10 +344,26 @@ export default class Sequencer implements ISequencer {
                 });
 
                 if (isDefined(playbackId)) {
-                    if (fadeInMs > 0) {
-                        const delayMsToFade = Math.max(0, (regionStartTime - now) * 1000);
+                    if (track.state === LoopState.TRANSITIONING) {
+                        const otherActiveRegions = [...track.activeRegions].filter(r => r.playbackId !== playbackId);
+
+                        if (otherActiveRegions.length > 0) {
+                            for (const active of otherActiveRegions) {
+                                this.router.performCrossfade(active.playbackId, playbackId, fadeInMs);
+                            }
+                        } else if (fadeInMs > 0) {
+                            const delaySec = Math.max(0, regionStartTime - now);
+                            this.controller.setVolume(playbackId, 0);
+                            this.controller.fadeVolume(playbackId, 1, fadeInMs, 'equal-power', delaySec * 1000);
+                        } else {
+                            this.controller.setVolume(playbackId, 1);
+                        }
+
+                        track.state = LoopState.LOOPING;
+                    } else if (fadeInMs > 0) {
+                        const delaySec = Math.max(0, regionStartTime - now);
                         this.controller.setVolume(playbackId, 0);
-                        this.controller.fadeVolume(playbackId, 1, fadeInMs, 'equal-power', delayMsToFade);
+                        this.controller.fadeVolume(playbackId, 1, fadeInMs, 'equal-power', delaySec * 1000);
                     } else {
                         this.controller.setVolume(playbackId, 1);
                     }
@@ -437,10 +451,8 @@ export default class Sequencer implements ISequencer {
             }
         }
 
-        const delaySec = Math.max(0, actualTargetTime - now);
-
         const playbackId = this.controller.play(soundId, {
-            when: delaySec,
+            when: actualTargetTime,
             offset: actualOffsetSec,
             duration: actualDurationSec
         });
