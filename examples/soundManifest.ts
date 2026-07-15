@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 export default {
     'backgroundMain': {
         url: 'assets/asami_main_loop_a.mp3'
@@ -70,5 +71,8 @@ export default {
     },
     'collectRing': {
         url: 'assets/wolfy_sanic-collect-ring-15982.mp3'
+    },
+    'smartLoop': {
+        url: 'assets/fmod-kurs.ogg'
     }
 };

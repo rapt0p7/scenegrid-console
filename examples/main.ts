@@ -2,7 +2,7 @@
 
 import { AudioEngine, BankId } from '@scene-grid/engine';
 
-import { Buses, Snapshots, SoundMap, RTPCManifest, Events, BankManifest } from './audio-config/index.js';
+import { Buses, Snapshots, SoundMap, RTPCManifest, Events, BankManifest, MusicFSM } from './audio-config/index.js';
 import soundManifest from './soundManifest.js';
 
 // oxlint-disable-next-line max-lines-per-function
@@ -15,6 +15,7 @@ async function bootstrap() {
         rtpcManifest: RTPCManifest,
         events: Events,
         banks: BankManifest,
+        musicFSM: MusicFSM,
         globalVoiceLimit: 32
     });
 

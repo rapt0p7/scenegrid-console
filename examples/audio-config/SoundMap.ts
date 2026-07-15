@@ -63,5 +63,24 @@ export default {
         busId: 'sfx',
         mode: 'random_no_repeat',
         sources: ['kickDrum', 'kickDrum2', 'kbKickMetallic', 'hardstyleKick']
+    },
+
+    'smartLoop': {
+        busId: 'musicMain',
+        smartLoop: {
+            bpm: 120,
+            crossfade: 4000,
+            regions: {
+                A: [1057706, 1763630],
+                B: [1763630, 2469413],
+                C: [2469413, 3175081],
+                A_TO_B: [3527999, 3704386],
+                A_TO_C: [3527999, 3704386],
+                B_TO_C: [3527999, 3704386],
+                B_TO_A: [3527999, 3704386],
+                C_TO_A: [3527999, 3704386],
+                C_TO_B: [3527999, 3704386]
+            }
+        }
     }
 };
