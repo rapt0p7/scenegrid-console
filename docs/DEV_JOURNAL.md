@@ -312,6 +312,23 @@
 
 ---
 
+## [Phase 21] Focus: Zero-Allocation Interactive Music Conductor (FSM)
+
+* **Context/Problem:** The engine required a data-driven finite state machine (FSM) to orchestrate complex interactive music transitions based on Game State (RTPCs). The initial proposal relied on Redux-style immutable DTOs (`MusicCommand`), which clashed with the engine's strict Zero-Allocation/GC-Safety requirements. Furthermore, musical scheduling lacked sample-accurate integration between the sequencer and mixer.
+* **Solution:** * **Zero-Allocation FSM:** Implemented `MusicConductor` as a direct, state-mutating class (`IConductorState`) operating on the `ITickable` polling model. It evaluates transitions using a pure function (`evaluateEdges`) and delegates execution directly to `ISequencer` and `MixerSnapshotManager` without allocating intermediate objects.
+    * **AudioGrid Encapsulation:** Extracted all fractional grid math (`NextGridDivision`, `ExactPulse`) natively into the `AudioGrid` class, ensuring drift-free integer calculations for precise scheduling.
+    * **Crossfade & Absolute Scheduling:** Migrated internal `Sequencer` and `SoundController` scheduling from relative delays to absolute timestamps. Introduced a dedicated `crossfade` API utilizing the Web Audio API's `cancelScheduledValues` for smooth, overlapping transitions.
+    * **Static Validation:** Integrated `checkMusicFSM` into `ConsistencyChecker` to proactively validate graph integrity, region existence within `smartLoop` assets, snapshot definitions, and RTPC bindings.
+    * **Lifecycle and Demo:** Added strict `init`, `start`, and `stop` lifecycle methods to ensure safe execution post-context-unlock. Updated the examples to demonstrate `MusicFSM` and `smartLoop` in action.
+
+*Manual notes (to be filled):*
+
+* **❌ What didn't work:**
+* **⚖️ Trade-off:**
+* **🎯 Next step:**
+
+---
+
 ## [Architectural Invariants] Documented Rules (from docs/architecture commits)
 
 The following explicit rules have been locked in the documentation:

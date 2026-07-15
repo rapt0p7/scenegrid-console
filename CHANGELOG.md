@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Add music fsm and smart loop demonstration
+
+- Implement interactive music conductor
+
+- Add crossfade for playback instances
+
+- Add `getNextDivisionTime` to `AudioGrid`
+
+- Implement ppqn timing and advanced quantization
+
+- Add openspec agent workflow and project configuration
+
 - Add what-if simulator to inspector app
 
 - Add inspector debug api and command integration
@@ -206,6 +218,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Update diagram
+
+- Archive implemented music conductor spec
+
+- Migrate to absolute time and fix pool races
+
+- Migrate from `codegraph` to `repowise`
+
+- Update project badges and phase 1 roadmap progress
+
+- Updated changelog, dev journal and dependency graph
+
 - Updated changelog
 
 - Updated dev journal and document phase 19 features
@@ -532,6 +556,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Fixed
+- Improve scheduling precision and transition handling
+
 - Adjust `CullingRunner` and telemetry bus data expectations
 
 - Adjust html doctype declaration and add favicon link
