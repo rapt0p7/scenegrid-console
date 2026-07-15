@@ -1,4 +1,5 @@
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
+import type { GridDivision } from '@scene-grid/shared';
 
 export default class AudioGrid implements IAudioGrid {
     readonly #bpm: number;
@@ -58,5 +59,28 @@ export default class AudioGrid implements IAudioGrid {
         const denominator = 60;
 
         return Math.round(numerator / denominator);
+    }
+
+    public getNextDivisionTime(currentTime: number, division: GridDivision): number {
+        let divisionFactor = 1;
+        switch (division) {
+            case '1/8':
+                divisionFactor = 2;
+                break;
+            case '1/16':
+                divisionFactor = 4;
+                break;
+            case '1/32':
+                divisionFactor = 8;
+                break;
+        }
+
+        const pulsesPerDivision = Math.floor(this.ppqn / divisionFactor);
+        const currentPulse = this.getPulseAtTime(currentTime);
+
+        const intervalsElapsed = Math.ceil((currentPulse + 1) / pulsesPerDivision);
+        const targetPulse = intervalsElapsed * pulsesPerDivision;
+
+        return this.getTimeAtPulse(targetPulse);
     }
 }

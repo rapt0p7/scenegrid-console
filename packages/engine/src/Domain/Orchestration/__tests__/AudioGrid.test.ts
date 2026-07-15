@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import AudioGrid from '../AudioGrid.js';
+import type { GridDivision } from '@scene-grid/shared';
 
 describe('AudioGrid', () => {
     describe('Initialization & Defaults', () => {
@@ -86,6 +87,40 @@ describe('AudioGrid', () => {
             expect(offsetGrid.getTimeAtPulse(960)).toBe(6.0);
             expect(offsetGrid.getPulseAtTime(6.0)).toBe(960);
             expect(offsetGrid.getPulseAtTime(2.0)).toBe(0);
+        });
+    });
+
+    describe('getNextDivisionTime', () => {
+        const grid = new AudioGrid(120, 4, 0, 960);
+
+        it('should correctly calculate the next 1/4 note division (implicit default fallback)', () => {
+            expect(grid.getNextDivisionTime(0.2, '1/4' as GridDivision)).toBe(0.5);
+            expect(grid.getNextDivisionTime(0.6, '1/4' as GridDivision)).toBe(1.0);
+        });
+
+        it('should correctly calculate the next 1/8 note division', () => {
+            expect(grid.getNextDivisionTime(0.1, '1/8')).toBe(0.25);
+            expect(grid.getNextDivisionTime(0.3, '1/8')).toBe(0.5);
+        });
+
+        it('should correctly calculate the next 1/16 note division', () => {
+            expect(grid.getNextDivisionTime(0.1, '1/16')).toBe(0.125);
+            expect(grid.getNextDivisionTime(0.15, '1/16')).toBe(0.25);
+        });
+
+        it('should correctly calculate the next 1/32 note division', () => {
+            expect(grid.getNextDivisionTime(0.05, '1/32')).toBe(0.0625);
+            expect(grid.getNextDivisionTime(0.1, '1/32')).toBe(0.125);
+        });
+
+        it('should strictly push to the NEXT division if currentTime is exactly on a boundary (+1 pulse safe zone)', () => {
+            expect(grid.getNextDivisionTime(0.25, '1/8')).toBe(0.5);
+            expect(grid.getNextDivisionTime(0.125, '1/16')).toBe(0.25);
+        });
+
+        it('should handle pre-roll (currentTime strictly before startTime) properly', () => {
+            expect(grid.getNextDivisionTime(-2.0, '1/8')).toBe(0.25);
+            expect(grid.getNextDivisionTime(-0.5, '1/16')).toBe(0.125);
         });
     });
 });

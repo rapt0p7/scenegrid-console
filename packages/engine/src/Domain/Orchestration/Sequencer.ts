@@ -142,25 +142,7 @@ export default class Sequencer implements ISequencer {
                 const targetPulse = currentPulse + options.quantize.pulseOffset;
                 targetTime = grid.getTimeAtPulse(targetPulse);
             } else if (options.quantize.type === 'NextGridDivision') {
-                let divisionFactor = 1;
-                switch (options.quantize.division) {
-                    case '1/8':
-                        divisionFactor = 2;
-                        break;
-                    case '1/16':
-                        divisionFactor = 4;
-                        break;
-                    case '1/32':
-                        divisionFactor = 8;
-                        break;
-                }
-
-                const pulsesPerDivision = Math.floor(grid.ppqn / divisionFactor);
-                const currentPulse = grid.getPulseAtTime(now);
-                const intervalsElapsed = Math.ceil((currentPulse + 1) / pulsesPerDivision);
-                const targetPulse = intervalsElapsed * pulsesPerDivision;
-
-                targetTime = grid.getTimeAtPulse(targetPulse);
+                targetTime = grid.getNextDivisionTime(now, options.quantize.division);
             }
         }
 
@@ -274,26 +256,7 @@ export default class Sequencer implements ISequencer {
             const currentPulse = grid.getPulseAtTime(now);
             targetTime = grid.getTimeAtPulse(currentPulse + quantize.pulseOffset);
         } else if (quantize.type === 'NextGridDivision') {
-            let divisionFactor = 1;
-            switch (quantize.division) {
-                case '1/8':
-                    divisionFactor = 2;
-                    break;
-                case '1/16':
-                    divisionFactor = 4;
-                    break;
-                case '1/32':
-                    divisionFactor = 8;
-                    break;
-            }
-
-            const pulsesPerDivision = Math.floor(grid.ppqn / divisionFactor);
-            const currentPulse = grid.getPulseAtTime(now);
-
-            const intervalsElapsed = Math.ceil((currentPulse + 1) / pulsesPerDivision);
-            const targetPulse = intervalsElapsed * pulsesPerDivision;
-
-            targetTime = grid.getTimeAtPulse(targetPulse);
+            targetTime = grid.getNextDivisionTime(now, quantize.division);
         }
 
         const delaySec = Math.max(0, targetTime - now);
