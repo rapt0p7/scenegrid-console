@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 
+// oxlint-disable-next-line no-underscore-dangle
 const __filename = import.meta.filename;
+// oxlint-disable-next-line no-underscore-dangle
 const __dirname = import.meta.dirname;
 
 export default defineConfig({
@@ -17,7 +18,7 @@ export default defineConfig({
         maxWorkers: 1,
         coverage: {
             provider: 'v8',
-            reporter: ['text', 'html'],
+            reporter: ['text', 'html', 'lcov'],
             exclude: [
                 'node_modules/',
                 'packages/*/src/config/',

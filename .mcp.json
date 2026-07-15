@@ -1,9 +1,9 @@
 {
     "mcpServers": {
-        "codegraph": {
-            "type": "stdio",
-            "command": "codegraph",
-            "args": ["serve", "--mcp"]
+        "repowise": {
+            "command": "repowise",
+            "args": ["mcp", ".", "--transport", "stdio"],
+            "description": "repowise: codebase intelligence \u2014 docs, graph, git signals, dead code, decisions"
         }
     }
 }

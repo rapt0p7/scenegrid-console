@@ -160,6 +160,9 @@ scripts/vite-worklet-isolator.js.map
 docs/repomix-output.md
 docs/Project_Source_Code.md
 
+.repowise/*
+!.repowise/config.yaml
+
 # Generated documentation
 /docs/api
 
