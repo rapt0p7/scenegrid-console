@@ -9,4 +9,5 @@ export interface IAudioRouter {
     pause(id: PlaybackId | PlaybackId[] | SoundId): void;
     resume(id: PlaybackId | PlaybackId[] | SoundId): void;
     applyConfigToPlayback(instance: PlaybackId, config: AnySoundConfig): void;
+    performCrossfade(outId: PlaybackId, inId: PlaybackId, durationMs: number): void;
 }

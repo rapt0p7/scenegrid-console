@@ -299,6 +299,23 @@ export class SoundController implements ISoundController {
         }
     }
 
+    public crossfade(outId: PlaybackId, inId: PlaybackId, durationMs: number): void {
+        const outVoice = this.activeVoices.get(outId);
+        const inVoice = this.activeVoices.get(inId);
+
+        if (outVoice?.physicalInstance && inVoice?.physicalInstance) {
+            outVoice.physicalInstance.gainParam.cancelScheduledValues(0);
+            inVoice.physicalInstance.gainParam.cancelScheduledValues(0);
+
+            this.automation.ramp(outVoice.physicalInstance.gainParam, 0, durationMs, 'equal-power');
+            this.automation.ramp(inVoice.physicalInstance.gainParam, 1, durationMs, 'equal-power');
+        } else {
+            console.warn(
+                `[SoundController.crossfade] MISSING VOICE out=${!!outVoice} in=${!!inVoice} outId=${outId} inId=${inId}`
+            );
+        }
+    }
+
     public playVirtual(soundId: SoundId, reason: VirtualReason = 'VIRTUAL_BY_API'): PlaybackId {
         const playbackId = this.nextPlaybackId++ as PlaybackId;
 

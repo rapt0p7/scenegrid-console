@@ -217,6 +217,10 @@ export default class AudioRouter implements IAudioRouter {
         }
     }
 
+    public performCrossfade(outId: PlaybackId, inId: PlaybackId, durationMs: number): void {
+        this.soundController.crossfade(outId, inId, durationMs);
+    }
+
     private resolvePlaybacks(target: PlaybackId | PlaybackId[] | SoundId): PlaybackId[] {
         if (Array.isArray(target)) {
             return target;

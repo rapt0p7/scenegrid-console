@@ -51,5 +51,6 @@ export interface ISoundController {
     virtualize(id: PlaybackId, reason: VirtualReason): void;
     devirtualize(id: PlaybackId): void;
     playVirtual(soundId: SoundId): PlaybackId;
+    crossfade(outId: PlaybackId, inId: PlaybackId, durationMs: number): void;
     isGhostVoice(id: PlaybackId): boolean;
 }
