@@ -216,6 +216,7 @@ export const InspectorApp: React.FC = () => {
             {isSimulatorOpen && manifest && (
                 <SimulatorDrawer
                     manifest={manifest}
+                    snapshot={displayRef.current}
                     onClose={() => {
                         setIsSimulatorOpen(false);
                     }}

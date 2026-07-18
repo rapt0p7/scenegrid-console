@@ -6,7 +6,7 @@ import { CommandReceiver } from '../CommandReceiver.js';
 import { BroadcastIpcAdapter } from '../BroadcastIpcAdapter.js';
 
 import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
-import type { InspectorCommand, EventId, SnapshotId, GameParamId, SoundId } from '@scene-grid/shared';
+import type { InspectorCommand, EventId, SnapshotId, GameParamId, SoundId, RegionId } from '@scene-grid/shared';
 
 vi.mock('../BroadcastIpcAdapter.js', () => {
     return {
@@ -30,7 +30,10 @@ describe('CommandReceiver', () => {
             pauseAll: vi.fn(),
             resumeAll: vi.fn(),
             clearAllOverrides: vi.fn(),
-            setSwitchOverride: vi.fn()
+            setSwitchOverride: vi.fn(),
+            playLoop: vi.fn(),
+            stopLoop: vi.fn(),
+            transitionMusicTo: vi.fn()
         };
 
         mockSubscribe = vi.fn().mockImplementation(cb => {
@@ -135,6 +138,41 @@ describe('CommandReceiver', () => {
             });
             receiver.tick(1, 16);
             expect(mockEnginePort.setSwitchOverride).toHaveBeenCalledWith('surface', 'metal', false);
+        });
+
+        it('should handle PLAY_LOOP', () => {
+            simulateIpcMessage({
+                type: 'PLAY_LOOP',
+                timestampMs: 0,
+                soundId: 'bgm_track' as SoundId,
+                regionName: 'intro' as RegionId
+            });
+            receiver.tick(1, 16);
+            expect(mockEnginePort.playLoop).toHaveBeenCalledWith('bgm_track', 'intro');
+        });
+
+        it('should handle STOP_LOOP', () => {
+            simulateIpcMessage({
+                type: 'STOP_LOOP',
+                timestampMs: 0,
+                soundId: 'bgm_track' as SoundId
+            });
+            receiver.tick(1, 16);
+            expect(mockEnginePort.stopLoop).toHaveBeenCalledWith('bgm_track');
+        });
+
+        it('should handle TRANSITION_MUSIC with optional parameters', () => {
+            const mockOptions = { quantize: 'NextBar' } as const;
+            simulateIpcMessage({
+                type: 'TRANSITION_MUSIC',
+                timestampMs: 0,
+                soundId: 'bgm_track' as SoundId,
+                targetRegion: 'chorus' as RegionId,
+                transitionRegionName: 'fill' as RegionId,
+                options: mockOptions
+            } as any);
+            receiver.tick(1, 16);
+            expect(mockEnginePort.transitionMusicTo).toHaveBeenCalledWith('bgm_track', 'chorus', 'fill', mockOptions);
         });
 
         it('should handle GLOBAL_ACTION: STOP_ALL', () => {

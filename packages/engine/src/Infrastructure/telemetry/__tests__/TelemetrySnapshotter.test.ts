@@ -1,17 +1,27 @@
 // oxlint-disable typescript/strict-void-return
 // noinspection D
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 import { TelemetrySnapshotter } from '@infrastructure/telemetry/TelemetrySnapshotter.js';
 
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
-import type { GameParamId, SoundId, PlaybackId, ITelemetrySnapshot, BusId } from '@scene-grid/shared';
+import type {
+    GameParamId,
+    SoundId,
+    PlaybackId,
+    ITelemetrySnapshot,
+    BusId,
+    IMusicTrackSnapshot,
+    RegionId
+} from '@scene-grid/shared';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 
 describe('TelemetrySnapshotter', () => {
     let mockDispatcher: { dispatch: ReturnType<typeof vi.fn> };
+    let mockSequencer: Mocked<ISequencer>;
     let mockSoundController: {
         getActivePlaybacks: ReturnType<typeof vi.fn>;
         getSoundId: ReturnType<typeof vi.fn>;
@@ -21,6 +31,7 @@ describe('TelemetrySnapshotter', () => {
     };
     let mockRtpcAdapter: { getValue: ReturnType<typeof vi.fn> };
     let mockSwitchRegistry: { getHistory: ReturnType<typeof vi.fn> };
+    // oxlint-disable-next-line typescript/no-explicit-any
     let mockBusSystem: any;
 
     let snapshotter: TelemetrySnapshotter;
@@ -38,6 +49,15 @@ describe('TelemetrySnapshotter', () => {
             getPlaybackPositionSec: vi.fn(),
             getCurrentVolume: vi.fn()
         };
+        mockSequencer = {
+            getPlaybackInfo: vi.fn(),
+            getMusicSnapshot: vi.fn().mockReturnValue([]),
+            playLoop: vi.fn(),
+            playStinger: vi.fn(),
+            stopLoop: vi.fn(),
+            transitionTo: vi.fn(),
+            destroy: vi.fn()
+        };
         mockRtpcAdapter = { getValue: vi.fn() };
         mockSwitchRegistry = { getHistory: vi.fn() };
 
@@ -54,6 +74,7 @@ describe('TelemetrySnapshotter', () => {
             mockRtpcAdapter as unknown as IRTPCAdapter,
             mockBusSystem,
             mockSwitchRegistry as unknown as ISwitchHistoryRegistry,
+            mockSequencer,
             rtpcKeys,
             switchKeys,
             busKeys,
@@ -173,7 +194,9 @@ describe('TelemetrySnapshotter', () => {
         mockSoundController.getSoundId.mockReturnValue('bgm');
         mockSoundController.getPlaybackState.mockReturnValue('playing');
 
+        // oxlint-disable-next-line typescript/no-explicit-any
         delete (mockSoundController as any).getPlaybackPositionSec;
+        // oxlint-disable-next-line typescript/no-explicit-any
         delete (mockSoundController as any).getCurrentVolume;
 
         snapshotter.tick(0.1, 100);
@@ -193,8 +216,6 @@ describe('TelemetrySnapshotter', () => {
         snapshotter.tick(0.1, 100);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
-
-        expect(dispatchCall.buses).toHaveLength(2);
 
         expect(dispatchCall.buses).toHaveLength(2);
 
@@ -219,5 +240,65 @@ describe('TelemetrySnapshotter', () => {
                 modifiersCount: 0
             })
         );
+    });
+
+    it('should collect music tracks correctly from sequencer', () => {
+        const mockTracks: IMusicTrackSnapshot[] = [
+            {
+                soundId: 'music_a' as SoundId,
+                state: 'LOOPING',
+                currentRegion: 'intro' as RegionId,
+                targetRegion: null,
+                queueLength: 0
+            },
+            {
+                soundId: 'music_b' as SoundId,
+                state: 'TRANSITIONING',
+                currentRegion: 'bridge' as RegionId,
+                targetRegion: 'chorus' as RegionId,
+                queueLength: 1
+            }
+        ];
+        mockSequencer.getMusicSnapshot.mockReturnValue(mockTracks);
+
+        snapshotter.tick(0.1, 100);
+
+        const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
+
+        expect(dispatchCall.musicTracks).toHaveLength(2);
+        expect(dispatchCall.musicTracks).toEqual(mockTracks);
+    });
+
+    it('should correctly resize musicTracks array when tracks are stopped (Zero Allocation check)', () => {
+        const mockTrack: IMusicTrackSnapshot = {
+            soundId: 'music_a' as SoundId,
+            state: 'LOOPING',
+            currentRegion: 'intro' as RegionId,
+            targetRegion: null,
+            queueLength: 0
+        };
+
+        mockSequencer.getMusicSnapshot.mockReturnValue([mockTrack]);
+        snapshotter.tick(0.1, 100);
+        expect((mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot).musicTracks).toHaveLength(1);
+
+        mockSequencer.getMusicSnapshot.mockReturnValue([]);
+        snapshotter.tick(0.2, 100);
+
+        const dispatchCall = mockDispatcher.dispatch.mock.calls[1][0] as ITelemetrySnapshot;
+        expect(dispatchCall.musicTracks).toHaveLength(0);
+        expect(dispatchCall.musicTracks).toBe(
+            (mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot).musicTracks
+        );
+    });
+
+    it('should fallback to empty array safely if getMusicSnapshot returns undefined', () => {
+        // oxlint-disable-next-line typescript/no-explicit-any
+        mockSequencer.getMusicSnapshot.mockReturnValue(undefined as any);
+
+        snapshotter.tick(0.1, 100);
+
+        const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
+        expect(dispatchCall.musicTracks).toHaveLength(0);
     });
 });

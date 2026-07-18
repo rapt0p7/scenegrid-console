@@ -1,5 +1,5 @@
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
-import type { RegionId, SoundId, QuantizeType } from '@scene-grid/shared';
+import type { RegionId, SoundId, QuantizeType, IMusicTrackSnapshot } from '@scene-grid/shared';
 
 export enum LoopState {
     IDLE = 'IDLE',
@@ -37,5 +37,6 @@ export interface ISequencer {
     stopLoop(soundId: SoundId): void;
     transitionTo(parameters: ITransitionToParameters): void;
     getPlaybackInfo(soundId: SoundId): IPlaybackInfo | null;
+    getMusicSnapshot(): readonly IMusicTrackSnapshot[];
     destroy(): void;
 }

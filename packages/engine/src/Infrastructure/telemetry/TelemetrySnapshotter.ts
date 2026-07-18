@@ -12,9 +12,11 @@ import type {
     SoundId,
     GameParamId,
     BusId,
-    IBusSnapshot
+    IBusSnapshot,
+    IMusicTrackSnapshot
 } from '@scene-grid/shared';
 import { isDefined } from '@scene-grid/shared';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 
 export class TelemetrySnapshotter implements ITickable {
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -32,6 +34,7 @@ export class TelemetrySnapshotter implements ITickable {
         private readonly rtpcAdapter: IRTPCAdapter,
         private readonly busSystem: IAudioBusSystem,
         private readonly switchRegistry: ISwitchHistoryRegistry,
+        private readonly sequencer: ISequencer,
         private readonly rtpcKeys: GameParamId[],
         private readonly switchKeys: SoundId[],
         private readonly busKeys: BusId[],
@@ -71,7 +74,8 @@ export class TelemetrySnapshotter implements ITickable {
             rtpcs: [],
             switches: [],
             activePlaybacks: [],
-            buses: []
+            buses: [],
+            musicTracks: []
         };
     }
 
@@ -89,8 +93,20 @@ export class TelemetrySnapshotter implements ITickable {
         this.collectSwitches(this.snapshotDto.switches);
         this.collectBuses(this.snapshotDto.buses);
         this.collectPlaybacks(this.snapshotDto.activePlaybacks);
+        this.collectMusicTracks(this.snapshotDto.musicTracks);
 
         this.dispatcher.dispatch(this.snapshotDto);
+    }
+
+    private collectMusicTracks(out: IMusicTrackSnapshot[]): void {
+        const snapshots = this.sequencer.getMusicSnapshot() ?? [];
+        const length = snapshots.length;
+
+        for (let i = 0; i < length; i++) {
+            out[i] = snapshots[i];
+        }
+
+        out.length = length;
     }
 
     private collectBuses(out: IBusSnapshot[]): void {

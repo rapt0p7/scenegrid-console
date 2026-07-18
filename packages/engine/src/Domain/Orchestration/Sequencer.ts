@@ -8,7 +8,15 @@ import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId, RegionId, SoundId, TickerTaskId, DeepReadonly, QuantizeType } from '@scene-grid/shared';
+import type {
+    PlaybackId,
+    RegionId,
+    SoundId,
+    TickerTaskId,
+    DeepReadonly,
+    QuantizeType,
+    IMusicTrackSnapshot
+} from '@scene-grid/shared';
 import { isDefined, isAbsent } from '@scene-grid/shared';
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 import { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
@@ -38,8 +46,14 @@ interface TrackContext {
     magnetStates: boolean[];
 }
 
+type MutableMusicSnapshot = {
+    -readonly [K in keyof IMusicTrackSnapshot]: IMusicTrackSnapshot[K];
+};
+
 export default class Sequencer implements ISequencer {
     private tracks: Map<SoundId, TrackContext> = new Map();
+    private readonly snapshotPool: MutableMusicSnapshot[] = [];
+    private readonly activeSnapshots: IMusicTrackSnapshot[] = [];
     private readonly scheduleIntervalMs = 25;
     private readonly lookaheadWindowSec = 0.1;
 
@@ -280,6 +294,37 @@ export default class Sequencer implements ISequencer {
         return {
             grid: new AudioGrid(bpm, beatsPerBar, track.gridStartTime, this.ppqn)
         };
+    }
+
+    public getMusicSnapshot(): readonly IMusicTrackSnapshot[] {
+        let count = 0;
+
+        this.tracks.forEach((track, soundId) => {
+            if (track.state === LoopState.IDLE) return;
+            if (count >= this.snapshotPool.length) {
+                this.snapshotPool.push({
+                    soundId: '' as SoundId,
+                    state: 'IDLE',
+                    currentRegion: null,
+                    targetRegion: null,
+                    queueLength: 0
+                });
+            }
+
+            const snap = this.snapshotPool[count];
+            snap.soundId = soundId;
+            snap.state = track.state;
+            snap.currentRegion = track.currentRegion;
+            snap.targetRegion = track.regionQueue.length > 0 ? track.regionQueue[0].name : null;
+            snap.queueLength = track.regionQueue.length;
+
+            this.activeSnapshots[count] = snap as IMusicTrackSnapshot;
+            count++;
+        });
+
+        this.activeSnapshots.length = count;
+
+        return this.activeSnapshots;
     }
 
     // oxlint-disable-next-line max-lines-per-function

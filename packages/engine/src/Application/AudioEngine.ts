@@ -478,6 +478,7 @@ export class AudioEngine implements IAudioEngine {
                 this.#rtpcManager,
                 this.#busSystem,
                 switchHistoryRegistry,
+                this.#sequencer,
                 typedKeys(this.config.rtpcManifest ?? {}),
                 typedKeys(this.config.soundMap).filter(k => 'isSwitch' in this.config.soundMap[k]),
                 typedKeys(this.config.buses) as BusId[],
@@ -581,6 +582,20 @@ export class AudioEngine implements IAudioEngine {
                     clearAllOverrides: () => {
                         this.#rtpcManager.resetOverrides();
                         switchHistoryRegistry.resetOverrides();
+                    },
+                    playLoop: (soundId, region) => {
+                        this.#sequencer.playLoop(soundId, region);
+                    },
+                    stopLoop: soundId => {
+                        this.#sequencer.stopLoop(soundId);
+                    },
+                    transitionMusicTo: (soundId, targetRegion, transitionRegionName, options) => {
+                        this.#sequencer.transitionTo({
+                            soundId,
+                            targetRegion,
+                            transitionRegionName,
+                            options
+                        });
                     }
                 };
 

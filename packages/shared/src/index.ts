@@ -22,3 +22,4 @@ export { SeededPRNG } from './Math/SeededPRNG.js';
 export type { ITelemetryTransport } from './Telemetry/ITelemetryTransport.js';
 export type * from './Telemetry/TelemetryEvents.js';
 export type * from './Telemetry/TelemetryBatch.js';
+export type * from './Telemetry/IMusicTrackSnapshot.js';

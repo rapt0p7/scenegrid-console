@@ -1,6 +1,7 @@
 import type { GameParamId, SoundId, PlaybackId, EventId, RegionId, BankId, BusId } from '../Types/Branded.js';
 import type { ConditionOperator } from '../Types/Condition.js';
-import { ArbiterCullReason } from '../Types/CullingReasons.js';
+import type { ArbiterCullReason } from '../Types/CullingReasons.js';
+import type { IMusicTrackSnapshot } from './IMusicTrackSnapshot.js';
 
 export interface IRtpcSnapshot {
     readonly param: GameParamId;
@@ -38,6 +39,7 @@ export interface ITelemetrySnapshot {
     readonly switches: ISwitchSnapshot[];
     readonly activePlaybacks: IPlaybackSnapshot[];
     readonly buses: IBusSnapshot[];
+    readonly musicTracks: IMusicTrackSnapshot[];
 }
 
 export type LifecycleAction = 'START' | 'STOP' | 'PAUSE' | 'RESUME' | 'VIRTUALIZE' | 'REVIVE';

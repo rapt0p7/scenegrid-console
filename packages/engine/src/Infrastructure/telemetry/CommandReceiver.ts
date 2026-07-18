@@ -52,6 +52,19 @@ export class CommandReceiver implements ITickable {
                 case 'SET_SWITCH':
                     this.enginePort.setSwitchOverride(cmd.switchId, cmd.currentKey, cmd.isOverride);
                     break;
+                case 'PLAY_LOOP':
+                    this.enginePort.playLoop(cmd.soundId, cmd.regionName);
+                    break;
+                case 'STOP_LOOP':
+                    this.enginePort.stopLoop(cmd.soundId);
+                    break;
+                case 'TRANSITION_MUSIC':
+                    this.enginePort.transitionMusicTo(
+                        cmd.soundId,
+                        cmd.targetRegion,
+                        cmd.transitionRegionName,
+                        cmd.options
+                    );
             }
         } catch (error) {
             console.error(`[CommandReceiver] Failed to execute command ${cmd.type}`, error);

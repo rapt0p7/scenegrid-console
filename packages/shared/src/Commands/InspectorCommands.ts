@@ -1,4 +1,5 @@
-import type { EventId, GameParamId, SoundId, SnapshotId } from '../Types/Branded.js';
+import type { EventId, GameParamId, SoundId, SnapshotId, RegionId } from '../Types/Branded.js';
+import type { QuantizeType } from '../Types/Musical.js';
 
 export interface ICommandBase {
     readonly timestampMs: number;
@@ -34,6 +35,33 @@ export interface ISetSwitchCommand extends ICommandBase {
     readonly isOverride: boolean;
 }
 
+export interface IPlayLoopCommand extends ICommandBase {
+    readonly type: 'PLAY_LOOP';
+    readonly soundId: SoundId;
+    readonly regionName: RegionId;
+}
+
+export interface IStopLoopCommand extends ICommandBase {
+    readonly type: 'STOP_LOOP';
+    readonly soundId: SoundId;
+}
+
+export interface IDebugTransitionOptions {
+    readonly quantize: QuantizeType;
+    readonly quantizeInterval: number;
+    readonly crossfadeDuration: number;
+    readonly blendMode: 'overlap' | 'crossfade';
+    readonly interruptable: boolean;
+}
+
+export interface ITransitionMusicCommand extends ICommandBase {
+    readonly type: 'TRANSITION_MUSIC';
+    readonly soundId: SoundId;
+    readonly targetRegion: RegionId;
+    readonly transitionRegionName: RegionId;
+    readonly options: IDebugTransitionOptions;
+}
+
 export interface IClearAllOverridesCommand extends ICommandBase {
     readonly type: 'CLEAR_ALL_OVERRIDES';
 }
@@ -44,4 +72,7 @@ export type InspectorCommand =
     | ISetSwitchCommand
     | IApplySnapshotCommand
     | IGlobalActionCommand
-    | IClearAllOverridesCommand;
+    | IClearAllOverridesCommand
+    | IPlayLoopCommand
+    | IStopLoopCommand
+    | ITransitionMusicCommand;
