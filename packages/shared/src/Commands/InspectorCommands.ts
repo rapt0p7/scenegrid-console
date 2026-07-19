@@ -1,4 +1,4 @@
-import type { EventId, GameParamId, SoundId, SnapshotId, RegionId } from '../Types/Branded.js';
+import type { EventId, GameParamId, SoundId, SnapshotId, RegionId, Milliseconds, Beats } from '../Types/Branded.js';
 import type { QuantizeType } from '../Types/Musical.js';
 
 export interface ICommandBase {
@@ -13,7 +13,7 @@ export interface IFireEventCommand extends ICommandBase {
 export interface IApplySnapshotCommand extends ICommandBase {
     readonly type: 'APPLY_SNAPSHOT';
     readonly snapshotId: SnapshotId;
-    readonly fadeTimeMs?: number;
+    readonly fadeTime?: Milliseconds;
 }
 
 export interface IGlobalActionCommand extends ICommandBase {
@@ -48,8 +48,8 @@ export interface IStopLoopCommand extends ICommandBase {
 
 export interface IDebugTransitionOptions {
     readonly quantize: QuantizeType;
-    readonly quantizeInterval: number;
-    readonly crossfadeDuration: number;
+    readonly quantizeInterval: Beats;
+    readonly crossfadeDuration: Milliseconds;
     readonly blendMode: 'overlap' | 'crossfade';
     readonly interruptable: boolean;
 }

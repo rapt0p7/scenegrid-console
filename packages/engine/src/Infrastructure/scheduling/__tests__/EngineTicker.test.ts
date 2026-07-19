@@ -6,7 +6,7 @@ import * as workerTimers from 'worker-timers';
 
 import { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 
-import type { TickerTaskId } from '@scene-grid/shared';
+import type { ContextTime, Milliseconds, TickerTaskId } from '@scene-grid/shared';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 
 vi.mock('worker-timers', () => ({
@@ -32,7 +32,7 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
 
         vi.spyOn(performance, 'now').mockReturnValue(1000);
 
-        ticker = new EngineTicker(mockGetContextTime as unknown as () => number);
+        ticker = new EngineTicker(mockGetContextTime as unknown as () => ContextTime);
     });
 
     afterEach(() => {
@@ -73,12 +73,12 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
         it('should prevent adding duplicate tasks', () => {
             const tickable: ITickable = { tick: vi.fn() };
 
-            ticker.add('task1' as TickerTaskId, 30, tickable);
-            ticker.add('task1' as TickerTaskId, 60, tickable);
+            ticker.add('task1' as TickerTaskId, 30 as Milliseconds, tickable);
+            ticker.add('task1' as TickerTaskId, 60 as Milliseconds, tickable);
 
             const tasks = (ticker as any).tasks;
             expect(tasks).toHaveLength(1);
-            expect(tasks[0].intervalMs).toBe(30);
+            expect(tasks[0].interval).toBe(30);
         });
 
         it('should add and remove tasks using O(1) Swap and Pop without allocations', () => {
@@ -86,9 +86,9 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
             const tickable2: ITickable = { tick: vi.fn() };
             const tickable3: ITickable = { tick: vi.fn() };
 
-            ticker.add('task1' as TickerTaskId, 30, tickable1);
-            ticker.add('task2' as TickerTaskId, 30, tickable2);
-            ticker.add('task3' as TickerTaskId, 30, tickable3);
+            ticker.add('task1' as TickerTaskId, 30 as Milliseconds, tickable1);
+            ticker.add('task2' as TickerTaskId, 30 as Milliseconds, tickable2);
+            ticker.add('task3' as TickerTaskId, 30 as Milliseconds, tickable3);
 
             let tasks = (ticker as any).tasks;
             expect(tasks).toHaveLength(3);
@@ -106,7 +106,7 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
 
         it('should safely handle removal of non-existent tasks', () => {
             const tickable: ITickable = { tick: vi.fn() };
-            ticker.add('task1' as TickerTaskId, 30, tickable);
+            ticker.add('task1' as TickerTaskId, 30 as Milliseconds, tickable);
 
             ticker.remove('ghost_task' as TickerTaskId);
 
@@ -118,7 +118,7 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
     describe('Tick Logic and Accumulation', () => {
         it('should accumulate deltaTime and NOT fire target if interval is not reached', () => {
             const tickable: ITickable = { tick: vi.fn() };
-            ticker.add('task1' as TickerTaskId, 30, tickable);
+            ticker.add('task1' as TickerTaskId, 30 as Milliseconds, tickable);
 
             ticker.start();
 
@@ -131,9 +131,9 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
             expect(task.accumulator).toBe(15);
         });
 
-        it('should fire target and subtract interval when accumulator reaches intervalMs', () => {
+        it('should fire target and subtract interval when accumulator reaches interval', () => {
             const tickable: ITickable = { tick: vi.fn() };
-            ticker.add('task1' as TickerTaskId, 30, tickable);
+            ticker.add('task1' as TickerTaskId, 30 as Milliseconds, tickable);
             mockGetContextTime.mockReturnValue(5.5);
 
             ticker.start();
@@ -153,7 +153,7 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
 
         it('should carry over remaining time in accumulator if deltaTime exceeds interval', () => {
             const tickable: ITickable = { tick: vi.fn() };
-            ticker.add('task1' as TickerTaskId, 20, tickable);
+            ticker.add('task1' as TickerTaskId, 20 as Milliseconds, tickable);
 
             ticker.start();
 
@@ -170,8 +170,8 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
             const tickable1: ITickable = { tick: vi.fn() };
             const tickable2: ITickable = { tick: vi.fn() };
 
-            ticker.add('fast' as TickerTaskId, 15, tickable1);
-            ticker.add('slow' as TickerTaskId, 30, tickable2);
+            ticker.add('fast' as TickerTaskId, 15 as Milliseconds, tickable1);
+            ticker.add('slow' as TickerTaskId, 30 as Milliseconds, tickable2);
 
             ticker.start();
 

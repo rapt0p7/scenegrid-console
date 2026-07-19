@@ -3,7 +3,16 @@
 
 import type { IControllerPlayOptions, ISoundController, VirtualReason } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
-import type { BusId, PlaybackId, SoundId, LifecycleAction, ITelemetryLifecycleEvent } from '@scene-grid/shared';
+import type {
+    BusId,
+    PlaybackId,
+    SoundId,
+    LifecycleAction,
+    ITelemetryLifecycleEvent,
+    ContextTime,
+    Seconds,
+    Milliseconds
+} from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
@@ -17,19 +26,19 @@ export interface SoundDescriptor {
     readonly options: ISoundOptions;
 }
 
-const DEFAULT_COOLDOWN_MS = 15;
+const DEFAULT_COOLDOWN = 15 as Milliseconds;
 
 interface VirtualVoiceTimer {
     playbackId: PlaybackId;
-    endTime: number;
+    endTime: ContextTime;
 }
 
 export class SoundController implements ISoundController {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE_MS = 16;
+    public static TICK_RATE: Milliseconds = 16 as Milliseconds;
     public readonly activeVoices = new Map<PlaybackId, ILogicalVoice>();
 
-    private readonly lastPlayTimes = new Map<SoundId, number>();
+    private readonly lastPlayTimes = new Map<SoundId, Milliseconds>();
     private nextPlaybackId = 1 as PlaybackId;
     readonly #sidechainLinks: Array<Map<BusId, number>>;
     private readonly virtualTimers: VirtualVoiceTimer[] = [];
@@ -58,7 +67,7 @@ export class SoundController implements ISoundController {
     }
 
     public tick(): void {
-        const currentTime = this.context.currentTime;
+        const currentTime = this.context.currentTime as ContextTime;
         const timers = this.virtualTimers;
 
         for (let index = timers.length - 1; index >= 0; index--) {
@@ -91,7 +100,14 @@ export class SoundController implements ISoundController {
     // oxlint-disable-next-line max-lines-per-function
     play(
         soundId: SoundId,
-        { when = 0, offset = 0, duration, loop = false, rate = 1, onRevive }: IControllerPlayOptions
+        {
+            when = 0 as ContextTime,
+            offset = 0 as Seconds,
+            duration,
+            loop = false,
+            rate = 1,
+            onRevive
+        }: IControllerPlayOptions
     ): PlaybackId | null {
         const definition = this.registry.get(soundId);
         if (!definition) return null;
@@ -101,9 +117,9 @@ export class SoundController implements ISoundController {
             return null;
         }
 
-        const now = this.getCurrentTime() * 1000;
-        const lastPlay = this.lastPlayTimes.get(soundId) ?? -Number.MAX_SAFE_INTEGER;
-        const cooldownMs = definition.options.cooldownMs ?? DEFAULT_COOLDOWN_MS;
+        const now = (this.getCurrentTime() * 1000) as Milliseconds;
+        const lastPlay = this.lastPlayTimes.get(soundId) ?? (-Number.MAX_SAFE_INTEGER as Milliseconds);
+        const cooldownMs = (definition.options.cooldownMs ?? DEFAULT_COOLDOWN) as Milliseconds;
 
         if (now - lastPlay < cooldownMs) {
             return null;
@@ -135,8 +151,8 @@ export class SoundController implements ISoundController {
             soundId,
             logicalState: 'playing',
             position: { x: 0, y: 0, z: 0 },
-            startedAtContextTime: this.context.currentTime,
-            startOffset: offset || 0,
+            startedAtContextTime: this.context.currentTime as ContextTime,
+            startOffset: (offset || 0) as Seconds,
             physicalInstance: instance,
             onRevive: onRevive
                 ? () => {
@@ -154,7 +170,7 @@ export class SoundController implements ISoundController {
 
         instance.on('ended', this.#handleVoiceEnded);
 
-        this.scheduler.schedulePlay(instance, when, offset, duration);
+        this.scheduler.schedulePlay(instance, when, offset, duration ?? undefined);
 
         this.pushLifecycle('START', playbackId, soundId);
 
@@ -225,7 +241,7 @@ export class SoundController implements ISoundController {
         return this.activeVoices.get(playbackId);
     }
 
-    stopById(playbackId: PlaybackId, timeToStop?: number): void {
+    stopById(playbackId: PlaybackId, timeToStop?: ContextTime): void {
         const voice = this.activeVoices.get(playbackId);
         if (voice) {
             if (voice.physicalInstance) {
@@ -299,7 +315,7 @@ export class SoundController implements ISoundController {
         }
     }
 
-    public crossfade(outId: PlaybackId, inId: PlaybackId, durationMs: number): void {
+    public crossfade(outId: PlaybackId, inId: PlaybackId, duration: Milliseconds): void {
         const outVoice = this.activeVoices.get(outId);
         const inVoice = this.activeVoices.get(inId);
 
@@ -307,8 +323,8 @@ export class SoundController implements ISoundController {
             outVoice.physicalInstance.gainParam.cancelScheduledValues(0);
             inVoice.physicalInstance.gainParam.cancelScheduledValues(0);
 
-            this.automation.ramp(outVoice.physicalInstance.gainParam, 0, durationMs, 'equal-power');
-            this.automation.ramp(inVoice.physicalInstance.gainParam, 1, durationMs, 'equal-power');
+            this.automation.ramp(outVoice.physicalInstance.gainParam, 0, duration, 'equal-power');
+            this.automation.ramp(inVoice.physicalInstance.gainParam, 1, duration, 'equal-power');
         } else {
             console.warn(
                 `[SoundController.crossfade] MISSING VOICE out=${!!outVoice} in=${!!inVoice} outId=${outId} inId=${inId}`
@@ -324,8 +340,8 @@ export class SoundController implements ISoundController {
             soundId,
             logicalState: 'playing',
             position: { x: 0, y: 0, z: 0 },
-            startedAtContextTime: this.context.currentTime,
-            startOffset: 0,
+            startedAtContextTime: this.context.currentTime as ContextTime,
+            startOffset: 0 as Seconds,
             physicalInstance: null as any,
             isVirtualNode: true,
             virtualReason: reason
@@ -343,28 +359,28 @@ export class SoundController implements ISoundController {
         return voice ? !!(voice as any).isVirtualNode : false;
     }
 
-    getCurrentTime(): number {
-        return this.context.currentTime;
+    getCurrentTime(): ContextTime {
+        return this.context.currentTime as ContextTime;
     }
 
     getSampleRate(): number {
         return this.context.sampleRate;
     }
 
-    public getPlaybackPositionSec(id: PlaybackId): number {
+    public getPlaybackPositionSec(id: PlaybackId): Seconds {
         const voice = this.activeVoices.get(id);
-        if (!voice) return 0;
+        if (!voice) return 0 as Seconds;
 
         if (voice.physicalInstance && typeof voice.physicalInstance.currentTime === 'number') {
             return voice.physicalInstance.currentTime;
         }
 
         if ((voice as any).isVirtualNode || voice.logicalState === 'paused' || !voice.physicalInstance) {
-            const ctxTime = this.context.currentTime;
-            return voice.startOffset + (ctxTime - voice.startedAtContextTime);
+            const ctxTime = this.context.currentTime as ContextTime;
+            return (voice.startOffset + (ctxTime - voice.startedAtContextTime)) as Seconds;
         }
 
-        return 0;
+        return 0 as Seconds;
     }
 
     public getCurrentVolume(id: PlaybackId): number {
@@ -412,8 +428,11 @@ export class SoundController implements ISoundController {
             const instance = voice.physicalInstance;
 
             if (!instance.isLooping && instance.duration > 0) {
-                const remainingSec = Math.max(0, (instance.duration - instance.currentTime) / instance.playbackRate);
-                const endTime = this.context.currentTime + remainingSec;
+                const remainingSec = Math.max(
+                    0,
+                    (instance.duration - instance.currentTime) / instance.playbackRate
+                ) as Seconds;
+                const endTime = (this.context.currentTime + remainingSec) as ContextTime;
                 this.virtualTimers.push({ playbackId: id, endTime });
             }
 
@@ -465,13 +484,13 @@ export class SoundController implements ISoundController {
     fadeVolume(
         id: PlaybackId,
         targetVolume: number,
-        durationMs: number,
+        duration: Milliseconds,
         curveType: 'linear' | 'equal-power' = 'linear',
-        delayMs: number = 0
+        delay: Milliseconds = 0 as Milliseconds
     ): void {
         const voice = this.activeVoices.get(id);
         if (voice?.physicalInstance?.gainParam) {
-            this.automation.ramp(voice.physicalInstance.gainParam, targetVolume, durationMs, curveType, delayMs);
+            this.automation.ramp(voice.physicalInstance.gainParam, targetVolume, duration, curveType, delay);
         }
     }
 
@@ -479,11 +498,11 @@ export class SoundController implements ISoundController {
         id: PlaybackId,
         target: 'gain' | 'pitch' | 'pan' | 'filterFrequency',
         targetValue: number,
-        durationMs: number
+        duration: Milliseconds
     ): void {
         const voice = this.activeVoices.get(id);
         if (voice?.physicalInstance) {
-            voice.physicalInstance.automate(target, targetValue, durationMs);
+            voice.physicalInstance.automate(target, targetValue, duration);
         }
     }
 
@@ -546,7 +565,7 @@ export class SoundController implements ISoundController {
         const dto = this.lifecyclePool.getNext();
 
         // oxlint-disable-next-line typescript/no-explicit-any
-        (dto as any).timestampMs = this.getCurrentTime() * 1000;
+        (dto as any).timestampMs = (this.getCurrentTime() * 1000) as Milliseconds;
         // oxlint-disable-next-line typescript/no-explicit-any
         (dto as any).action = action;
         // oxlint-disable-next-line typescript/no-explicit-any

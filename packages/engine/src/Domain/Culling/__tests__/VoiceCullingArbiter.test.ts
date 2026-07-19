@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { VoiceCullingArbiter } from '../VoiceCullingArbiter.js';
 import type { ICullingContext, CullingDecisions } from '../Ports/ICullingArbiter.js';
-import type { BusId, PlaybackId, SoundId } from '@scene-grid/shared';
+import type { BusId, Milliseconds, PlaybackId, SoundId } from '@scene-grid/shared';
 
 describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
     let arbiter: VoiceCullingArbiter;
@@ -18,7 +18,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
     let ghostStates: Record<number, boolean>;
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    const HYSTERESIS_MS = 1000;
+    const HYSTERESIS_MS: Milliseconds = 1000 as Milliseconds;
 
     beforeEach(() => {
         arbiter = new VoiceCullingArbiter(0.01, HYSTERESIS_MS);
@@ -82,14 +82,14 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
 
     describe('Basic Culling Decisions', () => {
         it('should return empty decisions if no sounds are playing', () => {
-            const decisions = arbiter.evaluate(mockContext, 500);
+            const decisions = arbiter.evaluate(mockContext, 500 as Milliseconds);
             expect(decisions.virtualizeCount).toBe(0);
             expect(decisions.devirtualizeCount).toBe(0);
         });
 
         it('should recommend to VIRTUALIZE a playing sound when its bus volume drops below threshold AND hysteresis time passes', () => {
             const pId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0.005);
-            const decisions = arbiter.evaluate(mockContext, 1500);
+            const decisions = arbiter.evaluate(mockContext, 1500 as Milliseconds);
 
             expect(getActiveVirtIds(decisions)).toContain(pId);
             expect(decisions.devirtualizeCount).toBe(0);
@@ -97,7 +97,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
 
         it('should recommend to DEVIRTUALIZE a sleeping sound when its bus volume rises above threshold INSTANTLY', () => {
             const pId = addMockPlayback(1, 'violins', 'music', 'virtual', 'playing', 1);
-            const decisions = arbiter.evaluate(mockContext, 0);
+            const decisions = arbiter.evaluate(mockContext, 0 as Milliseconds);
 
             expect(getActiveDevirtIds(decisions)).toContain(pId);
             expect(decisions.virtualizeCount).toBe(0);
@@ -105,7 +105,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
 
         it('should VIRTUALIZE a paused sound if its bus volume drops below threshold (to free up pool slots)', () => {
             const pId = addMockPlayback(1, 'ambient', 'bg', 'paused', 'paused', 0);
-            const decisions = arbiter.evaluate(mockContext, 1500);
+            const decisions = arbiter.evaluate(mockContext, 1500 as Milliseconds);
 
             expect(getActiveVirtIds(decisions)).toContain(pId);
             expect(decisions.devirtualizeCount).toBe(0);
@@ -113,7 +113,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
 
         it('should NOT DEVIRTUALIZE a sleeping sound if its bus volume rises BUT its logical state is paused', () => {
             addMockPlayback(1, 'ambient', 'bg', 'virtual', 'paused', 1);
-            const decisions = arbiter.evaluate(mockContext, 500);
+            const decisions = arbiter.evaluate(mockContext, 500 as Milliseconds);
 
             expect(decisions.virtualizeCount).toBe(0);
             expect(decisions.devirtualizeCount).toBe(0);
@@ -125,7 +125,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
             const pId = addMockPlayback(99, 'scatterer', 'bg', 'stopped', 'playing', 0);
             ghostStates[pId] = true;
 
-            const decisions = arbiter.evaluate(mockContext, HYSTERESIS_MS + 100);
+            const decisions = arbiter.evaluate(mockContext, (HYSTERESIS_MS + 100) as Milliseconds);
 
             expect(decisions.virtualizeCount).toBe(0);
             expect(decisions.devirtualizeCount).toBe(0);
@@ -137,36 +137,36 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
         it('should accumulate time and delay virtualization until hysteresis threshold is met', () => {
             const pId = addMockPlayback(1, 'drone', 'bg', 'playing', 'playing', 0);
 
-            let decisions = arbiter.evaluate(mockContext, 500);
+            let decisions = arbiter.evaluate(mockContext, 500 as Milliseconds);
             expect(getActiveVirtIds(decisions)).not.toContain(pId);
 
-            decisions = arbiter.evaluate(mockContext, 400);
+            decisions = arbiter.evaluate(mockContext, 400 as Milliseconds);
             expect(getActiveVirtIds(decisions)).not.toContain(pId);
 
-            decisions = arbiter.evaluate(mockContext, 100);
+            decisions = arbiter.evaluate(mockContext, 100 as Milliseconds);
             expect(getActiveVirtIds(decisions)).toContain(pId);
         });
 
         it('should reset hysteresis timer instantly if volume spikes back up (Anti-Flutter)', () => {
             const pId = addMockPlayback(1, 'drone', 'bg', 'playing', 'playing', 0);
 
-            arbiter.evaluate(mockContext, 800);
+            arbiter.evaluate(mockContext, 800 as Milliseconds);
             setVolume('bg', 0.5);
-            arbiter.evaluate(mockContext, 200);
+            arbiter.evaluate(mockContext, 200 as Milliseconds);
             setVolume('bg', 0);
 
-            const decisions = arbiter.evaluate(mockContext, 300);
+            const decisions = arbiter.evaluate(mockContext, 300 as Milliseconds);
             expect(getActiveVirtIds(decisions)).not.toContain(pId);
         });
 
         it('should safely clean up timers for playbacks that have naturally ended (Memory Leak Prevention)', () => {
             addMockPlayback(1, 'laser', 'sfx', 'playing', 'playing', 0);
 
-            arbiter.evaluate(mockContext, 500);
+            arbiter.evaluate(mockContext, 500 as Milliseconds);
             expect((arbiter as any).muteTimers.has(1)).toBe(true);
 
             activePlaybacks.length = 0;
-            arbiter.evaluate(mockContext, 500);
+            arbiter.evaluate(mockContext, 500 as Milliseconds);
 
             expect((arbiter as any).muteTimers.has(1)).toBe(false);
         });
@@ -175,12 +175,12 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
     describe('Edge Cases', () => {
         it('should DO NOTHING if state and volume already match', () => {
             addMockPlayback(1, 'explosion', 'sfx', 'playing', 'playing', 0.8);
-            const decisions1 = arbiter.evaluate(mockContext, 1000);
+            const decisions1 = arbiter.evaluate(mockContext, 1000 as Milliseconds);
             expect(decisions1.virtualizeCount).toBe(0);
             expect(decisions1.devirtualizeCount).toBe(0);
 
             addMockPlayback(2, 'ambient', 'bg', 'virtual', 'playing', 0);
-            const decisions2 = arbiter.evaluate(mockContext, 1000);
+            const decisions2 = arbiter.evaluate(mockContext, 1000 as Milliseconds);
             expect(decisions2.virtualizeCount).toBe(0);
             expect(decisions2.devirtualizeCount).toBe(0);
         });
@@ -189,7 +189,7 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
             const quietId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0);
             addMockPlayback(2, 'explosion', 'sfx', 'playing', 'playing', 1);
 
-            const decisions = arbiter.evaluate(mockContext, 1500);
+            const decisions = arbiter.evaluate(mockContext, 1500 as Milliseconds);
 
             expect(getActiveVirtIds(decisions)).toContain(quietId);
             expect(decisions.virtualizeCount).toBe(1);
@@ -197,12 +197,12 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
 
         it('should safely ignore playbacks with unknown soundIds or busIds', () => {
             activePlaybacks.push(999 as PlaybackId);
-            let decisions = arbiter.evaluate(mockContext, 1000);
+            let decisions = arbiter.evaluate(mockContext, 1000 as Milliseconds);
             expect(decisions.virtualizeCount).toBe(0);
 
             addMockPlayback(3, 'orphan', 'unknown_bus', 'playing', 'playing', 1);
             delete soundRouting['orphan'];
-            decisions = arbiter.evaluate(mockContext, 1000);
+            decisions = arbiter.evaluate(mockContext, 1000 as Milliseconds);
             expect(decisions.virtualizeCount).toBe(0);
         });
     });

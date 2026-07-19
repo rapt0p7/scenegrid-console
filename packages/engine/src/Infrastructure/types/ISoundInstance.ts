@@ -1,4 +1,4 @@
-import type { SoundId } from '@scene-grid/shared';
+import type { Milliseconds, SoundId } from '@scene-grid/shared';
 import type { PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
 import {
     type AudioNodeLike,
@@ -32,6 +32,6 @@ export interface ISoundInstance extends IPlaybackController {
     on(event: 'ended', handler: (instance: ISoundInstance) => void): () => void;
     on(event: 'stopped', handler: (instance: ISoundInstance) => void): () => void;
     on(event: 'disposed', handler: (instance: ISoundInstance) => void): () => void;
-    automate(target: InstanceParameterTarget, mappedValue: number, smoothing: number): void;
+    automate(target: InstanceParameterTarget, mappedValue: number, smoothing: Milliseconds): void;
     setPosition(x: number, y: number, z: number): void;
 }

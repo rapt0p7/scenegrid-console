@@ -43,7 +43,7 @@ export default {
         isScatterer: true,
         busId: 'sfx',
         sources: ['tick'],
-        spawnRateMs: [1000, 2000],
+        spawnRate: [1000, 2000],
         maxPolyphony: 5
     },
 

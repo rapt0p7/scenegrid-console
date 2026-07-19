@@ -1,10 +1,11 @@
 import type { ICullingArbiter, ICullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import type { Milliseconds } from '@scene-grid/shared';
 
 export class CullingRunner {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE_MS = 500;
+    public static TICK_RATE: Milliseconds = 500 as Milliseconds;
     constructor(
         private readonly arbiter: ICullingArbiter,
         private readonly controller: ISoundController,
@@ -12,8 +13,8 @@ export class CullingRunner {
         private readonly telemetry?: ITelemetryDispatcher
     ) {}
 
-    public tick(audioCurrentTime: number, deltaTimeMs: number): void {
-        const decisions = this.arbiter.evaluate(this.contextProvider, deltaTimeMs);
+    public tick(audioCurrentTime: number, deltaTime: Milliseconds): void {
+        const decisions = this.arbiter.evaluate(this.contextProvider, deltaTime);
         const audioTimeMs = this.controller.getCurrentTime() * 1000;
 
         for (let i = 0; i < decisions.virtualizeCount; i++) {

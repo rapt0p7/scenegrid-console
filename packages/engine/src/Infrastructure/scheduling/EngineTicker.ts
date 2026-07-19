@@ -1,13 +1,13 @@
 import * as workerTimers from 'worker-timers';
 
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
-import { TickerTaskId } from '@scene-grid/shared';
+import { ContextTime, Milliseconds, TickerTaskId } from '@scene-grid/shared';
 import { ITickable } from '@domain/Shared/Ports/ITickable.js';
 
 interface TickerTask {
     id: TickerTaskId;
     target: ITickable;
-    intervalMs: number;
+    interval: Milliseconds;
     accumulator: number;
 }
 
@@ -17,7 +17,7 @@ export class EngineTicker implements IEngineTicker {
     private readonly tasks: TickerTask[] = [];
     private readonly BASE_TICK_RATE = 15;
 
-    constructor(private readonly getContextTime: () => number) {}
+    constructor(private readonly getContextTime: () => ContextTime) {}
 
     public start(): void {
         if (this.tickerId !== null) return;
@@ -35,10 +35,10 @@ export class EngineTicker implements IEngineTicker {
         }
     }
 
-    public add(id: TickerTaskId, intervalMs: number, target: ITickable): void {
+    public add(id: TickerTaskId, interval: Milliseconds, target: ITickable): void {
         if (this.tasks.some(t => t.id === id)) return;
 
-        this.tasks.push({ id, target, intervalMs, accumulator: 0 });
+        this.tasks.push({ id, target, interval, accumulator: 0 });
     }
 
     public remove(id: TickerTaskId): void {
@@ -63,9 +63,9 @@ export class EngineTicker implements IEngineTicker {
             const task = this.tasks[i];
             task.accumulator += deltaTimeMs;
 
-            if (task.accumulator >= task.intervalMs) {
-                task.accumulator %= task.intervalMs;
-                task.target.tick(audioCurrentTime, task.intervalMs);
+            if (task.accumulator >= task.interval) {
+                task.accumulator %= task.interval;
+                task.target.tick(audioCurrentTime, task.interval);
             }
         }
     }

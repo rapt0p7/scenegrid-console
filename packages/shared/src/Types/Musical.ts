@@ -1,3 +1,5 @@
+import type { Pulses } from './Branded';
+
 export type GridDivision = '1/4' | '1/8' | '1/16' | '1/32';
 
 export type QuantizeType =
@@ -5,4 +7,4 @@ export type QuantizeType =
     | 'NextBeat'
     | 'NextBar'
     | { type: 'NextGridDivision'; division: GridDivision }
-    | { type: 'ExactPulse'; pulseOffset: number };
+    | { type: 'ExactPulse'; pulseOffset: Pulses };

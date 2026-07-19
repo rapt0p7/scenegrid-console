@@ -1,4 +1,10 @@
-import type { BusId, GameParamId, MathCurveDefinition, MathCurvePresetDefinition } from '@scene-grid/shared';
+import type {
+    BusId,
+    GameParamId,
+    MathCurveDefinition,
+    MathCurvePresetDefinition,
+    Milliseconds
+} from '@scene-grid/shared';
 
 export type RTPCTargetProperty = 'gain' | 'filterFrequency' | 'pan' | 'pitch' | 'sendLevel';
 
@@ -13,5 +19,5 @@ export interface IRTPCConfig {
     readonly gameParam: GameParamId;
     readonly curve: RTPCCurveDefinition | RTPCCurvePreset;
     readonly sendTargetBus?: BusId;
-    readonly smoothingMs?: number;
+    readonly smoothing?: Milliseconds;
 }

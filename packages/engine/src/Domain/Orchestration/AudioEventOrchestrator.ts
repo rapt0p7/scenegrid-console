@@ -1,5 +1,13 @@
 // oxlint-disable max-lines-per-function
-import { isDefined, CyclePool, TelemetryPacket, ConditionOperator, GameParamId } from '@scene-grid/shared';
+import {
+    isDefined,
+    CyclePool,
+    TelemetryPacket,
+    ConditionOperator,
+    GameParamId,
+    Milliseconds,
+    TimeMath
+} from '@scene-grid/shared';
 import type { EventAction, IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
@@ -15,7 +23,7 @@ import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispat
 interface ScheduledAction {
     readonly eventId: EventId;
     readonly action: EventAction;
-    readonly executeAtMs: number;
+    readonly executeAt: Milliseconds;
     readonly depth: number;
 }
 
@@ -77,7 +85,9 @@ export class AudioEventOrchestrator implements ITickable {
             return;
         }
 
-        const currentTimeMs = this.soundController.getCurrentTime() * 1000;
+        const currentTimeMs = TimeMath.secondsToMilliseconds(
+            TimeMath.castToSeconds(this.soundController.getCurrentTime())
+        );
         const actionsLength = config.actions.length;
 
         for (let i = 0; i < actionsLength; i++) {
@@ -107,11 +117,11 @@ export class AudioEventOrchestrator implements ITickable {
                 continue;
             }
 
-            if (isDefined(action.delayMs) && action.delayMs > 0) {
+            if (isDefined(action.delay) && action.delay > 0) {
                 this.scheduledActions.push({
                     eventId,
                     action,
-                    executeAtMs: currentTimeMs + action.delayMs,
+                    executeAt: (currentTimeMs + action.delay) as Milliseconds,
                     depth
                 });
             } else {
@@ -127,7 +137,7 @@ export class AudioEventOrchestrator implements ITickable {
         for (let i = length - 1; i >= 0; i--) {
             const scheduled = this.scheduledActions[i];
 
-            if (currentTimeMs >= scheduled.executeAtMs) {
+            if (currentTimeMs >= scheduled.executeAt) {
                 this.executeAction(scheduled.eventId, scheduled.action, scheduled.depth);
 
                 this.scheduledActions[i] = this.scheduledActions[length - 1];

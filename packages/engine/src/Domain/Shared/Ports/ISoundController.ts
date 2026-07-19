@@ -1,9 +1,17 @@
-import type { BusId, PlaybackId, SoundId, ArbiterCullReason } from '@scene-grid/shared';
+import type {
+    BusId,
+    PlaybackId,
+    SoundId,
+    ArbiterCullReason,
+    Milliseconds,
+    ContextTime,
+    Seconds
+} from '@scene-grid/shared';
 
 export interface IControllerPlayOptions {
-    readonly when?: number;
-    readonly offset?: number;
-    readonly duration?: number;
+    readonly when?: ContextTime;
+    readonly offset?: Seconds;
+    readonly duration?: Seconds;
     readonly loop?: boolean;
     readonly rate?: number;
     readonly onRevive?: (id: PlaybackId) => void;
@@ -17,7 +25,7 @@ export type VirtualReason = ArbiterCullReason | 'VIRTUAL_BY_API';
 
 export interface ISoundController {
     play(soundId: SoundId, options: IControllerPlayOptions): PlaybackId | null;
-    stopById(id: PlaybackId, timeToStop?: number): void;
+    stopById(id: PlaybackId, timeToStop?: ContextTime): void;
     stopAll(soundId?: SoundId): void;
     pauseById(id: PlaybackId): void;
     pauseAll(soundId?: SoundId): void;
@@ -27,21 +35,21 @@ export interface ISoundController {
     fadeVolume(
         id: PlaybackId,
         targetVolume: number,
-        durationMs: number,
+        duration: Milliseconds,
         curveType?: 'linear' | 'equal-power',
-        delayMs?: number
+        delay?: Milliseconds
     ): void;
-    getCurrentTime(): number;
+    getCurrentTime(): ContextTime;
     getSampleRate(): number;
     setPosition(playbackId: PlaybackId, x: number, y: number, z: number): void;
     getPosition(playbackId: PlaybackId): { readonly x: number; readonly y: number; readonly z: number } | undefined;
     cancelScheduled(id: PlaybackId): void;
     onVoiceEnded(id: PlaybackId, callback: () => void): () => void;
-    fadeParameter(id: PlaybackId, target: RTPCParameterTarget, targetValue: number, durationMs: number): void;
+    fadeParameter(id: PlaybackId, target: RTPCParameterTarget, targetValue: number, duration: Milliseconds): void;
     getActivePlaybacks(): PlaybackId[];
     getSoundId(id: PlaybackId): SoundId | undefined;
     getPlaybackState(id: PlaybackId): PlaybackState;
-    getPlaybackPositionSec(id: PlaybackId): number;
+    getPlaybackPositionSec(id: PlaybackId): Seconds;
     getCurrentVolume(id: PlaybackId): number;
     getLogicalState(id: PlaybackId): 'playing' | 'paused' | undefined;
     getVirtualReason(playbackId: PlaybackId): VirtualReason | undefined;
@@ -51,6 +59,6 @@ export interface ISoundController {
     virtualize(id: PlaybackId, reason: VirtualReason): void;
     devirtualize(id: PlaybackId): void;
     playVirtual(soundId: SoundId): PlaybackId;
-    crossfade(outId: PlaybackId, inId: PlaybackId, durationMs: number): void;
+    crossfade(outId: PlaybackId, inId: PlaybackId, duration: Milliseconds): void;
     isGhostVoice(id: PlaybackId): boolean;
 }

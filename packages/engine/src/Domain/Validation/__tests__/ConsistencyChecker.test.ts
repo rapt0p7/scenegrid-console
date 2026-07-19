@@ -328,14 +328,14 @@ describe('ConsistencyChecker', () => {
             );
 
             expect(console.error).toHaveBeenCalledWith(
-                expect.stringContaining('SmartLoop "loop_pre_str" region "outro" preEntryMs must be a number.')
+                expect.stringContaining('SmartLoop "loop_pre_str" region "outro" preEntry must be a number.')
             );
             expect(console.error).toHaveBeenCalledWith(
-                expect.stringContaining('SmartLoop "loop_tail_str" region "outro" tailMs must be a number.')
+                expect.stringContaining('SmartLoop "loop_tail_str" region "outro" tail must be a number.')
             );
         });
 
-        it('should pass valid SmartLoop regions with or without preEntryMs and tailMs', () => {
+        it('should pass valid SmartLoop regions with or without preEntry and tail', () => {
             const config: any = {
                 buses: { master: {} },
                 soundMap: {
@@ -353,7 +353,7 @@ describe('ConsistencyChecker', () => {
             const config: any = {
                 buses: { master: {} },
                 soundMap: {
-                    l1: { isLayered: true, layers: [{ src: 'missing_file', delayMs: 0, volume: 1 }] }
+                    l1: { isLayered: true, layers: [{ src: 'missing_file', delay: 0, volume: 1 }] }
                 }
             };
             ConsistencyChecker.validate(config);
@@ -510,8 +510,8 @@ describe('ConsistencyChecker', () => {
                         rtpc: {
                             gain: {
                                 gameParam: 'speed',
-                                attackMs: 100,
-                                releaseMs: 500,
+                                attack: 100,
+                                release: 500,
                                 curve: {
                                     type: 's-curve',
                                     minX: 0,
@@ -909,7 +909,7 @@ describe('ConsistencyChecker', () => {
                             gain: null,
                             pitch: {
                                 gameParam: 'tension',
-                                smoothingMs: 'not a number',
+                                smoothing: 'not a number',
                                 curve: null
                             },
                             pan: {
@@ -932,7 +932,7 @@ describe('ConsistencyChecker', () => {
             ConsistencyChecker.validate(config);
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "buses.sfx.rtpc"'));
             expect(console.error).toHaveBeenCalledWith(
-                expect.stringContaining('Type Error at "buses.master.rtpc.pitch.smoothingMs"')
+                expect.stringContaining('Type Error at "buses.master.rtpc.pitch.smoothing"')
             );
             expect(console.error).toHaveBeenCalledWith(
                 expect.stringContaining('Missing required field at "buses.master.rtpc.pitch.curve"')
@@ -951,8 +951,8 @@ describe('ConsistencyChecker', () => {
                 rtpcManifest: {
                     param1: 'not an object',
                     param2: {
-                        attackMs: 'str',
-                        releaseMs: 'str',
+                        attack: 'str',
+                        release: 'str',
                         defaultValue: 'str'
                     }
                 } as any
@@ -961,10 +961,10 @@ describe('ConsistencyChecker', () => {
             ConsistencyChecker.validate(config);
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Type Error at "rtpcManifest.param1"'));
             expect(console.error).toHaveBeenCalledWith(
-                expect.stringContaining('Type Error at "rtpcManifest.param2.attackMs"')
+                expect.stringContaining('Type Error at "rtpcManifest.param2.attack"')
             );
             expect(console.error).toHaveBeenCalledWith(
-                expect.stringContaining('Type Error at "rtpcManifest.param2.releaseMs"')
+                expect.stringContaining('Type Error at "rtpcManifest.param2.release"')
             );
             expect(console.error).toHaveBeenCalledWith(
                 expect.stringContaining('Type Error at "rtpcManifest.param2.defaultValue"')
@@ -1048,7 +1048,7 @@ describe('ConsistencyChecker', () => {
                     Valid_Event: {
                         actions: [
                             { type: 'play', target: 'sfx_test' },
-                            { type: 'stop', target: 'bgm_test', options: { allowTail: true, fadeOutMs: 500 } },
+                            { type: 'stop', target: 'bgm_test', options: { allowTail: true, fadeOut: 500 } },
                             { type: 'pause', target: 'sfx_test' },
                             { type: 'resume', target: 'sfx_test' },
                             { type: 'set_rtpc', param: 'player_health', value: 50 }
@@ -1164,7 +1164,7 @@ describe('ConsistencyChecker', () => {
                                 { type: 'stop' },
                                 { type: 'stop', target: 'bgm_test', options: 'fast' },
                                 { type: 'stop', target: 'bgm_test', options: { allowTail: 'yes' } },
-                                { type: 'stop', target: 'bgm_test', options: { fadeOutMs: '1s' } }
+                                { type: 'stop', target: 'bgm_test', options: { fadeOut: '1s' } }
                             ]
                         }
                     }
@@ -1183,7 +1183,7 @@ describe('ConsistencyChecker', () => {
                 );
                 expect(consoleErrorSpy).toHaveBeenCalledWith(
                     expect.stringContaining(
-                        'Type Error at "events.Bad_Event.actions[3].options.fadeOutMs": expected number'
+                        'Type Error at "events.Bad_Event.actions[3].options.fadeOut": expected number'
                     )
                 );
             });
@@ -1297,7 +1297,7 @@ describe('ConsistencyChecker', () => {
                                     region: 'intro',
                                     targetRegion: 'phase2',
                                     quantize: 'NextBar',
-                                    tailDurationMs: 1500,
+                                    tailDuration: 1500,
                                     condition: { param: 'boss_phase', operator: '==', value: 2 }
                                 }
                             ]
@@ -1578,7 +1578,7 @@ describe('ConsistencyChecker', () => {
             vi.spyOn(console, 'error').mockImplementation(() => {});
         });
 
-        it('should pass valid base properties (delayMs, probability, condition with hysteresis)', () => {
+        it('should pass valid base properties (delay, probability, condition with hysteresis)', () => {
             const config: any = {
                 buses: { master: {} },
                 rtpcManifest: { boss_health: { defaultValue: 100 } },
@@ -1589,7 +1589,7 @@ describe('ConsistencyChecker', () => {
                             {
                                 type: 'play',
                                 target: 'sfx_hit',
-                                delayMs: 1500,
+                                delay: 1500,
                                 probability: 0.5,
                                 condition: { param: 'boss_health', operator: '<=', value: 20, hysteresis: 5 }
                             }
@@ -1603,14 +1603,14 @@ describe('ConsistencyChecker', () => {
             expect(console.error).not.toHaveBeenCalled();
         });
 
-        it('should catch negative delayMs', () => {
+        it('should catch negative delay', () => {
             const config: any = {
                 buses: { master: {} },
                 rtpcManifest: {},
                 soundMap: { sfx: { busId: 'master' } },
                 events: {
                     bad_delay: {
-                        actions: [{ type: 'play', target: 'sfx', delayMs: -500 }]
+                        actions: [{ type: 'play', target: 'sfx', delay: -500 }]
                     }
                 }
             };
@@ -1618,7 +1618,7 @@ describe('ConsistencyChecker', () => {
             ConsistencyChecker.validate(config);
 
             expect(console.error).toHaveBeenCalledWith(
-                expect.stringContaining('Action at "events.bad_delay.actions[0].delayMs" cannot be negative.')
+                expect.stringContaining('Action at "events.bad_delay.actions[0].delay" cannot be negative.')
             );
         });
 
@@ -1938,7 +1938,7 @@ describe('ConsistencyChecker', () => {
                         isScatterer: true,
                         busId: 'sfx',
                         sources: ['bird_chirp', { id: 'bird_chirp', weight: 5 }],
-                        spawnRateMs: [1000, 2000],
+                        spawnRate: [1000, 2000],
                         scatterDistance: [10, 30],
                         maxPolyphony: 5,
                         sync: {
@@ -1962,7 +1962,7 @@ describe('ConsistencyChecker', () => {
                     bad_scatterer: {
                         isScatterer: true,
                         sources: ['ghost_sound'],
-                        spawnRateMs: [100, 200],
+                        spawnRate: [100, 200],
                         scatterDistance: [0, 10]
                     }
                 }
@@ -1987,7 +1987,7 @@ describe('ConsistencyChecker', () => {
                     tuple_error_scatterer: {
                         isScatterer: true,
                         sources: ['valid_sfx'],
-                        spawnRateMs: [2000, 1000],
+                        spawnRate: [2000, 1000],
                         scatterDistance: [10]
                     }
                 }
@@ -2013,7 +2013,7 @@ describe('ConsistencyChecker', () => {
                     bad_sync_scatterer: {
                         isScatterer: true,
                         sources: ['standard_sound'],
-                        spawnRateMs: [100, 200],
+                        spawnRate: [100, 200],
                         scatterDistance: [0, 10],
                         sync: {
                             quantize: 'NextBar',
@@ -2023,7 +2023,7 @@ describe('ConsistencyChecker', () => {
                     ghost_sync_scatterer: {
                         isScatterer: true,
                         sources: ['standard_sound'],
-                        spawnRateMs: [100, 200],
+                        spawnRate: [100, 200],
                         scatterDistance: [0, 10],
                         sync: {
                             quantize: 'NextBar',
@@ -2255,7 +2255,7 @@ describe('ConsistencyChecker', () => {
                                     targetState: 'phase_B',
                                     conditions: [{ param: 'music_phase', operator: '==', value: 2 }],
                                     syncRule: 'NextBar',
-                                    crossfadeDurationMs: 4000,
+                                    crossfadeDuration: 4000,
                                     transitionRegionName: 'A_TO_B',
                                     stingerId: 'stinger_sound',
                                     interruptable: true

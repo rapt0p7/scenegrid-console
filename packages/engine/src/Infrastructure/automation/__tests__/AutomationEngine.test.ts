@@ -7,7 +7,7 @@ import AutomationEngine from '../AutomationEngine.js';
 import type { AudioCtx } from '../../types/IAudioContext.js';
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
-import type { TickerTaskId } from '@scene-grid/shared';
+import type { ContextTime, Milliseconds, TickerTaskId } from '@scene-grid/shared';
 
 describe('AutomationEngine', () => {
     let mockContext: AudioCtx;
@@ -54,7 +54,7 @@ describe('AutomationEngine', () => {
 
     function triggerTick() {
         if (capturedTickTarget) {
-            capturedTickTarget.tick(mockContext.currentTime, (AutomationEngine as any).TICK_RATE_MS ?? 15);
+            capturedTickTarget.tick(mockContext.currentTime as ContextTime, AutomationEngine.TICK_RATE ?? 15);
         }
     }
 
@@ -95,7 +95,7 @@ describe('AutomationEngine', () => {
         it('should register target to EngineTicker on init', () => {
             expect(mockTicker.add).toHaveBeenCalledWith(
                 'automation-engine',
-                (AutomationEngine as any).TICK_RATE_MS ?? 15,
+                AutomationEngine.TICK_RATE ?? 15,
                 expect.any(Object)
             );
             expect(capturedTickTarget).toBeDefined();
@@ -104,7 +104,7 @@ describe('AutomationEngine', () => {
         it('should ignore invalid targets in ramp (NaN or Infinity)', () => {
             const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-            engine.ramp(mockParameter, Number.NaN, 1000);
+            engine.ramp(mockParameter, Number.NaN, 1000 as Milliseconds);
 
             expect(mockParameter.setValueAtTime).not.toHaveBeenCalled();
             expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid target'), Number.NaN);
@@ -115,19 +115,19 @@ describe('AutomationEngine', () => {
         it('should set immediately if context is not running', () => {
             vi.spyOn(mockContext, 'state', 'get').mockReturnValue('suspended');
 
-            engine.ramp(mockParameter, 1, 500);
+            engine.ramp(mockParameter, 1, 500 as Milliseconds);
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(1, 1);
             expect(mockParameter.linearRampToValueAtTime).not.toHaveBeenCalled();
         });
 
         it('should schedule setValueAtTime if duration is <= 0 but delay exists', () => {
-            engine.ramp(mockParameter, 0.5, 0, 'linear', 2000);
+            engine.ramp(mockParameter, 0.5, 0 as Milliseconds, 'linear', 2000 as Milliseconds);
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.5, 3);
         });
 
         it('should apply linear ramp correctly via EngineTicker batching', () => {
-            engine.ramp(mockParameter, 1, 2000);
+            engine.ramp(mockParameter, 1, 2000 as Milliseconds);
 
             triggerTick();
 
@@ -137,20 +137,20 @@ describe('AutomationEngine', () => {
         });
 
         it('should apply exponential ramp correctly', () => {
-            engine.ramp(mockParameter, 1, 1000, 'exponential');
+            engine.ramp(mockParameter, 1, 1000 as Milliseconds, 'exponential');
             triggerTick();
             expect(mockParameter.exponentialRampToValueAtTime).toHaveBeenCalledWith(1, 2);
         });
 
         it('should apply equal-power curve correctly (Fade In)', () => {
-            engine.ramp(mockParameter, 1, 1000, 'equal-power');
+            engine.ramp(mockParameter, 1, 1000 as Milliseconds, 'equal-power');
             triggerTick();
             expect(mockParameter.setValueCurveAtTime).toHaveBeenCalledWith(expect.any(Float32Array), 1, 1);
         });
 
         it('should generate equal-power curve correctly (Fade Out / target < start)', () => {
             mockParameter.value = 1;
-            engine.ramp(mockParameter, 0.1, 1000, 'equal-power');
+            engine.ramp(mockParameter, 0.1, 1000 as Milliseconds, 'equal-power');
             triggerTick();
 
             expect(mockParameter.setValueCurveAtTime).toHaveBeenCalled();
@@ -162,7 +162,7 @@ describe('AutomationEngine', () => {
 
         it('should handle safeExponentialRamp zero-value math correctly', () => {
             mockParameter.value = 0;
-            engine.safeExponentialRamp(mockParameter, 0, 2, 1);
+            engine.safeExponentialRamp(mockParameter, 0, 2 as ContextTime, 1 as ContextTime);
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.000_01, 1);
             expect(mockParameter.exponentialRampToValueAtTime).toHaveBeenCalledWith(0.000_01, 2);
@@ -175,7 +175,7 @@ describe('AutomationEngine', () => {
             });
             const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-            engine.ramp(mockParameter, 1, 1000, 'linear');
+            engine.ramp(mockParameter, 1, 1000 as Milliseconds, 'linear');
             triggerTick();
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(1, 1);
@@ -186,7 +186,7 @@ describe('AutomationEngine', () => {
 
     describe('ramp() - Time and Delay Edge Cases', () => {
         it('should schedule delayed linear ramp correctly', () => {
-            engine.ramp(mockParameter, 1, 1000, 'linear', 500);
+            engine.ramp(mockParameter, 1, 1000 as Milliseconds, 'linear', 500 as Milliseconds);
             triggerTick();
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.5, 1.5);
@@ -194,7 +194,7 @@ describe('AutomationEngine', () => {
         });
 
         it('should schedule delayed exponential ramp correctly', () => {
-            engine.ramp(mockParameter, 1, 1000, 'exponential', 500);
+            engine.ramp(mockParameter, 1, 1000 as Milliseconds, 'exponential', 500 as Milliseconds);
             triggerTick();
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.5, 1.5);
@@ -202,7 +202,7 @@ describe('AutomationEngine', () => {
         });
 
         it('should schedule delayed equal-power ramp correctly', () => {
-            engine.ramp(mockParameter, 1, 1000, 'equal-power', 500);
+            engine.ramp(mockParameter, 1, 1000 as Milliseconds, 'equal-power', 500 as Milliseconds);
             triggerTick();
 
             expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(0.5, 1.5);
@@ -210,7 +210,7 @@ describe('AutomationEngine', () => {
         });
 
         it('should immediately set value if remaining duration <= 0 during delayed flush', () => {
-            engine.ramp(mockParameter, 0.8, 1000);
+            engine.ramp(mockParameter, 0.8, 1000 as Milliseconds);
 
             vi.spyOn(mockContext, 'currentTime', 'get').mockReturnValue(3);
 
@@ -259,9 +259,9 @@ describe('AutomationEngine - Chrome Android Fallback', () => {
 
         const eng = new AndroidAutomationEngine(mContext, mTicker);
 
-        eng.ramp(mParameter as any, 1, 1000, 'linear');
+        eng.ramp(mParameter as any, 1, 1000 as Milliseconds, 'linear');
 
-        capturedTickTargetFallback!.tick(mContext.currentTime, 15);
+        capturedTickTargetFallback!.tick(mContext.currentTime as ContextTime, 15 as Milliseconds);
 
         expect(mParameter.linearRampToValueAtTime).not.toHaveBeenCalled();
         expect(mParameter.setValueCurveAtTime).toHaveBeenCalledWith(expect.any(Float32Array), 1, 1);

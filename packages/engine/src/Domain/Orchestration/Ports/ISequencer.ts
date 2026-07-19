@@ -1,5 +1,5 @@
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
-import type { RegionId, SoundId, QuantizeType, IMusicTrackSnapshot } from '@scene-grid/shared';
+import type { RegionId, SoundId, QuantizeType, IMusicTrackSnapshot, Milliseconds, Beats } from '@scene-grid/shared';
 
 export enum LoopState {
     IDLE = 'IDLE',
@@ -18,9 +18,9 @@ export interface ITransitionToParameters {
 
 export interface TransitionOptions {
     readonly quantize?: QuantizeType;
-    readonly quantizeInterval?: number;
-    readonly crossfadeDuration?: number;
-    readonly tailDurationMs?: number;
+    readonly quantizeInterval?: Beats;
+    readonly crossfadeDuration?: Milliseconds;
+    readonly tailDuration?: Milliseconds;
     readonly grid?: IAudioGrid;
     readonly blendMode?: TransitionBlendMode;
     readonly interruptable?: boolean;

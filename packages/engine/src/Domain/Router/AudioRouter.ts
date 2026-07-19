@@ -20,7 +20,7 @@ import type { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHisto
 import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { PlaybackId, SoundId, IPRNG } from '@scene-grid/shared';
+import { PlaybackId, SoundId, IPRNG, TimeMath, Milliseconds, ContextTime, Seconds } from '@scene-grid/shared';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IStopOptions } from '@domain/Configuration/Ports/IEventConfig.js';
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
@@ -144,12 +144,15 @@ export default class AudioRouter implements IAudioRouter {
 
         const finalOptions = VariationResolver.apply(config, options, this.prng);
 
-        const relativeDelaySec = options.when ?? (finalOptions.delayMs ?? 0) / 1000;
-        const absoluteTargetTime = relativeDelaySec > 0 ? this.soundController.getCurrentTime() + relativeDelaySec : 0;
+        const relativeDelaySec = options.when ?? TimeMath.msToSeconds(finalOptions.delay ?? (0 as Milliseconds));
+        const absoluteTargetTime =
+            relativeDelaySec > 0
+                ? TimeMath.addTime(this.soundController.getCurrentTime(), relativeDelaySec)
+                : (0 as Seconds);
 
         const playbackId = this.soundController.play(name, {
-            when: absoluteTargetTime,
-            offset: (finalOptions.seek ?? 0) / 1000,
+            when: TimeMath.castToContextTime(absoluteTargetTime),
+            offset: TimeMath.msToSeconds((finalOptions.seek ?? 0) || (0 as Milliseconds)),
             loop: finalOptions.isLoop,
             rate: finalOptions.rate,
             onRevive: (id: PlaybackId) => {
@@ -167,7 +170,9 @@ export default class AudioRouter implements IAudioRouter {
     public stop(id: PlaybackId | PlaybackId[] | SoundId, options?: IStopOptions): void {
         const playbacksToStop = this.resolvePlaybacks(id);
         const allowTail = options?.allowTail ?? true;
-        const timeToStop = options?.fadeOutMs;
+        const timeToStop = options?.fadeOut
+            ? TimeMath.addTime(this.soundController.getCurrentTime(), TimeMath.msToSeconds(options.fadeOut))
+            : undefined;
 
         const length = playbacksToStop.length;
         for (let i = 0; i < length; i++) {
@@ -217,8 +222,8 @@ export default class AudioRouter implements IAudioRouter {
         }
     }
 
-    public performCrossfade(outId: PlaybackId, inId: PlaybackId, durationMs: number): void {
-        this.soundController.crossfade(outId, inId, durationMs);
+    public performCrossfade(outId: PlaybackId, inId: PlaybackId, duration: Milliseconds): void {
+        this.soundController.crossfade(outId, inId, duration);
     }
 
     private resolvePlaybacks(target: PlaybackId | PlaybackId[] | SoundId): PlaybackId[] {
@@ -256,8 +261,7 @@ export default class AudioRouter implements IAudioRouter {
         }
         const virtualPlaybackId = this.soundController.playVirtual(name);
 
-        const currentTime = this.soundController.getCurrentTime() * 1000;
-        this.scattererOrchestrator.start(virtualPlaybackId, config, currentTime);
+        this.scattererOrchestrator.start(virtualPlaybackId, config, this.soundController.getCurrentTime());
 
         return virtualPlaybackId;
     }
@@ -324,13 +328,15 @@ export default class AudioRouter implements IAudioRouter {
                 this.prng
             );
 
-            const relativeDelaySec = (layer.delayMs ?? 0) / 1000;
+            const relativeDelaySec = TimeMath.msToSeconds(layer.delay ?? 0);
             const absoluteTargetTime =
-                relativeDelaySec > 0 ? this.soundController.getCurrentTime() + relativeDelaySec : 0;
+                relativeDelaySec > 0
+                    ? TimeMath.addTime(this.soundController.getCurrentTime(), relativeDelaySec)
+                    : (0 as ContextTime);
 
             const playbackId = this.soundController.play(layer.src, {
                 when: absoluteTargetTime,
-                offset: ((finalOptions.seek ?? 0) || 0) / 1000,
+                offset: TimeMath.msToSeconds((finalOptions.seek ?? 0) || (0 as Milliseconds)),
                 loop: finalOptions.isLoop,
                 rate: finalOptions.rate,
                 onRevive: (id: PlaybackId) => {

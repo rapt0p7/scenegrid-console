@@ -1,4 +1,4 @@
-import type { MusicStateId, SnapshotId } from '@scene-grid/shared';
+import type { Milliseconds, MusicStateId, SnapshotId } from '@scene-grid/shared';
 
 export interface IConductorState {
     currentStateId: MusicStateId;
@@ -6,7 +6,7 @@ export interface IConductorState {
         isActive: boolean;
         executionTime: number;
         snapshotId: SnapshotId;
-        crossfadeMs: number;
+        crossfade: Milliseconds;
     };
     isTransitioning: boolean;
 }

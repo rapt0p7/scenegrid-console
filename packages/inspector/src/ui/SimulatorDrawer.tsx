@@ -5,7 +5,16 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { useCommandTransmitter } from '../hooks/useCommandTransmitter';
 import type { IEngineManifestDTO } from '../types/ManifestDTO';
-import type { EventId, GameParamId, SoundId, ITelemetrySnapshot, RegionId } from '@scene-grid/shared';
+import {
+    EventId,
+    GameParamId,
+    SoundId,
+    ITelemetrySnapshot,
+    RegionId,
+    TimeMath,
+    Seconds,
+    Beats
+} from '@scene-grid/shared';
 
 interface SimulatorDrawerProps {
     manifest: IEngineManifestDTO;
@@ -156,9 +165,9 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
             transitionRegionName: transitionRegion as RegionId,
             options: {
                 quantize,
-                quantizeInterval,
+                quantizeInterval: quantizeInterval as Beats,
                 blendMode,
-                crossfadeDuration: crossfadeSec * 1000,
+                crossfadeDuration: TimeMath.secondsToMilliseconds(crossfadeSec as Seconds),
                 interruptable
             }
         });

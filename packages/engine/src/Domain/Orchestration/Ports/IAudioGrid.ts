@@ -1,11 +1,11 @@
-import type { GridDivision } from '@scene-grid/shared';
+import type { Beats, ContextTime, GridDivision, Pulses } from '@scene-grid/shared';
 
 export interface IAudioGrid {
-    readonly ppqn: number;
-    readonly beatsPerBar: number;
-    getNextBeatTime(currentTime: number, interval?: number): number;
-    getNextBarTime(currentTime: number, interval?: number): number;
-    getNextDivisionTime(currentTime: number, division: GridDivision): number;
-    getTimeAtPulse(pulseIndex: number): number;
-    getPulseAtTime(currentTime: number): number;
+    readonly ppqn: Pulses;
+    readonly beatsPerBar: Beats;
+    getNextBeatTime(currentTime: ContextTime, interval?: Beats): ContextTime;
+    getNextBarTime(currentTime: ContextTime, interval?: number): ContextTime;
+    getNextDivisionTime(currentTime: ContextTime, division: GridDivision): ContextTime;
+    getTimeAtPulse(pulseIndex: Pulses): ContextTime;
+    getPulseAtTime(currentTime: ContextTime): Pulses;
 }

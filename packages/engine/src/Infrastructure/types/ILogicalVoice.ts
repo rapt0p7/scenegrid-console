@@ -1,4 +1,4 @@
-import type { PlaybackId, SoundId } from '@scene-grid/shared';
+import type { ContextTime, PlaybackId, Seconds, SoundId } from '@scene-grid/shared';
 import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
 
 export interface ILogicalVoice {
@@ -6,8 +6,8 @@ export interface ILogicalVoice {
     soundId: SoundId;
     logicalState: 'playing' | 'paused';
     position: { x: number; y: number; z: number };
-    startedAtContextTime: number;
-    startOffset: number;
+    startedAtContextTime: ContextTime;
+    startOffset: Seconds;
     physicalInstance: ISoundInstance | null;
     onRevive?: (id: PlaybackId) => void;
 }

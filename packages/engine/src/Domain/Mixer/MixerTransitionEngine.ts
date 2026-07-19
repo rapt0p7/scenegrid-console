@@ -3,7 +3,7 @@
 import mitt from 'mitt';
 
 import { isFilterEqual } from '@domain/BusSystem/ValueObjects/filterEquals.js';
-import { isDefined, typedEntries, typedKeys } from '@scene-grid/shared';
+import { isDefined, type Milliseconds, typedEntries, typedKeys } from '@scene-grid/shared';
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
@@ -17,17 +17,17 @@ type MixerFSMState =
     | {
           type: 'FADE_OUT_FILTERS' | 'RUNNING_TRANSITION';
           target: MixerState;
-          elapsed: number;
-          totalDuration: number;
-          filterPhaseDuration: number;
+          elapsed: Milliseconds;
+          totalDuration: Milliseconds;
+          filterPhaseDuration: Milliseconds;
           isInterruptible: boolean;
       };
 
 export default class MixerTransitionEngine {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE_MS = 16;
+    public static TICK_RATE: Milliseconds = 16 as Milliseconds;
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public readonly events: Emitter<{ 'transition:start': { durationMs: number } }> = mitt();
+    public readonly events: Emitter<{ 'transition:start': { duration: Milliseconds } }> = mitt();
 
     private current: MixerState = { buses: {} };
     private state: MixerFSMState = { type: 'IDLE' };
@@ -44,7 +44,7 @@ export default class MixerTransitionEngine {
 
     public applyState(
         next: DeepReadonly<MixerState>,
-        { durationMs = 500, interruptible = true }: DeepReadonly<ITransitionOptions> = {}
+        { duration = 500 as Milliseconds, interruptible = true }: DeepReadonly<ITransitionOptions> = {}
     ): void {
         if (this.state.type !== 'IDLE' && !this.state.isInterruptible) {
             return;
@@ -57,20 +57,20 @@ export default class MixerTransitionEngine {
             }
         }
 
-        this.events.emit('transition:start', { durationMs });
+        this.events.emit('transition:start', { duration });
 
-        if (!this.isInitialized || durationMs <= 0) {
+        if (!this.isInitialized || duration <= 0) {
             this.forceInstantTransition(next);
             return;
         }
 
-        const filterPhaseDuration = durationMs * 0.25;
+        const filterPhaseDuration = (duration * 0.25) as Milliseconds;
 
         this.state = {
             type: 'FADE_OUT_FILTERS',
             target: next,
-            elapsed: 0,
-            totalDuration: durationMs,
+            elapsed: 0 as Milliseconds,
+            totalDuration: duration,
             filterPhaseDuration,
             isInterruptible: interruptible
         };
@@ -83,14 +83,14 @@ export default class MixerTransitionEngine {
         this.state = { type: 'IDLE' };
     }
 
-    public tick(currentTime: number, dt: number): void {
+    public tick(currentTime: number, dt: Milliseconds): void {
         if (this.state.type === 'IDLE') return;
 
         const s = this.state;
-        s.elapsed += dt;
+        s.elapsed = (s.elapsed + dt) as Milliseconds;
 
         if (s.type === 'FADE_OUT_FILTERS' && s.elapsed >= s.filterPhaseDuration) {
-            const remainingTime = Math.max(0, s.totalDuration - s.elapsed);
+            const remainingTime = Math.max(0, s.totalDuration - s.elapsed) as Milliseconds;
             this.startMainTransitionPhase(s.target, remainingTime);
             s.type = 'RUNNING_TRANSITION';
         }
@@ -116,12 +116,12 @@ export default class MixerTransitionEngine {
             bus.setGainImmediate(targetGain);
 
             const targetFilter = isDefined(nextBusConfig?.filter) ? nextBusConfig.filter : (baseConfig.filter ?? null);
-            bus.safeReplaceFilter(targetFilter, 0);
+            bus.safeReplaceFilter(targetFilter, 0 as Milliseconds);
 
             const targetSends = isDefined(nextBusConfig?.sends) ? nextBusConfig.sends : baseConfig.sends;
             if (targetSends) {
                 for (const [targetBusId, sendGain] of typedEntries(targetSends)) {
-                    this.busSystem.applySend(busId, targetBusId, sendGain, 0);
+                    this.busSystem.applySend(busId, targetBusId, sendGain, 0 as Milliseconds);
                 }
             }
         }
@@ -131,7 +131,7 @@ export default class MixerTransitionEngine {
         this.isInitialized = true;
     }
 
-    private startFilterPhase(target: DeepReadonly<MixerState>, filterPhaseDuration: number): void {
+    private startFilterPhase(target: DeepReadonly<MixerState>, filterPhaseDuration: Milliseconds): void {
         for (const [busId, bus] of this.busSystem.getAllBuses()) {
             const nextBusConfig = target.buses[busId];
             const previousBusConfig = this.current.buses[busId];
@@ -153,7 +153,7 @@ export default class MixerTransitionEngine {
         }
     }
 
-    private startMainTransitionPhase(target: DeepReadonly<MixerState>, remainingTime: number): void {
+    private startMainTransitionPhase(target: DeepReadonly<MixerState>, remainingTime: Milliseconds): void {
         for (const [busId, bus] of this.busSystem.getAllBuses()) {
             const nextBusConfig = target.buses[busId];
             const previousBusConfig = this.current.buses[busId];

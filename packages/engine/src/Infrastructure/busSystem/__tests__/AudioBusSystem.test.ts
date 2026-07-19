@@ -7,7 +7,7 @@ import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 import AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
-import type { BusId } from '@scene-grid/shared';
+import type { BusId, ContextTime, Milliseconds, Seconds } from '@scene-grid/shared';
 import type { IPluginFactory } from '@infrastructure';
 import type { AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
@@ -123,7 +123,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
 
         const processFrameSpy = vi.spyOn(AudioBus.prototype, 'processFrame').mockImplementation(() => {});
 
-        capturedTickTarget!.tick(123.45, 20);
+        capturedTickTarget!.tick(123.45 as ContextTime, 20 as Milliseconds);
 
         expect(processFrameSpy).toHaveBeenCalledTimes(2);
         expect(processFrameSpy).toHaveBeenCalledWith(123.45);
@@ -259,13 +259,13 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
 
         const sourceBus = system.getBus('sfx' as BusId);
         const updateSendSpy = vi.spyOn(sourceBus as any, 'updateSend');
-        system.applySend('sfx' as BusId, 'ghost_bus' as any, null, 100);
+        system.applySend('sfx' as BusId, 'ghost_bus' as any, null, 100 as Milliseconds);
 
         expect(updateSendSpy).toHaveBeenCalledWith({
             targetBusId: 'ghost_bus',
             targetNode: null,
             targetGain: null,
-            durationMs: 100
+            duration: 100 as Milliseconds
         });
 
         warnSpy.mockRestore();
@@ -766,7 +766,7 @@ describe('AudioBusSystem (Internal Edge Cases & 100% Coverage)', () => {
 
             bus.setGainImmediate(0.8);
             bus.setRtpcGainModifier(0.9);
-            bus.processFrame(0);
+            bus.processFrame(0 as Seconds);
 
             const modifiers = [
                 { type: '', value: 0, source: '' },

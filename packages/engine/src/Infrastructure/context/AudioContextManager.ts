@@ -5,6 +5,7 @@ import UnlockManager from '@infrastructure/context/UnlockManager.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 import type { IAudioContextManager } from '@infrastructure/types/IAudioContextManager.js';
+import type { ContextTime } from '@scene-grid/shared';
 
 export default class AudioContextManager implements IAudioContextManager {
     readonly #context: AudioCtx;
@@ -36,8 +37,8 @@ export default class AudioContextManager implements IAudioContextManager {
         return this.#context.sampleRate;
     }
 
-    get currentTime(): number {
-        return this.#context.currentTime;
+    get currentTime(): ContextTime {
+        return this.#context.currentTime as ContextTime;
     }
 
     public initSpatial(automation: AutomationEngine): void {

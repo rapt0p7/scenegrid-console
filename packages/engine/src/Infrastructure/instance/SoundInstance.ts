@@ -6,7 +6,7 @@ import mitt from 'mitt';
 
 import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
 
-import type { SoundId } from '@scene-grid/shared';
+import type { SoundId, ContextTime, Seconds, Milliseconds } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { AudioNodeFactory, PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
@@ -47,13 +47,13 @@ export class SoundInstance implements ISoundInstance {
     #chain: NodeChain;
     #source: AudioBufferSourceNodeLike | null = null;
     #state: PlaybackState = 'idle';
-    #startTime: number = 0;
-    #pauseOffset: number = 0;
+    #startTime: ContextTime = 0 as ContextTime;
+    #pauseOffset: Seconds = 0 as Seconds;
     #playbackRate: number = 1;
     #loop: boolean = false;
     #endedByStop: boolean = false;
-    private readonly SCHEDULE_DELAY = 0.05;
-    private readonly MICRO_FADE_SEC = 0.015;
+    private readonly SCHEDULE_DELAY: Seconds = 0.05 as Seconds;
+    private readonly MICRO_FADE_SEC: Seconds = 0.015 as Seconds;
     private readonly LISTENER_OPTIONS = { once: true };
 
     // eslint-disable-next-line max-params
@@ -97,24 +97,24 @@ export class SoundInstance implements ISoundInstance {
         return this.#playbackRate;
     }
 
-    public get currentTime(): number {
-        if (!this.#buffer) return 0;
+    public get currentTime(): Seconds {
+        if (!this.#buffer) return 0 as Seconds;
 
         if (this.#state === 'playing') {
             const now = this.#ctxManager.context.currentTime;
             const elapsed = now - this.#startTime;
-            return elapsed % this.#buffer.duration;
+            return (elapsed % this.#buffer.duration) as Seconds;
         }
 
         if (this.#state === 'paused') {
             return this.#pauseOffset;
         }
 
-        return 0;
+        return 0 as Seconds;
     }
 
-    public get duration(): number {
-        return this.#buffer?.duration ?? 0;
+    public get duration(): Seconds {
+        return (this.#buffer?.duration ?? 0) as Seconds;
     }
 
     public connectTo(destination: AudioNodeLike): void {
@@ -131,7 +131,7 @@ export class SoundInstance implements ISoundInstance {
         options?: { spatial?: PannerConfig; hasPanner?: boolean }
     ): void {
         if (this.#state === 'playing' || this.#state === 'virtual') {
-            this.stop(0);
+            this.stop(0 as ContextTime);
         }
 
         this.#id = newId;
@@ -147,17 +147,21 @@ export class SoundInstance implements ISoundInstance {
         }
     }
 
-    public automate(target: InstanceParameterTarget, value: number, smoothingMs: number = 50): void {
+    public automate(
+        target: InstanceParameterTarget,
+        value: number,
+        smoothing: Milliseconds = 50 as Milliseconds
+    ): void {
         switch (target) {
             case 'gain': {
-                this.#automation.ramp(this.#chain.gainParam, value, smoothingMs, 'exponential');
+                this.#automation.ramp(this.#chain.gainParam, value, smoothing, 'exponential');
                 break;
             }
 
             case 'pitch': {
                 this.#playbackRate = value;
                 if (this.#source) {
-                    this.#automation.ramp(this.#source.playbackRate, value, smoothingMs, 'linear');
+                    this.#automation.ramp(this.#source.playbackRate, value, smoothing, 'linear');
                 }
                 break;
             }
@@ -165,7 +169,7 @@ export class SoundInstance implements ISoundInstance {
             case 'pan': {
                 const panner = this.#chain.pannerNode;
                 if (panner && 'pan' in panner) {
-                    this.#automation.ramp(panner.pan, value, smoothingMs, 'linear');
+                    this.#automation.ramp(panner.pan, value, smoothing, 'linear');
                 }
                 break;
             }
@@ -173,7 +177,7 @@ export class SoundInstance implements ISoundInstance {
             case 'filterFrequency': {
                 const filter = this.#chain.mainFilterNode;
                 if (filter && 'frequency' in filter) {
-                    this.#automation.ramp(filter.frequency, value, smoothingMs, 'exponential');
+                    this.#automation.ramp(filter.frequency, value, smoothing, 'exponential');
                 }
                 break;
             }
@@ -186,16 +190,16 @@ export class SoundInstance implements ISoundInstance {
         }
     }
 
-    public play(when: number = 0, offset: number = 0, duration?: number): void {
+    public play(when: ContextTime = 0 as ContextTime, offset: Seconds = 0 as Seconds, duration?: Seconds): void {
         if (!this.#buffer) return;
 
         if (this.#source) {
-            this.stop();
+            this.stop(0 as ContextTime);
         }
 
         const context = this.#ctxManager.context;
         const now = context.currentTime;
-        const startTime = when > 0 ? Math.max(now, when) : now;
+        const startTime = (when > 0 ? Math.max(now, when) : now) as ContextTime;
 
         this.#endedByStop = false;
 
@@ -203,19 +207,19 @@ export class SoundInstance implements ISoundInstance {
         source.start(startTime, offset, duration);
 
         this.#source = source;
-        this.#startTime = startTime - offset;
-        this.#pauseOffset = 0;
+        this.#startTime = (startTime - offset) as ContextTime;
+        this.#pauseOffset = 0 as Seconds;
 
         this.#setState('playing');
     }
 
-    public stop(when: number = 0): void {
+    public stop(when: ContextTime = 0 as ContextTime): void {
         const context = this.#ctxManager.context;
 
         if (!this.#source) {
             if (this.#state === 'virtual' || this.#state === 'paused') {
                 this.#endedByStop = true;
-                this.#pauseOffset = 0;
+                this.#pauseOffset = 0 as Seconds;
                 this.#setState('stopped');
                 this.#emitter.emit('stopped', this);
                 this.#emitter.emit('ended', this);
@@ -224,8 +228,8 @@ export class SoundInstance implements ISoundInstance {
         }
 
         const now = context.currentTime;
-        const stopTime = when > 0 ? Math.max(now, when) : now;
-        const actualStopTime = stopTime + this.MICRO_FADE_SEC;
+        const stopTime = (when > 0 ? Math.max(now, when) : now) as ContextTime;
+        const actualStopTime = (stopTime + this.MICRO_FADE_SEC) as ContextTime;
 
         const sourceToStop = this.#source;
 
@@ -240,7 +244,7 @@ export class SoundInstance implements ISoundInstance {
             /* empty fallback */
         }
 
-        this.#pauseOffset = 0;
+        this.#pauseOffset = 0 as Seconds;
         const EPS = 0.005;
 
         if (stopTime <= now + EPS) {
@@ -283,16 +287,16 @@ export class SoundInstance implements ISoundInstance {
     public resume(): void {
         if (this.#state !== 'paused' || !this.#buffer) return;
 
-        const now = this.#ctxManager.context.currentTime;
+        const now = this.#ctxManager.context.currentTime as ContextTime;
 
         const source = this.#createAndBindSource();
         source.start(now, this.#pauseOffset);
 
         this.#source = source;
-        this.#startTime = now - this.#pauseOffset;
+        this.#startTime = (now - this.#pauseOffset) as ContextTime;
 
         this.#setState('playing');
-        this.#pauseOffset = 0;
+        this.#pauseOffset = 0 as Seconds;
     }
 
     public setPosition(x: number, y: number, z: number): void {
@@ -370,9 +374,9 @@ export class SoundInstance implements ISoundInstance {
 
         const context = this.#ctxManager.context;
         const now = context.currentTime;
-        const startTimeWithLookAhead = now + this.SCHEDULE_DELAY;
+        const startTimeWithLookAhead = (now + this.SCHEDULE_DELAY) as ContextTime;
         const elapsed = Math.max(0, startTimeWithLookAhead - this.#startTime);
-        const offsetInFuture = elapsed % this.#buffer.duration;
+        const offsetInFuture = (elapsed % this.#buffer.duration) as Seconds;
 
         const source = this.#createAndBindSource();
 
@@ -380,7 +384,7 @@ export class SoundInstance implements ISoundInstance {
 
         this.#source = source;
 
-        this.#startTime = startTimeWithLookAhead - offsetInFuture;
+        this.#startTime = (startTimeWithLookAhead - offsetInFuture) as ContextTime;
 
         this.#setState('playing');
     }
@@ -394,10 +398,10 @@ export class SoundInstance implements ISoundInstance {
             /* empty */
         }
 
-        this.automate('gain', 1, 0);
-        this.automate('pitch', 1, 0);
-        this.automate('pan', 0, 0);
-        this.automate('filterFrequency', 22000, 0);
+        this.automate('gain', 1, 0 as Milliseconds);
+        this.automate('pitch', 1, 0 as Milliseconds);
+        this.automate('pan', 0, 0 as Milliseconds);
+        this.automate('filterFrequency', 22000, 0 as Milliseconds);
 
         if (this.#chain.pannerNode) {
             this.setPosition(0, 0, 0);
@@ -406,8 +410,8 @@ export class SoundInstance implements ISoundInstance {
         this.#endedByStop = false;
         this.#playbackRate = 1;
         this.#loop = false;
-        this.#pauseOffset = 0;
-        this.#startTime = 0;
+        this.#pauseOffset = 0 as Seconds;
+        this.#startTime = 0 as ContextTime;
 
         this.#emitter.all.clear();
         this.#setState('idle');
@@ -428,7 +432,7 @@ export class SoundInstance implements ISoundInstance {
     }
 
     public dispose(): void {
-        this.stop();
+        this.stop(0 as ContextTime);
         this.#chain.dispose();
         this.#buffer = null;
         this.#setState('idle');

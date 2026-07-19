@@ -1,6 +1,6 @@
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
-import type { BusId, SnapshotId } from '@scene-grid/shared';
+import type { BusId, Milliseconds, SnapshotId } from '@scene-grid/shared';
 
 export interface MixerState {
     readonly buses: Record<
@@ -23,13 +23,13 @@ export type Sends = Record<BusId, number | null>;
 export type MixerSnapshot = Partial<MixerState>;
 
 export interface ITransitionOptions {
-    readonly durationMs?: number;
+    readonly duration?: Milliseconds;
     readonly interruptible?: boolean;
 }
 
 export interface MixerEvents {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    'transition:start': { layerId: string; snapshotName: string; durationMs: number };
+    'transition:start': { layerId: string; snapshotName: string; duration: Milliseconds };
     // eslint-disable-next-line @typescript-eslint/naming-convention
     'transition:end': { layerId: string; snapshotName: string };
     // eslint-disable-next-line @typescript-eslint/naming-convention

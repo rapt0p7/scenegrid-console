@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISmartLoopSoundConfig, IMagnetConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { RegionId, GameParamId, BusId } from '@scene-grid/shared';
+import type { RegionId, GameParamId, BusId, Milliseconds, Samples } from '@scene-grid/shared';
 
 describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
     let mockRtpcAdapter: any;
@@ -26,9 +26,9 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
         busId: 'master' as BusId,
         smartLoop: {
             regions: {
-                ['intro' as RegionId]: [0, 100],
-                ['main' as RegionId]: [100, 200],
-                ['outro' as RegionId]: [200, 300]
+                ['intro' as RegionId]: [0 as Samples, 100 as Samples],
+                ['main' as RegionId]: [100 as Samples, 200 as Samples],
+                ['outro' as RegionId]: [200 as Samples, 300 as Samples]
             },
             magnets
         }
@@ -203,8 +203,8 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
                 targetRegion: 'outro' as RegionId,
                 quantize: 'NextBeat',
                 transitionRegionName: 'drum_fill' as RegionId,
-                crossfadeDuration: 500,
-                tailDurationMs: 1000,
+                crossfadeDuration: 500 as Milliseconds,
+                tailDuration: 1000 as Milliseconds,
                 condition: { param: 'time' as GameParamId, operator: '==', value: 0 }
             }
         ]);
@@ -218,7 +218,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
             options: {
                 quantize: 'NextBeat',
                 crossfadeDuration: 500,
-                tailDurationMs: 1000,
+                tailDuration: 1000,
                 interruptable: true
             },
             trace: {

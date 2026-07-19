@@ -1,13 +1,13 @@
 // noinspection D
 
 import type { IRTPCManager } from '@kernel/RTPC/Ports/IRTPCManager.js';
-import type { GameParamId } from '@scene-grid/shared';
+import type { GameParamId, Milliseconds } from '@scene-grid/shared';
 
 const MAX_PARAMS = 1024;
 
 export default class RTPCManager implements IRTPCManager {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE_MS = 30;
+    public static TICK_RATE: Milliseconds = 30 as Milliseconds;
 
     private paramToIndex = new Map<GameParamId, number>();
     private indexToParam: GameParamId[] = Array.from({ length: MAX_PARAMS });
@@ -22,10 +22,14 @@ export default class RTPCManager implements IRTPCManager {
     private overrideFlags = new Uint8Array(MAX_PARAMS);
     private overrideValues = new Float32Array(MAX_PARAMS);
 
-    public configureParam(name: GameParamId, attackMs: number = 0, releaseMs: number = 0): void {
+    public configureParam(
+        name: GameParamId,
+        attack: Milliseconds = 0 as Milliseconds,
+        release: Milliseconds = 0 as Milliseconds
+    ): void {
         const index = this.getParamIndex(name);
-        this.attack[index] = attackMs;
-        this.release[index] = releaseMs;
+        this.attack[index] = attack;
+        this.release[index] = release;
     }
 
     public setValue(name: GameParamId, value: number): void {
@@ -95,10 +99,10 @@ export default class RTPCManager implements IRTPCManager {
         this.overrideFlags.fill(0);
     }
 
-    public tick(currentTime: number, deltaTimeMs: number): void {
+    public tick(currentTime: number, deltaTime: Milliseconds): void {
         if (!this.isInterpolating) return;
 
-        const deltaTimeSec = deltaTimeMs / 1000;
+        const deltaTimeSec = deltaTime / 1000;
         let hasActive = false;
 
         for (let index = 0; index < this.nextFreeIndex; index++) {

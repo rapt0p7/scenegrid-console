@@ -1,8 +1,16 @@
-import type { SoundId, GameParamId, EventId, SnapshotId, RegionId, IDebugTransitionOptions } from '@scene-grid/shared';
+import type {
+    SoundId,
+    GameParamId,
+    EventId,
+    SnapshotId,
+    RegionId,
+    IDebugTransitionOptions,
+    Milliseconds
+} from '@scene-grid/shared';
 
 export interface IInspectorDebugPort {
     fireEvent(eventId: EventId): void;
-    applySnapshot(snapshotId: SnapshotId, fadeTimeMs?: number): void;
+    applySnapshot(snapshotId: SnapshotId, fadeTime?: Milliseconds): void;
     setRtpcOverride(param: GameParamId, value: number, isOverride: boolean): void;
     setSwitchOverride(switchId: SoundId, currentKey: string, isOverride: boolean): void;
     playLoop(soundId: SoundId, region: RegionId): void;

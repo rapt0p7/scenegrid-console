@@ -20,3 +20,17 @@ export type EventId = string & { readonly __brand: unique symbol };
 export type BankId = string & { readonly __brand: unique symbol };
 
 export type MusicStateId = string & { readonly __brand: unique symbol };
+
+export type ContextTime = number & { readonly __brand: unique symbol };
+
+export type Seconds = number & { readonly __brand: unique symbol };
+
+export type Milliseconds = number & { readonly __brand: unique symbol };
+
+export type Samples = number & { readonly __brand: unique symbol };
+
+export type BPM = number & { readonly __brand: unique symbol };
+
+export type Beats = number & { readonly __brand: unique symbol };
+
+export type Pulses = number & { readonly __brand: unique symbol };

@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
-import type { GameParamId } from '@scene-grid/shared';
+import type { GameParamId, Milliseconds } from '@scene-grid/shared';
 
 describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
     let manager: RTPCManager;
@@ -46,31 +46,31 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
 
     describe('Interpolation and Slew Rates (Math ticking)', () => {
         it('should correctly configure parameters without triggering immediate change', () => {
-            manager.configureParam('HP' as GameParamId, 1000, 2000);
+            manager.configureParam('HP' as GameParamId, 1000 as Milliseconds, 2000 as Milliseconds);
             manager.setValue('HP' as GameParamId, 100);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(0);
         });
 
         it('should apply values instantly if attack and release are <= 0', () => {
-            manager.configureParam('HP' as GameParamId, 0, 0);
+            manager.configureParam('HP' as GameParamId, 0 as Milliseconds, 0 as Milliseconds);
             manager.setValue('HP' as GameParamId, 100);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(100);
         });
 
         it('should interpolate value over time when increasing (Attack)', () => {
-            manager.configureParam('HP' as GameParamId, 1000, 0);
+            manager.configureParam('HP' as GameParamId, 1000 as Milliseconds, 0 as Milliseconds);
             manager.setValue('HP' as GameParamId, 100);
 
-            manager.tick(0, 30);
+            manager.tick(0, 30 as Milliseconds);
 
             const firstTickValue = manager.getValue('HP' as GameParamId);
             expect(firstTickValue).toBeGreaterThan(0);
             expect(firstTickValue).toBeLessThan(100);
 
-            manager.tick(0, 3000);
-            manager.tick(0, 30);
+            manager.tick(0, 3000 as Milliseconds);
+            manager.tick(0, 30 as Milliseconds);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(100);
         });
@@ -78,71 +78,71 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
         it('should interpolate value over time when decreasing (Release)', () => {
             manager.setValue('HP' as GameParamId, 100);
 
-            manager.configureParam('HP' as GameParamId, 0, 1000);
+            manager.configureParam('HP' as GameParamId, 0 as Milliseconds, 1000 as Milliseconds);
             manager.setValue('HP' as GameParamId, 0);
 
-            manager.tick(0, 30);
+            manager.tick(0, 30 as Milliseconds);
 
             const firstTickValue = manager.getValue('HP' as GameParamId);
             expect(firstTickValue).toBeLessThan(100);
             expect(firstTickValue).toBeGreaterThan(0);
 
-            manager.tick(0, 3000);
-            manager.tick(0, 30);
+            manager.tick(0, 3000 as Milliseconds);
+            manager.tick(0, 30 as Milliseconds);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(0);
         });
 
         it('should handle multiple parameters interpolating in the same tick', () => {
-            manager.configureParam('P1' as GameParamId, 1000, 1000);
-            manager.configureParam('P2' as GameParamId, 500, 500);
+            manager.configureParam('P1' as GameParamId, 1000 as Milliseconds, 1000 as Milliseconds);
+            manager.configureParam('P2' as GameParamId, 500 as Milliseconds, 500 as Milliseconds);
 
             manager.setValue('P1' as GameParamId, 100);
             manager.setValue('P2' as GameParamId, 50);
 
-            manager.tick(0, 30);
+            manager.tick(0, 30 as Milliseconds);
 
             expect(manager.getValue('P1' as GameParamId)).toBeGreaterThan(0);
             expect(manager.getValue('P2' as GameParamId)).toBeGreaterThan(0);
         });
 
         it('should snap to target if difference is very small (< 1e-4)', () => {
-            manager.configureParam('HP' as GameParamId, 1000, 1000);
+            manager.configureParam('HP' as GameParamId, 1000 as Milliseconds, 1000 as Milliseconds);
 
             manager.setValue('HP' as GameParamId, 99.999_99);
 
-            manager.configureParam('HP' as GameParamId, 0, 0);
+            manager.configureParam('HP' as GameParamId, 0 as Milliseconds, 0 as Milliseconds);
             manager.setValue('HP' as GameParamId, 99.999_95);
-            manager.configureParam('HP' as GameParamId, 1000, 1000);
+            manager.configureParam('HP' as GameParamId, 1000 as Milliseconds, 1000 as Milliseconds);
 
             manager.setValue('HP' as GameParamId, 100);
 
-            manager.tick(0, 30);
+            manager.tick(0, 30 as Milliseconds);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(100);
         });
 
         it('should fallback to instant assignment if slewTimeMs becomes 0 mid-flight', () => {
-            manager.configureParam('HP' as GameParamId, 1000, 1000);
+            manager.configureParam('HP' as GameParamId, 1000 as Milliseconds, 1000 as Milliseconds);
             manager.setValue('HP' as GameParamId, 100);
 
-            manager.tick(0, 30);
+            manager.tick(0, 30 as Milliseconds);
 
-            manager.configureParam('HP' as GameParamId, 0, 0);
+            manager.configureParam('HP' as GameParamId, 0 as Milliseconds, 0 as Milliseconds);
 
-            manager.tick(0, 30);
+            manager.tick(0, 30 as Milliseconds);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(100);
         });
 
         it('should sleep automatically (isInterpolating = false) when all interpolations finish', () => {
-            manager.configureParam('HP' as GameParamId, 100, 100);
+            manager.configureParam('HP' as GameParamId, 100 as Milliseconds, 100 as Milliseconds);
             manager.setValue('HP' as GameParamId, 10);
 
             expect((manager as any).isInterpolating).toBe(true);
 
-            manager.tick(0, 500);
-            manager.tick(0, 30);
+            manager.tick(0, 500 as Milliseconds);
+            manager.tick(0, 30 as Milliseconds);
 
             expect(manager.getValue('HP' as GameParamId)).toBe(10);
 
@@ -173,7 +173,7 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
         });
 
         it('should wake up the interpolator when disabling override if game state shifted in the background', () => {
-            manager.configureParam('P1' as GameParamId, 1000, 1000);
+            manager.configureParam('P1' as GameParamId, 1000 as Milliseconds, 1000 as Milliseconds);
             manager.setValue('P1' as GameParamId, 10);
 
             manager.setOverride('P1' as GameParamId, 99, true);
@@ -214,7 +214,7 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
         });
 
         it('should trigger wake up from resetOverrides() if background drift exists', () => {
-            manager.configureParam('P1' as GameParamId, 1000, 1000);
+            manager.configureParam('P1' as GameParamId, 1000 as Milliseconds, 1000 as Milliseconds);
             manager.setValue('P1' as GameParamId, 10);
             manager.setOverride('P1' as GameParamId, 88, true);
             manager.setValue('P1' as GameParamId, 50);

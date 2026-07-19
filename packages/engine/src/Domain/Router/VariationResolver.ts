@@ -1,6 +1,6 @@
 // noinspection D
 
-import { clamp, isAbsent, isDefined } from '@scene-grid/shared';
+import { clamp, isAbsent, isDefined, type Milliseconds } from '@scene-grid/shared';
 
 import type { IBaseSoundConfig, IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { IPRNG } from '@scene-grid/shared';
@@ -28,7 +28,7 @@ export class VariationResolver {
         }
 
         if (isDefined(v.randomOffset)) {
-            final.seek = prng.nextRange(0, v.randomOffset);
+            final.seek = prng.nextRange(0, v.randomOffset) as Milliseconds;
         }
 
         return final;

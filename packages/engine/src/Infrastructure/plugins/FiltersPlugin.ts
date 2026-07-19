@@ -1,6 +1,6 @@
 // noinspection D
 
-import { isDefined, isAbsent } from '@scene-grid/shared';
+import { isDefined, isAbsent, type Milliseconds } from '@scene-grid/shared';
 
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type {
@@ -100,13 +100,13 @@ export default class FiltersPlugin {
         filterNode,
         parameterName,
         targetValue = 20_000,
-        durationMs,
+        duration,
         automation
     }: {
         filterNode: BiquadFilterNodeLike;
         parameterName: AudioParameterKeys<BiquadFilterNodeLike>;
         targetValue?: number;
-        durationMs: number;
+        duration: Milliseconds;
         automation: AutomationEngine;
     }): void {
         if (isAbsent(filterNode)) return;
@@ -115,6 +115,6 @@ export default class FiltersPlugin {
 
         if (isAbsent(parameter)) return;
 
-        automation.ramp(parameter, targetValue, durationMs, 'linear');
+        automation.ramp(parameter, targetValue, duration, 'linear');
     }
 }

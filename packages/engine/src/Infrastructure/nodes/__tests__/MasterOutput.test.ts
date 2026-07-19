@@ -5,6 +5,7 @@ import MasterOutput from '../MasterOutput.js';
 
 import type AutomationEngine from '../../automation/AutomationEngine.js';
 import type AudioContextManager from '../../context/AudioContextManager.js';
+import type { Milliseconds } from '@scene-grid/shared';
 
 describe('MasterOutput', () => {
     let mockContextManager: any;
@@ -69,7 +70,7 @@ describe('MasterOutput', () => {
         const masterOut = new MasterOutput(mockContextManager, mockAutomationEngine);
         const [_, masterGain] = gainNodes;
 
-        masterOut.setVolume(0.5, 2);
+        masterOut.setVolume(0.5, 2 as Milliseconds);
 
         expect(mockAutomationEngine.ramp).toHaveBeenCalledWith(masterGain.gain, 0.5, 2, 'linear');
         expect(masterGain.gain.value).toBe(1);
@@ -81,7 +82,7 @@ describe('MasterOutput', () => {
 
         masterOut.mute();
 
-        expect(mockAutomationEngine.ramp).toHaveBeenCalledWith(masterGain.gain, 0, 0.05, 'linear');
+        expect(mockAutomationEngine.ramp).toHaveBeenCalledWith(masterGain.gain, 0, 50, 'linear');
     });
 
     it('should unmute to default (1) or provided value using default fade of 0.05s', () => {
@@ -89,10 +90,10 @@ describe('MasterOutput', () => {
         const [_, masterGain] = gainNodes;
 
         masterOut.unmute();
-        expect(mockAutomationEngine.ramp).toHaveBeenCalledWith(masterGain.gain, 1, 0.05, 'linear');
+        expect(mockAutomationEngine.ramp).toHaveBeenCalledWith(masterGain.gain, 1, 50, 'linear');
 
         masterOut.unmute(0.8);
-        expect(mockAutomationEngine.ramp).toHaveBeenCalledWith(masterGain.gain, 0.8, 0.05, 'linear');
+        expect(mockAutomationEngine.ramp).toHaveBeenCalledWith(masterGain.gain, 0.8, 50, 'linear');
     });
 
     it('should disconnect all nodes on dispose', () => {

@@ -1,14 +1,16 @@
+import type { ContextTime, Seconds } from '@scene-grid/shared';
+
 export type PlaybackState = 'idle' | 'playing' | 'paused' | 'stopped' | 'virtual';
 
 export interface IPlaybackController {
     readonly state: PlaybackState;
-    readonly currentTime: number;
-    readonly duration: number;
+    readonly currentTime: Seconds;
+    readonly duration: Seconds;
     readonly isLooping: boolean;
     readonly playbackRate: number;
 
-    play(when?: number, offset?: number, duration?: number): void;
-    stop(when?: number): void;
+    play(when?: ContextTime, offset?: Seconds, duration?: Seconds): void;
+    stop(when?: ContextTime): void;
     pause(): void;
     resume(): void;
     setRate(rate: number): void;

@@ -9,7 +9,7 @@ import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { BusId } from '@scene-grid/shared';
+import type { BusId, Milliseconds, Seconds } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type {
     AudioCtx,
@@ -55,18 +55,18 @@ export default class AudioBus implements IAudioBus {
     private isDirty = false;
     private swapState = {
         active: false,
-        executeAt: 0,
-        durationMs: 0,
+        executeAt: 0 as Seconds,
+        duration: 0 as Milliseconds,
         newFilterConfigOrNode: null as BiquadFilterNodeLike | IFilter | null
     };
 
     private targetParams = {
-        gain: { logical: 1, rtpc: 1, durationMs: 0 },
-        filterFrequency: { logical: 20_000, rtpc: 0, durationMs: 0 },
-        pan: { logical: 0, rtpc: 0, durationMs: 0 },
+        gain: { logical: 1, rtpc: 1, duration: 0 as Milliseconds },
+        filterFrequency: { logical: 20_000, rtpc: 0, duration: 0 as Milliseconds },
+        pan: { logical: 0, rtpc: 0, duration: 0 as Milliseconds },
         sends: new Map<
             BusId,
-            { logical: number | null; rtpc: number; durationMs: number; targetNode?: AudioNodeLike }
+            { logical: number | null; rtpc: number; duration: Milliseconds; targetNode?: AudioNodeLike }
         >()
     };
 
@@ -117,7 +117,7 @@ export default class AudioBus implements IAudioBus {
         this.coldStart();
     }
 
-    public processFrame(currentTime: number): void {
+    public processFrame(currentTime: Seconds): void {
         if (this.isDirty) {
             this.recalculateAndApply();
             this.isDirty = false;
@@ -140,40 +140,40 @@ export default class AudioBus implements IAudioBus {
         return result as IBus;
     }
 
-    public setLogicalGain(gain: number, durationMs: number = 0): void {
+    public setLogicalGain(gain: number, duration: Milliseconds = 0 as Milliseconds): void {
         this.targetParams.gain.logical = gain;
         this.logicalTargetGain = gain;
 
-        if (durationMs <= 0) {
+        if (duration <= 0) {
             this.automation.set(this.#inputGainNode.gain, gain);
-            this.targetParams.gain.durationMs = 0;
+            this.targetParams.gain.duration = 0 as Milliseconds;
         } else {
-            this.targetParams.gain.durationMs = Math.max(this.targetParams.gain.durationMs, durationMs);
+            this.targetParams.gain.duration = Math.max(this.targetParams.gain.duration, duration) as Milliseconds;
             this.scheduleUpdate();
         }
     }
 
     public setGainImmediate(gain: number): void {
-        this.setLogicalGain(gain, 0);
+        this.setLogicalGain(gain, 0 as Milliseconds);
     }
 
-    public setRtpcGainModifier(modifier: number, durationMs: number = 0): void {
+    public setRtpcGainModifier(modifier: number, duration: Milliseconds = 0 as Milliseconds): void {
         this.targetParams.gain.rtpc = modifier;
-        this.targetParams.gain.durationMs = Math.max(this.targetParams.gain.durationMs, durationMs);
+        this.targetParams.gain.duration = Math.max(this.targetParams.gain.duration, duration) as Milliseconds;
         this.scheduleUpdate();
     }
 
     public safeReplaceFilter(
         newFilterConfigOrNode: BiquadFilterNodeLike | IFilter | null,
-        durationMs: number = 8
+        duration: Milliseconds = 8 as Milliseconds
     ): void {
-        const fadeSec = Math.max(0.001, durationMs / 1000);
+        const fadeSec = Math.max(0.001, duration / 1000) as Seconds;
 
-        this.automation.ramp(this.#postFilterGain.gain, 0, durationMs, 'linear');
+        this.automation.ramp(this.#postFilterGain.gain, 0, duration, 'linear');
 
         this.swapState.active = true;
-        this.swapState.executeAt = this.context.currentTime + fadeSec + 0.002;
-        this.swapState.durationMs = durationMs;
+        this.swapState.executeAt = (this.context.currentTime + fadeSec + 0.002) as Seconds;
+        this.swapState.duration = duration;
         this.swapState.newFilterConfigOrNode = newFilterConfigOrNode;
     }
 
@@ -188,7 +188,7 @@ export default class AudioBus implements IAudioBus {
             if (isAbsent(config)) continue;
 
             const target = targetName;
-            const smoothing = config.smoothingMs ?? 50;
+            const smoothing = (config.smoothing ?? 50) as Milliseconds;
             const targetBusId = config.sendTargetBus;
 
             const gameValue = rtpcAdapter.getValue(config.gameParam);
@@ -202,23 +202,23 @@ export default class AudioBus implements IAudioBus {
         targetBusId,
         targetNode,
         targetGain,
-        durationMs
+        duration
     }: {
         targetBusId: BusId;
         targetNode: AudioNodeLike;
         targetGain: number | null;
-        durationMs: number;
+        duration: Milliseconds;
     }): void {
         let state = this.targetParams.sends.get(targetBusId);
 
         if (isAbsent(state)) {
-            state = { logical: targetGain, rtpc: 1, durationMs: 0, targetNode };
+            state = { logical: targetGain, rtpc: 1, duration: 0 as Milliseconds, targetNode };
             this.targetParams.sends.set(targetBusId, state);
         }
 
         state.logical = targetGain;
         state.targetNode = targetNode;
-        state.durationMs = Math.max(state.durationMs, durationMs);
+        state.duration = Math.max(state.duration, duration) as Milliseconds;
         this.scheduleUpdate();
     }
 
@@ -230,12 +230,12 @@ export default class AudioBus implements IAudioBus {
 
         if (isDefined(config.frequency) && isDefined(this.filterNode.frequency)) {
             this.targetParams.filterFrequency.logical = config.frequency;
-            this.targetParams.filterFrequency.durationMs = 30;
+            this.targetParams.filterFrequency.duration = 30 as Milliseconds;
             this.scheduleUpdate();
         }
 
         if (isDefined(config.Q) && isDefined(this.filterNode.Q)) {
-            this.automation.ramp(this.filterNode.Q, config.Q, 30, 'linear');
+            this.automation.ramp(this.filterNode.Q, config.Q, 30 as Milliseconds, 'linear');
         }
     }
 
@@ -250,7 +250,7 @@ export default class AudioBus implements IAudioBus {
     private applyRTPCTarget(
         target: RTPCTargetProperty,
         mappedValue: number,
-        smoothing: number,
+        smoothing: Milliseconds,
         targetBusId?: BusId
     ): void {
         switch (target) {
@@ -260,16 +260,16 @@ export default class AudioBus implements IAudioBus {
             }
             case 'filterFrequency': {
                 this.targetParams.filterFrequency.rtpc = mappedValue;
-                this.targetParams.filterFrequency.durationMs = Math.max(
-                    this.targetParams.filterFrequency.durationMs,
+                this.targetParams.filterFrequency.duration = Math.max(
+                    this.targetParams.filterFrequency.duration,
                     smoothing
-                );
+                ) as Milliseconds;
                 this.scheduleUpdate();
                 break;
             }
             case 'pan': {
                 this.targetParams.pan.rtpc = mappedValue;
-                this.targetParams.pan.durationMs = Math.max(this.targetParams.pan.durationMs, smoothing);
+                this.targetParams.pan.duration = Math.max(this.targetParams.pan.duration, smoothing) as Milliseconds;
                 this.scheduleUpdate();
                 break;
             }
@@ -277,11 +277,11 @@ export default class AudioBus implements IAudioBus {
                 if (isAbsent(targetBusId)) break;
                 let state = this.targetParams.sends.get(targetBusId);
                 if (isAbsent(state)) {
-                    state = { logical: 0, rtpc: 1, durationMs: 0 };
+                    state = { logical: 0, rtpc: 1, duration: 0 as Milliseconds };
                     this.targetParams.sends.set(targetBusId, state);
                 }
                 state.rtpc = mappedValue;
-                state.durationMs = Math.max(state.durationMs, smoothing);
+                state.duration = Math.max(state.duration, smoothing) as Milliseconds;
                 this.scheduleUpdate();
                 break;
             }
@@ -303,8 +303,8 @@ export default class AudioBus implements IAudioBus {
     private recalculateAndApply(): void {
         const finalGain = clamp(this.targetParams.gain.logical * this.targetParams.gain.rtpc, 0, 4);
         this.logicalTargetGain = finalGain;
-        this.automation.ramp(this.#inputGainNode.gain, finalGain, this.targetParams.gain.durationMs, 'linear');
-        this.targetParams.gain.durationMs = 0;
+        this.automation.ramp(this.#inputGainNode.gain, finalGain, this.targetParams.gain.duration, 'linear');
+        this.targetParams.gain.duration = 0 as Milliseconds;
 
         if (this.isBiquadFilterNode(this.filterNode)) {
             const finalFreq = clamp(
@@ -315,16 +315,16 @@ export default class AudioBus implements IAudioBus {
             this.automation.ramp(
                 this.filterNode.frequency,
                 finalFreq,
-                this.targetParams.filterFrequency.durationMs,
+                this.targetParams.filterFrequency.duration,
                 'exponential'
             );
-            this.targetParams.filterFrequency.durationMs = 0;
+            this.targetParams.filterFrequency.duration = 0 as Milliseconds;
         }
 
         if (isDefined(this.pannerNode)) {
             const finalPan = clamp(this.targetParams.pan.logical + this.targetParams.pan.rtpc, -1, 1);
-            this.automation.ramp(this.pannerNode.pan, finalPan, this.targetParams.pan.durationMs, 'linear');
-            this.targetParams.pan.durationMs = 0;
+            this.automation.ramp(this.pannerNode.pan, finalPan, this.targetParams.pan.duration, 'linear');
+            this.targetParams.pan.duration = 0 as Milliseconds;
         }
 
         for (const [targetBusId, state] of this.targetParams.sends.entries()) {
@@ -335,7 +335,7 @@ export default class AudioBus implements IAudioBus {
 
             if (isRemoving) {
                 if (isDefined(sendGainNode)) {
-                    this.automation.ramp(sendGainNode.gain, 0, state.durationMs, 'linear');
+                    this.automation.ramp(sendGainNode.gain, 0, state.duration, 'linear');
 
                     setTimeout(() => {
                         const currentState = this.targetParams.sends.get(targetBusId);
@@ -348,7 +348,7 @@ export default class AudioBus implements IAudioBus {
                         this.sendGains.delete(targetBusId);
 
                         this.targetParams.sends.delete(targetBusId);
-                    }, state.durationMs + 50);
+                    }, state.duration + 50);
                 } else {
                     this.targetParams.sends.delete(targetBusId);
                 }
@@ -364,10 +364,10 @@ export default class AudioBus implements IAudioBus {
                     this.sendGains.set(targetBusId, sendGainNode);
                 }
                 if (isDefined(sendGainNode)) {
-                    this.automation.ramp(sendGainNode.gain, finalSendGain, state.durationMs, 'linear');
+                    this.automation.ramp(sendGainNode.gain, finalSendGain, state.duration, 'linear');
                 }
             }
-            state.durationMs = 0;
+            state.duration = 0 as Milliseconds;
         }
     }
 
@@ -404,7 +404,7 @@ export default class AudioBus implements IAudioBus {
             this.currentFilterConfig = undefined;
         }
 
-        this.automation.ramp(this.#postFilterGain.gain, 1, this.swapState.durationMs, 'linear');
+        this.automation.ramp(this.#postFilterGain.gain, 1, this.swapState.duration, 'linear');
 
         this.swapState.active = false;
         this.swapState.newFilterConfigOrNode = null;

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
 import AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
+import type { Milliseconds } from '@scene-grid/shared';
 
 const BUS_CONFIG = {
     musicMain: { gain: 1 },
@@ -26,6 +27,7 @@ describe('Integration: Cold Start Audio Leak', () => {
     beforeEach(async () => {
         vi.clearAllMocks();
 
+        // oxlint-disable-next-line unicorn/consistent-function-scoping
         const createMockNode = (name: string) => {
             const state = { currentGain: 1 };
 
@@ -90,7 +92,7 @@ describe('Integration: Cold Start Audio Leak', () => {
     });
 
     it('should NOT allow leaked audio when playing sounds immediately after setState', async () => {
-        mixer.applyState(IDLE_SNAPSHOT as any, { durationMs: 0 });
+        mixer.applyState(IDLE_SNAPSHOT as any, { duration: 0 as Milliseconds });
 
         const exploreBus = busSystem.getBus('musicExplore' as any);
         const combatBus = busSystem.getBus('musicCombat' as any);

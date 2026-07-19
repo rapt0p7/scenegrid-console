@@ -5,7 +5,7 @@ import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
 import type { IBus, IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IDuckingConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { BusId, TickerTaskId } from '@scene-grid/shared';
+import { BusId, TickerTaskId, Milliseconds, ContextTime, TimeMath } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { AudioCtx, AudioNodeLike, GainNodeLike } from '@infrastructure/types/IAudioContext.js';
@@ -28,7 +28,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
     private readonly masterOutput: IMasterOutput;
     private readonly pluginFactory: IPluginFactory;
     private masterLimiter?: ILimiterNode;
-    private readonly TICK_RATE_MS = 20;
+    private readonly TICK_RATE: Milliseconds = 20 as Milliseconds;
     constructor(
         {
             context,
@@ -74,13 +74,13 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
         await this.initBuses();
 
-        ticker.add('audio-bus-system' as TickerTaskId, this.TICK_RATE_MS, this);
+        ticker.add('audio-bus-system' as TickerTaskId, this.TICK_RATE, this);
     }
 
-    public tick(currentTime: number) {
+    public tick(currentTime: ContextTime) {
         const length = this.hotPathBuses.length;
         for (let index = 0; index < length; index++) {
-            this.hotPathBuses[index].processFrame(currentTime);
+            this.hotPathBuses[index].processFrame(TimeMath.castToSeconds(currentTime));
         }
     }
 
@@ -186,7 +186,12 @@ export default class AudioBusSystem implements IAudioBusSystem {
     }
 
     // eslint-disable-next-line max-params
-    public applySend(sourceBusId: BusId, targetBusId: BusId, gain: number | null, durationMs: number = 0): void {
+    public applySend(
+        sourceBusId: BusId,
+        targetBusId: BusId,
+        gain: number | null,
+        duration: Milliseconds = 0 as Milliseconds
+    ): void {
         const sourceBus = this.getBus(sourceBusId);
         const targetBus = this.getBus(targetBusId);
 
@@ -204,7 +209,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 targetBusId: targetBusId,
                 targetNode: targetInputNode as AudioNodeLike,
                 targetGain: gain,
-                durationMs
+                duration
             });
         }
     }
@@ -297,7 +302,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
             }
 
             bus.bindRTPC(busConfig.rtpc);
-            bus.safeReplaceFilter(busConfig.filter ?? null, 100);
+            bus.safeReplaceFilter(busConfig.filter ?? null, 100 as Milliseconds);
         }
 
         const promises = [];
@@ -306,7 +311,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
             if (busConfig.sends) {
                 for (const [targetBusId, sendGain] of typedEntries(busConfig.sends)) {
-                    this.applySend(busId as BusId, targetBusId, sendGain, 100);
+                    this.applySend(busId as BusId, targetBusId, sendGain, 100 as Milliseconds);
                 }
             }
 
@@ -315,7 +320,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
                     const isStillExists = busConfig.sends && isDefined(busConfig.sends[targetBusId]);
 
                     if (!isStillExists) {
-                        this.applySend(busId as BusId, targetBusId, null, 100);
+                        this.applySend(busId as BusId, targetBusId, null, 100 as Milliseconds);
                     }
                 }
             }
@@ -424,7 +429,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
         for (const [busId, busConfig] of typedEntries(this.busConfig!)) {
             if (busConfig.sends) {
                 for (const [targetBusId, sendGain] of typedEntries(busConfig.sends)) {
-                    this.applySend(busId as BusId, targetBusId, sendGain, 0);
+                    this.applySend(busId as BusId, targetBusId, sendGain, 0 as Milliseconds);
                 }
             }
             if (busConfig.sidechain?.enabled) {

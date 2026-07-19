@@ -10,7 +10,7 @@ import Sequencer from '@domain/Orchestration/Sequencer.js';
 
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
-import type { PlaybackId, RegionId, SoundId } from '@scene-grid/shared';
+import type { ContextTime, Milliseconds, PlaybackId, Pulses, RegionId, SoundId } from '@scene-grid/shared';
 import type { Mocked } from 'vitest';
 
 vi.mock('../AudioGrid', () => {
@@ -22,7 +22,7 @@ vi.mock('../AudioGrid', () => {
 
 describe('Sequencer (Interactive Music)', () => {
     let mockContext: MockAudioContext;
-    let simulatedTime: number;
+    let simulatedTime: ContextTime;
 
     let mockController: any;
     let mockRouter: any;
@@ -38,7 +38,7 @@ describe('Sequencer (Interactive Music)', () => {
         capturedOnVoiceEnded = null;
         capturedTickTarget = null;
 
-        simulatedTime = 0;
+        simulatedTime = 0 as ContextTime;
         mockContext = new MockAudioContext();
 
         mockTicker = {
@@ -102,7 +102,7 @@ describe('Sequencer (Interactive Music)', () => {
         registrar.reset(mockContext as any);
     });
 
-    function triggerTick(deltaTimeMs: number = 25) {
+    function triggerTick(deltaTimeMs: Milliseconds = 25 as Milliseconds) {
         if (capturedTickTarget) {
             capturedTickTarget.tick(simulatedTime, deltaTimeMs);
         }
@@ -130,7 +130,7 @@ describe('Sequencer (Interactive Music)', () => {
         manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         mockController.play.mockClear();
 
-        simulatedTime = 0.95;
+        simulatedTime = 0.95 as ContextTime;
         triggerTick();
 
         expect(mockController.play).toHaveBeenCalledTimes(1);
@@ -150,13 +150,13 @@ describe('Sequencer (Interactive Music)', () => {
 
     it('should perform DIRECT transition with full crossfade (No Fill)', () => {
         manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
-        simulatedTime = 0.5;
+        simulatedTime = 0.5 as ContextTime;
 
         manager.transitionTo({
             soundId: 'battle_music' as SoundId,
             targetRegion: 'main' as RegionId,
             transitionRegionName: '' as RegionId,
-            options: { quantize: 'Immediate', crossfadeDuration: 1000 }
+            options: { quantize: 'Immediate', crossfadeDuration: 1000 as Milliseconds }
         });
 
         expect(mockController.fadeVolume).toHaveBeenCalledWith(1, 0, 1000, 'equal-power', 0);
@@ -179,7 +179,7 @@ describe('Sequencer (Interactive Music)', () => {
         mockController.play.mockClear();
         mockController.setVolume.mockClear();
         mockController.fadeVolume.mockClear();
-        simulatedTime = 0.5;
+        simulatedTime = 0.5 as ContextTime;
         vi.mocked(mockController.getCurrentTime).mockReturnValue(0.5);
 
         mockController.play.mockReturnValueOnce(2 as PlaybackId);
@@ -188,7 +188,7 @@ describe('Sequencer (Interactive Music)', () => {
             soundId: 'battle_music' as SoundId,
             targetRegion: 'main' as RegionId,
             transitionRegionName: 'fill' as RegionId,
-            options: { quantize: 'Immediate', crossfadeDuration: 4000 }
+            options: { quantize: 'Immediate', crossfadeDuration: 4000 as Milliseconds }
         });
 
         expect(mockController.fadeVolume).toHaveBeenCalledWith(1, 0, 4000, 'equal-power', expect.any(Number));
@@ -201,7 +201,7 @@ describe('Sequencer (Interactive Music)', () => {
     it('should perform QUANTIZED transition using AudioGrid', () => {
         manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
         mockController.play.mockClear();
-        simulatedTime = 0.8;
+        simulatedTime = 0.8 as ContextTime;
 
         manager.transitionTo({
             soundId: 'battle_music' as SoundId,
@@ -212,7 +212,7 @@ describe('Sequencer (Interactive Music)', () => {
 
         expect(mockController.play).not.toHaveBeenCalled();
 
-        simulatedTime = 1.95;
+        simulatedTime = 1.95 as ContextTime;
         triggerTick();
 
         expect(mockController.play).toHaveBeenCalledTimes(1);
@@ -242,7 +242,7 @@ describe('Sequencer (Interactive Music)', () => {
             transitionRegionName: '' as RegionId,
             options: {
                 quantize: 'Immediate',
-                crossfadeDuration: 0
+                crossfadeDuration: 0 as Milliseconds
             }
         });
 
@@ -407,13 +407,13 @@ describe('Sequencer (Interactive Music)', () => {
                 getNextBarTime: vi.fn()
             } as any;
 
-            simulatedTime = 0.5;
+            simulatedTime = 0.5 as ContextTime;
 
             manager.transitionTo({
                 soundId: 'battle_music' as SoundId,
                 targetRegion: 'main' as RegionId,
                 options: {
-                    quantize: { type: 'ExactPulse', pulseOffset: 480 },
+                    quantize: { type: 'ExactPulse', pulseOffset: 480 as Pulses },
                     grid: customGrid
                 }
             });
@@ -498,7 +498,7 @@ describe('Sequencer (Interactive Music)', () => {
             });
 
             it('should schedule stinger strictly using ExactPulse offset', () => {
-                manager.playStinger('victory_chord' as SoundId, { type: 'ExactPulse', pulseOffset: 300 });
+                manager.playStinger('victory_chord' as SoundId, { type: 'ExactPulse', pulseOffset: 300 as Pulses });
 
                 expect(customGrid.getPulseAtTime).toHaveBeenCalledWith(0.96);
                 expect(customGrid.getTimeAtPulse).toHaveBeenCalledWith(1260);
@@ -522,7 +522,7 @@ describe('Sequencer (Interactive Music)', () => {
         });
     });
 
-    describe('Pickups (preEntryMs) Logic', () => {
+    describe('Pickups (preEntry) Logic', () => {
         it('should handle pickups on fresh start by pushing the grid forward to play the full pickup', () => {
             mockRouter.getSoundConfig.mockReturnValue({
                 busId: 'music',
@@ -534,7 +534,7 @@ describe('Sequencer (Interactive Music)', () => {
                 }
             });
 
-            simulatedTime = 0;
+            simulatedTime = 0 as ContextTime;
             manager.playLoop('battle_music' as SoundId, 'pickup_region' as RegionId);
 
             expect(mockController.play).toHaveBeenCalledTimes(1);
@@ -561,7 +561,7 @@ describe('Sequencer (Interactive Music)', () => {
             const track = (manager as any).getTrackContext('battle_music');
             track.gridStartTime = 0;
 
-            simulatedTime = 9.7;
+            simulatedTime = 9.7 as ContextTime;
 
             (manager as any).scheduleRegion({
                 soundId: 'battle_music',
@@ -580,8 +580,8 @@ describe('Sequencer (Interactive Music)', () => {
         });
     });
 
-    describe('Musical Overlap & Tails (tailDurationMs) Logic', () => {
-        it('should append tailMs to the physical duration of the scheduled region without shifting the grid', () => {
+    describe('Musical Overlap & Tails (tailDuration) Logic', () => {
+        it('should append tail to the physical duration of the scheduled region without shifting the grid', () => {
             mockRouter.getSoundConfig.mockReturnValue({
                 busId: 'music',
                 smartLoop: {
@@ -592,7 +592,7 @@ describe('Sequencer (Interactive Music)', () => {
                 }
             });
 
-            simulatedTime = 0;
+            simulatedTime = 0 as ContextTime;
             manager.playLoop('battle_music' as SoundId, 'tail_region' as RegionId);
 
             expect(mockController.play).toHaveBeenCalledTimes(1);
@@ -604,15 +604,15 @@ describe('Sequencer (Interactive Music)', () => {
             expect(track.nextScheduleTime).toBeCloseTo(1.0);
         });
 
-        it('should perform MUSICAL OVERLAP transition when tailDurationMs is provided', () => {
+        it('should perform MUSICAL OVERLAP transition when tailDuration is provided', () => {
             manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
-            simulatedTime = 0.5;
+            simulatedTime = 0.5 as ContextTime;
 
             manager.transitionTo({
                 soundId: 'battle_music' as SoundId,
                 targetRegion: 'main' as RegionId,
                 transitionRegionName: '' as RegionId,
-                options: { quantize: 'Immediate', tailDurationMs: 2000 }
+                options: { quantize: 'Immediate', tailDuration: 2000 as Milliseconds }
             });
 
             expect(mockController.fadeVolume).not.toHaveBeenCalled();
@@ -635,18 +635,18 @@ describe('Sequencer (Interactive Music)', () => {
 
         it('should play stinger immediately if quantize is Immediate', () => {
             manager.playStinger('victory_chord' as SoundId, 'Immediate');
-            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delayMs: 0 });
+            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delay: 0 });
         });
 
         it('should play stinger immediately if no looping track is active', () => {
             manager.playStinger('victory_chord' as SoundId, 'NextBar');
-            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delayMs: 0 });
+            expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { delay: 0 });
         });
 
         it('should quantize stinger to NextBeat using the active track grid', () => {
             manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
             mockRouter.play.mockClear();
-            simulatedTime = 1.0;
+            simulatedTime = 1.0 as ContextTime;
 
             manager.playStinger('victory_chord' as SoundId, 'NextBeat');
 
@@ -656,7 +656,7 @@ describe('Sequencer (Interactive Music)', () => {
         it('should quantize stinger to NextBar using the explicit reference track', () => {
             manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
             mockRouter.play.mockClear();
-            simulatedTime = 0.5;
+            simulatedTime = 0.5 as ContextTime;
 
             manager.playStinger('victory_chord' as SoundId, 'NextBar', 'battle_music' as SoundId);
 
@@ -733,12 +733,12 @@ describe('Sequencer (Interactive Music)', () => {
                 });
             });
 
-            it('should apply Relative offset correctly and ignore preEntryMs', () => {
+            it('should apply Relative offset correctly and ignore preEntry', () => {
                 manager.playLoop('battle_music' as SoundId, 'source_region' as RegionId);
 
                 const track = (manager as any).tracks.get('battle_music');
                 track.gridStartTime = 0;
-                simulatedTime = 0.5;
+                simulatedTime = 0.5 as ContextTime;
 
                 mockController.play.mockClear();
 
@@ -760,7 +760,7 @@ describe('Sequencer (Interactive Music)', () => {
 
                 const track = (manager as any).tracks.get('battle_music');
                 track.gridStartTime = 0;
-                simulatedTime = 0.5;
+                simulatedTime = 0.5 as ContextTime;
 
                 mockController.play.mockClear();
 
@@ -779,7 +779,7 @@ describe('Sequencer (Interactive Music)', () => {
 
                 const track = (manager as any).tracks.get('battle_music');
                 track.gridStartTime = 0;
-                simulatedTime = 0.5;
+                simulatedTime = 0.5 as ContextTime;
 
                 mockController.play.mockClear();
 

@@ -337,7 +337,7 @@ export default class ConsistencyChecker {
             const path = `soundMap.${soundId}.layers[${index}]`;
             if (this.assertRequiredType(path, layer, 'object')) {
                 this.assertRequiredType(`${path}.src`, layer.src, 'string');
-                this.assertOptionalType(`${path}.delayMs`, layer.delayMs, 'number');
+                this.assertOptionalType(`${path}.delay`, layer.delay, 'number');
                 this.assertOptionalType(`${path}.volume`, layer.volume, 'number');
 
                 if (isDefined(layer.src) && !this.manifest[layer.src] && !this.soundMap[layer.src]) {
@@ -361,7 +361,7 @@ export default class ConsistencyChecker {
 
         this.validateContainerSources(path, cfg.sources);
 
-        this.validateTuple(`${path}.spawnRateMs`, cfg.spawnRateMs);
+        this.validateTuple(`${path}.spawnRate`, cfg.spawnRate);
         if (isDefined(cfg.scatterDistance)) {
             this.validateTuple(`${path}.scatterDistance`, cfg.scatterDistance);
         }
@@ -429,10 +429,10 @@ export default class ConsistencyChecker {
                     );
                 } else {
                     if (range.length >= 3 && typeof range[2] !== 'number') {
-                        this.errors.push(`SmartLoop "${soundId}" region "${regionId}" preEntryMs must be a number.`);
+                        this.errors.push(`SmartLoop "${soundId}" region "${regionId}" preEntry must be a number.`);
                     }
                     if (range.length === 4 && typeof range[3] !== 'number') {
-                        this.errors.push(`SmartLoop "${soundId}" region "${regionId}" tailMs must be a number.`);
+                        this.errors.push(`SmartLoop "${soundId}" region "${regionId}" tail must be a number.`);
                     }
                 }
             }
@@ -461,7 +461,7 @@ export default class ConsistencyChecker {
 
             this.assertOptionalType(`${magnetPath}.transitionRegionName`, magnet.transitionRegionName, 'string');
             this.assertOptionalType(`${magnetPath}.crossfadeDuration`, magnet.crossfadeDuration, 'number');
-            this.assertOptionalType(`${magnetPath}.tailDurationMs`, magnet.tailDurationMs, 'number');
+            this.assertOptionalType(`${magnetPath}.tailDuration`, magnet.tailDuration, 'number');
 
             if (
                 isDefined(magnet.offsetMode) &&
@@ -647,8 +647,8 @@ export default class ConsistencyChecker {
 
             if (!this.assertRequiredType(`${configPath}.gameParam`, rConfig.gameParam, 'string')) continue;
 
-            if (isDefined(rConfig.smoothingMs)) {
-                this.assertOptionalType(`${configPath}.smoothingMs`, rConfig.smoothingMs, 'number');
+            if (isDefined(rConfig.smoothing)) {
+                this.assertOptionalType(`${configPath}.smoothing`, rConfig.smoothing, 'number');
             }
 
             const curve = rConfig.curve;
@@ -877,12 +877,12 @@ export default class ConsistencyChecker {
 
             if (!this.assertRequiredType(configPath, config, 'object')) continue;
 
-            if (isDefined(config.attackMs)) {
-                this.assertOptionalType(`${configPath}.attackMs`, config.attackMs, 'number');
+            if (isDefined(config.attack)) {
+                this.assertOptionalType(`${configPath}.attack`, config.attack, 'number');
             }
 
-            if (isDefined(config.releaseMs)) {
-                this.assertOptionalType(`${configPath}.releaseMs`, config.releaseMs, 'number');
+            if (isDefined(config.release)) {
+                this.assertOptionalType(`${configPath}.release`, config.release, 'number');
             }
 
             if (isDefined(config.defaultValue)) {
@@ -997,10 +997,10 @@ export default class ConsistencyChecker {
                 if (!this.assertRequiredType(actionPath, action, 'object')) continue;
                 if (!this.assertRequiredType(`${actionPath}.type`, action.type, 'string')) continue;
 
-                if (isDefined(action.delayMs)) {
-                    if (this.assertOptionalType(`${actionPath}.delayMs`, action.delayMs, 'number')) {
-                        if (isDefined(action.delayMs) && action.delayMs < 0) {
-                            this.errors.push(`Action at "${actionPath}.delayMs" cannot be negative.`);
+                if (isDefined(action.delay)) {
+                    if (this.assertOptionalType(`${actionPath}.delay`, action.delay, 'number')) {
+                        if (isDefined(action.delay) && action.delay < 0) {
+                            this.errors.push(`Action at "${actionPath}.delay" cannot be negative.`);
                         }
                     }
                 }
@@ -1071,7 +1071,7 @@ export default class ConsistencyChecker {
                             if (this.assertRequiredType(`${actionPath}.options`, options, 'object')) {
                                 const opts = options as Record<string, any>;
                                 this.assertOptionalType(`${actionPath}.options.allowTail`, opts.allowTail, 'boolean');
-                                this.assertOptionalType(`${actionPath}.options.fadeOutMs`, opts.fadeOutMs, 'number');
+                                this.assertOptionalType(`${actionPath}.options.fadeOut`, opts.fadeOut, 'number');
                             }
                         }
                         break;
@@ -1118,7 +1118,7 @@ export default class ConsistencyChecker {
 
                             this.assertOptionalType(`${optsPath}.quantize`, opts.quantize, 'string');
                             this.assertOptionalType(`${optsPath}.crossfadeDuration`, opts.crossfadeDuration, 'number');
-                            this.assertOptionalType(`${optsPath}.tailDurationMs`, opts.tailDurationMs, 'number');
+                            this.assertOptionalType(`${optsPath}.tailDuration`, opts.tailDuration, 'number');
                             this.assertOptionalType(`${optsPath}.interruptable`, opts.interruptable, 'boolean');
 
                             if (

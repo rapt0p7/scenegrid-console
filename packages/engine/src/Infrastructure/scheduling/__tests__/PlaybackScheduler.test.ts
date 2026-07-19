@@ -6,6 +6,7 @@ import { PlaybackScheduler } from '@infrastructure';
 
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
+import { ContextTime, Seconds } from '@scene-grid/shared';
 
 describe('PlaybackScheduler', () => {
     let mockContextManager: any;
@@ -39,8 +40,8 @@ describe('PlaybackScheduler', () => {
     });
 
     it('should schedule play accurately using absolute targetTime', () => {
-        const targetTime = 102.5;
-        const id = scheduler.schedulePlay(mockInstance, targetTime, 1, 5);
+        const targetTime = 102.5 as ContextTime;
+        const id = scheduler.schedulePlay(mockInstance, targetTime, 1 as Seconds, 5 as Seconds);
 
         expect(id).toBe(1);
         expect(mockInstance.play).toHaveBeenCalledWith(targetTime, 1, 5);
@@ -48,20 +49,20 @@ describe('PlaybackScheduler', () => {
     });
 
     it('should fallback to context currentTime if targetTime is 0', () => {
-        scheduler.schedulePlay(mockInstance, 0, 1, 5);
+        scheduler.schedulePlay(mockInstance, 0 as ContextTime, 1 as Seconds, 5 as Seconds);
 
         expect(mockInstance.play).toHaveBeenCalledWith(100, 1, 5);
     });
 
     it('should schedule stop by passing relative delay to instance', () => {
-        const id = scheduler.scheduleStop(mockInstance, 5);
+        const id = scheduler.scheduleStop(mockInstance, 5 as ContextTime);
 
         expect(id).toBe(1);
         expect(mockInstance.stop).toHaveBeenCalledWith(5);
     });
 
     it('should cancel a specific scheduled event by ID', () => {
-        const playId = scheduler.schedulePlay(mockInstance, 2);
+        const playId = scheduler.schedulePlay(mockInstance, 2 as ContextTime);
 
         scheduler.cancel(playId);
 
@@ -73,8 +74,8 @@ describe('PlaybackScheduler', () => {
     });
 
     it('should cancel ALL events for a specific instance', () => {
-        scheduler.schedulePlay(mockInstance, 1);
-        scheduler.schedulePlay(mockInstance, 2);
+        scheduler.schedulePlay(mockInstance, 1 as ContextTime);
+        scheduler.schedulePlay(mockInstance, 2 as ContextTime);
 
         scheduler.cancelAll(mockInstance);
 
@@ -83,7 +84,7 @@ describe('PlaybackScheduler', () => {
     });
 
     it('should auto-cleanup slot and unsubscribe when instance ends', () => {
-        const playId = scheduler.schedulePlay(mockInstance, 1);
+        const playId = scheduler.schedulePlay(mockInstance, 1 as ContextTime);
 
         expect(endedHandler).toBeDefined();
         endedHandler(mockInstance);
@@ -95,7 +96,7 @@ describe('PlaybackScheduler', () => {
     });
 
     it('should clear instance from registry without calling cancelScheduled', () => {
-        const id = scheduler.schedulePlay(mockInstance, 1);
+        const id = scheduler.schedulePlay(mockInstance, 1 as ContextTime);
 
         scheduler.clearInstance(mockInstance);
 
@@ -115,8 +116,8 @@ describe('PlaybackScheduler', () => {
             cancelScheduled: vi.fn()
         };
 
-        scheduler.schedulePlay(mockInstance, 1);
-        scheduler.schedulePlay(otherInstance, 1);
+        scheduler.schedulePlay(mockInstance, 1 as ContextTime);
+        scheduler.schedulePlay(otherInstance, 1 as ContextTime);
 
         scheduler.clearInstance(mockInstance);
         expect(offSpy).toHaveBeenCalledTimes(1);
@@ -130,8 +131,8 @@ describe('PlaybackScheduler', () => {
     it('should handle capacity limit gracefully', () => {
         const smallScheduler = new PlaybackScheduler(mockContextManager, 1);
 
-        const id1 = smallScheduler.schedulePlay(mockInstance, 1);
-        const id2 = smallScheduler.schedulePlay(mockInstance, 1);
+        const id1 = smallScheduler.schedulePlay(mockInstance, 1 as ContextTime);
+        const id2 = smallScheduler.schedulePlay(mockInstance, 1 as ContextTime);
 
         expect(id1).toBe(1);
         expect(id2).toBe(-1);

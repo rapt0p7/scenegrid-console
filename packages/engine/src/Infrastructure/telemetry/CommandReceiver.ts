@@ -1,11 +1,11 @@
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
-import type { InspectorCommand } from '@scene-grid/shared';
+import type { InspectorCommand, Milliseconds } from '@scene-grid/shared';
 import { BroadcastIpcAdapter } from './BroadcastIpcAdapter.js';
 import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
 
 export class CommandReceiver implements ITickable {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE_MS = 16;
+    public static TICK_RATE: Milliseconds = 16 as Milliseconds;
     private readonly queue: InspectorCommand[] = [];
     private transport = new BroadcastIpcAdapter<InspectorCommand>('scenegrid_commands');
 
@@ -36,7 +36,7 @@ export class CommandReceiver implements ITickable {
                     this.enginePort.fireEvent(cmd.eventId);
                     break;
                 case 'APPLY_SNAPSHOT':
-                    this.enginePort.applySnapshot(cmd.snapshotId, cmd.fadeTimeMs);
+                    this.enginePort.applySnapshot(cmd.snapshotId, cmd.fadeTime);
                     break;
                 case 'SET_RTPC':
                     this.enginePort.setRtpcOverride(cmd.param, cmd.value, cmd.isOverride);

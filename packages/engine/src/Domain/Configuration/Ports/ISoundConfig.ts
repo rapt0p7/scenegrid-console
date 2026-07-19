@@ -6,7 +6,12 @@ import type {
     SoundId,
     QuantizeType,
     DeepReadonly,
-    IConditionConfig
+    IConditionConfig,
+    Milliseconds,
+    Samples,
+    BPM,
+    ContextTime,
+    Beats
 } from '@scene-grid/shared';
 
 export interface IBaseSoundConfig {
@@ -59,19 +64,19 @@ export interface IMagnetConfig {
     readonly condition: IConditionConfig;
     readonly quantize: QuantizeType;
     readonly transitionRegionName?: RegionId;
-    readonly crossfadeDuration?: number;
-    readonly tailDurationMs?: number;
+    readonly crossfadeDuration?: Milliseconds;
+    readonly tailDuration?: Milliseconds;
 }
 
 export interface ISmartLoopSoundConfig {
     readonly busId: BusId;
     readonly smartLoop: {
-        readonly bpm?: number;
-        readonly beatsPerBar?: number;
-        readonly crossfade?: number;
+        readonly bpm?: BPM;
+        readonly beatsPerBar?: Beats;
+        readonly crossfade?: Milliseconds;
         readonly regions: Record<
             RegionId,
-            readonly [startSample: number, endSample: number, preEntryMs?: number, tailMs?: number]
+            readonly [startSample: Samples, endSample: Samples, preEntry?: Milliseconds, tail?: Milliseconds]
         >;
         readonly magnets?: readonly IMagnetConfig[];
     };
@@ -95,7 +100,7 @@ export interface ISwitchSoundConfig extends IBaseSoundConfig {
 
 export interface ILayerConfig {
     readonly src: SoundId;
-    readonly delayMs: number;
+    readonly delay: Milliseconds;
     readonly volume: number;
     readonly rate: number;
 }
@@ -111,9 +116,9 @@ export interface IPlayOptions {
     readonly isLoop?: boolean;
     readonly rate?: number;
     readonly volume?: number;
-    readonly seek?: number;
-    readonly delayMs?: number;
-    readonly when?: number;
+    readonly seek?: Milliseconds;
+    readonly delay?: Milliseconds;
+    readonly when?: ContextTime;
 }
 
 export interface IScattererSyncConfig {
@@ -124,7 +129,7 @@ export interface IScattererSyncConfig {
 export interface IScattererSoundConfig extends IBaseSoundConfig {
     readonly isScatterer: true;
     readonly sources: readonly ContainerSourceItem[];
-    readonly spawnRateMs: readonly [min: number, max: number];
+    readonly spawnRate: readonly [min: Milliseconds, max: Milliseconds];
     readonly scatterDistance?: readonly [min: number, max: number];
     readonly maxPolyphony?: number;
     readonly sync?: IScattererSyncConfig;

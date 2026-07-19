@@ -1,6 +1,7 @@
 // noinspection D
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
+import type { ContextTime, Seconds } from '@scene-grid/shared';
 
 export class PlaybackScheduler {
     readonly #ctx: AudioContextManager;
@@ -34,15 +35,15 @@ export class PlaybackScheduler {
     // eslint-disable-next-line max-params
     public schedulePlay(
         instance: ISoundInstance,
-        targetTime: number = 0,
-        offset: number = 0,
-        duration?: number
+        targetTime: ContextTime = 0 as ContextTime,
+        offset: Seconds = 0 as Seconds,
+        duration?: Seconds
     ): number {
         const slot = this.#findFreeSlot();
         if (slot === -1) return -1;
 
         const id = this.#nextInternalId++;
-        const when = targetTime > 0 ? targetTime : this.#ctx.context.currentTime;
+        const when = (targetTime > 0 ? targetTime : this.#ctx.context.currentTime) as ContextTime;
 
         instance.play(when, offset, duration);
 
@@ -55,9 +56,9 @@ export class PlaybackScheduler {
         return id;
     }
 
-    public scheduleStop(instance: ISoundInstance, targetTime: number = 0): number {
+    public scheduleStop(instance: ISoundInstance, targetTime: ContextTime = 0 as ContextTime): number {
         const id = this.#nextInternalId++;
-        const when = targetTime > 0 ? targetTime : this.#ctx.context.currentTime;
+        const when = (targetTime > 0 ? targetTime : this.#ctx.context.currentTime) as ContextTime;
 
         instance.stop(when);
 

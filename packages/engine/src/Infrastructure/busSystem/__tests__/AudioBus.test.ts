@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 
-import type { BusId, GameParamId } from '@scene-grid/shared';
+import type { BusId, GameParamId, Milliseconds, Seconds } from '@scene-grid/shared';
 import type { AudioCtx, AutomationEngine, GainNodeLike, IPluginFactory } from '@infrastructure';
 
 function createMockContext() {
@@ -83,7 +83,7 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
             pluginFactory: mockPluginFactory as IPluginFactory
         });
 
-        bus.safeReplaceFilter({ type: 'highpass', frequency: 500 }, 10);
+        bus.safeReplaceFilter({ type: 'highpass', frequency: 500 }, 10 as Milliseconds);
 
         expect(mockAutomation.ramp).toHaveBeenCalledWith(expect.any(Object), 0, 10, 'linear');
 
@@ -106,13 +106,13 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
             pluginFactory: mockPluginFactory
         });
 
-        bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 5);
+        bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 5 as Milliseconds);
         mockContext.currentTime += 0.01;
         bus.processFrame(mockContext.currentTime);
 
         expect(bus.getConfig().filter).toBeDefined();
 
-        bus.safeReplaceFilter(null, 5);
+        bus.safeReplaceFilter(null, 5 as Milliseconds);
         mockContext.currentTime += 0.01;
         bus.processFrame(mockContext.currentTime);
 
@@ -135,7 +135,7 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
             targetBusId: 'reverb_bus' as BusId,
             targetNode: mockTargetNode,
             targetGain: 0.5,
-            durationMs: 0
+            duration: 0 as Milliseconds
         });
         bus.processFrame(mockContext.currentTime);
 
@@ -143,7 +143,7 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
             targetBusId: 'reverb_bus' as BusId,
             targetNode: mockTargetNode,
             targetGain: null,
-            durationMs: 100
+            duration: 100 as Milliseconds
         });
         bus.processFrame(mockContext.currentTime);
 
@@ -217,7 +217,7 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
             targetBusId: 'reverb_bus' as BusId,
             targetNode: mockTargetNode,
             targetGain: 1,
-            durationMs: 0
+            duration: 0 as Milliseconds
         });
         bus.processFrame(mockContext.currentTime);
 
@@ -232,7 +232,7 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
                     { x: 0, y: 0 },
                     { x: 100, y: 0.8 }
                 ],
-                smoothingMs: 200
+                smoothing: 200 as Milliseconds
             }
         });
 
@@ -391,16 +391,16 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
 
             mockAutomation.ramp.mockClear();
 
-            bus.setLogicalGain(0.5, 100);
+            bus.setLogicalGain(0.5, 100 as Milliseconds);
             expect((bus as any).targetParams.gain.logical).toBe(0.5);
 
             bus.processFrame(mockContext.currentTime);
 
             expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputNode.gain, 0.5, 100, 'linear');
-            expect((bus as any).targetParams.gain.durationMs).toBe(0);
+            expect((bus as any).targetParams.gain.duration).toBe(0);
         });
 
-        it('should use Math.max for durationMs when called multiple times before flush', () => {
+        it('should use Math.max for duration when called multiple times before flush', () => {
             const bus = new AudioBus({
                 id: 'bus' as BusId,
                 config: { gain: 1 },
@@ -412,9 +412,9 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
 
             mockAutomation.ramp.mockClear();
 
-            bus.setLogicalGain(0.2, 50);
-            bus.setLogicalGain(0.8, 200);
-            bus.setLogicalGain(0.4, 10);
+            bus.setLogicalGain(0.2, 50 as Milliseconds);
+            bus.setLogicalGain(0.8, 200 as Milliseconds);
+            bus.setLogicalGain(0.4, 10 as Milliseconds);
 
             bus.processFrame(mockContext.currentTime);
 
@@ -431,11 +431,11 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
                 pluginFactory: mockPluginFactory
             });
 
-            bus.setRtpcGainModifier(0.5, 0);
+            bus.setRtpcGainModifier(0.5, 0 as Milliseconds);
             bus.processFrame(mockContext.currentTime);
             mockAutomation.ramp.mockClear();
 
-            bus.setLogicalGain(0.8, 50);
+            bus.setLogicalGain(0.8, 50 as Milliseconds);
             bus.processFrame(mockContext.currentTime);
 
             expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputNode.gain, 0.4, 50, 'linear');
@@ -499,8 +499,8 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
                 pluginFactory: mockPluginFactory
             });
 
-            bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 10);
-            bus.safeReplaceFilter({ type: 'highpass', frequency: 500 }, 10);
+            bus.safeReplaceFilter({ type: 'lowpass', frequency: 500 }, 10 as Milliseconds);
+            bus.safeReplaceFilter({ type: 'highpass', frequency: 500 }, 10 as Milliseconds);
 
             mockContext.currentTime += 0.015;
             bus.processFrame(mockContext.currentTime);
@@ -523,7 +523,7 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
 
         const connectSpy = vi.spyOn(bus.duckerTapNode, 'connect');
 
-        bus.safeReplaceFilter({ type: 'alien_filter' as any }, 0);
+        bus.safeReplaceFilter({ type: 'alien_filter' as any }, 0 as Milliseconds);
 
         mockContext.currentTime += 0.01;
         bus.processFrame(mockContext.currentTime);
@@ -545,7 +545,7 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
             pluginFactory: mockPluginFactory
         });
 
-        bus.safeReplaceFilter(mockConvolver as any, 0);
+        bus.safeReplaceFilter(mockConvolver as any, 0 as Milliseconds);
 
         mockContext.currentTime += 0.01;
         bus.processFrame(mockContext.currentTime);
@@ -574,7 +574,7 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
                     { x: 0, y: 0 },
                     { x: 100, y: 0.5 }
                 ],
-                smoothingMs: 120
+                smoothing: 120 as Milliseconds
             }
         });
 
@@ -733,15 +733,15 @@ describe('AudioBus (Internal Branch Coverage & Edge Cases)', () => {
             disconnect: vi.fn()
         });
 
-        bus.safeReplaceFilter({ type: 'highpass', frequency: 1000 }, 0);
+        bus.safeReplaceFilter({ type: 'highpass', frequency: 1000 }, 0 as Milliseconds);
 
-        bus.processFrame(10);
+        bus.processFrame(10 as Seconds);
 
         expect(warnSpy).toHaveBeenCalledWith('[AudioBus] Failed to connect filterNode', expect.any(Error));
 
-        bus.safeReplaceFilter(null, 0);
+        bus.safeReplaceFilter(null, 0 as Milliseconds);
         expect(() => {
-            bus.processFrame(20);
+            bus.processFrame(20 as Seconds);
         }).not.toThrow();
 
         warnSpy.mockRestore();
@@ -769,8 +769,13 @@ describe('AudioBus - HMR & Race Conditions (recalculateAndApply)', () => {
 
         const mockTargetNode = { disconnect: vi.fn(), connect: vi.fn() };
 
-        bus.updateSend({ targetBusId: 'verb' as any, targetNode: mockTargetNode as any, targetGain: 1, durationMs: 0 });
-        bus.processFrame(0);
+        bus.updateSend({
+            targetBusId: 'verb' as any,
+            targetNode: mockTargetNode as any,
+            targetGain: 1,
+            duration: 0 as Milliseconds
+        });
+        bus.processFrame(0 as Seconds);
 
         const sendNode = (bus as any).sendGains.get('verb');
         const disconnectSpy = vi.spyOn(sendNode, 'disconnect');
@@ -779,12 +784,17 @@ describe('AudioBus - HMR & Race Conditions (recalculateAndApply)', () => {
             targetBusId: 'verb' as any,
             targetNode: mockTargetNode as any,
             targetGain: null,
-            durationMs: 100
+            duration: 100 as Milliseconds
         });
-        bus.processFrame(1);
+        bus.processFrame(1 as Seconds);
 
         vi.advanceTimersByTime(50);
-        bus.updateSend({ targetBusId: 'verb' as any, targetNode: mockTargetNode as any, targetGain: 1, durationMs: 0 });
+        bus.updateSend({
+            targetBusId: 'verb' as any,
+            targetNode: mockTargetNode as any,
+            targetGain: 1,
+            duration: 0 as Milliseconds
+        });
 
         vi.advanceTimersByTime(200);
 
@@ -802,11 +812,11 @@ describe('AudioBus - HMR & Race Conditions (recalculateAndApply)', () => {
             pluginFactory: {} as any
         });
 
-        (bus as any).targetParams.sends.set('ghost', { logical: null, durationMs: 0 });
+        (bus as any).targetParams.sends.set('ghost', { logical: null, duration: 0 as Milliseconds });
 
         (bus as any).isDirty = true;
 
-        bus.processFrame(0);
+        bus.processFrame(0 as Seconds);
 
         expect((bus as any).targetParams.sends.has('ghost')).toBe(false);
     });

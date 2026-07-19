@@ -7,7 +7,7 @@ import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { GameParamId, PlaybackId } from '@scene-grid/shared';
+import type { GameParamId, Milliseconds, PlaybackId } from '@scene-grid/shared';
 import type { Mocked } from 'vitest';
 
 describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
@@ -60,7 +60,7 @@ describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
                     { x: 0, y: 0.5 },
                     { x: 100, y: 1 }
                 ],
-                smoothingMs: 100
+                smoothing: 100 as Milliseconds
             }
         };
 
@@ -80,7 +80,7 @@ describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
                     { x: 1000, y: 1 },
                     { x: 8000, y: 2 }
                 ],
-                smoothingMs: 50
+                smoothing: 50 as Milliseconds
             }
         };
 
@@ -139,7 +139,7 @@ describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
                     minY: 0,
                     maxY: 1
                 },
-                smoothingMs: 150
+                smoothing: 150 as Milliseconds
             }
         };
 
@@ -181,7 +181,7 @@ describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
                         { x: 0, y: 0 },
                         { x: 1, y: 1 }
                     ],
-                    smoothingMs: 50
+                    smoothing: 50 as Milliseconds
                 }
             };
 
@@ -222,7 +222,7 @@ describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
                         { x: 0, y: 1 },
                         { x: 100, y: 0 }
                     ],
-                    smoothingMs: 50
+                    smoothing: 50 as Milliseconds
                 },
                 pitch: {
                     gameParam: 'speed' as GameParamId,
@@ -230,7 +230,7 @@ describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
                         { x: 0, y: 1 },
                         { x: 100, y: 2 }
                     ],
-                    smoothingMs: 20
+                    smoothing: 20 as Milliseconds
                 },
                 filterFrequency: {
                     gameParam: 'underwater' as GameParamId,
@@ -238,7 +238,7 @@ describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
                         { x: 0, y: 22000 },
                         { x: 1, y: 500 }
                     ],
-                    smoothingMs: 100
+                    smoothing: 100 as Milliseconds
                 }
             };
 

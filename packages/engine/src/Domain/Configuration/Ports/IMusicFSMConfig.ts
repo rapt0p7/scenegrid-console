@@ -1,4 +1,12 @@
-import type { IConditionConfig, MusicStateId, QuantizeType, RegionId, SnapshotId, SoundId } from '@scene-grid/shared';
+import type {
+    IConditionConfig,
+    MusicStateId,
+    QuantizeType,
+    RegionId,
+    SnapshotId,
+    SoundId,
+    Milliseconds
+} from '@scene-grid/shared';
 
 export interface IMusicFSMConfig {
     readonly initialState: MusicStateId;
@@ -18,7 +26,7 @@ export interface IMusicTransitionEdge {
     readonly targetState: MusicStateId;
     readonly conditions: ReadonlyArray<IConditionConfig>;
     readonly syncRule: QuantizeType;
-    readonly crossfadeDurationMs?: number;
+    readonly crossfadeDuration?: Milliseconds;
     readonly transitionRegionName?: RegionId;
     readonly stingerId?: SoundId;
     readonly interruptable: boolean;

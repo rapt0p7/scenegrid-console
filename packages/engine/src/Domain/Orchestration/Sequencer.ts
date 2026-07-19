@@ -2,44 +2,51 @@
 // noinspection D
 
 import AudioGrid from '@domain/Orchestration/AudioGrid.js';
-import { IPlaybackInfo, LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
+import { type IPlaybackInfo, LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 
 import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type {
+import {
     PlaybackId,
     RegionId,
     SoundId,
     TickerTaskId,
     DeepReadonly,
     QuantizeType,
-    IMusicTrackSnapshot
+    IMusicTrackSnapshot,
+    Milliseconds,
+    Seconds,
+    TimeMath,
+    Samples,
+    Pulses,
+    BPM,
+    Beats
 } from '@scene-grid/shared';
 import { isDefined, isAbsent } from '@scene-grid/shared';
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
-import { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 interface ActiveRegion {
     playbackId: PlaybackId;
-    scheduledStartTime: number;
+    scheduledStartTime: Seconds;
     unsubscribe: () => void;
 }
 
 interface QueuedRegion {
     name: RegionId;
-    fadeInDurationMs: number;
-    startOffsetSec?: number;
+    fadeInDuration: Milliseconds;
+    startOffset?: Seconds;
 }
 
 interface TrackContext {
     soundId: SoundId;
     state: LoopState;
     playId: number;
-    nextScheduleTime: number;
+    nextScheduleTime: Seconds;
     activeRegions: Set<ActiveRegion>;
-    gridStartTime: number | null;
+    gridStartTime: Seconds | null;
     regionQueue: QueuedRegion[];
     loopRegion: RegionId | null;
     currentRegion: RegionId | null;
@@ -54,15 +61,15 @@ export default class Sequencer implements ISequencer {
     private tracks: Map<SoundId, TrackContext> = new Map();
     private readonly snapshotPool: MutableMusicSnapshot[] = [];
     private readonly activeSnapshots: IMusicTrackSnapshot[] = [];
-    private readonly scheduleIntervalMs = 25;
-    private readonly lookaheadWindowSec = 0.1;
+    private readonly scheduleInterval = 25 as Milliseconds;
+    private readonly lookaheadWindowSec = 0.1 as Seconds;
 
     constructor(
         private readonly controller: ISoundController,
         private readonly router: IAudioRouter,
         private readonly ticker: IEngineTicker,
         private readonly transitionPolicy: SmartLoopTransitionPolicy,
-        private readonly ppqn: number = 960,
+        private readonly ppqn: Pulses = 960 as Pulses,
         private readonly telemetry?: ITelemetryDispatcher
     ) {
         this.startScheduler();
@@ -73,7 +80,7 @@ export default class Sequencer implements ISequencer {
         const track = this.getTrackContext(soundId);
         track.playId++;
         track.state = LoopState.LOOPING;
-        track.nextScheduleTime = 0;
+        track.nextScheduleTime = 0 as Seconds;
         track.gridStartTime = null;
         track.regionQueue = [];
         track.loopRegion = regionName;
@@ -88,7 +95,7 @@ export default class Sequencer implements ISequencer {
 
         track.playId++;
         track.state = LoopState.IDLE;
-        track.nextScheduleTime = 0;
+        track.nextScheduleTime = 0 as Seconds;
         track.gridStartTime = null;
         track.regionQueue = [];
         track.loopRegion = null;
@@ -129,8 +136,8 @@ export default class Sequencer implements ISequencer {
         let targetTime = now;
 
         if (isDefined(options.quantize) && options.quantize !== 'Immediate') {
-            const interval = options.quantizeInterval ?? 1;
-            let currentAnchorTime = track.gridStartTime ?? 0;
+            const interval = options.quantizeInterval ?? (1 as Beats);
+            let currentAnchorTime = track.gridStartTime ?? (0 as Seconds);
 
             for (const active of track.activeRegions) {
                 if (active.scheduledStartTime <= now) {
@@ -141,10 +148,10 @@ export default class Sequencer implements ISequencer {
             const grid =
                 options.grid ??
                 new AudioGrid(
-                    config.smartLoop.bpm ?? 60,
-                    config.smartLoop.beatsPerBar ?? 4,
-                    currentAnchorTime,
-                    this.ppqn ?? 960
+                    config.smartLoop.bpm ?? (60 as BPM),
+                    config.smartLoop.beatsPerBar ?? (4 as Beats),
+                    TimeMath.castToContextTime(currentAnchorTime),
+                    this.ppqn ?? (960 as Pulses)
                 );
 
             if (typeof options.quantize === 'string') {
@@ -154,21 +161,21 @@ export default class Sequencer implements ISequencer {
                         : grid.getNextBarTime(now, interval);
             } else if (options.quantize.type === 'ExactPulse') {
                 const currentPulse = grid.getPulseAtTime(now);
-                const targetPulse = currentPulse + options.quantize.pulseOffset;
+                const targetPulse = (currentPulse + options.quantize.pulseOffset) as Pulses;
                 targetTime = grid.getTimeAtPulse(targetPulse);
             } else if (options.quantize.type === 'NextGridDivision') {
                 targetTime = grid.getNextDivisionTime(now, options.quantize.division);
             }
         }
 
-        const crossfadeMs =
+        const crossfade =
             options.quantize === 'Immediate'
-                ? (options.crossfadeDuration ?? 0)
-                : (options.crossfadeDuration ?? config.smartLoop.crossfade ?? 0);
+                ? (options.crossfadeDuration ?? (0 as Milliseconds))
+                : (options.crossfadeDuration ?? config.smartLoop.crossfade ?? (0 as Milliseconds));
 
-        const crossfadeSec = crossfadeMs / 1000;
-        const isMusicalOverlap = isDefined(options.tailDurationMs);
-        const overrideTailSec = (options.tailDurationMs ?? 0) / 1000;
+        const crossfadeSec = TimeMath.msToSeconds(crossfade);
+        const isMusicalOverlap = isDefined(options.tailDuration);
+        const overrideTailSec = TimeMath.msToSeconds(options.tailDuration ?? (0 as Milliseconds));
 
         for (const active of track.activeRegions) {
             try {
@@ -184,14 +191,14 @@ export default class Sequencer implements ISequencer {
 
             if (isMusicalOverlap) {
                 if (overrideTailSec > 0) {
-                    this.controller.stopById(active.playbackId, targetTime + overrideTailSec);
+                    this.controller.stopById(active.playbackId, TimeMath.addTime(targetTime, overrideTailSec));
                 } else {
                     this.controller.stopById(active.playbackId, targetTime);
                 }
-            } else if (crossfadeMs > 0) {
-                const delayMsToFade = Math.max(0, (targetTime - now) * 1000);
-                this.controller.fadeVolume(active.playbackId, 0, crossfadeMs, 'equal-power', delayMsToFade);
-                this.controller.stopById(active.playbackId, targetTime + crossfadeSec);
+            } else if (crossfade > 0) {
+                const delayMsToFade = TimeMath.secondsToMilliseconds(TimeMath.timeUntil(now, targetTime));
+                this.controller.fadeVolume(active.playbackId, 0, crossfade, 'equal-power', delayMsToFade);
+                this.controller.stopById(active.playbackId, TimeMath.addTime(targetTime, crossfadeSec));
             } else {
                 this.controller.stopById(active.playbackId, targetTime);
             }
@@ -199,9 +206,9 @@ export default class Sequencer implements ISequencer {
 
         track.activeRegions.clear();
         track.regionQueue = [];
-        track.nextScheduleTime = targetTime;
+        track.nextScheduleTime = TimeMath.castToSeconds(targetTime);
 
-        let targetStartOffsetSec = 0;
+        let targetStartOffsetSec = 0 as Seconds;
         if (options.offsetMode && options.offsetMode !== 'None' && track.currentRegion) {
             const sourceRegion = config.smartLoop.regions[track.currentRegion];
             const targetRegionData = config.smartLoop.regions[targetRegion];
@@ -218,21 +225,21 @@ export default class Sequencer implements ISequencer {
                     if (options.offsetMode === 'Inverted') {
                         phase = 1.0 - phase;
                     }
-                    targetStartOffsetSec = phase * targetLenSec;
+                    targetStartOffsetSec = (phase * targetLenSec) as Seconds;
                 }
             }
         }
 
         if (isDefined(transitionRegionName) && transitionRegionName !== '') {
             track.regionQueue.push(
-                { name: transitionRegionName, fadeInDurationMs: crossfadeMs },
-                { name: targetRegion, fadeInDurationMs: 0, startOffsetSec: targetStartOffsetSec }
+                { name: transitionRegionName, fadeInDuration: crossfade },
+                { name: targetRegion, fadeInDuration: 0 as Milliseconds, startOffset: targetStartOffsetSec }
             );
         } else {
             track.regionQueue.push({
                 name: targetRegion,
-                fadeInDurationMs: crossfadeMs,
-                startOffsetSec: targetStartOffsetSec
+                fadeInDuration: crossfade,
+                startOffset: targetStartOffsetSec
             });
         }
 
@@ -246,7 +253,7 @@ export default class Sequencer implements ISequencer {
         const now = this.controller.getCurrentTime();
 
         if (quantize === 'Immediate') {
-            this.router.play(stingerId, { delayMs: 0 });
+            this.router.play(stingerId, { delay: 0 as Milliseconds });
             return;
         }
 
@@ -257,7 +264,7 @@ export default class Sequencer implements ISequencer {
         const playbackInfo = isDefined(refTrackId) ? this.getPlaybackInfo(refTrackId) : undefined;
 
         if (isAbsent(playbackInfo)) {
-            this.router.play(stingerId, { delayMs: 0 });
+            this.router.play(stingerId, { delay: 0 as Milliseconds });
             return;
         }
 
@@ -268,7 +275,7 @@ export default class Sequencer implements ISequencer {
             targetTime = quantize === 'NextBar' ? grid.getNextBarTime(now) : grid.getNextBeatTime(now);
         } else if (quantize.type === 'ExactPulse') {
             const currentPulse = grid.getPulseAtTime(now);
-            targetTime = grid.getTimeAtPulse(currentPulse + quantize.pulseOffset);
+            targetTime = grid.getTimeAtPulse((currentPulse + quantize.pulseOffset) as Pulses);
         } else if (quantize.type === 'NextGridDivision') {
             targetTime = grid.getNextDivisionTime(now, quantize.division);
         }
@@ -288,11 +295,11 @@ export default class Sequencer implements ISequencer {
             return null;
         }
 
-        const bpm = config.smartLoop.bpm ?? 120;
-        const beatsPerBar = config.smartLoop.beatsPerBar ?? 4;
+        const bpm = config.smartLoop.bpm ?? (120 as BPM);
+        const beatsPerBar = config.smartLoop.beatsPerBar ?? (4 as Beats);
 
         return {
-            grid: new AudioGrid(bpm, beatsPerBar, track.gridStartTime, this.ppqn)
+            grid: new AudioGrid(bpm, beatsPerBar, TimeMath.castToContextTime(track.gridStartTime), this.ppqn)
         };
     }
 
@@ -340,7 +347,9 @@ export default class Sequencer implements ISequencer {
                     if (decision) {
                         this.telemetry?.dispatch({
                             type: 'CAUSE_CHAIN',
-                            timestampMs: this.controller.getCurrentTime() * 1000,
+                            timestampMs: TimeMath.secondsToMilliseconds(
+                                TimeMath.castToSeconds(this.controller.getCurrentTime())
+                            ),
                             initiator: {
                                 type: 'MAGNET',
                                 sourceRegion: track.currentRegion,
@@ -365,14 +374,14 @@ export default class Sequencer implements ISequencer {
 
             while (track.nextScheduleTime < scheduleHorizon) {
                 let nextRegionName: RegionId | null = null;
-                let fadeInMs = 0;
-                let startOffsetSec = 0;
+                let fadeInMs = 0 as Milliseconds;
+                let startOffsetSec = 0 as Seconds;
 
                 if (track.regionQueue.length > 0) {
                     const queued = track.regionQueue.shift()!;
                     nextRegionName = queued.name;
-                    fadeInMs = queued.fadeInDurationMs;
-                    startOffsetSec = queued.startOffsetSec ?? 0;
+                    fadeInMs = queued.fadeInDuration;
+                    startOffsetSec = queued.startOffset ?? (0 as Seconds);
                 } else if (isDefined(track.loopRegion)) {
                     nextRegionName = track.loopRegion;
                 }
@@ -397,18 +406,30 @@ export default class Sequencer implements ISequencer {
                                 this.router.performCrossfade(active.playbackId, playbackId, fadeInMs);
                             }
                         } else if (fadeInMs > 0) {
-                            const delaySec = Math.max(0, regionStartTime - now);
+                            const delaySec = TimeMath.timeUntil(now, TimeMath.castToContextTime(regionStartTime));
                             this.controller.setVolume(playbackId, 0);
-                            this.controller.fadeVolume(playbackId, 1, fadeInMs, 'equal-power', delaySec * 1000);
+                            this.controller.fadeVolume(
+                                playbackId,
+                                1,
+                                fadeInMs,
+                                'equal-power',
+                                TimeMath.secondsToMilliseconds(delaySec)
+                            );
                         } else {
                             this.controller.setVolume(playbackId, 1);
                         }
 
                         track.state = LoopState.LOOPING;
                     } else if (fadeInMs > 0) {
-                        const delaySec = Math.max(0, regionStartTime - now);
+                        const delaySec = TimeMath.timeUntil(now, TimeMath.castToContextTime(regionStartTime));
                         this.controller.setVolume(playbackId, 0);
-                        this.controller.fadeVolume(playbackId, 1, fadeInMs, 'equal-power', delaySec * 1000);
+                        this.controller.fadeVolume(
+                            playbackId,
+                            1,
+                            fadeInMs,
+                            'equal-power',
+                            TimeMath.secondsToMilliseconds(delaySec)
+                        );
                     } else {
                         this.controller.setVolume(playbackId, 1);
                     }
@@ -425,7 +446,7 @@ export default class Sequencer implements ISequencer {
                 soundId,
                 state: LoopState.IDLE,
                 playId: 0,
-                nextScheduleTime: 0,
+                nextScheduleTime: 0 as Seconds,
                 activeRegions: new Set(),
                 gridStartTime: null,
                 regionQueue: [],
@@ -443,13 +464,13 @@ export default class Sequencer implements ISequencer {
         regionName,
         targetTime,
         track,
-        startOffsetSec = 0
+        startOffsetSec = 0 as Seconds
     }: {
         soundId: SoundId;
         regionName: RegionId;
-        targetTime: number;
+        targetTime: Seconds;
         track: TrackContext;
-        startOffsetSec?: number;
+        startOffsetSec?: Seconds;
     }): PlaybackId | null {
         const config = this.router.getSoundConfig(soundId);
         if (isAbsent(config) || !('smartLoop' in config)) return null;
@@ -457,61 +478,61 @@ export default class Sequencer implements ISequencer {
         const region = config.smartLoop.regions[regionName];
         if (isAbsent(region)) return null;
 
-        const [startSample, endSample, preEntryMs = 0, tailMs = 0] = region;
+        const [startSample, endSample, preEntry = 0 as Milliseconds, tail = 0 as Milliseconds] = region;
         const sampleRate = this.controller.getSampleRate();
 
-        const fullLogicalDurationSec = (endSample - startSample) / sampleRate;
-        const safeStartOffsetSec = Math.min(startOffsetSec, fullLogicalDurationSec);
+        const fullLogicalDurationSec = TimeMath.samplesToSeconds((endSample - startSample) as Samples, sampleRate);
+        const safeStartOffsetSec = Math.min(startOffsetSec, fullLogicalDurationSec) as Seconds;
 
-        const preEntrySec = safeStartOffsetSec > 0 ? 0 : preEntryMs / 1000;
-        const tailSec = tailMs / 1000;
+        const preEntrySec = safeStartOffsetSec > 0 ? (0 as Seconds) : TimeMath.msToSeconds(preEntry);
+        const tailSec = TimeMath.msToSeconds(tail);
 
-        const logicalDurationSec = fullLogicalDurationSec - safeStartOffsetSec;
-        const logicalOffsetSec = startSample / sampleRate + safeStartOffsetSec;
+        const logicalDurationSec = (fullLogicalDurationSec - safeStartOffsetSec) as Seconds;
+        const logicalOffsetSec = (TimeMath.samplesToSeconds(startSample, sampleRate) + safeStartOffsetSec) as Seconds;
 
-        let actualOffsetSec = Math.max(0, logicalOffsetSec - preEntrySec);
+        let actualOffsetSec = Math.max(0, logicalOffsetSec - preEntrySec) as Seconds;
 
-        let actualDurationSec = logicalDurationSec + (logicalOffsetSec - actualOffsetSec) + tailSec;
+        let actualDurationSec = (logicalDurationSec + (logicalOffsetSec - actualOffsetSec) + tailSec) as Seconds;
 
-        let actualTargetTime = targetTime - preEntrySec;
+        let actualTargetTime = (targetTime - preEntrySec) as Seconds;
         let logicalScheduledTime = targetTime;
 
-        const now = this.controller.getCurrentTime();
+        const now = TimeMath.castToSeconds(this.controller.getCurrentTime());
 
         if (actualTargetTime < now) {
             if (isAbsent(track.gridStartTime) && targetTime === 0) {
                 actualTargetTime = now;
-                logicalScheduledTime = now + preEntrySec;
+                logicalScheduledTime = (now + preEntrySec) as Seconds;
             } else {
-                const missedSec = now - actualTargetTime;
+                const missedSec = (now - actualTargetTime) as Seconds;
                 if (now >= targetTime) {
-                    actualOffsetSec = logicalOffsetSec + (now - targetTime);
-                    actualDurationSec = Math.max(0, logicalDurationSec - (now - targetTime) + tailSec);
+                    actualOffsetSec = (logicalOffsetSec + (now - targetTime)) as Seconds;
+                    actualDurationSec = Math.max(0, logicalDurationSec - (now - targetTime) + tailSec) as Seconds;
                     actualTargetTime = now;
                 } else {
-                    actualOffsetSec += missedSec;
-                    actualDurationSec -= missedSec;
+                    actualOffsetSec = (actualOffsetSec + missedSec) as Seconds;
+                    actualDurationSec = (actualDurationSec - missedSec) as Seconds;
                     actualTargetTime = now;
                 }
             }
         }
 
         const playbackId = this.controller.play(soundId, {
-            when: actualTargetTime,
+            when: TimeMath.castToContextTime(actualTargetTime),
             offset: actualOffsetSec,
             duration: actualDurationSec
         });
 
         if (isAbsent(playbackId)) {
             console.warn(`[Sequencer] Failed to schedule region ${regionName} for ${soundId} (voice dropped).`);
-            track.nextScheduleTime = logicalScheduledTime + logicalDurationSec;
+            track.nextScheduleTime = (logicalScheduledTime + logicalDurationSec) as Seconds;
             return null;
         }
 
         this.router.applyConfigToPlayback(playbackId, config);
 
         track.gridStartTime ??= logicalScheduledTime;
-        track.nextScheduleTime = logicalScheduledTime + logicalDurationSec;
+        track.nextScheduleTime = (logicalScheduledTime + logicalDurationSec) as Seconds;
 
         const activeRegion: ActiveRegion = {
             playbackId,
@@ -531,6 +552,6 @@ export default class Sequencer implements ISequencer {
     }
 
     private startScheduler(): void {
-        this.ticker.add('sequencer' as TickerTaskId, this.scheduleIntervalMs, this);
+        this.ticker.add('sequencer' as TickerTaskId, this.scheduleInterval, this);
     }
 }

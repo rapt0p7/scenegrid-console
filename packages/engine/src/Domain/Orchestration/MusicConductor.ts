@@ -1,7 +1,7 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import type { DeepReadonly, IConditionConfig, LayerId } from '@scene-grid/shared';
+import type { ContextTime, DeepReadonly, IConditionConfig, LayerId, Milliseconds, Pulses } from '@scene-grid/shared';
 import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
 import type { IMusicFSMConfig, IMusicTransitionEdge } from '@domain/Configuration/Ports/IMusicFSMConfig.js';
@@ -12,7 +12,7 @@ import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
 
 export class MusicConductor implements ITickable {
-    public readonly TICK_RATE_MS: number = 16;
+    public readonly TICK_RATE: Milliseconds = 16 as Milliseconds;
     private readonly state: IConductorState;
     private config!: DeepReadonly<IMusicFSMConfig>;
     private readonly conductorMixerLayer = 'music_fsm' as LayerId;
@@ -31,7 +31,7 @@ export class MusicConductor implements ITickable {
                 isActive: false,
                 executionTime: 0,
                 snapshotId: '' as any,
-                crossfadeMs: 0
+                crossfade: 0 as Milliseconds
             }
         };
     }
@@ -55,7 +55,7 @@ export class MusicConductor implements ITickable {
                     startNode.activeSnapshot,
                     this.conductorMixerLayer,
                     this.conductorMixerPriority,
-                    0
+                    0 as Milliseconds
                 );
             }
         }
@@ -76,7 +76,7 @@ export class MusicConductor implements ITickable {
         this.state.isTransitioning = false;
     }
 
-    public tick(currentTime: number): void {
+    public tick(currentTime: ContextTime): void {
         if (!this.isRunning) return;
 
         const pm = this.state.pendingMixer;
@@ -86,7 +86,7 @@ export class MusicConductor implements ITickable {
                 pm.snapshotId,
                 this.conductorMixerLayer,
                 this.conductorMixerPriority,
-                pm.crossfadeMs
+                pm.crossfade
             );
             pm.isActive = false;
             this.state.isTransitioning = false;
@@ -106,7 +106,7 @@ export class MusicConductor implements ITickable {
         return ConditionEvaluator.evaluate(value, cond.operator, cond.value);
     };
 
-    private executeTransition(edge: DeepReadonly<IMusicTransitionEdge>, currentTime: number): void {
+    private executeTransition(edge: DeepReadonly<IMusicTransitionEdge>, currentTime: ContextTime): void {
         const targetNode = this.config.states[edge.targetState];
         if (!targetNode) return;
 
@@ -118,7 +118,7 @@ export class MusicConductor implements ITickable {
             transitionRegionName: edge.transitionRegionName,
             options: {
                 quantize: edge.syncRule,
-                crossfadeDuration: edge.crossfadeDurationMs,
+                crossfadeDuration: edge.crossfadeDuration,
                 interruptable: edge.interruptable
             }
         });
@@ -144,7 +144,7 @@ export class MusicConductor implements ITickable {
                         targetTime = grid.getNextDivisionTime(currentTime, rule.division);
                     } else if (rule.type === 'ExactPulse') {
                         const currentPulse = grid.getPulseAtTime(currentTime);
-                        targetTime = grid.getTimeAtPulse(currentPulse + rule.pulseOffset);
+                        targetTime = grid.getTimeAtPulse((currentPulse + rule.pulseOffset) as Pulses);
                     }
                 }
             }
@@ -153,7 +153,7 @@ export class MusicConductor implements ITickable {
             pm.isActive = true;
             pm.executionTime = targetTime;
             pm.snapshotId = targetNode.activeSnapshot;
-            pm.crossfadeMs = edge.crossfadeDurationMs ?? 0;
+            pm.crossfade = edge.crossfadeDuration ?? (0 as Milliseconds);
 
             this.state.isTransitioning = true;
         }

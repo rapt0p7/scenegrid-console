@@ -12,7 +12,16 @@ import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager, FiltersPlugin } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 
-import type { BankId, BusId, GameParamId, PlaybackId, RegionId, SnapshotId, SoundId } from '@scene-grid/shared';
+import type {
+    BankId,
+    BusId,
+    GameParamId,
+    Milliseconds,
+    PlaybackId,
+    RegionId,
+    SnapshotId,
+    SoundId
+} from '@scene-grid/shared';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn((cb: Function, ms: number) => globalThis.setInterval(cb, ms)),
@@ -239,8 +248,12 @@ describe('AudioEngine', () => {
                 soundMap: {},
                 events: {},
                 rtpcManifest: {
-                    ['health' as GameParamId]: { attackMs: 100, releaseMs: 200, defaultValue: 100 },
-                    ['speed' as GameParamId]: { attackMs: 50 }
+                    ['health' as GameParamId]: {
+                        attack: 100 as Milliseconds,
+                        release: 200 as Milliseconds,
+                        defaultValue: 100
+                    },
+                    ['speed' as GameParamId]: { attack: 50 as Milliseconds }
                 },
                 banks: {}
             });
@@ -633,7 +646,7 @@ describe('AudioEngine', () => {
 
             layerEngine.mixer.addModifier('snap1', 'layer1');
 
-            expect(recomputeSpy).toHaveBeenCalledWith({ durationMs: 500 });
+            expect(recomputeSpy).toHaveBeenCalledWith({ duration: 500 });
             recomputeSpy.mockRestore();
         });
     });

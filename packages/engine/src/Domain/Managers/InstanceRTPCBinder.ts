@@ -1,6 +1,6 @@
 // noinspection D
 
-import { isAbsent, evaluateRTPCCurve } from '@scene-grid/shared';
+import { isAbsent, evaluateRTPCCurve, Milliseconds } from '@scene-grid/shared';
 
 import type { GameParamId, PlaybackId } from '@scene-grid/shared';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
@@ -66,7 +66,7 @@ export class InstanceRTPCBinder {
         const gameValue = this.rtpcAdapter.getValue(binding.paramId);
 
         const mappedValue = evaluateRTPCCurve(gameValue, binding.config.curve);
-        const smoothing = binding.config.smoothingMs ?? 50;
+        const smoothing = binding.config.smoothing ?? (50 as Milliseconds);
 
         this.soundController.fadeParameter(binding.playbackId, binding.target, mappedValue, smoothing);
     }

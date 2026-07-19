@@ -1,8 +1,8 @@
-import type { GameParamId } from '@scene-grid/shared';
+import type { GameParamId, Milliseconds } from '@scene-grid/shared';
 
 export interface IGlobalRTPCParameterConfig {
-    readonly attackMs?: number;
-    readonly releaseMs?: number;
+    readonly attack?: Milliseconds;
+    readonly release?: Milliseconds;
     readonly defaultValue?: number;
 }
 

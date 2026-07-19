@@ -19,6 +19,8 @@ export { typedEntries, typedKeys, typedFromEntries } from './typedObjects.js';
 export { evaluateRTPCCurve } from './Math/rtpcMath.js';
 export { SeededPRNG } from './Math/SeededPRNG.js';
 
+export { TimeMath } from './Math/TimeMath.js';
+
 export type { ITelemetryTransport } from './Telemetry/ITelemetryTransport.js';
 export type * from './Telemetry/TelemetryEvents.js';
 export type * from './Telemetry/TelemetryBatch.js';

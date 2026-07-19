@@ -3,7 +3,7 @@
 
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { AudioCtx, AudioParamLike } from '@infrastructure/types/IAudioContext.js';
-import type { TickerTaskId } from '@scene-grid/shared';
+import { TickerTaskId, ContextTime, Milliseconds, Seconds, TimeMath } from '@scene-grid/shared';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const isChromeAndroid =
@@ -16,18 +16,17 @@ type RampType = 'linear' | 'exponential' | 'equal-power';
 interface PendingRamp {
     param: AudioParamLike;
     target: number;
-    duration: number;
+    duration: Seconds;
     type: RampType;
-    startTime: number;
+    startTime: ContextTime;
 }
 
 export default class AutomationEngine {
     readonly #ctx: AudioCtx;
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE_MS = 16;
+    public static TICK_RATE = 16 as Milliseconds;
     private static readonly CURVE_STEPS = 100;
     private static readonly CONSTANT_CURVE_BUFFER = new Float32Array(AutomationEngine.CURVE_STEPS);
-    private static readonly MS_IN_SECONDS = 1000;
     private readonly DIGITAL_SILENCE = 0.000_01;
 
     #pending: PendingRamp[] = [];
@@ -35,7 +34,7 @@ export default class AutomationEngine {
     constructor(context: AudioCtx, ticker: EngineTicker) {
         this.#ctx = context;
 
-        ticker.add('automation-engine' as TickerTaskId, AutomationEngine.TICK_RATE_MS, this);
+        ticker.add('automation-engine' as TickerTaskId, AutomationEngine.TICK_RATE, this);
     }
 
     set(parameter: AudioParamLike, value: number): void {
@@ -45,7 +44,7 @@ export default class AutomationEngine {
             return;
         }
 
-        const now = this.#ctx.currentTime;
+        const now = this.#ctx.currentTime as ContextTime;
 
         try {
             parameter.cancelScheduledValues(now);
@@ -59,9 +58,9 @@ export default class AutomationEngine {
     ramp(
         parameter: AudioParamLike,
         value: number,
-        durationMs: number,
+        duration: Milliseconds,
         type: RampType = 'linear',
-        delayMs: number = 0
+        delay: Milliseconds = 0 as Milliseconds
     ): void {
         const target = value;
         if (!Number.isFinite(target)) {
@@ -69,13 +68,13 @@ export default class AutomationEngine {
             return;
         }
 
-        const duration = durationMs / AutomationEngine.MS_IN_SECONDS;
-        const delay = delayMs / AutomationEngine.MS_IN_SECONDS;
-        const now = this.#ctx.currentTime;
-        const startTime = now + delay;
+        const durationSec = TimeMath.msToSeconds(duration);
+        const delaySec = TimeMath.msToSeconds(delay);
+        const now = this.#ctx.currentTime as ContextTime;
+        const startTime = (now + delaySec) as ContextTime;
 
         if (this.#ctx.state !== 'running' || duration <= 0) {
-            if (delay > 0) {
+            if (delaySec > 0) {
                 parameter.setValueAtTime(target, startTime);
             } else {
                 this.set(parameter, target);
@@ -86,7 +85,7 @@ export default class AutomationEngine {
         this.#pending.push({
             param: parameter,
             target,
-            duration,
+            duration: durationSec,
             type,
             startTime
         });
@@ -96,8 +95,8 @@ export default class AutomationEngine {
     public safeExponentialRamp(
         parameter: AudioParamLike,
         targetValue: number,
-        endTime: number,
-        contextTime: number
+        endTime: ContextTime,
+        contextTime: ContextTime
     ): void {
         const safeTarget = Math.max(targetValue, this.DIGITAL_SILENCE);
 
@@ -126,7 +125,7 @@ export default class AutomationEngine {
     private applyRamp(item: PendingRamp): void {
         const { param, target, duration, type, startTime } = item;
 
-        const now = this.#ctx.currentTime;
+        const now = this.#ctx.currentTime as ContextTime;
 
         try {
             param.cancelScheduledValues(now);
@@ -137,7 +136,7 @@ export default class AutomationEngine {
             if (startTime > now) {
                 param.setValueAtTime(currentValue, startTime);
 
-                const endTime = startTime + duration;
+                const endTime = (startTime + duration) as ContextTime;
                 if (type === 'equal-power') {
                     this.applyEqualPowerCurve(param, currentValue, target, startTime, duration);
                 } else if (type === 'exponential') {
@@ -146,8 +145,8 @@ export default class AutomationEngine {
                     param.linearRampToValueAtTime(target, endTime);
                 }
             } else {
-                const elapsed = now - startTime;
-                const remaining = Math.max(0, duration - elapsed);
+                const elapsed = (now - startTime) as Seconds;
+                const remaining = Math.max(0, duration - elapsed) as Seconds;
 
                 if (remaining <= 0) {
                     param.setValueAtTime(target, now);
@@ -159,7 +158,7 @@ export default class AutomationEngine {
                     return;
                 }
 
-                const endTime = now + remaining;
+                const endTime = (now + remaining) as ContextTime;
 
                 if (type === 'equal-power') {
                     this.applyEqualPowerCurve(param, currentValue, target, now, remaining);
@@ -184,8 +183,8 @@ export default class AutomationEngine {
         parameter: AudioParamLike,
         startValue: number,
         targetValue: number,
-        startTime: number,
-        duration: number
+        startTime: ContextTime,
+        duration: Seconds
     ): void {
         const steps = AutomationEngine.CURVE_STEPS;
         const curve = AutomationEngine.CONSTANT_CURVE_BUFFER;
@@ -207,7 +206,7 @@ export default class AutomationEngine {
         parameter.setValueCurveAtTime(curve, startTime, duration);
     }
 
-    private applyCurveFallback(parameter: AudioParamLike, target: number, duration: number): void {
+    private applyCurveFallback(parameter: AudioParamLike, target: number, duration: Seconds): void {
         const steps = AutomationEngine.CURVE_STEPS;
         const curve = AutomationEngine.CONSTANT_CURVE_BUFFER;
         const start = parameter.value;

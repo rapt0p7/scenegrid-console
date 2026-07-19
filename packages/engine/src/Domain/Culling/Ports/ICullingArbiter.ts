@@ -1,4 +1,4 @@
-import type { PlaybackId, SoundId, BusId, ArbiterCullReason } from '@scene-grid/shared';
+import type { PlaybackId, SoundId, BusId, ArbiterCullReason, Milliseconds } from '@scene-grid/shared';
 
 export interface ICullingContext {
     readonly activePlaybacks: PlaybackId[];
@@ -23,5 +23,5 @@ export interface CullingDecisions {
 }
 
 export interface ICullingArbiter {
-    evaluate(context: ICullingContext, deltaTimeMs: number): CullingDecisions;
+    evaluate(context: ICullingContext, deltaTime: Milliseconds): CullingDecisions;
 }

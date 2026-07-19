@@ -15,7 +15,8 @@ import type {
     ITelemetrySnapshot,
     BusId,
     IMusicTrackSnapshot,
-    RegionId
+    RegionId,
+    Milliseconds
 } from '@scene-grid/shared';
 import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 
@@ -83,13 +84,13 @@ describe('TelemetrySnapshotter', () => {
     });
 
     it('should not dispatch if TICK_RATE_MS has not elapsed', () => {
-        snapshotter.tick(0.05, 50);
+        snapshotter.tick(0.05, 50 as Milliseconds);
         expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
 
-        snapshotter.tick(0.099, 49);
+        snapshotter.tick(0.099, 49 as Milliseconds);
         expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
 
-        snapshotter.tick(0.1, 1);
+        snapshotter.tick(0.1, 1 as Milliseconds);
         expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
     });
 
@@ -100,7 +101,7 @@ describe('TelemetrySnapshotter', () => {
             return undefined;
         });
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
         expect(dispatchCall.rtpcs).toEqual([
@@ -118,7 +119,7 @@ describe('TelemetrySnapshotter', () => {
             return undefined;
         });
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
         expect(dispatchCall.switches).toHaveLength(1);
@@ -128,7 +129,7 @@ describe('TelemetrySnapshotter', () => {
     it('should return full switch pool without slicing if all switches are active', () => {
         mockSwitchRegistry.getHistory.mockReturnValue({ currentSwitchKey: 'active' });
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
         expect(dispatchCall.switches).toHaveLength(2);
@@ -143,7 +144,7 @@ describe('TelemetrySnapshotter', () => {
         mockSoundController.getPlaybackPositionSec.mockImplementation((id: number) => (id === 1 ? 12.5 : 5.0));
         mockSoundController.getCurrentVolume.mockImplementation((id: number) => (id === 1 ? 0.8 : 1.0));
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
 
@@ -169,7 +170,7 @@ describe('TelemetrySnapshotter', () => {
         // oxlint-disable-next-line unicorn/no-useless-undefined
         mockSoundController.getSoundId.mockReturnValue(undefined);
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
         expect(dispatchCall.activePlaybacks).toHaveLength(0);
@@ -180,7 +181,7 @@ describe('TelemetrySnapshotter', () => {
         mockSoundController.getSoundId.mockReturnValue('test-sound');
         mockSoundController.getPlaybackState.mockReturnValue('playing');
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
 
@@ -199,7 +200,7 @@ describe('TelemetrySnapshotter', () => {
         // oxlint-disable-next-line typescript/no-explicit-any
         delete (mockSoundController as any).getCurrentVolume;
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
 
@@ -213,7 +214,7 @@ describe('TelemetrySnapshotter', () => {
         mockBusSystem.getBusFinalGain.mockImplementation((busId: string) => (busId === 'main' ? 0.72 : undefined));
         mockBusSystem.getSidechainGain.mockImplementation((busId: string) => (busId === 'main' ? 0.5 : undefined));
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
 
@@ -261,7 +262,7 @@ describe('TelemetrySnapshotter', () => {
         ];
         mockSequencer.getMusicSnapshot.mockReturnValue(mockTracks);
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
 
@@ -279,11 +280,11 @@ describe('TelemetrySnapshotter', () => {
         };
 
         mockSequencer.getMusicSnapshot.mockReturnValue([mockTrack]);
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
         expect((mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot).musicTracks).toHaveLength(1);
 
         mockSequencer.getMusicSnapshot.mockReturnValue([]);
-        snapshotter.tick(0.2, 100);
+        snapshotter.tick(0.2, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[1][0] as ITelemetrySnapshot;
         expect(dispatchCall.musicTracks).toHaveLength(0);
@@ -296,7 +297,7 @@ describe('TelemetrySnapshotter', () => {
         // oxlint-disable-next-line typescript/no-explicit-any
         mockSequencer.getMusicSnapshot.mockReturnValue(undefined as any);
 
-        snapshotter.tick(0.1, 100);
+        snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
         expect(dispatchCall.musicTracks).toHaveLength(0);

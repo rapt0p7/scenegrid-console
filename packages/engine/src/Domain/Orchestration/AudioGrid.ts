@@ -1,71 +1,83 @@
+import { TimeMath } from '@scene-grid/shared';
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
-import type { GridDivision } from '@scene-grid/shared';
+import type { GridDivision, BPM, Beats, ContextTime, Pulses, Seconds } from '@scene-grid/shared';
 
 export default class AudioGrid implements IAudioGrid {
-    readonly #bpm: number;
-    readonly #ppqn: number;
-    readonly #beatsPerBar: number;
-    readonly #startTime: number;
+    readonly #bpm: BPM;
+    readonly #ppqn: Pulses;
+    readonly #beatsPerBar: Beats;
+    readonly #startTime: ContextTime;
 
-    constructor(bpm: number, beatsPerBar: number = 4, startTime: number = 0, ppqn: number = 960) {
+    // eslint-disable-next-line max-params
+    constructor(
+        bpm: BPM,
+        beatsPerBar: Beats = 4 as Beats,
+        startTime: ContextTime = 0 as ContextTime,
+        ppqn: Pulses = 960 as Pulses
+    ) {
         this.#bpm = bpm;
         this.#beatsPerBar = beatsPerBar;
         this.#startTime = startTime;
         this.#ppqn = ppqn;
     }
 
-    public get ppqn(): number {
+    public get ppqn(): Pulses {
         return this.#ppqn;
     }
 
-    public get beatsPerBar(): number {
+    public get beatsPerBar(): Beats {
         return this.#beatsPerBar;
     }
 
-    public getNextBeatTime(currentTime: number, interval: number = 1): number {
-        const secondsPerBeat = 60 / this.#bpm;
-        const secondsPerInterval = secondsPerBeat * interval;
+    public getNextBeatTime(currentTime: ContextTime, interval: Beats = 1 as Beats): ContextTime {
+        const secondsPerBeat = TimeMath.bpmToSecondsPerBeat(this.#bpm);
+        const secondsPerInterval = (secondsPerBeat * interval) as Seconds;
 
-        const elapsed = currentTime - this.#startTime;
-        const safeElapsed = Math.max(0, elapsed + 0.001);
-
-        const intervalsElapsed = Math.ceil(safeElapsed / secondsPerInterval);
-        return this.#startTime + intervalsElapsed * secondsPerInterval;
-    }
-
-    public getNextBarTime(currentTime: number, interval: number = 1): number {
-        const secondsPerBar = (60 / this.#bpm) * this.#beatsPerBar;
-        const secondsPerInterval = secondsPerBar * interval;
-
-        const elapsed = currentTime - this.#startTime;
-        const safeElapsed = Math.max(0, elapsed + 0.001);
+        const elapsed = (currentTime - this.#startTime) as Seconds;
+        const safeElapsed = Math.max(0, elapsed + 0.001) as Seconds;
 
         const intervalsElapsed = Math.ceil(safeElapsed / secondsPerInterval);
-        return this.#startTime + intervalsElapsed * secondsPerInterval;
+        const offset = (intervalsElapsed * secondsPerInterval) as Seconds;
+
+        return TimeMath.addTime(this.#startTime, offset);
     }
 
-    public getTimeAtPulse(targetPulseIndex: number): number {
+    public getNextBarTime(currentTime: ContextTime, interval: number = 1): ContextTime {
+        const secondsPerBeat = TimeMath.bpmToSecondsPerBeat(this.#bpm);
+        const secondsPerBar = (secondsPerBeat * this.#beatsPerBar) as Seconds;
+        const secondsPerInterval = (secondsPerBar * interval) as Seconds;
+
+        const elapsed = (currentTime - this.#startTime) as Seconds;
+        const safeElapsed = Math.max(0, elapsed + 0.001) as Seconds;
+
+        const intervalsElapsed = Math.ceil(safeElapsed / secondsPerInterval);
+        const offset = (intervalsElapsed * secondsPerInterval) as Seconds;
+
+        return TimeMath.addTime(this.#startTime, offset);
+    }
+
+    public getTimeAtPulse(targetPulseIndex: Pulses): ContextTime {
         const numerator = 60 * targetPulseIndex;
         const denominator = this.#bpm * this.#ppqn;
-        const elapsedSeconds = numerator / denominator;
+        const elapsedSeconds = (numerator / denominator) as Seconds;
 
-        return this.#startTime + elapsedSeconds;
+        return TimeMath.addTime(this.#startTime, elapsedSeconds);
     }
 
-    public getPulseAtTime(currentTime: number): number {
+    public getPulseAtTime(currentTime: ContextTime): Pulses {
         if (currentTime <= this.#startTime) {
-            return 0;
+            return 0 as Pulses;
         }
 
-        const elapsedSeconds = currentTime - this.#startTime;
+        const elapsedSeconds = (currentTime - this.#startTime) as Seconds;
 
         const numerator = elapsedSeconds * this.#bpm * this.#ppqn;
         const denominator = 60;
 
-        return Math.round(numerator / denominator);
+        return Math.round(numerator / denominator) as Pulses;
     }
 
-    public getNextDivisionTime(currentTime: number, division: GridDivision): number {
+    public getNextDivisionTime(currentTime: ContextTime, division: GridDivision): ContextTime {
         let divisionFactor = 1;
         switch (division) {
             case '1/8':
@@ -79,11 +91,11 @@ export default class AudioGrid implements IAudioGrid {
                 break;
         }
 
-        const pulsesPerDivision = Math.floor(this.ppqn / divisionFactor);
+        const pulsesPerDivision = Math.floor(this.#ppqn / divisionFactor) as Pulses;
         const currentPulse = this.getPulseAtTime(currentTime);
 
         const intervalsElapsed = Math.ceil((currentPulse + 1) / pulsesPerDivision);
-        const targetPulse = intervalsElapsed * pulsesPerDivision;
+        const targetPulse = (intervalsElapsed * pulsesPerDivision) as Pulses;
 
         return this.getTimeAtPulse(targetPulse);
     }

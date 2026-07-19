@@ -113,9 +113,9 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs, onLogClick, isLive =
                                 <span className="text-foreground font-bold bg-background px-1.5 rounded text-[10px]">
                                     {log.result.snapshotId}
                                 </span>
-                                {log.result.fadeTimeMs > 0 && (
+                                {log.result.fadeTime > 0 && (
                                     <span className="text-foreground-muted text-[10px]">
-                                        ({log.result.fadeTimeMs}ms fade)
+                                        ({log.result.fadeTime}ms fade)
                                     </span>
                                 )}
                             </div>

@@ -13,14 +13,15 @@ import type {
     GameParamId,
     BusId,
     IBusSnapshot,
-    IMusicTrackSnapshot
+    IMusicTrackSnapshot,
+    Milliseconds
 } from '@scene-grid/shared';
 import { isDefined } from '@scene-grid/shared';
 import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 
 export class TelemetrySnapshotter implements ITickable {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public TICK_RATE_MS: number = 100;
+    public TICK_RATE: Milliseconds = 100 as Milliseconds;
     private lastSnapshotTimeMs: number = 0;
     private readonly snapshotDto: ITelemetrySnapshot;
     private readonly rtpcPool: IRtpcSnapshot[];
@@ -79,10 +80,10 @@ export class TelemetrySnapshotter implements ITickable {
         };
     }
 
-    public tick(currentTimeSec: number, _deltaTimeMs: number): void {
+    public tick(currentTimeSec: number, _deltaTime: Milliseconds): void {
         const currentTimeMs = currentTimeSec * 1000;
 
-        if (currentTimeMs - this.lastSnapshotTimeMs < this.TICK_RATE_MS) {
+        if (currentTimeMs - this.lastSnapshotTimeMs < this.TICK_RATE) {
             return;
         }
         this.lastSnapshotTimeMs = currentTimeMs;

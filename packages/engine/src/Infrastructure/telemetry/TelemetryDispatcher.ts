@@ -1,9 +1,9 @@
-import type { ITelemetryBatch, TelemetryPacket, ITelemetryTransport } from '@scene-grid/shared';
+import type { ITelemetryBatch, TelemetryPacket, ITelemetryTransport, Milliseconds } from '@scene-grid/shared';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 export class TelemetryDispatcher implements ITelemetryDispatcher {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public TICK_RATE_MS: number = 16;
+    public TICK_RATE: Milliseconds = 16 as Milliseconds;
     private readonly packets: TelemetryPacket[];
     private packetCount: number = 0;
     private batchId: number = 0;

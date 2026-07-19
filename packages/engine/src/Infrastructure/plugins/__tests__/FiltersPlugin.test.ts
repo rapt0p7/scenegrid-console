@@ -131,7 +131,7 @@ describe('FiltersPlugin', () => {
                 (FiltersPlugin as any).rampParameter({
                     filterNode: null,
                     parameterName: 'frequency',
-                    durationMs: 100,
+                    duration: 100,
                     automation: mockAutomation
                 });
             }).not.toThrow();
@@ -143,7 +143,7 @@ describe('FiltersPlugin', () => {
                 (FiltersPlugin as any).rampParameter({
                     filterNode: mockFilter,
                     parameterName: 'non_existent_param',
-                    durationMs: 100,
+                    duration: 100,
                     automation: mockAutomation
                 });
             }).not.toThrow();
@@ -154,7 +154,7 @@ describe('FiltersPlugin', () => {
             (FiltersPlugin as any).rampParameter({
                 filterNode: mockFilter,
                 parameterName: 'frequency',
-                durationMs: 500,
+                duration: 500,
                 automation: mockAutomation
             });
 
@@ -166,7 +166,7 @@ describe('FiltersPlugin', () => {
                 filterNode: mockFilter,
                 parameterName: 'Q',
                 targetValue: 10,
-                durationMs: 300,
+                duration: 300,
                 automation: mockAutomation
             });
 

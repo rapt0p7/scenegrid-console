@@ -45,7 +45,7 @@ import {
 } from '@infrastructure';
 import type { IPluginFactory } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
-import { SeededPRNG, isDefined, deepFreeze, typedEntries, typedKeys } from '@scene-grid/shared';
+import { SeededPRNG, isDefined, deepFreeze, typedEntries, typedKeys, Milliseconds, Pulses } from '@scene-grid/shared';
 
 import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
@@ -123,12 +123,12 @@ export class AudioEngine implements IAudioEngine {
     };
 
     public readonly mixer = {
-        setState: (snapshotName: string, durationMs?: number) => {
+        setState: (snapshotName: string, duration?: number) => {
             this.#snapshotManager.activateSnapshot(
                 snapshotName as SnapshotId,
                 'scene_main' as LayerId,
                 PRIORITY.BASE,
-                durationMs
+                duration as Milliseconds
             );
         },
         addModifier: (snapshotName: string, id: string, priority = PRIORITY.OVERLAY) => {
@@ -393,14 +393,14 @@ export class AudioEngine implements IAudioEngine {
                 this.#router,
                 this.#engineTicker,
                 smartLoopTransitionPolicy,
-                this.config.sequencer?.ppqn,
+                this.config.sequencer?.ppqn as Pulses,
                 this.#telemetry
             );
 
             const resolver = new MixerStateResolver({ defaultBusGain: 1 });
 
             const layerStack = new MixerLayerStack(resolver, () => {
-                coordinator.recompute({ durationMs: 500 });
+                coordinator.recompute({ duration: 500 as Milliseconds });
             });
 
             const mixerTransitionEngine = new MixerTransitionEngine(this.#busSystem, this.#rtpcManager);
@@ -485,7 +485,7 @@ export class AudioEngine implements IAudioEngine {
                 this.config.globalVoiceLimit ?? 128
             );
 
-            const cullingArbiter = new VoiceCullingArbiter(0.01, 1000, this.config.globalVoiceLimit);
+            const cullingArbiter = new VoiceCullingArbiter(0.01, 1000 as Milliseconds, this.config.globalVoiceLimit);
 
             const cullingProvider = new CullingContextProvider(
                 this.#soundController,
@@ -500,19 +500,19 @@ export class AudioEngine implements IAudioEngine {
                 this.#telemetry
             );
 
-            this.#engineTicker.add('telemetry' as TickerTaskId, this.#telemetry.TICK_RATE_MS, this.#telemetry);
+            this.#engineTicker.add('telemetry' as TickerTaskId, this.#telemetry.TICK_RATE, this.#telemetry);
 
-            this.#engineTicker.add('snapshotter' as TickerTaskId, snapshotter.TICK_RATE_MS, snapshotter);
+            this.#engineTicker.add('snapshotter' as TickerTaskId, snapshotter.TICK_RATE, snapshotter);
 
-            this.#engineTicker.add('rtpc-manager' as TickerTaskId, RTPCManager.TICK_RATE_MS, this.#rtpcManager);
+            this.#engineTicker.add('rtpc-manager' as TickerTaskId, RTPCManager.TICK_RATE, this.#rtpcManager);
 
-            this.#engineTicker.add('bus-system' as TickerTaskId, RTPCManager.TICK_RATE_MS, {
+            this.#engineTicker.add('bus-system' as TickerTaskId, RTPCManager.TICK_RATE, {
                 tick: () => {
                     this.#busSystem.tickRTPC(this.#rtpcManager);
                 }
             });
 
-            this.#engineTicker.add('instance-rtpc' as TickerTaskId, RTPCManager.TICK_RATE_MS, {
+            this.#engineTicker.add('instance-rtpc' as TickerTaskId, RTPCManager.TICK_RATE, {
                 tick: () => {
                     this.#instanceRTPCBinder.tickRTPC();
                 }
@@ -520,31 +520,27 @@ export class AudioEngine implements IAudioEngine {
 
             this.#engineTicker.add(
                 'sound-controller' as TickerTaskId,
-                SoundController.TICK_RATE_MS,
+                SoundController.TICK_RATE,
                 this.#soundController
             );
-            this.#engineTicker.add('culling-runner' as TickerTaskId, CullingRunner.TICK_RATE_MS, this.#cullingRunner);
+            this.#engineTicker.add('culling-runner' as TickerTaskId, CullingRunner.TICK_RATE, this.#cullingRunner);
             mixerTransitionEngine.events.on('transition:start', () => {
-                this.#cullingRunner.tick(this.#contextManager.currentTime, 0);
+                this.#cullingRunner.tick(this.#contextManager.currentTime, 0 as Milliseconds);
             });
             this.#engineTicker.add(
                 'mixer-state-manager' as TickerTaskId,
-                MixerTransitionEngine.TICK_RATE_MS,
+                MixerTransitionEngine.TICK_RATE,
                 mixerTransitionEngine
             );
 
             this.#engineTicker.add(
                 'scatterer-orchestrator' as TickerTaskId,
-                this.#scattererOrchestrator.TICK_RATE_MS,
+                this.#scattererOrchestrator.TICK_RATE,
                 this.#scattererOrchestrator
             );
 
             if (this.#conductor) {
-                this.#engineTicker.add(
-                    'music-conductor' as TickerTaskId,
-                    this.#conductor.TICK_RATE_MS,
-                    this.#conductor
-                );
+                this.#engineTicker.add('music-conductor' as TickerTaskId, this.#conductor.TICK_RATE, this.#conductor);
             }
 
             this.#isInitialized = true;
@@ -603,7 +599,7 @@ export class AudioEngine implements IAudioEngine {
 
                 this.#engineTicker.add(
                     'inspector-command-receiver' as TickerTaskId,
-                    CommandReceiver.TICK_RATE_MS,
+                    CommandReceiver.TICK_RATE,
                     receiver
                 );
             }
@@ -710,7 +706,11 @@ export class AudioEngine implements IAudioEngine {
                 this.#rtpcManager.setValue(parameterName as GameParamId, config.defaultValue);
             }
 
-            this.#rtpcManager.configureParam(parameterName as GameParamId, config.attackMs ?? 0, config.releaseMs ?? 0);
+            this.#rtpcManager.configureParam(
+                parameterName as GameParamId,
+                config.attack ?? (0 as Milliseconds),
+                config.release ?? (0 as Milliseconds)
+            );
         }
     }
 }

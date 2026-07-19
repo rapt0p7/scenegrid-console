@@ -6,17 +6,17 @@ import type {
     ICullingArbiter,
     IVirtualizeDecision
 } from '@domain/Culling/Ports/ICullingArbiter.js';
-import type { PlaybackId } from '@scene-grid/shared';
+import type { Milliseconds, PlaybackId } from '@scene-grid/shared';
 
 export class VoiceCullingArbiter implements ICullingArbiter {
-    private readonly muteTimers = new Map<PlaybackId, number>();
+    private readonly muteTimers = new Map<PlaybackId, Milliseconds>();
     private readonly virtualizePool: IVirtualizeDecision[];
     private readonly devirtualizePool: PlaybackId[];
     private readonly decisions: CullingDecisions;
 
     constructor(
         private readonly cullingThreshold: number = 0.01,
-        private readonly hysteresisMs: number = 1000,
+        private readonly hysteresis: Milliseconds = 1000 as Milliseconds,
         maxPlaybacks: number = 128
     ) {
         this.virtualizePool = Array.from({ length: maxPlaybacks }, () => ({
@@ -35,7 +35,7 @@ export class VoiceCullingArbiter implements ICullingArbiter {
     }
 
     // oxlint-disable-next-line max-lines-per-function
-    public evaluate(context: ICullingContext, deltaTimeMs: number): CullingDecisions {
+    public evaluate(context: ICullingContext, deltaTime: Milliseconds): CullingDecisions {
         let virtCount = 0;
         let devirtCount = 0;
 
@@ -66,10 +66,10 @@ export class VoiceCullingArbiter implements ICullingArbiter {
             const logicalState = context.getLogicalState(playbackId);
 
             if (isMuted) {
-                const timeMuted = (this.muteTimers.get(playbackId) ?? 0) + deltaTimeMs;
+                const timeMuted = ((this.muteTimers.get(playbackId) ?? 0) + deltaTime) as Milliseconds;
                 this.muteTimers.set(playbackId, timeMuted);
 
-                if (timeMuted >= this.hysteresisMs && physicalState !== 'virtual' && physicalState !== 'stopped') {
+                if (timeMuted >= this.hysteresis && physicalState !== 'virtual' && physicalState !== 'stopped') {
                     const poolItem = this.virtualizePool[virtCount++];
                     // oxlint-disable-next-line typescript/no-explicit-any
                     (poolItem as any).playbackId = playbackId;

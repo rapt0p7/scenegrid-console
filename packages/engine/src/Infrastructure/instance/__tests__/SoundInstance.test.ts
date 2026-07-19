@@ -11,7 +11,7 @@ import { SoundInstance } from '../SoundInstance.js';
 
 import type AudioContextManager from '../../context/AudioContextManager.js';
 import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
-import type { SoundId } from '@scene-grid/shared';
+import type { ContextTime, SoundId } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 
 function setupStandardizedContext() {
@@ -418,7 +418,7 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
 
         instance.play();
         const source = env.createdSources[0];
-        instance.stop(5);
+        instance.stop(5 as ContextTime);
         expect(source.stop).toHaveBeenCalled();
 
         instance.play();
@@ -427,7 +427,7 @@ describe('SoundInstance (Coverage & Edge Cases)', () => {
             throw new Error('WebAudio Error');
         });
         expect(() => {
-            instance.stop(5);
+            instance.stop(5 as ContextTime);
         }).not.toThrow();
 
         instance.play();
@@ -863,7 +863,7 @@ describe('SoundInstance Lifecycle and Pooling', () => {
         instance.on('ended', endedSpy);
 
         instance.play();
-        instance.stop(0);
+        instance.stop(0 as ContextTime);
 
         const source = env.createdSources[0];
         expect(instance.state).toBe('stopped');
@@ -886,7 +886,7 @@ describe('SoundInstance Lifecycle and Pooling', () => {
 
         instance.play();
 
-        const stopTime = 105;
+        const stopTime = 105 as ContextTime;
         instance.stop(stopTime);
 
         expect(instance.state).toBe('playing');
@@ -907,7 +907,7 @@ describe('SoundInstance Lifecycle and Pooling', () => {
         const instance = createInstance();
 
         instance.play();
-        instance.stop(110);
+        instance.stop(110 as ContextTime);
 
         instance.resetForReuse();
 

@@ -1,22 +1,26 @@
+// oxlint-disable max-lines-per-function
+// noinspection D
+
 import { isDefined, isAbsent } from '@scene-grid/shared';
 import type { IContainerSoundConfig, IScattererSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
-import type { PlaybackId, IPRNG } from '@scene-grid/shared';
+import type { PlaybackId, IPRNG, ContextTime, Milliseconds } from '@scene-grid/shared';
+import { TimeMath } from '@scene-grid/shared';
 import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 
 interface ActiveScatterer {
     readonly playbackId: PlaybackId;
     readonly config: IScattererSoundConfig;
-    nextSpawnTimeMs: number;
+    nextSpawnTime: Milliseconds;
     spawnedPlaybacks: PlaybackId[];
     spawnCount: number;
 }
 
 export class ScattererOrchestrator implements ITickable {
-    public readonly TICK_RATE_MS: number = 16;
+    public readonly TICK_RATE: Milliseconds = 16 as Milliseconds;
 
     private readonly activeSessions: ActiveScatterer[] = [];
 
@@ -28,18 +32,20 @@ export class ScattererOrchestrator implements ITickable {
         private readonly prng: IPRNG
     ) {}
 
-    public start(playbackId: PlaybackId, config: IScattererSoundConfig, currentTime: number): void {
+    public start(playbackId: PlaybackId, config: IScattererSoundConfig, currentTime: ContextTime): void {
+        const currentTimeMs = TimeMath.secondsToMilliseconds(TimeMath.castToSeconds(currentTime));
+
         this.activeSessions.push({
             playbackId,
             config,
-            nextSpawnTimeMs: this.calculateNextSpawnTime(config, currentTime),
+            nextSpawnTime: this.calculateNextSpawnTime(config, currentTimeMs),
             spawnedPlaybacks: Array.from({ length: config.maxPolyphony ?? 16 }),
             spawnCount: 0
         });
     }
 
-    public tick(currentTime: number, deltaTimeMs: number): void {
-        const currentTimeMs = currentTime * 1000;
+    public tick(currentTime: ContextTime, deltaTime: Milliseconds): void {
+        const currentTimeMs = TimeMath.secondsToMilliseconds(TimeMath.castToSeconds(currentTime));
         const { length } = this.activeSessions;
 
         for (let i = length - 1; i >= 0; i--) {
@@ -54,13 +60,13 @@ export class ScattererOrchestrator implements ITickable {
             }
 
             if (logicalState === 'paused') {
-                session.nextSpawnTimeMs += deltaTimeMs;
+                session.nextSpawnTime = (session.nextSpawnTime + deltaTime) as Milliseconds;
                 continue;
             }
 
-            if (currentTimeMs >= session.nextSpawnTimeMs) {
+            if (currentTimeMs >= session.nextSpawnTime) {
                 this.spawn(session);
-                session.nextSpawnTimeMs = this.calculateNextSpawnTime(session.config, currentTimeMs);
+                session.nextSpawnTime = this.calculateNextSpawnTime(session.config, currentTimeMs);
             }
         }
     }
@@ -103,17 +109,25 @@ export class ScattererOrchestrator implements ITickable {
         }
     }
 
-    private calculateNextSpawnTime(config: IScattererSoundConfig, currentTime: number): number {
-        const [minMs, maxMs] = config.spawnRateMs;
-        const rawNextTime = currentTime + this.prng.nextRange(minMs, maxMs);
+    private calculateNextSpawnTime(config: IScattererSoundConfig, currentTime: Milliseconds): Milliseconds {
+        const [minMs, maxMs] = config.spawnRate;
+        const rawNextTime = (currentTime + this.prng.nextRange(minMs, maxMs)) as Milliseconds;
 
         if (isDefined(config.sync)) {
             const gridInfo = this.sequencer.getPlaybackInfo?.(config.sync.referenceTrackId);
 
             if (isDefined(gridInfo)) {
-                return config.sync.quantize === 'NextBar'
-                    ? gridInfo.grid.getNextBarTime(rawNextTime)
-                    : gridInfo.grid.getNextBeatTime(rawNextTime);
+                return TimeMath.secondsToMilliseconds(
+                    TimeMath.castToSeconds(
+                        config.sync.quantize === 'NextBar'
+                            ? gridInfo.grid.getNextBarTime(
+                                  TimeMath.castToContextTime(TimeMath.msToSeconds(rawNextTime))
+                              )
+                            : gridInfo.grid.getNextBeatTime(
+                                  TimeMath.castToContextTime(TimeMath.msToSeconds(rawNextTime))
+                              )
+                    )
+                );
             }
         }
 

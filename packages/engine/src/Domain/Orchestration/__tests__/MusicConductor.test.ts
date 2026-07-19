@@ -8,7 +8,7 @@ import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IMusicFSMConfig } from '@domain/Configuration/Ports/IMusicFSMConfig.js';
-import type { GameParamId, MusicStateId, RegionId, SnapshotId, SoundId } from '@scene-grid/shared';
+import type { ContextTime, GameParamId, MusicStateId, RegionId, SnapshotId, SoundId } from '@scene-grid/shared';
 import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
 import * as MusicFsmEvaluator from '@domain/Orchestration/MusicFsmEvaluator.js';
 
@@ -148,7 +148,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
             conductor.init(mockConfig);
             const evalSpy = vi.spyOn(MusicFsmEvaluator, 'evaluateEdges');
 
-            conductor.tick(10.0);
+            conductor.tick(10.0 as ContextTime);
 
             expect(evalSpy).not.toHaveBeenCalled();
         });
@@ -182,7 +182,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
             const edge = {
                 targetState: 'combat' as MusicStateId,
                 syncRule: 'NextBar',
-                crossfadeDurationMs: 2500,
+                crossfadeDuration: 2500,
                 transitionRegionName: 'fill_in' as RegionId,
                 interruptable: false,
                 conditions: []
@@ -190,7 +190,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
 
             vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
 
-            conductor.tick(10.0);
+            conductor.tick(10.0 as ContextTime);
 
             expect(sequencer.transitionTo).toHaveBeenCalledWith({
                 soundId: 'sys_music',
@@ -208,7 +208,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
             const edge = { targetState: 'combat', syncRule: 'Immediate', stingerId: 'cymbal' } as any;
             vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
 
-            conductor.tick(10.0);
+            conductor.tick(10.0 as ContextTime);
 
             expect(sequencer.playStinger).toHaveBeenCalledWith('cymbal', 'Immediate', 'sys_music');
         });
@@ -217,7 +217,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
             const edge = { targetState: 'no_snapshot' } as any;
             vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
 
-            conductor.tick(10.0);
+            conductor.tick(10.0 as ContextTime);
 
             const state = (conductor as any).state;
             expect(state.currentStateId).toBe('no_snapshot');
@@ -232,17 +232,17 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
         });
 
         it('should calculate targetTime for NextBar using Sequencer Grid', () => {
-            const edge = { targetState: 'combat', syncRule: 'NextBar', crossfadeDurationMs: 1000 } as any;
+            const edge = { targetState: 'combat', syncRule: 'NextBar', crossfadeDuration: 1000 } as any;
             vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
             mockGrid.getNextBarTime.mockReturnValue(14.5);
 
-            conductor.tick(10.0);
+            conductor.tick(10.0 as ContextTime);
 
             const state = (conductor as any).state;
             expect(mockGrid.getNextBarTime).toHaveBeenCalledWith(10.0);
 
             expect(state.pendingMixer.executionTime).toBe(14.5);
-            expect(state.pendingMixer.crossfadeMs).toBe(1000);
+            expect(state.pendingMixer.crossfade).toBe(1000);
             expect(state.isTransitioning).toBe(true);
         });
 
@@ -251,7 +251,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
             vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
             mockGrid.getNextDivisionTime.mockReturnValue(11.125);
 
-            conductor.tick(10.0);
+            conductor.tick(10.0 as ContextTime);
 
             const state = (conductor as any).state;
             expect(mockGrid.getNextDivisionTime).toHaveBeenCalledWith(10.0, '1/8');
@@ -264,7 +264,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
             mockGrid.getPulseAtTime.mockReturnValue(1000);
             mockGrid.getTimeAtPulse.mockReturnValue(12.5);
 
-            conductor.tick(10.0);
+            conductor.tick(10.0 as ContextTime);
 
             expect(mockGrid.getPulseAtTime).toHaveBeenCalledWith(10.0);
             expect(mockGrid.getTimeAtPulse).toHaveBeenCalledWith(1480);
@@ -275,7 +275,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
             const edge = { targetState: 'combat', syncRule: 'Immediate' } as any;
             vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
 
-            conductor.tick(10.5);
+            conductor.tick(10.5 as ContextTime);
 
             expect((conductor as any).state.pendingMixer.executionTime).toBe(10.5);
         });
@@ -292,27 +292,27 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
             const evalSpy = vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
             mockGrid.getNextBarTime.mockReturnValue(15.0);
 
-            conductor.tick(10.0);
+            conductor.tick(10.0 as ContextTime);
             expect((conductor as any).state.isTransitioning).toBe(true);
 
             evalSpy.mockClear();
-            conductor.tick(12.0);
+            conductor.tick(12.0 as ContextTime);
 
             expect(evalSpy).not.toHaveBeenCalled();
             expect(mixer.activateSnapshot).toHaveBeenCalledTimes(1);
         });
 
         it('should commit Mixer exactly when time arrives and unlock FSM', () => {
-            const edge = { targetState: 'combat', syncRule: 'NextBar', crossfadeDurationMs: 500 } as any;
+            const edge = { targetState: 'combat', syncRule: 'NextBar', crossfadeDuration: 500 } as any;
             const evalSpy = vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
             mockGrid.getNextBarTime.mockReturnValue(15.0);
 
-            conductor.tick(10.0);
+            conductor.tick(10.0 as ContextTime);
 
             evalSpy.mockReturnValue(null);
             evalSpy.mockClear();
 
-            conductor.tick(15.1);
+            conductor.tick(15.1 as ContextTime);
 
             expect(mixer.activateSnapshot).toHaveBeenCalledWith('snap_combat', 'music_fsm', 100, 500);
 
@@ -340,7 +340,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
                 } as any;
                 vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
 
-                conductor.tick(i * 10);
+                conductor.tick((i * 10) as ContextTime);
             }
 
             const currentStateRef = (conductor as any).state;

@@ -6,7 +6,15 @@ import { CommandReceiver } from '../CommandReceiver.js';
 import { BroadcastIpcAdapter } from '../BroadcastIpcAdapter.js';
 
 import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
-import type { InspectorCommand, EventId, SnapshotId, GameParamId, SoundId, RegionId } from '@scene-grid/shared';
+import type {
+    InspectorCommand,
+    EventId,
+    SnapshotId,
+    GameParamId,
+    SoundId,
+    RegionId,
+    Milliseconds
+} from '@scene-grid/shared';
 
 vi.mock('../BroadcastIpcAdapter.js', () => {
     return {
@@ -72,7 +80,7 @@ describe('CommandReceiver', () => {
         });
 
         it('should process a batch of commands in order and clear the queue', () => {
-            simulateIpcMessage({ type: 'STOP_ALL' } as unknown as InspectorCommand); // Fallback для тестов
+            simulateIpcMessage({ type: 'STOP_ALL' } as unknown as InspectorCommand);
 
             simulateIpcMessage({
                 type: 'FIRE_EVENT',
@@ -101,7 +109,7 @@ describe('CommandReceiver', () => {
             expect(mockEnginePort.fireEvent).toHaveBeenCalledWith('boom');
         });
 
-        it('should handle APPLY_SNAPSHOT with and without fadeTimeMs', () => {
+        it('should handle APPLY_SNAPSHOT with and without fadeTime', () => {
             simulateIpcMessage({ type: 'APPLY_SNAPSHOT', timestampMs: 0, snapshotId: 'snap1' as SnapshotId });
             receiver.tick(1, 16);
             expect(mockEnginePort.applySnapshot).toHaveBeenCalledWith('snap1', undefined);
@@ -110,7 +118,7 @@ describe('CommandReceiver', () => {
                 type: 'APPLY_SNAPSHOT',
                 timestampMs: 0,
                 snapshotId: 'snap2' as SnapshotId,
-                fadeTimeMs: 500
+                fadeTime: 500 as Milliseconds
             });
             receiver.tick(2, 16);
             expect(mockEnginePort.applySnapshot).toHaveBeenCalledWith('snap2', 500);

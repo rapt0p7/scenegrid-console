@@ -8,7 +8,18 @@ import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { EventId, SoundId, GameParamId, RegionId, SnapshotId, LayerId, BankId, IPRNG } from '@scene-grid/shared';
+import type {
+    EventId,
+    SoundId,
+    GameParamId,
+    RegionId,
+    SnapshotId,
+    LayerId,
+    BankId,
+    IPRNG,
+    ContextTime,
+    Milliseconds
+} from '@scene-grid/shared';
 import type { Mocked } from 'vitest';
 import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
@@ -36,7 +47,11 @@ const testEventMap: IEventMap = {
     },
     ['Boss_Defeated' as EventId]: {
         actions: [
-            { type: 'stop', target: 'bgm_boss' as SoundId, options: { allowTail: true, fadeOutMs: 2000 } },
+            {
+                type: 'stop',
+                target: 'bgm_boss' as SoundId,
+                options: { allowTail: true, fadeOut: 2000 as Milliseconds }
+            },
             { type: 'play', target: 'jingle_victory' as SoundId }
         ]
     },
@@ -93,7 +108,7 @@ const testEventMap: IEventMap = {
         actions: [{ type: 'trigger_event', target: 'Player_Recursion' as EventId }]
     },
     ['Event_With_Delay' as EventId]: {
-        actions: [{ type: 'play', target: 'sfx_delayed' as SoundId, delayMs: 1500 }]
+        actions: [{ type: 'play', target: 'sfx_delayed' as SoundId, delay: 1500 as Milliseconds }]
     },
     ['Event_With_Probability' as EventId]: {
         actions: [
@@ -256,7 +271,7 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
 
     it('should pass options down to the router on stop action', () => {
         dispatcher.postEvent('Boss_Defeated' as EventId);
-        expect(mockRouter.stop).toHaveBeenCalledWith('bgm_boss', { allowTail: true, fadeOutMs: 2000 });
+        expect(mockRouter.stop).toHaveBeenCalledWith('bgm_boss', { allowTail: true, fadeOut: 2000 });
         expect(mockRouter.play).toHaveBeenCalledWith('jingle_victory');
     });
 
@@ -369,8 +384,8 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
     });
 
     describe('Temporal Scheduling (Delays)', () => {
-        it('should schedule action with delayMs and execute it only when time is reached', () => {
-            mockController.getCurrentTime.mockReturnValue(5);
+        it('should schedule action with delay and execute it only when time is reached', () => {
+            mockController.getCurrentTime.mockReturnValue(5 as ContextTime);
 
             dispatcher.postEvent('Event_With_Delay' as EventId);
 

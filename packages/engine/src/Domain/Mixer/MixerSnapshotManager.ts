@@ -2,7 +2,7 @@
 
 import mitt from 'mitt';
 import type { Emitter } from 'mitt';
-import { CyclePool, isDefined, type ITelemetryCauseChain } from '@scene-grid/shared';
+import { CyclePool, isDefined, type ITelemetryCauseChain, Milliseconds } from '@scene-grid/shared';
 import type { LayerId, SnapshotId, TelemetryPacket } from '@scene-grid/shared';
 import type MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
@@ -21,7 +21,7 @@ export default class MixerSnapshotManager {
         result: {
             type: 'SET_MIX_SNAPSHOT',
             snapshotId: '',
-            fadeTimeMs: 0
+            fadeTime: 0 as Milliseconds
         },
         conditionTrace: undefined
     }));
@@ -34,14 +34,19 @@ export default class MixerSnapshotManager {
         private readonly soundController: ISoundController
     ) {}
 
-    activateSnapshot(name: SnapshotId, layerId: LayerId, priority: number, durationMs: number = 500): void {
+    activateSnapshot(
+        name: SnapshotId,
+        layerId: LayerId,
+        priority: number,
+        duration: Milliseconds = 500 as Milliseconds
+    ): void {
         const snapshot = this.snapshots[name];
         if (!isDefined(snapshot)) return;
 
         this.events.emit('snapshot:enter', { layerId, snapshotName: name, priority });
-        this.events.emit('transition:start', { layerId, snapshotName: name, durationMs });
+        this.events.emit('transition:start', { layerId, snapshotName: name, duration });
 
-        this.dispatchTelemetrySnapshotChange(name, durationMs, 'activateSnapshot');
+        this.dispatchTelemetrySnapshotChange(name, duration, 'activateSnapshot');
 
         this.layerStack.addLayer({
             id: layerId,
@@ -58,17 +63,17 @@ export default class MixerSnapshotManager {
         this.events.emit('transition:end', { layerId, snapshotName: name });
     }
 
-    clearLayer(layerId: LayerId, durationMs: number = 500): void {
+    clearLayer(layerId: LayerId, duration: Milliseconds = 500 as Milliseconds): void {
         if (!this.layerStack.hasLayer(layerId)) return;
 
         this.events.emit('snapshot:exit', { layerId });
-        this.events.emit('transition:start', { layerId, snapshotName: 'clear', durationMs });
+        this.events.emit('transition:start', { layerId, snapshotName: 'clear', duration });
 
         this.layerStack.removeLayer(layerId);
 
-        this.coordinator.recompute({ durationMs });
+        this.coordinator.recompute({ duration });
 
-        this.dispatchTelemetrySnapshotChange('CLEAR', durationMs, 'clearLayer');
+        this.dispatchTelemetrySnapshotChange('CLEAR', duration, 'clearLayer');
 
         this.events.emit('transition:end', { layerId, snapshotName: 'clear' });
     }
@@ -98,7 +103,7 @@ export default class MixerSnapshotManager {
         }
     }
 
-    private dispatchTelemetrySnapshotChange(snapshotId: string, fadeTimeMs: number, methodName: string): void {
+    private dispatchTelemetrySnapshotChange(snapshotId: string, fadeTime: Milliseconds, methodName: string): void {
         if (!this.telemetry) return;
 
         const log = this.telemetryPool.getNext() as unknown as ITelemetryCauseChain;
@@ -112,7 +117,7 @@ export default class MixerSnapshotManager {
 
         mutableLog.result.type = 'SET_MIX_SNAPSHOT';
         mutableLog.result.snapshotId = snapshotId;
-        mutableLog.result.fadeTimeMs = fadeTimeMs;
+        mutableLog.result.fadeTime = fadeTime;
         mutableLog.conditionTrace = undefined;
 
         this.telemetry.dispatch(log);

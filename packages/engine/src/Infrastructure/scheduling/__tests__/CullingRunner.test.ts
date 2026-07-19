@@ -6,7 +6,7 @@ import { CullingRunner } from '../CullingRunner.js';
 import type { ICullingArbiter, ICullingContext, CullingDecisions } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
-import type { PlaybackId } from '@scene-grid/shared';
+import type { Milliseconds, PlaybackId } from '@scene-grid/shared';
 
 describe('CullingRunner (Infrastructure Adapter)', () => {
     let mockArbiter: ICullingArbiter;
@@ -53,7 +53,7 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
             devirtualizeCount: 0
         } as unknown as CullingDecisions);
 
-        runner.tick(10.5, 500);
+        runner.tick(10.5, 500 as Milliseconds);
 
         expect(mockArbiter.evaluate).toHaveBeenCalledWith(mockContext, 500);
 
@@ -81,7 +81,7 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
             devirtualizeCount: 1
         } as unknown as CullingDecisions);
 
-        runner.tick(12.0, 0);
+        runner.tick(12.0, 0 as Milliseconds);
 
         expect(mockArbiter.evaluate).toHaveBeenCalledWith(mockContext, 0);
 

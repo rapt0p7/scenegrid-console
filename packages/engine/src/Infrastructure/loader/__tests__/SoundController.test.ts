@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, Mocked } from 'vitest'
 import { SoundInstance } from '@infrastructure';
 import { SoundController } from '@infrastructure/loader/SoundController.js';
 
-import type { BusId, PlaybackId, SoundId } from '@scene-grid/shared';
+import type { BusId, ContextTime, Milliseconds, PlaybackId, Seconds, SoundId } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
@@ -149,9 +149,9 @@ describe('SoundController', () => {
             controller.register('hero_jump' as SoundId, { url: 'jump.wav' });
 
             const playbackId = controller.play('hero_jump' as SoundId, {
-                when: 0.5,
-                offset: 1.2,
-                duration: 2,
+                when: 0.5 as ContextTime,
+                offset: 1.2 as Seconds,
+                duration: 2 as Seconds,
                 loop: true,
                 rate: 1.5
             });
@@ -312,7 +312,7 @@ describe('SoundController', () => {
 
             const endedCallback = fakeInstance.on.mock.calls.find((call: any[]) => call[0] === 'ended')[1];
 
-            controller.stopById(id, 1.5);
+            controller.stopById(id, 1.5 as ContextTime);
             expect(fakeInstance.stop).toHaveBeenCalledWith(1.5);
 
             endedCallback(fakeInstance);
@@ -540,22 +540,22 @@ describe('SoundController', () => {
         });
 
         it('should format arguments and delegate fadeVolume() correctly using gainParam', () => {
-            controller.fadeVolume(playbackId, 0.5, 1000, 'equal-power', 100);
+            controller.fadeVolume(playbackId, 0.5, 1000 as Milliseconds, 'equal-power', 100 as Milliseconds);
 
             expect(mockAutomation.ramp).toHaveBeenCalledWith(fakeInstance.gainParam, 0.5, 1000, 'equal-power', 100);
 
             expect(() => {
-                controller.fadeVolume(999 as PlaybackId, 1, 1);
+                controller.fadeVolume(999 as PlaybackId, 1, 1 as Milliseconds);
             }).not.toThrow();
         });
 
         it('should delegate fadeParameter() correctly', () => {
-            controller.fadeParameter(playbackId, 'filterFrequency', 2000, 500);
+            controller.fadeParameter(playbackId, 'filterFrequency', 2000, 500 as Milliseconds);
 
             expect(fakeInstance.automate).toHaveBeenCalledWith('filterFrequency', 2000, 500);
 
             expect(() => {
-                controller.fadeParameter(999 as PlaybackId, 'pitch', 1, 1);
+                controller.fadeParameter(999 as PlaybackId, 'pitch', 1, 1 as Milliseconds);
             }).not.toThrow();
         });
 
@@ -692,8 +692,8 @@ describe('SoundController', () => {
             expect(() => {
                 controller.setPosition(id, 10, 20, 30);
                 controller.setVolume(id, 0.5);
-                controller.fadeVolume(id, 1, 100);
-                controller.fadeParameter(id, 'pitch', 2, 100);
+                controller.fadeVolume(id, 1, 100 as Milliseconds);
+                controller.fadeParameter(id, 'pitch', 2, 100 as Milliseconds);
                 controller.routeToBus(id, 'sfx' as BusId);
                 controller.addSidechainTrigger(id, 'music' as BusId, 1);
                 controller.virtualize(id);
@@ -745,7 +745,7 @@ describe('SoundController', () => {
         });
 
         it('should calculate time mathematically if voice is paused or virtual', () => {
-            const id = controller.play('telemetry_sound' as SoundId, { offset: 2.0 })!;
+            const id = controller.play('telemetry_sound' as SoundId, { offset: 2.0 as Seconds })!;
 
             mockContext.currentTime = 128.45;
 

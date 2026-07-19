@@ -74,7 +74,7 @@ describe('MixerSnapshotManager', () => {
             expect(emitSpy).toHaveBeenNthCalledWith(2, 'transition:start', {
                 layerId: 'layer_underwater',
                 snapshotName: 'muffled_underwater',
-                durationMs: 500
+                duration: 500
             });
             expect(emitSpy).toHaveBeenNthCalledWith(3, 'transition:end', {
                 layerId: 'layer_underwater',
@@ -115,7 +115,7 @@ describe('MixerSnapshotManager', () => {
             expect(emitSpy).toHaveBeenNthCalledWith(2, 'transition:start', {
                 layerId: 'layer_pause',
                 snapshotName: 'clear',
-                durationMs: 500
+                duration: 500
             });
             expect(emitSpy).toHaveBeenNthCalledWith(3, 'transition:end', {
                 layerId: 'layer_pause',

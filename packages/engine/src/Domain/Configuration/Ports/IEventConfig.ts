@@ -7,17 +7,18 @@ import type {
     SnapshotId,
     SoundId,
     QuantizeType,
-    IConditionConfig
+    IConditionConfig,
+    Milliseconds
 } from '@scene-grid/shared';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 
 export interface IStopOptions {
     readonly allowTail?: boolean;
-    readonly fadeOutMs?: number;
+    readonly fadeOut?: Milliseconds;
 }
 
 export interface IBaseEventAction {
-    readonly delayMs?: number;
+    readonly delay?: Milliseconds;
     readonly probability?: number;
     readonly condition?: IConditionConfig;
 }

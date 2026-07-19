@@ -1,3 +1,5 @@
+import type { ContextTime, Milliseconds } from '@scene-grid/shared';
+
 export interface ITickable {
-    tick(currentTime: number, deltaTimeMs: number): void;
+    tick(currentTime: ContextTime, deltaTime: Milliseconds): void;
 }
