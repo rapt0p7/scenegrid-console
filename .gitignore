@@ -166,3 +166,7 @@ docs/Project_Source_Code.md
 # Generated documentation
 /docs/api
 
+
+.agents/mcp_config.json
+.vscode
+/docs/config.json

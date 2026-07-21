@@ -26,6 +26,7 @@
                 "logic",
                 "orchestration",
                 "culling",
+                "validation",
 
                 "bus-adapter",
                 "dsp",
