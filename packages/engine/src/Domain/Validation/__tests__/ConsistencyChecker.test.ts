@@ -2,10 +2,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
-import { ConsoleReporter } from '@domain/Validation/Reporters/ConsoleReporter.js';
 
-import type { BusId, SoundId } from '@scene-grid/shared';
-import type { IConsistencyCheckerPayload } from '@domain/Validation/ConsistencyChecker.js';
+import type { BankId, BusId, SoundId } from '@scene-grid/shared';
+import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload';
 
 describe('ConsistencyChecker', () => {
     beforeEach(() => {
@@ -31,7 +30,13 @@ describe('ConsistencyChecker', () => {
             soundMap: {
                 ['gun_fire' as SoundId]: { busId: 'sfx' as BusId, src: 'shoot' }
             },
-            snapshots: {}
+            snapshots: {},
+            banks: {
+                ['Bank_A' as BankId]: {
+                    id: 'Bank_A' as BankId,
+                    sounds: ['gun_fire' as SoundId]
+                }
+            }
         };
 
         expect(ConsistencyChecker.validate(validConfig)).toBe(true);
@@ -525,21 +530,7 @@ describe('ConsistencyChecker', () => {
                 }
             };
 
-            const checker = new ConsistencyChecker(
-                {
-                    soundMapConfig: config.soundMap,
-                    soundManifest: {},
-                    busSystemConfig: config.buses,
-                    snapshotsConfig: {},
-                    rtpcManifest: {},
-                    eventsConfig: {},
-                    banksConfig: {}
-                },
-                [new ConsoleReporter()]
-            );
-
-            (checker as any).run();
-            expect((checker as any).errors).toHaveLength(0);
+            expect(ConsistencyChecker.validate(config)).toBe(true);
         });
 
         it('should generate errors for missing preset fields', () => {
@@ -561,21 +552,8 @@ describe('ConsistencyChecker', () => {
                 }
             };
 
-            const checker = new ConsistencyChecker(
-                {
-                    soundMapConfig: config.soundMap,
-                    soundManifest: {},
-                    busSystemConfig: config.buses,
-                    snapshotsConfig: {},
-                    rtpcManifest: {},
-                    eventsConfig: {},
-                    banksConfig: {}
-                },
-                [new ConsoleReporter()]
-            );
-
-            (checker as any).run();
-            const errors = (checker as any).errors;
+            const [result, { errors }] = ConsistencyChecker.validate(config, { isReturnWithReport: true });
+            expect(result).toBe(false);
             expect(errors.length).toBeGreaterThan(0);
             expect(
                 errors.some((error: string) =>
@@ -606,23 +584,10 @@ describe('ConsistencyChecker', () => {
                 }
             };
 
-            const checker = new ConsistencyChecker(
-                {
-                    soundMapConfig: config.soundMap,
-                    soundManifest: {},
-                    busSystemConfig: config.buses,
-                    snapshotsConfig: {},
-                    rtpcManifest: {},
-                    eventsConfig: {},
-                    banksConfig: {}
-                },
-                [new ConsoleReporter()]
-            );
+            const [result, { errors }] = ConsistencyChecker.validate(config, { isReturnWithReport: true });
 
-            (checker as any).run();
-            expect((checker as any).errors.some((error: string) => error.includes('invalid type "magic-curve"'))).toBe(
-                true
-            );
+            expect(result).toBe(false);
+            expect(errors.some((error: string) => error.includes('invalid type "magic-curve"'))).toBe(true);
         });
     });
 
@@ -773,18 +738,18 @@ describe('ConsistencyChecker', () => {
 
     describe('100% Coverage Edge Cases', () => {
         it('should handle absent base properties in early returns (checkRoutingCycles, etc.)', () => {
-            const checker = new (ConsistencyChecker as any)(
-                {
-                    soundMapConfig: null,
-                    soundManifest: null,
-                    busSystemConfig: null,
-                    snapshotsConfig: null,
-                    rtpcManifest: null
-                },
-                [new ConsoleReporter()]
-            );
-            expect(() => checker['run']()).not.toThrow();
-            expect(checker['errors'].length).toBeGreaterThan(0);
+            const config = {
+                soundMapConfig: null,
+                soundManifest: null,
+                busSystemConfig: null,
+                snapshotsConfig: null,
+                rtpcManifest: null
+            };
+            const [result, { errors }] = ConsistencyChecker.validate(config as unknown as IConsistencyCheckerPayload, {
+                isReturnWithReport: true
+            });
+            expect(result).toBe(false);
+            expect(errors.length).toBeGreaterThan(0);
         });
 
         it('should fail if missing required array (Container sources)', () => {
