@@ -71,6 +71,8 @@ async function bootstrap() {
             audio.play('backgroundMain', { isLoop: true });
             audio.play('backgroundMain2', { isLoop: true });
             audio.play('backgroundMain3', { isLoop: true });
+            // audio.music.playLoop('smartLoop', 'A');
+            // audio.conductor.start();
 
             if (process.env.NODE_ENV !== 'production') {
                 void import('@scene-grid/inspector').then(({ attachDebugUI, initAudioDebugPanel }) => {
