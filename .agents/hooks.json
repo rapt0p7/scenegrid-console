@@ -1,0 +1,16 @@
+{
+  "repowise-post-tools": {
+    "PostToolUse": [
+      {
+        "matcher": "run_command|view_file|write_to_file|replace_file_content|multi_replace_file_content|grep_search|find_by_name",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "repowise-augment",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
