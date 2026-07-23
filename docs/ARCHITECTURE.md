@@ -18,6 +18,8 @@ Interaction between the client application and the audio engine occurs through a
 
 The engine natively supports **Hot Module Replacement (HMR)** via `_hotReloadConfig`, allowing developers to dynamically update buses, RTPC curves, and sound maps without destroying the active `AudioContext` or interrupting gameplay.
 
+**Declaration Merging (Type-Safe Facade):** To eliminate "Stringly-typed code" without violating the Dependency Rule (the Engine must not import Game configurations), the `IAudioEngine` facade utilizes TypeScript Declaration Merging. The engine exposes a generic `SceneGridRegistry`. The client application extends this registry with its own static asset literals (`AutocompleteSound`, `AutocompleteEvent`). As a result, the game developer gets AAA-level IDE autocomplete for all specific sound names, while the engine's core (Domain) remains 100% agnostic and continues to operate on strict Branded Types.
+
 ---
 
 ## 0. Architectural Philosophy: Ports & Adapters
@@ -123,6 +125,8 @@ Relying solely on loading individual audio buffers leads to memory bloat. The en
 
 The system natively supports professional interactive music patterns, strictly separating horizontal sequencing from vertical intensity to ensure the mix state remains predictable for the DevTools.
 
+**Autonomous Music Conductor (FSM):** At the highest level, interactive music is driven by the `MusicConductor`—a Zero-Allocation finite state machine. It evaluates gameplay states (via RTPCs) using pure functions and dispatches immutable `MusicCommand` DTOs (Target Time, Crossfade, Target Region). It maintains an absolute "I/O Sandwich", decoupling the decision-making phase from the actual `Sequencer` execution, ensuring 0 GC-spikes during complex musical transitions.
+
 **Horizontal Sequencing (The `Sequencer` & Smart Loops)**
 Instead of triggering multiple separate files chaotically, the `Sequencer` works with audio sprites (regions) within a single media file to manage musical time.
 
@@ -134,8 +138,6 @@ Key capabilities:
 * **None (Default):** Starts the target region precisely from its defined beginning.
 * **Relative:** Preserves the current playback offset (e.g., jumping seamlessly from beat 3 of Region A directly to beat 3 of Region B).
 * **Inverted:** Mathematically mirrors the offset relative to the region's duration, useful for specific rhythmic or reversing patterns.
-
-
 * **Quantized Stinger Injection:** A dedicated `playStinger` pipeline allows short, non-looping audio events (e.g., a cymbal crash or musical flourish) to be injected with temporal precision, quantized to the next beat or bar of an active reference track.
 * **Local Crossfades:** Blending regions occurs strictly at the individual channel level (`NodeChain`), preserving global bus automation and preventing routing graph pollution.
 
@@ -244,13 +246,28 @@ SceneGrid features a full-fledged observability pipeline designed to feed the In
 
 - **AudioGraph & Inspector:** The engine emits a structural manifest upon initialization, allowing external React-based dev tools (using ELK.js) to render a live, topological view of the active mix.
 - **Zero-Allocation Telemetry:** Telemetry objects (Snapshots, Lifecycle events, Cause Chains) are heavily pooled via `CyclePool` to prioritize reuse over allocation.
+- **Command Pipeline (Inspector -> Engine):** Through the `IInspectorDebugPort`, developers can inject algebraic commands (e.g., `SET_SWITCH`, `PLAY_LOOP`, override RTPC values) directly into the running game instance. This allows Audio Engineers to simulate edge-case scenarios and test mixer states in real-time without modifying the game's actual code.
 - **Broadcast Transport:** Telemetry is dispatched via `BroadcastTelemetryTransport`, allowing developers to run the Inspector in a separate browser tab/window without dragging down the game's performance.
 - **Deep Tracing:** Emits `LIFECYCLE` events (start, pause, virtualize) and `CAUSE_CHAIN` events to trace exactly why a specific action was blocked or culled.
 - **DSP Worklets:** Hardware-level RMS meters and spectrum analyzers run entirely on the `silentTail` AudioWorklets, ensuring zero main-thread overhead.
 
 ---
 
-### 13. Stability Guarantees (System Invariants)
+### 13. Temporal Coordinate Systems (DDD Time Domains)
+To prevent catastrophic scheduling desynchronization (e.g., passing musical beats into a Web Audio API method expecting absolute seconds), SceneGrid employs strict mathematical separation of time domains using TypeScript Branded Types (following Domain-Driven Design principles).
+
+*   **Physical Time (Data Plane):**
+    *   `ContextTime`: Absolute hardware timestamp (`audioContext.currentTime`). The only type allowed for exact scheduling (`when` in `ISoundController`).
+    *   `Seconds` & `Milliseconds`: Relative durations and offsets (e.g., `seek`, `crossfadeDuration`).
+    *   `Samples`: Discrete values for exact buffer manipulation.
+*   **Musical Time (Control Plane):**
+    *   `BPM`, `Beats`, and `Pulses` (PPQN). Purely logical coordinates evaluated by the `AudioGrid`.
+
+The compiler strictly forbids mixing these domains. Conversion between Musical Time and Physical Time occurs exclusively through pure math functions within the `AudioGrid` and `Sequencer`, ensuring sample-accurate, drift-free synchronization.
+
+---
+
+### 14. Stability Guarantees (System Invariants)
 
 To maintain a single source of truth for the debugger, the following are **strictly prohibited**:
 
@@ -266,7 +283,7 @@ The principle of immutability **does not apply** to the dynamic runtime state (*
 
 ---
 
-### 14. Architectural Gotcha: The Multiplicative Veto
+### 15. Architectural Gotcha: The Multiplicative Veto
 
 Due to the transition to a multiplicative parameter resolution model (`Final Gain = Base Gain × RTPC Modifier`), the engine enforces a strict separation of orchestrator responsibilities. This strictness is what allows the DevTools to mathematically trace why a sound is muted.
 
