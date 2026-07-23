@@ -2,9 +2,16 @@ import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.j
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { PlaybackId, SoundId, DeepReadonly, QuantizeType, BankId } from '@scene-grid/shared';
+import type { PlaybackId, DeepReadonly, QuantizeType } from '@scene-grid/shared';
 import type { Handler } from 'mitt';
 import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
+import {
+    AutocompleteBank,
+    AutocompleteEvent,
+    AutocompleteGameParam,
+    AutocompleteSnapshot,
+    AutocompleteSound
+} from '@application/Ports/SceneGridRegistry.js';
 
 export interface InitParameters {
     readonly isStrictValidation?: boolean;
@@ -34,8 +41,8 @@ export interface IAudioEngine {
     };
 
     params: {
-        set: (parameterName: string, value: number) => void;
-        get: (parameterName: string) => number | undefined;
+        set: (parameterName: AutocompleteGameParam, value: number) => void;
+        get: (parameterName: AutocompleteGameParam) => number | undefined;
     };
 
     /**
@@ -49,7 +56,7 @@ export interface IAudioEngine {
          * @param snapshotName Snapshot identifier.
          * @param durationMs Optional crossfade duration in milliseconds.
          */
-        setState: (snapshotName: string, durationMs?: number) => void;
+        setState: (snapshotName: AutocompleteSnapshot, durationMs?: number) => void;
 
         /**
          * Applies an overlay snapshot layer on top of the current mix state.
@@ -60,7 +67,7 @@ export interface IAudioEngine {
          * @param id - Unique layer identifier for later removal.
          * @param priority - Layer priority (defaults to OVERLAY).
          */
-        addModifier: (snapshotName: string, id: string, priority?: 100) => void;
+        addModifier: (snapshotName: AutocompleteSnapshot, id: string, priority?: 100) => void;
         /**
          * Removes a previously applied snapshot modifier layer.
          *
@@ -81,14 +88,14 @@ export interface IAudioEngine {
          * @param soundId - Music track identifier (SmartLoopSoundConfig).
          * @param region - Initial playback region identifier.
          */
-        playLoop: (soundId: string, region: string) => void;
+        playLoop: (soundId: AutocompleteSound, region: string) => void;
 
         /**
          * Stops a looping music track.
          *
          * @param soundId Music track identifier.
          */
-        stopLoop: (soundId: string) => void;
+        stopLoop: (soundId: AutocompleteSound) => void;
 
         /**
          * Plays a stinger with optional quantization and reference track.
@@ -97,7 +104,11 @@ export interface IAudioEngine {
          * @param quantize Quantization mode.
          * @param referenceTrackId Optional reference track.
          */
-        playStinger: (stingerId: string, quantize: QuantizeType, referenceTrackId?: SoundId) => void;
+        playStinger: (
+            stingerId: AutocompleteSound,
+            quantize: QuantizeType,
+            referenceTrackId?: AutocompleteSound
+        ) => void;
 
         /**
          * Performs a quantized transition between music regions.
@@ -154,21 +165,21 @@ export interface IAudioEngine {
          *
          * @param bankId Bank identifier.
          */
-        load: (bankId: BankId) => Promise<void>;
+        load: (bankId: AutocompleteBank) => Promise<void>;
 
         /**
          * Unloads an audio bank and releases associated resources.
          *
          * @param bankId Bank identifier.
          */
-        unload: (bankId: BankId) => void;
+        unload: (bankId: AutocompleteBank) => void;
 
         /**
          * Returns current bank loading state.
          *
          * @param bankId Bank identifier.
          */
-        getState: (bankId: BankId) => BankState;
+        getState: (bankId: AutocompleteBank) => BankState;
     };
 
     /**
@@ -205,26 +216,26 @@ export interface IAudioEngine {
      * @returns PlaybackId (or array of PlaybackIds for polyphonic outputs),
      * or null if the sound is rejected by the voice management / culling system.
      */
-    play(soundId: string, options?: DeepReadonly<IPlayOptions>): PlaybackId | PlaybackId[] | null;
+    play(soundId: AutocompleteSound, options?: DeepReadonly<IPlayOptions>): PlaybackId | PlaybackId[] | null;
 
     /**
      * Stops playback by instance or sound identifier.
      *
      * @param playbackIdOrSoundId - Branded identifier of a sound defined in the manifest.
      */
-    stop(playbackIdOrSoundId: PlaybackId | PlaybackId[] | string): void;
+    stop(playbackIdOrSoundId: PlaybackId | PlaybackId[] | AutocompleteSound): void;
 
     /**
      * Pauses playback by instance or sound identifier.
      */
-    pause(playbackIdOrSoundId: PlaybackId | PlaybackId[] | SoundId): void;
+    pause(playbackIdOrSoundId: PlaybackId | PlaybackId[] | AutocompleteSound): void;
 
     /**
      * Resumes playback by instance or sound identifier.
      *
      * @param playbackIdOrSoundId - Branded identifier of a sound defined in the manifest.
      */
-    resume(playbackIdOrSoundId: PlaybackId | PlaybackId[] | SoundId): void;
+    resume(playbackIdOrSoundId: PlaybackId | PlaybackId[] | AutocompleteSound): void;
 
     /**
      * Primary entry point for dispatching gameplay audio events (data-driven event system).
@@ -233,5 +244,5 @@ export interface IAudioEngine {
      * @param eventId - Branded identifier of the event (e.g. 'WEAPON_FIRE').
      * Raw string identifiers are intentionally disallowed by the type system.
      */
-    postEvent(eventId: string): void;
+    postEvent(eventId: AutocompleteEvent): void;
 }

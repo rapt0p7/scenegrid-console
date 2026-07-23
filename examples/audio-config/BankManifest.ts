@@ -13,4 +13,4 @@ export default {
         id: 'sfx2' as BankId,
         sounds: ['kickDrum2', 'hardstyleKick', 'kbKickMetallic', 'explosion2', 'explosion'] as SoundId[]
     }
-} as IBankManifest;
+} satisfies IBankManifest;

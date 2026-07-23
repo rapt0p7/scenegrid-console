@@ -1,9 +1,25 @@
 // noinspection D
 
-import { AudioEngine, BankId } from '@scene-grid/engine';
+import { AudioEngine } from '@scene-grid/engine';
 
 import { Buses, Snapshots, SoundMap, RTPCManifest, Events, BankManifest, MusicFSM } from './audio-config/index.js';
 import soundManifest from './soundManifest.js';
+
+type MySounds = keyof typeof SoundMap;
+type MyEvents = keyof typeof Events;
+type MyBanks = keyof typeof BankManifest;
+type MySnapshots = keyof typeof Snapshots;
+type MyGameParams = keyof typeof RTPCManifest;
+
+declare module '@scene-grid/engine' {
+    export interface SceneGridRegistry {
+        SoundIds: MySounds;
+        EventIds: MyEvents;
+        BankIds: MyBanks;
+        SnapshotIds: MySnapshots;
+        GameParamIds: MyGameParams;
+    }
+}
 
 // oxlint-disable-next-line max-lines-per-function
 async function bootstrap() {
@@ -50,9 +66,9 @@ async function bootstrap() {
         return;
     }
 
-    await audio.banks.load('music' as BankId);
-    await audio.banks.load('sfx' as BankId);
-    await audio.banks.load('sfx2' as BankId);
+    await audio.banks.load('music');
+    await audio.banks.load('sfx');
+    await audio.banks.load('sfx2');
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error

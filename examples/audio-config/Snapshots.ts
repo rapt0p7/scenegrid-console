@@ -1,58 +1,55 @@
-import type { ISnapshots } from '@scene-grid/engine';
+import type { ISnapshot, BusId } from '@scene-grid/engine';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const Snapshots = {
+export default {
     idle: {
         buses: {
-            musicMain: { gain: 1 },
-            musicExplore: { gain: 0 },
-            musicCombat: { gain: 0 },
-            musicLounge: { gain: 0 },
-            sfx: { gain: 1 },
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            SFX_COINS: { gain: 1 }
+            ['musicMain' as BusId]: { gain: 1 },
+            ['musicExplore' as BusId]: { gain: 0 },
+            ['musicCombat' as BusId]: { gain: 0 },
+            ['musicLounge' as BusId]: { gain: 0 },
+            ['sfx' as BusId]: { gain: 1 },
+            ['SFX_COINS' as BusId]: { gain: 1 }
         }
     },
 
     explore: {
         buses: {
-            musicMain: { gain: 0 },
-            musicExplore: { gain: 1 },
-            musicCombat: { gain: 0 },
-            musicLounge: { gain: 0 },
-            sfx: { gain: 1 }
+            ['musicMain' as BusId]: { gain: 0 },
+            ['musicExplore' as BusId]: { gain: 1 },
+            ['musicCombat' as BusId]: { gain: 0 },
+            ['musicLounge' as BusId]: { gain: 0 },
+            ['sfx' as BusId]: { gain: 1 }
         }
     },
 
     combat: {
         buses: {
-            musicMain: { gain: 0 },
-            musicExplore: { gain: 0 },
-            musicCombat: { gain: 1 },
-            musicLounge: { gain: 0 }
+            ['musicMain' as BusId]: { gain: 0 },
+            ['musicExplore' as BusId]: { gain: 0 },
+            ['musicCombat' as BusId]: { gain: 1 },
+            ['musicLounge' as BusId]: { gain: 0 }
         }
     },
 
     lounge: {
         buses: {
-            musicMain: { gain: 0 },
-            musicExplore: { gain: 0 },
-            musicCombat: { gain: 0 },
-            musicLounge: { gain: 1 }
+            ['musicMain' as BusId]: { gain: 0 },
+            ['musicExplore' as BusId]: { gain: 0 },
+            ['musicCombat' as BusId]: { gain: 0 },
+            ['musicLounge' as BusId]: { gain: 1 }
         }
     },
 
     info: {
         buses: {
-            musicMain: {
+            ['musicMain' as BusId]: {
                 gain: 1,
                 filter: { type: 'lowpass', frequency: 500 }
             },
-            musicExplore: { gain: 0 },
-            musicCombat: { gain: 0 },
-            musicLounge: { gain: 0 }
+            ['musicExplore' as BusId]: { gain: 0 },
+            ['musicCombat' as BusId]: { gain: 0 },
+            ['musicLounge' as BusId]: { gain: 0 }
         }
     }
-};
-
-export default Snapshots as ISnapshots;
+} satisfies Record<string, ISnapshot>;

@@ -77,6 +77,13 @@ import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngi
 import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
 import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
+import type {
+    AutocompleteBank,
+    AutocompleteEvent,
+    AutocompleteGameParam,
+    AutocompleteSnapshot,
+    AutocompleteSound
+} from '@application/Ports/SceneGridRegistry.js';
 
 export class AudioEngine implements IAudioEngine {
     #contextManager!: AudioContextManager;
@@ -116,14 +123,14 @@ export class AudioEngine implements IAudioEngine {
     };
 
     public readonly params = {
-        set: (parameterName: string, value: number) => {
+        set: (parameterName: AutocompleteGameParam, value: number) => {
             this.#rtpcManager.setValue(parameterName as GameParamId, value);
         },
-        get: (parameterName: string) => this.#rtpcManager.getValue(parameterName as GameParamId)
+        get: (parameterName: AutocompleteGameParam) => this.#rtpcManager.getValue(parameterName as GameParamId)
     };
 
     public readonly mixer = {
-        setState: (snapshotName: string, duration?: number) => {
+        setState: (snapshotName: AutocompleteSnapshot, duration?: number) => {
             this.#snapshotManager.activateSnapshot(
                 snapshotName as SnapshotId,
                 'scene_main' as LayerId,
@@ -131,7 +138,7 @@ export class AudioEngine implements IAudioEngine {
                 duration as Milliseconds
             );
         },
-        addModifier: (snapshotName: string, id: string, priority = PRIORITY.OVERLAY) => {
+        addModifier: (snapshotName: AutocompleteSnapshot, id: string, priority = PRIORITY.OVERLAY) => {
             this.#snapshotManager.activateSnapshot(snapshotName as SnapshotId, id as LayerId, priority);
         },
 
@@ -141,13 +148,17 @@ export class AudioEngine implements IAudioEngine {
     };
 
     public readonly music = {
-        playLoop: (soundId: string, region: string) => {
+        playLoop: (soundId: AutocompleteSound, region: string) => {
             this.#sequencer.playLoop(soundId as SoundId, region as RegionId);
         },
-        stopLoop: (soundId: string) => {
+        stopLoop: (soundId: AutocompleteSound) => {
             this.#sequencer.stopLoop(soundId as SoundId);
         },
-        playStinger: (stingerId: string, quantize: QuantizeType, referenceTrackId?: SoundId): void => {
+        playStinger: (
+            stingerId: AutocompleteSound,
+            quantize: QuantizeType,
+            referenceTrackId?: AutocompleteSound
+        ): void => {
             this.#sequencer.playStinger(stingerId as SoundId, quantize, referenceTrackId as SoundId);
         },
         transitionTo: (options: ITransitionToParameters) => {
@@ -205,17 +216,17 @@ export class AudioEngine implements IAudioEngine {
 
     public get banks() {
         return {
-            load: async (bankId: BankId): Promise<void> => {
+            load: async (bankId: AutocompleteBank): Promise<void> => {
                 if (!this.#isInitialized) return;
-                await this.#bankManager.loadBank(bankId);
+                await this.#bankManager.loadBank(bankId as BankId);
             },
-            unload: (bankId: BankId): void => {
+            unload: (bankId: AutocompleteBank): void => {
                 if (!this.#isInitialized) return;
-                this.#bankManager.unloadBank(bankId);
+                this.#bankManager.unloadBank(bankId as BankId);
             },
-            getState: (bankId: BankId): BankState => {
+            getState: (bankId: AutocompleteBank): BankState => {
                 if (!this.#isInitialized) return 'UNLOADED';
-                return this.#bankManager.getBankState(bankId);
+                return this.#bankManager.getBankState(bankId as BankId);
             }
         };
     }
@@ -624,23 +635,23 @@ export class AudioEngine implements IAudioEngine {
         await this.#contextManager.suspend();
     }
 
-    public play(soundId: string, options?: DeepReadonly<IPlayOptions>): PlaybackId | PlaybackId[] | null {
+    public play(soundId: AutocompleteSound, options?: DeepReadonly<IPlayOptions>): PlaybackId | PlaybackId[] | null {
         return this.#router.play(soundId as SoundId, options);
     }
 
-    public stop(playbackIdOrSoundId: PlaybackId | PlaybackId[] | string): void {
+    public stop(playbackIdOrSoundId: PlaybackId | PlaybackId[] | AutocompleteSound): void {
         this.#router.stop(playbackIdOrSoundId as PlaybackId | PlaybackId[] | SoundId);
     }
 
-    public pause(playbackIdOrSoundId: PlaybackId | PlaybackId[] | SoundId): void {
-        this.#router.pause(playbackIdOrSoundId);
+    public pause(playbackIdOrSoundId: PlaybackId | PlaybackId[] | AutocompleteSound): void {
+        this.#router.pause(playbackIdOrSoundId as PlaybackId | PlaybackId[] | SoundId);
     }
 
-    public resume(playbackIdOrSoundId: PlaybackId | PlaybackId[] | SoundId): void {
-        this.#router.resume(playbackIdOrSoundId);
+    public resume(playbackIdOrSoundId: PlaybackId | PlaybackId[] | AutocompleteSound): void {
+        this.#router.resume(playbackIdOrSoundId as PlaybackId | PlaybackId[] | SoundId);
     }
 
-    public postEvent(eventId: string): void {
+    public postEvent(eventId: AutocompleteEvent): void {
         if (!this.#isInitialized) {
             console.warn(`[AudioEngine] Cannot post event "${eventId}": Engine is not initialized.`);
             return;
