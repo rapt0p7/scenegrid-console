@@ -8,6 +8,7 @@ export type { Point2D, MathCurveType, MathCurvePresetDefinition, MathCurveDefini
 export type { IPRNG } from './Math/SeededPRNG.js';
 
 export { CyclePool } from './Memory/CyclePool.js';
+export { ConcurrencyThrottler } from './Memory/ConcurrencyThrottler.js';
 
 export { default as clamp } from './clamp.js';
 export { default as deepFreeze } from './deepFreeze.js';

@@ -1,6 +1,7 @@
 // noinspection D
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { IAudioBufferLoader } from '@infrastructure/types/IAudioBufferLoader.js';
+import { ConcurrencyThrottler } from '@scene-grid/shared';
 
 type Extension = 'mp3' | 'ogg' | 'wav' | 'm4a';
 
@@ -12,12 +13,14 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         m4a: 'audio/mp4'
     };
     #contextManager: AudioContextManager;
+    #throttler: ConcurrencyThrottler<AudioBuffer>;
     #bufferCache: Map<string, AudioBuffer> = new Map();
     #inFlightPromises: Map<string, Promise<AudioBuffer>> = new Map();
     #dummyBuffer: AudioBuffer | null = null;
 
-    constructor(contextManager: AudioContextManager) {
+    constructor(contextManager: AudioContextManager, concurrencyLimit: number = 6, maxQueueSize: number = 1024) {
         this.#contextManager = contextManager;
+        this.#throttler = new ConcurrencyThrottler<AudioBuffer>(concurrencyLimit, maxQueueSize);
     }
 
     public async load(url: string | string[]): Promise<AudioBuffer> {
@@ -35,7 +38,7 @@ export class AudioBufferLoader implements IAudioBufferLoader {
             return inFlight;
         }
 
-        const loadPromise = this.performLoad(resolvedUrl);
+        const loadPromise = this.#throttler.enqueue(() => this.performLoad(resolvedUrl));
         this.#inFlightPromises.set(resolvedUrl, loadPromise);
 
         try {
