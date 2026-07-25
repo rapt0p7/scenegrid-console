@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Introduce `SceneGridRegistry` for type-safe api autocomplete
+
+- Add new autocomplete spec
+
+- Add new repowise skills
+
+- Add svg diagram generation script
+
+- Implement time branded types and `TimeMath` utility
+
+- Add interactive music sequencer controls to inspector
+
 - Add music fsm and smart loop demonstration
 
 - Implement interactive music conductor
@@ -218,6 +230,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Update architecture manifests with latest changes
+
+- Update diagram
+
+- Archive implemented autocomplete spec
+
+- Update notebooklm script
+
+- Update commitlint scope and gitignore
+
+- Update `repowise`
+
+- Archive implemented checker spec
+
+- Decompose `ConsistencyChecker`
+
+- Update `repowise`
+
+- Update diagram
+
+- Update component map
+
+- Update `repowise`
+
+- Update diagram
+
+- Update `repowise`
+
+- Updated changelog, dev journal and
+
 - Update diagram
 
 - Archive implemented music conductor spec
