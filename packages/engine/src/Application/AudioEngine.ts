@@ -276,7 +276,26 @@ export class AudioEngine implements IAudioEngine {
             this.#contextManager.initSpatial(automation);
             const nodeFactory = new AudioNodeFactory(this.#contextManager);
             const scheduler = new PlaybackScheduler(this.#contextManager);
-            const bufferLoader = new AudioBufferLoader(this.#contextManager);
+            const bufferLoader = new AudioBufferLoader(
+                this.#contextManager,
+                6,
+                1024,
+                this.config.ramQuotaMb ?? Number.MAX_SAFE_INTEGER,
+                (url: string) => {
+                    console.error(
+                        `[SceneGrid Quota Manager] CRITICAL OOM EVICTION: High-priority asset dropped -> ${url}`
+                    );
+
+                    if (this.#telemetry) {
+                        this.#telemetry.dispatch({
+                            type: 'CAUSE_CHAIN',
+                            timestampMs: this.#soundController.getCurrentTime() * 1000,
+                            initiator: { type: 'RAM_QUOTA_MANAGER' },
+                            result: { type: 'OOM_CRITICAL_EVICTION', targetUrl: url }
+                        });
+                    }
+                }
+            );
             this.#masterOutput = new MasterOutput(this.#contextManager, automation);
             this.#rtpcManager = new RTPCManager();
 
@@ -430,6 +449,7 @@ export class AudioEngine implements IAudioEngine {
                 bufferLoader,
                 soundPool,
                 this.#router,
+                this.config.precalculatedSizes || {},
                 {
                     onStart: totalItems => {
                         this.#dispatcher.emit('load:start', { totalItems });
@@ -441,6 +461,13 @@ export class AudioEngine implements IAudioEngine {
                             progress,
                             lastLoadedResource
                         });
+                        if (this.#telemetry) {
+                            this.#telemetry.dispatch({
+                                type: 'RAM_REPORT',
+                                ramQuotaMb: this.config.ramQuotaMb,
+                                currentRamMb: bufferLoader.getCurrentRam()
+                            });
+                        }
                     },
                     onError: (key, error) => {
                         this.#dispatcher.emit('engine:error', {

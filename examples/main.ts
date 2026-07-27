@@ -2,7 +2,16 @@
 
 import { AudioEngine } from '@scene-grid/engine';
 
-import { Buses, Snapshots, SoundMap, RTPCManifest, Events, BankManifest, MusicFSM } from './audio-config/index.js';
+import {
+    Buses,
+    Snapshots,
+    SoundMap,
+    RTPCManifest,
+    Events,
+    BankManifest,
+    MusicFSM,
+    AudioSizes
+} from './audio-config/index.js';
 import soundManifest from './soundManifest.js';
 
 type MySounds = keyof typeof SoundMap;
@@ -32,6 +41,8 @@ async function bootstrap() {
         events: Events,
         banks: BankManifest,
         musicFSM: MusicFSM,
+        precalculatedSizes: AudioSizes,
+        ramQuotaMb: Number.MAX_SAFE_INTEGER,
         globalVoiceLimit: 32
     });
 

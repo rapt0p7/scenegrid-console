@@ -14,7 +14,7 @@ import { NodeInspector, type SelectedNodeInfo } from './ui/AudioGraph/NodeInspec
 import clsx from 'clsx';
 
 export const InspectorApp: React.FC = () => {
-    const { logs, latestSnapshot, manifest, consistencyReport } = useTelemetryBus();
+    const { logs, latestSnapshot, manifest, consistencyReport, ramReport } = useTelemetryBus();
 
     const {
         displayRef,
@@ -65,6 +65,52 @@ export const InspectorApp: React.FC = () => {
         );
     };
 
+    const renderRamStatus = () => {
+        if (!ramReport) {
+            return <span className="text-foreground-muted text-[10px] uppercase tracking-wider">RAM: --</span>;
+        }
+
+        const current = ramReport.currentRamMb;
+        const quota = ramReport.ramQuotaMb;
+
+        if (!quota) {
+            return (
+                <span className="text-foreground-muted">
+                    RAM: <span className="text-foreground font-bold">{current.toFixed(1)} MB</span>
+                </span>
+            );
+        }
+
+        const percentage = Math.min(100, Math.max(0, (current / quota) * 100));
+
+        let barColor = 'bg-success';
+        if (percentage > 85) barColor = 'bg-danger';
+        else if (percentage > 70) barColor = 'bg-warning';
+
+        return (
+            <div
+                className="flex items-center gap-2"
+                title={`RAM Usage: ${current.toFixed(2)} / ${quota.toFixed(2)} MB`}
+            >
+                <span className="text-foreground-muted uppercase tracking-wider text-[10px]">RAM:</span>
+                <div className="flex flex-col gap-1 w-28">
+                    <div className="flex justify-between text-[9px] leading-none">
+                        <span className={clsx('font-bold', percentage > 85 ? 'text-danger' : 'text-foreground')}>
+                            {current.toFixed(1)}
+                        </span>
+                        <span className="text-foreground-muted">{quota.toFixed(0)} MB</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-surface-active rounded-full overflow-hidden border border-border">
+                        <div
+                            className={clsx('h-full transition-all duration-300 ease-out rounded-full', barColor)}
+                            style={{ width: `${percentage}%` }}
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="flex flex-col h-screen w-screen bg-background text-foreground font-mono text-xs overflow-hidden select-none">
             <header className="flex-none h-10 bg-surface border-b border-border flex items-center justify-between px-4 relative">
@@ -76,6 +122,8 @@ export const InspectorApp: React.FC = () => {
                     <span className="text-foreground-muted">
                         Polyphony: <PolyphonyCounter snapshotRef={displayRef} />
                     </span>
+                    <div className="h-4 w-px bg-border" />
+                    {renderRamStatus()}
                 </div>
 
                 <div className="flex items-center gap-4">

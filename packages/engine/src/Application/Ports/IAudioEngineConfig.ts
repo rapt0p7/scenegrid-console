@@ -18,6 +18,8 @@ export interface IAudioEngineConfig {
     readonly banks: IBankManifest;
     readonly globalVoiceLimit?: number;
     readonly seed?: number;
+    readonly ramQuotaMb?: number;
+    readonly precalculatedSizes?: Record<string, number>;
     readonly sequencer?: {
         readonly ppqn?: 96 | 192 | 480 | 960;
     };

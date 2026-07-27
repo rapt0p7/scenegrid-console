@@ -10,15 +10,17 @@ describe('BankManagerAdapter', () => {
     let mockPool: any;
     let mockRouter: any;
     let mockEvents: any;
+    let mockPrecalculatedSizes: Record<string, number>;
 
     const bankManifest: IBankManifest = {
-        ['bank_1' as BankId]: { id: 'bank_1' as BankId, sounds: ['s1' as SoundId, 's2' as SoundId] },
+        ['bank_1' as BankId]: { id: 'bank_1' as BankId, sounds: ['s1' as SoundId, 's2' as SoundId, 's3' as SoundId] },
         ['empty_bank' as BankId]: { id: 'empty_bank' as BankId, sounds: [] }
     };
 
     const soundManifest: ISpriteSoundManifest = {
-        ['s1' as SoundId]: { url: 'url1' },
-        ['s2' as SoundId]: { url: 'url2' }
+        ['s1' as SoundId]: { url: 'url1', priority: 'high' },
+        ['s2' as SoundId]: { url: 'url2' },
+        ['s3' as SoundId]: { url: 'url_unknown_size' }
     };
 
     beforeEach(() => {
@@ -36,20 +38,36 @@ describe('BankManagerAdapter', () => {
             onComplete: vi.fn(),
             onUnload: vi.fn()
         };
+        mockPrecalculatedSizes = {
+            url1: 1.5,
+            url2: 3.2
+        };
     });
 
     function createAdapter() {
-        return new BankManagerAdapter(bankManifest, soundManifest, mockLoader, mockPool, mockRouter, mockEvents);
+        return new BankManagerAdapter(
+            bankManifest,
+            soundManifest,
+            mockLoader,
+            mockPool,
+            mockRouter,
+            mockPrecalculatedSizes,
+            mockEvents
+        );
     }
 
     describe('loadBank', () => {
-        it('should change state to LOADED after successful batch load', async () => {
+        it('should change state to LOADED and pass correct DTOs to loader', async () => {
             const adapter = createAdapter();
             await adapter.loadBank('bank_1' as any);
 
             expect(adapter.getBankState('bank_1' as any)).toBe('LOADED');
             expect(mockLoader.loadBatch).toHaveBeenCalledWith(
-                { s1: 'url1', s2: 'url2' },
+                {
+                    s1: { url: 'url1', priority: 'high', expectedSizeMb: 1.5 },
+                    s2: { url: 'url2', priority: 'low', expectedSizeMb: 3.2 },
+                    s3: { url: 'url_unknown_size', priority: 'low', expectedSizeMb: 5.0 }
+                },
                 expect.any(Function),
                 expect.any(Function)
             );
@@ -87,16 +105,18 @@ describe('BankManagerAdapter', () => {
 
             adapter.unloadBank(bankId);
 
-            expect(mockRouter.stop).toHaveBeenCalledTimes(2);
+            expect(mockRouter.stop).toHaveBeenCalledTimes(3);
             expect(mockRouter.stop).toHaveBeenCalledWith('s1', { allowTail: false });
             expect(mockRouter.stop).toHaveBeenCalledWith('s2', { allowTail: false });
+            expect(mockRouter.stop).toHaveBeenCalledWith('s3', { allowTail: false });
 
-            expect(mockPool.purgeSound).toHaveBeenCalledTimes(2);
+            expect(mockPool.purgeSound).toHaveBeenCalledTimes(3);
             expect(mockPool.purgeSound).toHaveBeenCalledWith('s1');
             expect(mockPool.purgeSound).toHaveBeenCalledWith('s2');
+            expect(mockPool.purgeSound).toHaveBeenCalledWith('s3');
 
             expect(mockLoader.purgeUrls).toHaveBeenCalledTimes(1);
-            expect(mockLoader.purgeUrls).toHaveBeenCalledWith(['url1', 'url2']);
+            expect(mockLoader.purgeUrls).toHaveBeenCalledWith(['url1', 'url2', 'url_unknown_size']);
 
             expect(adapter.getBankState(bankId)).toBe('UNLOADED');
             expect(mockEvents.onUnload).toHaveBeenCalledWith(bankId);

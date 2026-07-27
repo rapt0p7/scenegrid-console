@@ -7,7 +7,8 @@ export default {
         url: 'assets/asami_main_loop_b.mp3'
     },
     'backgroundMain3': {
-        url: 'assets/asami_main_loop_c.mp3'
+        url: 'assets/asami_main_loop_c.mp3',
+        priority: 'high'
     },
     'kickDrum': {
         url: 'assets/11325622-tr909-kick-drum-241402.mp3'

@@ -7,7 +7,8 @@ import type {
     ITelemetrySnapshot,
     ITelemetryLifecycleEvent,
     ITelemetryCauseChain,
-    ITelemetryConsistencyReport
+    ITelemetryConsistencyReport,
+    ITelemetryRamReport
 } from '@scene-grid/shared';
 import type { IEngineManifestDTO } from '../types/ManifestDTO';
 
@@ -21,6 +22,7 @@ export function useTelemetryBus(channelName: string = 'scenegrid_audio_telemetry
     const [logs, setLogs] = useState<UILogPacket[]>([]);
     const [manifest, setManifest] = useState<IEngineManifestDTO | null>(null);
     const [consistencyReport, setConsistencyReport] = useState<ITelemetryConsistencyReport | null>(null);
+    const [ramReport, setRamReport] = useState<ITelemetryRamReport | null>(null);
     const latestSnapshot = useRef<ITelemetrySnapshot | null>(null);
     const sequenceRef = useRef(0);
 
@@ -51,6 +53,8 @@ export function useTelemetryBus(channelName: string = 'scenegrid_audio_telemetry
                     newLogs.push({ ...packet, _seq: sequenceRef.current++ });
                 } else if (packet?.type === 'CONSISTENCY_REPORT') {
                     setConsistencyReport(packet);
+                } else if (packet?.type === 'RAM_REPORT') {
+                    setRamReport(packet);
                 }
             }
 
@@ -78,5 +82,5 @@ export function useTelemetryBus(channelName: string = 'scenegrid_audio_telemetry
         };
     }, [channelName]);
 
-    return { logs, latestSnapshot, manifest, consistencyReport };
+    return { logs, latestSnapshot, manifest, consistencyReport, ramReport };
 }

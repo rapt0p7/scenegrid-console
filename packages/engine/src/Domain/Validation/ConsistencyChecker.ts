@@ -15,6 +15,7 @@ import RTPCManifestRule from '@domain/Validation/Rules/RTPCManifestRule.js';
 import BankSystemRule from '@domain/Validation/Rules/BankSystemRule.js';
 import EventsRule from '@domain/Validation/Rules/EventsRule.js';
 import MusicFSMRule from '@domain/Validation/Rules/MusicFSMRule.js';
+import RamQuotaRule from '@domain/Validation/Rules/RamQuotaRule.js';
 
 export default class ConsistencyChecker {
     public static validate(
@@ -45,7 +46,8 @@ export default class ConsistencyChecker {
             new RTPCManifestRule(),
             new BankSystemRule(),
             new EventsRule(),
-            new MusicFSMRule()
+            new MusicFSMRule(),
+            new RamQuotaRule()
         ];
 
         try {

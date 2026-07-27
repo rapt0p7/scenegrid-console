@@ -1,7 +1,6 @@
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
 import { AudioBufferLoader } from '@infrastructure/loader/AudioBufferLoader.js';
 
 describe('AudioBufferLoader', () => {
@@ -11,12 +10,15 @@ describe('AudioBufferLoader', () => {
     let mockAudioElement: any;
     let fakeAudioBuffer: any;
     let dummyAudioBuffer: any;
+    let onEmergencyEviction: (url: string) => void;
 
     beforeEach(() => {
         vi.clearAllMocks();
 
         fakeAudioBuffer = { duration: 2.5, isDummy: false };
         dummyAudioBuffer = { duration: 0.0001, isDummy: true };
+        // oxlint-disable-next-line typescript/strict-void-return
+        onEmergencyEviction = vi.fn();
 
         mockContextManager = {
             context: {
@@ -26,7 +28,7 @@ describe('AudioBufferLoader', () => {
             }
         };
 
-        loader = new AudioBufferLoader(mockContextManager);
+        loader = new AudioBufferLoader(mockContextManager, 6, 1024, 10, onEmergencyEviction);
 
         mockFetch = vi.fn().mockResolvedValue({
             ok: true,
@@ -52,9 +54,9 @@ describe('AudioBufferLoader', () => {
         vi.restoreAllMocks();
     });
 
-    describe('Basic Loading', () => {
-        it('should fetch, decode, and return an AudioBuffer for a valid URL', async () => {
-            const buffer = await loader.load('sound.mp3');
+    describe('Basic Loading & DTO Handling', () => {
+        it('should fetch, decode, and return an AudioBuffer for a valid Request DTO', async () => {
+            const buffer = await loader.load({ url: 'sound.mp3', priority: 'low', expectedSizeMb: 2 });
 
             expect(mockFetch).toHaveBeenCalledWith('sound.mp3');
             expect(mockContextManager.context.decodeAudioData).toHaveBeenCalled();
@@ -67,9 +69,61 @@ describe('AudioBufferLoader', () => {
                 return '';
             });
 
-            await loader.load(['my-sound', 'sound.mp3']);
+            await loader.load({ url: ['my-sound', 'sound.mp3'], priority: 'low', expectedSizeMb: 2 });
 
             expect(mockFetch).toHaveBeenCalledWith('sound.mp3');
+        });
+    });
+
+    describe('RAM Quota Manager & LRU Eviction', () => {
+        it('should proactively evict the oldest LOW priority buffer when quota is exceeded', async () => {
+            await loader.load({ url: 'low1.mp3', priority: 'low', expectedSizeMb: 4 });
+            await loader.load({ url: 'low2.mp3', priority: 'low', expectedSizeMb: 4 });
+
+            expect(loader.getBuffer('low1.mp3')).toBe(fakeAudioBuffer);
+            expect(loader.getBuffer('low2.mp3')).toBe(fakeAudioBuffer);
+
+            await loader.load({ url: 'low3.mp3', priority: 'low', expectedSizeMb: 4 });
+
+            expect(loader.getBuffer('low1.mp3')).toBeUndefined();
+            expect(loader.getBuffer('low2.mp3')).toBe(fakeAudioBuffer);
+            expect(loader.getBuffer('low3.mp3')).toBe(fakeAudioBuffer);
+
+            expect(onEmergencyEviction).not.toHaveBeenCalled();
+        });
+
+        it('should protect HIGH priority buffers and evict newer LOW buffers instead', async () => {
+            await loader.load({ url: 'high1.mp3', priority: 'high', expectedSizeMb: 4 });
+            await loader.load({ url: 'low1.mp3', priority: 'low', expectedSizeMb: 4 });
+
+            await loader.load({ url: 'high2.mp3', priority: 'high', expectedSizeMb: 4 });
+
+            expect(loader.getBuffer('high1.mp3')).toBe(fakeAudioBuffer);
+            expect(loader.getBuffer('low1.mp3')).toBeUndefined();
+            expect(loader.getBuffer('high2.mp3')).toBe(fakeAudioBuffer);
+        });
+
+        it('should trigger EMERGENCY eviction and callback if all LOW buffers are gone', async () => {
+            await loader.load({ url: 'high1.mp3', priority: 'high', expectedSizeMb: 4 });
+            await loader.load({ url: 'high2.mp3', priority: 'high', expectedSizeMb: 4 });
+
+            await loader.load({ url: 'high3.mp3', priority: 'high', expectedSizeMb: 4 });
+
+            expect(loader.getBuffer('high1.mp3')).toBeUndefined();
+            expect(onEmergencyEviction).toHaveBeenCalledTimes(1);
+            expect(onEmergencyEviction).toHaveBeenCalledWith('high1.mp3');
+        });
+
+        it('should update LRU status to MRU (head) when getBuffer is called', async () => {
+            await loader.load({ url: 'low1.mp3', priority: 'low', expectedSizeMb: 4 });
+            await loader.load({ url: 'low2.mp3', priority: 'low', expectedSizeMb: 4 });
+
+            loader.getBuffer('low1.mp3');
+
+            await loader.load({ url: 'low3.mp3', priority: 'low', expectedSizeMb: 4 });
+
+            expect(loader.getBuffer('low2.mp3')).toBeUndefined();
+            expect(loader.getBuffer('low1.mp3')).toBe(fakeAudioBuffer);
         });
     });
 
@@ -83,8 +137,8 @@ describe('AudioBufferLoader', () => {
 
         it('should load multiple valid resources and return a record of AudioBuffers', async () => {
             const resources = {
-                sound1: 'sound1.mp3',
-                sound2: 'sound2.mp3'
+                sound1: { url: 'sound1.mp3', priority: 'low' as const, expectedSizeMb: 1 },
+                sound2: { url: 'sound2.mp3', priority: 'high' as const, expectedSizeMb: 2 }
             };
 
             const results = await loader.loadBatch(resources);
@@ -96,8 +150,8 @@ describe('AudioBufferLoader', () => {
 
         it('should call onProgress callback on successful loads', async () => {
             const resources = {
-                sound1: 'sound1.mp3',
-                sound2: 'sound2.mp3'
+                sound1: { url: 'sound1.mp3', priority: 'low' as const, expectedSizeMb: 1 },
+                sound2: { url: 'sound2.mp3', priority: 'low' as const, expectedSizeMb: 1 }
             };
             const onProgress = vi.fn();
 
@@ -120,8 +174,8 @@ describe('AudioBufferLoader', () => {
             });
 
             const resources = {
-                good: 'good.mp3',
-                bad: 'fail.mp3'
+                good: { url: 'good.mp3', priority: 'low' as const, expectedSizeMb: 1 },
+                bad: { url: 'fail.mp3', priority: 'low' as const, expectedSizeMb: 1 }
             };
 
             const onProgress = vi.fn();
@@ -138,7 +192,7 @@ describe('AudioBufferLoader', () => {
         it('should call onError only if a catastrophic unexpected error occurs', async () => {
             vi.spyOn(loader, 'load').mockRejectedValueOnce(new Error('Catastrophic failure'));
 
-            const resources = { bad: 'fail.mp3' };
+            const resources = { bad: { url: 'fail.mp3', priority: 'low' as const, expectedSizeMb: 1 } };
             const onProgress = vi.fn();
             const onError = vi.fn();
 
@@ -158,7 +212,7 @@ describe('AudioBufferLoader', () => {
                 return '';
             });
 
-            await loader.load(['sound.ogg', 'sound.mp3']);
+            await loader.load({ url: ['sound.ogg', 'sound.mp3'], priority: 'low', expectedSizeMb: 1 });
 
             expect(mockFetch).toHaveBeenCalledWith('sound.mp3');
         });
@@ -166,7 +220,7 @@ describe('AudioBufferLoader', () => {
         it('should fallback to the first URL if no formats are explicitly supported', async () => {
             mockAudioElement.canPlayType.mockReturnValue('');
 
-            await loader.load(['sound.ogg', 'sound.mp3']);
+            await loader.load({ url: ['sound.ogg', 'sound.mp3'], priority: 'low', expectedSizeMb: 1 });
 
             expect(mockFetch).toHaveBeenCalledWith('sound.ogg');
         });
@@ -174,7 +228,7 @@ describe('AudioBufferLoader', () => {
         it('should skip URLs with unknown extensions during resolution', async () => {
             mockAudioElement.canPlayType.mockReturnValue('probably');
 
-            await loader.load(['sound.xyz', 'sound.wav']);
+            await loader.load({ url: ['sound.xyz', 'sound.wav'], priority: 'low', expectedSizeMb: 1 });
 
             expect(mockFetch).toHaveBeenCalledWith('sound.wav');
         });
@@ -182,10 +236,11 @@ describe('AudioBufferLoader', () => {
 
     describe('Caching & Deduplication', () => {
         it('should return cached buffer on subsequent calls without fetching again', async () => {
-            await loader.load('sound.mp3');
+            const req = { url: 'sound.mp3', priority: 'low' as const, expectedSizeMb: 2 };
+            await loader.load(req);
             expect(mockFetch).toHaveBeenCalledTimes(1);
 
-            const buffer2 = await loader.load('sound.mp3');
+            const buffer2 = await loader.load(req);
 
             expect(mockFetch).toHaveBeenCalledTimes(1);
             expect(buffer2).toBe(fakeAudioBuffer);
@@ -199,8 +254,9 @@ describe('AudioBufferLoader', () => {
                 })
             );
 
-            const p1 = loader.load('heavy_sound.mp3');
-            const p2 = loader.load('heavy_sound.mp3');
+            const req = { url: 'heavy_sound.mp3', priority: 'low' as const, expectedSizeMb: 2 };
+            const p1 = loader.load(req);
+            const p2 = loader.load(req);
 
             resolveFetch({
                 ok: true,
@@ -215,19 +271,23 @@ describe('AudioBufferLoader', () => {
         });
 
         it('should clear specific url from cache', async () => {
-            await loader.load('sound.mp3');
+            const req = { url: 'sound.mp3', priority: 'low' as const, expectedSizeMb: 2 };
+            await loader.load(req);
             loader.clearCache('sound.mp3');
 
-            await loader.load('sound.mp3');
+            await loader.load(req);
             expect(mockFetch).toHaveBeenCalledTimes(2);
         });
 
         it('should clear entire cache if no url provided', async () => {
-            await Promise.all([loader.load('sound1.mp3'), loader.load('sound2.mp3')]);
+            await Promise.all([
+                loader.load({ url: 'sound1.mp3', priority: 'low', expectedSizeMb: 1 }),
+                loader.load({ url: 'sound2.mp3', priority: 'low', expectedSizeMb: 1 })
+            ]);
 
             loader.clearCache();
 
-            await loader.load('sound1.mp3');
+            await loader.load({ url: 'sound1.mp3', priority: 'low', expectedSizeMb: 1 });
             expect(mockFetch).toHaveBeenCalledTimes(3);
         });
     });
@@ -236,7 +296,7 @@ describe('AudioBufferLoader', () => {
         it('should return a Dummy Buffer and log a warning if network response is not ok', async () => {
             mockFetch.mockResolvedValue({ ok: false, status: 404 });
 
-            const buffer = await loader.load('missing.mp3');
+            const buffer = await loader.load({ url: 'missing.mp3', priority: 'low', expectedSizeMb: 1 });
 
             expect(buffer).toBe(dummyAudioBuffer);
             expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('missing.mp3'));
@@ -245,7 +305,7 @@ describe('AudioBufferLoader', () => {
         it('should return a Dummy Buffer and log an error if decoding fails', async () => {
             mockContextManager.context.decodeAudioData.mockRejectedValue(new Error('Decode error'));
 
-            const buffer = await loader.load('corrupt.mp3');
+            const buffer = await loader.load({ url: 'corrupt.mp3', priority: 'low', expectedSizeMb: 1 });
 
             expect(buffer).toBe(dummyAudioBuffer);
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('corrupt.mp3'), expect.any(Error));
@@ -254,12 +314,12 @@ describe('AudioBufferLoader', () => {
         it('should remove failed requests from in-flight promises even on failure', async () => {
             mockFetch.mockResolvedValue({ ok: false, status: 404 });
 
-            await loader.load('missing.mp3');
+            await loader.load({ url: 'missing.mp3', priority: 'low', expectedSizeMb: 1 });
 
-            const buffer = await loader.load('missing.mp3');
+            const buffer = await loader.load({ url: 'missing.mp3', priority: 'low', expectedSizeMb: 1 });
             expect(buffer).toBe(dummyAudioBuffer);
 
-            expect(mockFetch).toHaveBeenCalledTimes(1);
+            expect(mockFetch).toHaveBeenCalledTimes(1); // Кэш упавших не сохраняем
         });
     });
 
@@ -270,14 +330,14 @@ describe('AudioBufferLoader', () => {
         });
 
         it('should return cached buffer from getBuffer if previously loaded', async () => {
-            await loader.load('sound.mp3');
+            await loader.load({ url: 'sound.mp3', priority: 'low', expectedSizeMb: 1 });
             const buffer = loader.getBuffer('sound.mp3');
             expect(buffer).toBe(fakeAudioBuffer);
         });
 
         it('should purge specific URLs from cache', async () => {
-            await loader.load('s1.mp3');
-            await loader.load('s2.mp3');
+            await loader.load({ url: 's1.mp3', priority: 'low', expectedSizeMb: 1 });
+            await loader.load({ url: 's2.mp3', priority: 'low', expectedSizeMb: 1 });
 
             loader.purgeUrls(['s1.mp3', 's2.mp3']);
 

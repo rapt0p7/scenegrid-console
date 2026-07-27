@@ -6,6 +6,7 @@ import type { AudioBufferLoader } from '@infrastructure/loader/AudioBufferLoader
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
 import { isDefined } from '@scene-grid/shared';
+import type { IAudioBufferRequest } from '@infrastructure/types/IAudioBufferLoader.js';
 
 export interface IBankLoadEvents {
     readonly onStart: (totalItems: number) => void;
@@ -24,6 +25,7 @@ export class BankManagerAdapter implements IBankManager {
         private readonly loader: AudioBufferLoader,
         private readonly pool: SoundPoolManager,
         private readonly router: IAudioRouter,
+        private readonly precalculatedSizes: Record<string, number>,
         private readonly events?: IBankLoadEvents
     ) {}
 
@@ -44,11 +46,18 @@ export class BankManagerAdapter implements IBankManager {
 
         this.states.set(bankId, 'LOADING');
 
-        const entries: [string, string | string[]][] = [];
+        const entries: [string, IAudioBufferRequest][] = [];
         for (const soundId of config.sounds) {
             const soundMeta = this.soundManifest[soundId];
             if (isDefined(soundMeta)) {
-                entries.push([soundId as string, soundMeta.url]);
+                entries.push([
+                    soundId as string,
+                    {
+                        url: soundMeta.url,
+                        priority: soundMeta.priority ?? 'low',
+                        expectedSizeMb: this.precalculatedSizes[soundMeta.url] ?? 5.0
+                    }
+                ]);
             }
         }
 
@@ -64,9 +73,9 @@ export class BankManagerAdapter implements IBankManager {
         const startTime = performance.now();
         const failedItems: string[] = [];
 
-        const urlsToLoad: Record<string, string | string[]> = {};
-        for (const [key, url] of entries) {
-            urlsToLoad[key] = url;
+        const urlsToLoad: Record<string, IAudioBufferRequest> = {};
+        for (const [key, request] of entries) {
+            urlsToLoad[key] = request;
         }
 
         try {

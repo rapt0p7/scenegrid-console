@@ -18,4 +18,6 @@ export interface IConsistencyCheckerPayload {
     readonly rtpcManifest?: IRTPCManifest;
     readonly events?: IEventMap;
     readonly banks?: IBankManifest;
+    readonly ramQuotaMb?: number;
+    readonly precalculatedSizes?: Record<string, number>;
 }

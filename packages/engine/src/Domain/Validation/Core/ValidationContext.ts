@@ -31,7 +31,9 @@ export default class ValidationContext implements IValidationContext {
             rtpcManifest: config.rtpcManifest ?? {},
             events: config.events ?? {},
             banks: config.banks ?? {},
-            musicFSM: config.musicFSM ?? ({} as IMusicFSMConfig)
+            musicFSM: config.musicFSM ?? ({} as IMusicFSMConfig),
+            ramQuotaMb: config.ramQuotaMb ?? Number.MAX_SAFE_INTEGER,
+            precalculatedSizes: config.precalculatedSizes ?? {}
         };
 
         this.reporters = options?.reporters ?? [new ConsoleReporter()];

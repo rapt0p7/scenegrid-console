@@ -4,5 +4,6 @@ export type ISpriteSoundManifest = Record<
     SoundId,
     {
         readonly url: string;
+        readonly priority?: 'high' | 'low';
     }
 >;

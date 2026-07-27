@@ -67,6 +67,12 @@ export interface ITelemetryConsistencyReport {
     readonly isConsistent: boolean;
 }
 
+export interface ITelemetryRamReport {
+    readonly type: 'RAM_REPORT';
+    readonly currentRamMb: number;
+    readonly ramQuotaMb?: number;
+}
+
 export interface IActionTelemetryDTO {
     readonly type: string;
     readonly target?: SoundId | EventId | BankId;
@@ -80,7 +86,8 @@ export type CauseInitiator =
     | { readonly type: 'EVENT'; readonly eventId: EventId }
     | { readonly type: 'MAGNET'; readonly sourceRegion: RegionId; readonly targetRegion: RegionId }
     | { readonly type: 'CONTAINER_POLICY'; readonly containerId: SoundId }
-    | { readonly type: 'CULLING_ARBITER'; readonly reason: ArbiterCullReason };
+    | { readonly type: 'CULLING_ARBITER'; readonly reason: ArbiterCullReason }
+    | { readonly type: 'RAM_QUOTA_MANAGER' };
 
 export type CauseResult =
     | { readonly type: 'PLAY'; readonly target: SoundId }
@@ -91,7 +98,8 @@ export type CauseResult =
     | { readonly type: 'BLOCKED'; readonly reason: string }
     | { readonly type: 'VIRTUALIZE'; readonly target: PlaybackId }
     | { readonly type: 'KILL'; readonly target: PlaybackId }
-    | { readonly type: 'SET_MIX_SNAPSHOT'; readonly snapshotId: string | number; readonly fadeTime: number };
+    | { readonly type: 'SET_MIX_SNAPSHOT'; readonly snapshotId: string | number; readonly fadeTime: number }
+    | { readonly type: 'OOM_CRITICAL_EVICTION'; readonly targetUrl: string };
 
 export interface IConditionTrace {
     readonly param: GameParamId;

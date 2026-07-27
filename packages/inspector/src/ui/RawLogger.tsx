@@ -50,6 +50,8 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs, onLogClick, isLive =
                 return `CONTAINER::${initiator.containerId}`;
             case 'CULLING_ARBITER':
                 return `CULLING::${initiator.reason}`;
+            case 'RAM_QUOTA_MANAGER':
+                return `RAM_QUOTA`;
             default:
                 return 'UNKNOWN';
         }
@@ -69,6 +71,7 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs, onLogClick, isLive =
                 const isCause = log.type === 'CAUSE_CHAIN';
                 const isBlocked = isCause && log.result.type === 'BLOCKED';
                 const isSnapshotChange = isCause && log.result.type === 'SET_MIX_SNAPSHOT';
+                const isOomEviction = isCause && log.result.type === 'OOM_CRITICAL_EVICTION';
                 const isActive = !isLive && closestTime === log.timestampMs;
 
                 return (
@@ -80,12 +83,12 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs, onLogClick, isLive =
                             'p-2 rounded-sm border-l-4 transition-all cursor-pointer',
                             isActive
                                 ? 'bg-surface-active ring-1 ring-primary shadow-md'
-                                : isBlocked
+                                : isBlocked || isOomEviction
                                   ? 'bg-danger/20'
                                   : isSnapshotChange
                                     ? 'bg-info/10'
                                     : 'bg-surface hover:bg-surface-hover',
-                            isBlocked
+                            isBlocked || isOomEviction
                                 ? 'border-danger'
                                 : isSnapshotChange
                                   ? 'border-info'
@@ -121,39 +124,54 @@ export const RawLogger: React.FC<RawLoggerProps> = ({ logs, onLogClick, isLive =
                             </div>
                         )}
 
-                        {log.type === 'CAUSE_CHAIN' && log.result.type !== 'SET_MIX_SNAPSHOT' && (
+                        {log.type === 'CAUSE_CHAIN' && log.result.type === 'OOM_CRITICAL_EVICTION' && (
                             <div className="leading-tight">
-                                <strong className={clsx(isBlocked ? 'text-danger' : 'text-primary')}>
-                                    [{renderInitiator(log.initiator)}]
+                                <strong className="text-danger tracking-wider">
+                                    [{renderInitiator(log.initiator)}] OOM CRITICAL EVICTION
                                 </strong>
-                                <span className="mx-2 text-foreground-muted">-&gt;</span>
-                                <span className={clsx(isBlocked ? 'text-danger font-bold' : 'text-info')}>
-                                    {log.result.type}{' '}
-                                    {log.result.type === 'PLAY' || log.result.type === 'STOP' ? log.result.target : ''}
-                                </span>
-
-                                {log.conditionTrace && (
-                                    <div className="mt-1 pl-2 ml-1 border-l-2 border-border text-foreground-muted text-[10px]">
-                                        Cond: {log.conditionTrace.param} {log.conditionTrace.operator}{' '}
-                                        {log.conditionTrace.threshold}
-                                        <span className="mx-1">|</span>
-                                        Act: {log.conditionTrace.actualValue}
-                                        <span
-                                            className={clsx(
-                                                'ml-2 font-bold',
-                                                log.conditionTrace.passed ? 'text-success' : 'text-danger'
-                                            )}
-                                        >
-                                            [{log.conditionTrace.passed ? 'PASS' : 'FAIL'}]
-                                        </span>
-                                    </div>
-                                )}
-
-                                {log.result.type === 'BLOCKED' && (
-                                    <div className="mt-1 text-danger text-[10px]">Reason: {log.result.reason}</div>
-                                )}
+                                <div className="mt-1 text-foreground-muted text-[10px] break-all">
+                                    Asset dropped: <span className="text-danger font-mono">{log.result.targetUrl}</span>
+                                </div>
                             </div>
                         )}
+
+                        {log.type === 'CAUSE_CHAIN' &&
+                            log.result.type !== 'SET_MIX_SNAPSHOT' &&
+                            log.result.type !== 'OOM_CRITICAL_EVICTION' && (
+                                <div className="leading-tight">
+                                    <strong className={clsx(isBlocked ? 'text-danger' : 'text-primary')}>
+                                        [{renderInitiator(log.initiator)}]
+                                    </strong>
+                                    <span className="mx-2 text-foreground-muted">-&gt;</span>
+                                    <span className={clsx(isBlocked ? 'text-danger font-bold' : 'text-info')}>
+                                        {log.result.type}{' '}
+                                        {log.result.type === 'PLAY' || log.result.type === 'STOP'
+                                            ? log.result.target
+                                            : ''}
+                                    </span>
+
+                                    {log.conditionTrace && (
+                                        <div className="mt-1 pl-2 ml-1 border-l-2 border-border text-foreground-muted text-[10px]">
+                                            Cond: {log.conditionTrace.param} {log.conditionTrace.operator}{' '}
+                                            {log.conditionTrace.threshold}
+                                            <span className="mx-1">|</span>
+                                            Act: {log.conditionTrace.actualValue}
+                                            <span
+                                                className={clsx(
+                                                    'ml-2 font-bold',
+                                                    log.conditionTrace.passed ? 'text-success' : 'text-danger'
+                                                )}
+                                            >
+                                                [{log.conditionTrace.passed ? 'PASS' : 'FAIL'}]
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {log.result.type === 'BLOCKED' && (
+                                        <div className="mt-1 text-danger text-[10px]">Reason: {log.result.reason}</div>
+                                    )}
+                                </div>
+                            )}
                     </div>
                 );
             })}

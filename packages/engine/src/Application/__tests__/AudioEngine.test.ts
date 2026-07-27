@@ -63,13 +63,14 @@ vi.mock('@infrastructure', async importOriginal => {
             return {
                 getBuffer: vi.fn().mockReturnValue(new ArrayBuffer(8)),
                 purgeUrls: vi.fn(),
+                getCurrentRam: vi.fn(),
                 load: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
                 // oxlint-disable-next-line require-await
                 loadBatch: vi.fn().mockImplementation(async (urls, onProgress, onError) => {
                     const results: any = {};
                     let loaded = 0;
                     const total = Object.keys(urls).length;
-                    for (const [key, url] of Object.entries(urls as Record<string, string>)) {
+                    for (const [key, { url }] of Object.entries(urls as Record<string, { url: string }>)) {
                         loaded++;
                         if (url.includes('fail')) {
                             if (onError) onError(key, new Error('Network error'));
