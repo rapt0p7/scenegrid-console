@@ -347,6 +347,19 @@
 
 ---
 
+## [Phase 23] Focus: Resource Management — RAM Quota and Concurrency Throttling
+
+* **Context/Problem:** Unbounded loading of audio assets could lead to memory exhaustion, especially on constrained devices. Additionally, executing too many asynchronous tasks (like fetching and decoding) simultaneously could overwhelm the network and CPU, causing performance degradation.
+* **Solution:** Introduced a RAM Quota Manager with an LRU (Least Recently Used) eviction policy in the loader layer to strictly manage memory usage. Implemented a `ConcurrencyThrottler` in the shared layer to control the rate of concurrent asynchronous tasks, ensuring smoother operation during heavy asset loading.
+
+*Manual notes (to be filled):*
+
+* **❌ What didn't work:**
+* **⚖️ Trade-off:**
+* **🎯 Next step:**
+
+---
+
 ## [Architectural Invariants] Documented Rules (from docs/architecture commits)
 
 The following explicit rules have been locked in the documentation:

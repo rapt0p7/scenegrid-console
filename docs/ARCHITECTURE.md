@@ -115,9 +115,18 @@ They allow independent management of: music, SFX, UI sounds, and various game co
 
 ---
 
-### 6. Memory Management: Bank System
+### 6. Resource & Memory Management: Banks, Quotas, and Throttling
 
-Relying solely on loading individual audio buffers leads to memory bloat. The engine enforces memory hygiene through a **Bank Loading System** (`BankManagerAdapter`). Developers group audio assets into logical Banks, allowing for bulk asynchronous loading (with fallback dummy buffers for decode errors) and safe, deterministic unloading when a context or scene is destroyed.
+Relying solely on loading individual audio buffers leads to memory bloat and can overwhelm the network or CPU. The engine enforces strict resource hygiene through several layers:
+
+**1. Bank Loading System:**
+Developers group audio assets into logical Banks (`BankManagerAdapter`), allowing for bulk asynchronous loading (with fallback dummy buffers for decode errors) and safe, deterministic unloading when a context or scene is destroyed.
+
+**2. RAM Quota Manager (LRU):**
+To prevent Out-Of-Memory (OOM) crashes on constrained devices, the loader layer implements a strict RAM quota. When the allocated memory limit is reached, it uses a Least Recently Used (LRU) eviction policy to automatically unload the oldest unused audio buffers.
+
+**3. Concurrency Throttling:**
+A `ConcurrencyThrottler` strictly controls the number of simultaneous asynchronous tasks (like fetching and decoding audio). This rate-limiting prevents heavy loading phases from stalling the main thread or overwhelming the browser's network queue.
 
 ---
 
@@ -199,10 +208,13 @@ Before a single Web Audio node is allocated, the engine validates the entire con
     * **Ghost Ducking Analysis:** Detects state conflicts, warning developers if a sound is configured to duck a target bus, but its own parent bus is muted in the current Snapshot (resulting in "ghost" compression).
     * **Multiplicative Vetoes:** Identifies collisions between dynamic RTPC controls and hardcoded Snapshot overrides to prevent erratic volume scaling.
     * **Event & Magnet Validation:** Ensures that all `SmartLoop` transition conditions and `Switch Container` states point to registered variables within the `RTPC Manifest`.
+    * **Music FSM Integrity:** Validates the `MusicConductor` state machine graph. It ensures all transition edges point to existing states, target regions exist within the referenced `smartLoop` assets, and conditional logic is bound to valid RTPC parameters.
 
 
 * **Asset Hygiene (Memory Safety):**
     * **Orphan Detection:** Cross-references the loaded asset manifest with the `SoundMap` (including nested `Switch` layers and `Events`). It proactively flags unused audio files ("orphans") loaded into memory, helping technical audio designers optimize RAM usage before shipping.
+    * **Bank System Verification:** Ensures every sound in the `SoundMap` is assigned to a Bank. It warns if complex containers reference assets scattered across multiple banks to prevent partial loading states.
+    * **RAM Quota Enforcement:** Calculates the memory footprint of high-priority assets against the engine's `ramQuotaMb`. It throws a critical error if priority assets exceed the quota and warns about excessively large files (>15MB) that should be streamed.
 
 By treating audio configurations as compilable code, the `ConsistencyChecker` acts as the first line of defense for system stability, preserving frame rates and preventing unpredictable DSP behavior.
 

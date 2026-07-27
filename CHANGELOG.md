@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Introduce ram quota manager with lru eviction
+
+- Add 'ConcurrencyThrottler' for controlled async task
+
 - Introduce `SceneGridRegistry` for type-safe api autocomplete
 
 - Add new autocomplete spec
@@ -230,6 +234,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Update `repowise`
+
+- Update diagram
+
+- Update `repowise`
+
+- Updated changelog and dev journal
+
 - Update architecture manifests with latest changes
 
 - Update diagram
