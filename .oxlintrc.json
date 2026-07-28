@@ -1,6 +1,7 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
     "plugins": ["typescript", "unicorn", "import"],
+    "jsPlugins": [{ "name": "boundaries", "specifier": "eslint-plugin-boundaries" }],
     "categories": {
         "correctness": "error",
         "suspicious": "error",
@@ -11,10 +12,151 @@
         "typeAware": true
     },
     "ignorePatterns": ["node_modules/", "**/build/**", "**/dist/**", "**/*.js", "coverage/"],
+    "settings": {
+        "boundaries/root-path": "./",
+        "boundaries/elements": [
+            { "type": "application", "partialMatch": false, "pattern": "packages/engine/src/Application" },
+            { "type": "domain", "partialMatch": false, "pattern": "packages/engine/src/Domain" },
+            { "type": "kernel", "partialMatch": false, "pattern": "packages/engine/src/Kernel" },
+            { "type": "debug", "partialMatch": false, "pattern": "packages/inspector/src" },
+            { "type": "infrastructure", "partialMatch": false, "pattern": "packages/engine/src/Infrastructure" },
+            { "type": "shared", "partialMatch": false, "pattern": "packages/shared" }
+        ],
+        "import/resolver": {
+            "typescript": {
+                "alwaysTryTypes": true
+            },
+            "node": true
+        }
+    },
     "rules": {
         "import/no-cycle": "error",
         "unicorn/prefer-structured-clone": "warn",
-        "@typescript-eslint/no-unsafe-type-assertion": "warn"
+        "@typescript-eslint/no-unsafe-type-assertion": "warn",
+        "boundaries/dependencies": [
+            "error",
+            {
+                "default": "disallow",
+                "checkAllOrigins": true,
+                "policies": [
+                    {
+                        "from": { "element": { "type": "kernel" } },
+                        "disallow": {
+                            "to": {
+                                "module": { "source": ["@application/*", "@domain/*", "@infrastructure/*", "@debug/*"] }
+                            }
+                        },
+                        "message": "Architecture violation: The Kernel layer is not allowed to import from {{to.module.source}}"
+                    },
+                    {
+                        "from": { "element": { "type": "domain" } },
+                        "disallow": {
+                            "to": { "module": { "source": ["@application/*", "@infrastructure/*", "@debug/*"] } }
+                        },
+                        "message": "Architecture violation: The Domain layer is not allowed to import from {{to.module.source}}"
+                    },
+                    {
+                        "from": { "element": { "type": "infrastructure" } },
+                        "disallow": { "to": { "module": { "source": ["@application/*", "@debug/*"] } } },
+                        "message": "Architecture violation: The Infrastructure layer is not allowed to import from {{to.module.source}}"
+                    },
+                    {
+                        "from": { "element": { "type": "application" } },
+                        "disallow": { "to": { "module": { "source": ["@debug/*"] } } },
+                        "message": "Architecture violation: The Application layer is not allowed to import from {{to.module.source}}"
+                    },
+                    {
+                        "from": { "element": { "type": "shared" } },
+                        "disallow": {
+                            "to": {
+                                "module": {
+                                    "source": [
+                                        "@application/*",
+                                        "@domain/*",
+                                        "@kernel/*",
+                                        "@infrastructure/*",
+                                        "@debug/*"
+                                    ]
+                                }
+                            }
+                        },
+                        "message": "Architecture violation: The Shared layer must be completely independent. Remove the import from {{to.module.source}}"
+                    },
+
+                    {
+                        "allow": {
+                            "to": {
+                                "module": {
+                                    "origin": ["external", "core"],
+                                    "source": ["!(@application/*|@domain/*|@kernel/*|@infrastructure/*)"]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": { "element": { "type": "application" } },
+                        "allow": {
+                            "to": {
+                                "module": {
+                                    "source": ["@application/*", "@domain/*", "@kernel/*", "@infrastructure/*"]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": { "element": { "type": "infrastructure" } },
+                        "allow": { "to": { "module": { "source": ["@infrastructure/*", "@domain/*", "@kernel/*"] } } }
+                    },
+                    {
+                        "from": { "element": { "type": "domain" } },
+                        "allow": { "to": { "module": { "source": ["@domain/*", "@kernel/*"] } } }
+                    },
+                    {
+                        "from": { "element": { "type": "kernel" } },
+                        "allow": { "to": { "module": { "source": ["@kernel/*"] } } }
+                    },
+                    {
+                        "from": { "element": { "type": "debug" } },
+                        "allow": {
+                            "to": {
+                                "module": { "source": ["@debug/*", "@infrastructure/*", "@domain/*", "@kernel/*"] }
+                            }
+                        }
+                    },
+
+                    {
+                        "from": { "element": { "type": "application" } },
+                        "allow": {
+                            "to": {
+                                "element": { "type": ["application", "domain", "kernel", "infrastructure", "shared"] }
+                            }
+                        }
+                    },
+                    {
+                        "from": { "element": { "type": "infrastructure" } },
+                        "allow": { "to": { "element": { "type": ["infrastructure", "domain", "kernel", "shared"] } } }
+                    },
+                    {
+                        "from": { "element": { "type": "domain" } },
+                        "allow": { "to": { "element": { "type": ["domain", "kernel", "shared"] } } }
+                    },
+                    {
+                        "from": { "element": { "type": "kernel" } },
+                        "allow": { "to": { "element": { "type": ["kernel", "shared"] } } }
+                    },
+                    {
+                        "from": { "element": { "type": "debug" } },
+                        "allow": {
+                            "to": { "element": { "type": ["debug", "infrastructure", "domain", "kernel", "shared"] } }
+                        }
+                    },
+                    {
+                        "from": { "element": { "type": "shared" } },
+                        "allow": { "to": { "element": { "type": "shared" } } }
+                    }
+                ]
+            }
+        ]
     },
     "overrides": [
         {

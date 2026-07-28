@@ -1,17 +1,16 @@
-// @ts-check
-import tseslint from 'typescript-eslint';
-import importPlugin from 'eslint-plugin-import';
-import eslintPluginBoundaries from 'eslint-plugin-boundaries';
-import markdownlintPlugin from 'eslint-plugin-markdownlint';
-import markdownlintParser from 'eslint-plugin-markdownlint/parser.js';
 import json from '@eslint/json';
 import vitest from '@vitest/eslint-plugin';
+import importPlugin from 'eslint-plugin-import';
+import markdownlintPlugin from 'eslint-plugin-markdownlint';
+import markdownlintParser from 'eslint-plugin-markdownlint/parser.js';
 import oxlint from 'eslint-plugin-oxlint';
 import * as jsoncParser from 'jsonc-eslint-parser';
+// @ts-check
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
     {
-        ignores: ['node_modules/', '**/build/**', '**/dist/**', '**/*.js', 'coverage/']
+        ignores: ['node_modules/', '**/build/**', '**/dist/**', '**/*.js', 'coverage/', 'scripts/']
     },
     {
         files: ['**/*.ts', '**/*.config.ts'],
@@ -30,8 +29,7 @@ export default tseslint.config(
         },
         plugins: {
             '@typescript-eslint': tseslint.plugin,
-            'import': importPlugin,
-            'boundaries': eslintPluginBoundaries
+            'import': importPlugin
         },
         settings: {
             'import/resolver': {
@@ -42,16 +40,7 @@ export default tseslint.config(
                 node: {
                     extensions: ['.js', '.ts']
                 }
-            },
-            'boundaries/elements': [
-                { type: 'application', mode: 'full', pattern: 'packages/engine/src/Application' },
-                { type: 'domain', mode: 'full', pattern: 'packages/engine/src/Domain' },
-                { type: 'kernel', mode: 'full', pattern: 'packages/engine/src/Kernel' },
-                { type: 'debug', mode: 'full', pattern: 'packages/inspector' },
-                { type: 'infrastructure', mode: 'full', pattern: 'packages/engine/src/Infrastructure' },
-                { type: 'shared', mode: 'full', pattern: 'packages/shared' },
-                { type: 'root', mode: 'full', pattern: 'src/*.ts' }
-            ]
+            }
         },
         rules: {
             'import/no-restricted-paths': [
@@ -82,50 +71,6 @@ export default tseslint.config(
                                 './packages/engine/src/Infrastructure/**/*.ts'
                             ],
                             message: 'Shared utilities must be independent of business logic.'
-                        }
-                    ]
-                }
-            ],
-
-            'boundaries/dependencies': [
-                'error',
-                {
-                    default: 'disallow',
-                    rules: [
-                        {
-                            from: 'application',
-                            allow: ['application', 'domain', 'kernel', 'infrastructure', 'shared', 'helpers', 'debug']
-                        },
-                        {
-                            from: 'domain',
-                            allow: ['domain', 'kernel', 'shared', 'helpers']
-                        },
-                        {
-                            from: 'kernel',
-                            allow: ['kernel', 'shared', 'helpers']
-                        },
-                        {
-                            from: 'infrastructure',
-                            allow: ['infrastructure', 'domain', 'kernel', 'shared', 'helpers', 'debug']
-                        },
-                        {
-                            from: 'debug',
-                            allow: ['debug', 'infrastructure', 'domain', 'kernel', 'shared', 'helpers']
-                        },
-                        { from: 'shared', allow: ['shared'] },
-                        { from: 'helpers', allow: ['helpers', 'shared'] },
-                        {
-                            from: 'root',
-                            allow: [
-                                'application',
-                                'domain',
-                                'kernel',
-                                'infrastructure',
-                                'shared',
-                                'helpers',
-                                'debug',
-                                'root'
-                            ]
                         }
                     ]
                 }
