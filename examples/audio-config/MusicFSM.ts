@@ -1,13 +1,5 @@
 // oxlint-disable typescript/no-unsafe-type-assertion
-import type {
-    IMusicFSMConfig,
-    GameParamId,
-    MusicStateId,
-    RegionId,
-    SoundId,
-    ConditionOperator,
-    QuantizeType
-} from '@scene-grid/engine';
+import type { IMusicFSMConfig, GameParamId, MusicStateId, RegionId, SoundId } from '@scene-grid/engine';
 import type { Milliseconds } from '@scene-grid/shared';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -22,20 +14,16 @@ const MusicFSM: IMusicFSMConfig = {
             edges: [
                 {
                     targetState: 'phase_B' as MusicStateId,
-                    conditions: [
-                        { param: 'music_phase' as GameParamId, operator: '==' as ConditionOperator, value: 2 }
-                    ],
-                    syncRule: 'NextBar' as QuantizeType,
+                    conditions: [{ param: 'music_phase' as GameParamId, operator: '==', value: 2 }],
+                    syncRule: 'NextBar',
                     crossfadeDuration: 4000 as Milliseconds,
                     transitionRegionName: 'A_TO_B' as RegionId,
                     interruptable: true
                 },
                 {
                     targetState: 'phase_C' as MusicStateId,
-                    conditions: [
-                        { param: 'music_phase' as GameParamId, operator: '==' as ConditionOperator, value: 3 }
-                    ],
-                    syncRule: 'NextBar' as QuantizeType,
+                    conditions: [{ param: 'music_phase' as GameParamId, operator: '==', value: 3 }],
+                    syncRule: 'NextBar',
                     crossfadeDuration: 4000 as Milliseconds,
                     transitionRegionName: 'A_TO_C' as RegionId,
                     interruptable: true
@@ -49,20 +37,16 @@ const MusicFSM: IMusicFSMConfig = {
             edges: [
                 {
                     targetState: 'phase_A' as MusicStateId,
-                    conditions: [
-                        { param: 'music_phase' as GameParamId, operator: '==' as ConditionOperator, value: 1 }
-                    ],
-                    syncRule: 'NextBar' as QuantizeType,
+                    conditions: [{ param: 'music_phase' as GameParamId, operator: '==', value: 1 }],
+                    syncRule: 'NextBar',
                     crossfadeDuration: 4000 as Milliseconds,
                     transitionRegionName: 'B_TO_A' as RegionId,
                     interruptable: true
                 },
                 {
                     targetState: 'phase_C' as MusicStateId,
-                    conditions: [
-                        { param: 'music_phase' as GameParamId, operator: '==' as ConditionOperator, value: 3 }
-                    ],
-                    syncRule: 'NextBar' as QuantizeType,
+                    conditions: [{ param: 'music_phase' as GameParamId, operator: '==', value: 3 }],
+                    syncRule: 'NextBar',
                     crossfadeDuration: 4000 as Milliseconds,
                     transitionRegionName: 'B_TO_C' as RegionId,
                     interruptable: true
@@ -76,20 +60,16 @@ const MusicFSM: IMusicFSMConfig = {
             edges: [
                 {
                     targetState: 'phase_A' as MusicStateId,
-                    conditions: [
-                        { param: 'music_phase' as GameParamId, operator: '==' as ConditionOperator, value: 1 }
-                    ],
-                    syncRule: 'NextBar' as QuantizeType,
+                    conditions: [{ param: 'music_phase' as GameParamId, operator: '==', value: 1 }],
+                    syncRule: 'NextBar',
                     crossfadeDuration: 4000 as Milliseconds,
                     transitionRegionName: 'C_TO_A' as RegionId,
                     interruptable: true
                 },
                 {
                     targetState: 'phase_B' as MusicStateId,
-                    conditions: [
-                        { param: 'music_phase' as GameParamId, operator: '==' as ConditionOperator, value: 2 }
-                    ],
-                    syncRule: 'NextBar' as QuantizeType,
+                    conditions: [{ param: 'music_phase' as GameParamId, operator: '==', value: 2 }],
+                    syncRule: 'NextBar',
                     crossfadeDuration: 4000 as Milliseconds,
                     transitionRegionName: 'C_TO_B' as RegionId,
                     interruptable: true
