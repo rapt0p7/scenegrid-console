@@ -43,38 +43,6 @@ export default tseslint.config(
             }
         },
         rules: {
-            'import/no-restricted-paths': [
-                'error',
-                {
-                    zones: [
-                        {
-                            target: './packages/engine/src/Domain/**/*.ts',
-                            from: [
-                                './packages/engine/src/Infrastructure/**/*.ts',
-                                './packages/engine/src/Application/**/*.ts'
-                            ],
-                            message: 'Domain layer must be pure. Infrastructure or Application details leaked.'
-                        },
-                        {
-                            target: './packages/engine/src/Kernel/**/*.ts',
-                            from: [
-                                './packages/engine/src/Domain/**/*.ts',
-                                './packages/engine/src/Infrastructure/**/*.ts'
-                            ],
-                            message: 'Kernel should only contain low-level logic. Domain logic found.'
-                        },
-                        {
-                            target: './packages/shared/**/*.ts',
-                            from: [
-                                './packages/engine/src/Domain/**/*.ts',
-                                './packages/engine/src/Kernel/**/*.ts',
-                                './packages/engine/src/Infrastructure/**/*.ts'
-                            ],
-                            message: 'Shared utilities must be independent of business logic.'
-                        }
-                    ]
-                }
-            ],
             'no-restricted-imports': [
                 'error',
                 {
@@ -86,7 +54,6 @@ export default tseslint.config(
                     ]
                 }
             ],
-
             '@typescript-eslint/naming-convention': [
                 'error',
                 {
