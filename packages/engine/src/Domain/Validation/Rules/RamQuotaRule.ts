@@ -1,10 +1,10 @@
+import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
 import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
-import type ValidationContext from '@domain/Validation/Core/ValidationContext.js';
 
 export default class RamQuotaRule implements IValidationRule {
     private static readonly FALLBACK_SIZE_MB = 5.0;
 
-    public validate(context: ValidationContext): void {
+    public validate(context: IValidationContext): void {
         const config = context.config;
         const manifest = config.manifest;
 
