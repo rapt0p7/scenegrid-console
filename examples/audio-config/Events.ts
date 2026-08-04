@@ -1,4 +1,4 @@
-import type { IEventMap, SoundId } from '@scene-grid/engine';
+import type { IEventMap, Milliseconds, SoundId } from '@scene-grid/engine';
 
 export default {
     stop: {
@@ -13,6 +13,24 @@ export default {
             {
                 type: 'play',
                 target: 'punchyKick' as SoundId
+            }
+        ]
+    },
+    delayed: {
+        actions: [
+            {
+                type: 'play',
+                target: 'punchyKick' as SoundId,
+                delay: 5000 as Milliseconds,
+                tags: ['sfx']
+            }
+        ]
+    },
+    flush: {
+        actions: [
+            {
+                type: 'cancel_pending',
+                targetTags: ['sfx']
             }
         ]
     }

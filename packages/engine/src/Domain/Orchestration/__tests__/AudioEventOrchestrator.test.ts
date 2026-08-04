@@ -1,30 +1,32 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestrator.js';
 
 import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
-import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
+import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type {
+    BankId,
+    ContextTime,
     EventId,
-    SoundId,
     GameParamId,
+    IPRNG,
+    LayerId,
+    Milliseconds,
+    PlaybackId,
     RegionId,
     SnapshotId,
-    LayerId,
-    BankId,
-    IPRNG,
-    ContextTime,
-    Milliseconds
+    SoundId
 } from '@scene-grid/shared';
 import type { Mocked } from 'vitest';
+
 import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
-import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestrator.js';
+import { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid';
+import { ISequencer, LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const testEventMap: IEventMap = {
     ['Player_Jump' as EventId]: {
@@ -144,6 +146,31 @@ const testEventMap: IEventMap = {
     },
     ['Unload_Level_Bank' as EventId]: {
         actions: [{ type: 'unload_bank', target: 'Bank_Level1' as BankId }]
+    },
+    ['Tagged_Play' as EventId]: {
+        actions: [{ type: 'play', target: 'sfx_tagged' as SoundId, tags: ['cutscene'] } as any]
+    },
+    ['Tagged_Delayed' as EventId]: {
+        actions: [
+            {
+                type: 'play',
+                target: 'sfx_delayed_tagged' as SoundId,
+                delay: 5000 as Milliseconds,
+                tags: ['cutscene']
+            } as any
+        ]
+    },
+    ['Tagged_Loop' as EventId]: {
+        actions: [{ type: 'start_loop', target: 'bgm_loop' as SoundId, tags: ['cutscene'] } as any]
+    },
+    ['Cancel_Cutscene' as EventId]: {
+        actions: [{ type: 'cancel_pending', targetTags: ['cutscene'] } as any]
+    },
+    ['Multi_Delayed' as EventId]: {
+        actions: [
+            { type: 'play', target: 'sfx_seq_1' as SoundId, delay: 1000 as Milliseconds },
+            { type: 'play', target: 'sfx_seq_2' as SoundId, delay: 2000 as Milliseconds }
+        ]
     }
 };
 
@@ -164,7 +191,7 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
         vi.spyOn(console, 'error').mockImplementation(() => {});
 
         mockRouter = {
-            play: vi.fn(),
+            play: vi.fn().mockReturnValue(100),
             stop: vi.fn(),
             pause: vi.fn(),
             resume: vi.fn(),
@@ -184,7 +211,8 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
             stopLoop: vi.fn(),
             transitionTo: vi.fn(),
             playStinger: vi.fn(),
-            destroy: vi.fn()
+            destroy: vi.fn(),
+            getPlaybackInfo: vi.fn()
         } as unknown as Mocked<ISequencer>;
 
         mockMixer = {
@@ -196,7 +224,8 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
         } as unknown as Mocked<MixerSnapshotManager>;
 
         mockController = {
-            getCurrentTime: vi.fn().mockReturnValue(1.5)
+            getCurrentTime: vi.fn().mockReturnValue(1.5),
+            getPlaybackState: vi.fn().mockReturnValue('playing')
         } as unknown as Mocked<ISoundController>;
 
         mockPrng = {
@@ -208,7 +237,7 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
             // oxlint-disable-next-line unicorn/no-useless-undefined
             loadBank: vi.fn().mockResolvedValue(undefined),
             unloadBank: vi.fn()
-        } as unknown as Mocked<IBankManager>;
+        };
 
         mockTelemetry = {
             dispatch: vi.fn()
@@ -500,6 +529,150 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
 
             expect(mockBankManager.unloadBank).toHaveBeenCalledTimes(1);
             expect(mockBankManager.unloadBank).toHaveBeenCalledWith('Bank_Level1');
+        });
+    });
+
+    describe('Feature: Tag Tracking and Garbage Collection', () => {
+        it('should correctly parse and process actions with the `tags` property', () => {
+            dispatcher.postEvent('Tagged_Play' as EventId);
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_tagged');
+        });
+
+        it('should track active playbacks when an action specifies tags (strictly per 2.3)', () => {
+            mockRouter.play.mockReturnValue(42);
+            dispatcher.postEvent('Tagged_Play' as EventId);
+
+            const tracked = (dispatcher as any).trackedPlaybacks;
+            expect(tracked).toBeDefined();
+            expect(tracked).toContainEqual({ playbackId: 42, tags: ['cutscene'] });
+        });
+
+        it('should garbage collect stopped playbacks in tick() using zero-allocation swap-and-pop', () => {
+            mockRouter.play.mockReturnValueOnce(1).mockReturnValueOnce(2).mockReturnValueOnce(3);
+
+            dispatcher.postEvent('Tagged_Play' as EventId);
+            dispatcher.postEvent('Tagged_Play' as EventId);
+            dispatcher.postEvent('Tagged_Play' as EventId);
+
+            let tracked = (dispatcher as any).trackedPlaybacks;
+            expect(tracked).toHaveLength(3);
+
+            mockController.getPlaybackState.mockImplementation((id: PlaybackId) => {
+                if (id === 2) return 'stopped';
+                return 'playing';
+            });
+
+            dispatcher.tick(1.6, 16.6);
+
+            tracked = (dispatcher as any).trackedPlaybacks;
+            expect(tracked).toHaveLength(2);
+
+            expect(tracked[0].playbackId).toBe(1);
+            expect(tracked[1].playbackId).toBe(3);
+        });
+    });
+
+    describe('Feature: cancel_pending Action', () => {
+        it('should flush scheduled actions, stop active playbacks, and stop active loops by target tag', () => {
+            mockController.getCurrentTime.mockReturnValue(0 as ContextTime);
+            mockSequencer.getPlaybackInfo.mockReturnValueOnce({
+                soundId: 'bgm_loop' as SoundId,
+                state: LoopState.LOOPING,
+                grid: null as unknown as IAudioGrid
+            });
+            mockRouter.play.mockReturnValue(99);
+
+            dispatcher.postEvent('Tagged_Delayed' as EventId);
+            dispatcher.postEvent('Tagged_Play' as EventId);
+            dispatcher.postEvent('Tagged_Loop' as EventId);
+
+            expect((dispatcher as any).scheduledActions).toHaveLength(1);
+
+            dispatcher.postEvent('Cancel_Cutscene' as EventId);
+
+            expect((dispatcher as any).scheduledActions).toHaveLength(0);
+            expect(mockRouter.stop).toHaveBeenCalledWith(99);
+            expect(mockSequencer.stopLoop).toHaveBeenCalledWith('bgm_loop');
+        });
+
+        it('should NOT cancel events that do not match the target tags', () => {
+            mockController.getCurrentTime.mockReturnValue(0 as ContextTime);
+
+            dispatcher.postEvent('Event_With_Delay' as EventId);
+            expect((dispatcher as any).scheduledActions).toHaveLength(1);
+
+            dispatcher.postEvent('Cancel_Cutscene' as EventId);
+
+            expect((dispatcher as any).scheduledActions).toHaveLength(1);
+        });
+    });
+
+    describe('Feature: Temporal Scheduling (Delayed Events)', () => {
+        it('should store delayed actions in scheduledActions and NOT execute them immediately', () => {
+            mockController.getCurrentTime.mockReturnValue(5.0 as ContextTime);
+
+            dispatcher.postEvent('Event_With_Delay' as EventId);
+
+            expect(mockRouter.play).not.toHaveBeenCalled();
+
+            const scheduled = (dispatcher as any).scheduledActions;
+            expect(scheduled).toBeDefined();
+            expect(scheduled).toHaveLength(1);
+
+            expect(scheduled[0].executeAt).toBe(6500);
+        });
+
+        it('should execute a delayed action only when the context time passes its target time', () => {
+            mockController.getCurrentTime.mockReturnValue(5.0 as ContextTime);
+            dispatcher.postEvent('Event_With_Delay' as EventId);
+
+            dispatcher.tick(6.0, 1000);
+            expect(mockRouter.play).not.toHaveBeenCalled();
+            expect((dispatcher as any).scheduledActions).toHaveLength(1);
+
+            dispatcher.tick(6.6, 600);
+            expect(mockRouter.play).toHaveBeenCalledTimes(1);
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_delayed');
+
+            expect((dispatcher as any).scheduledActions).toHaveLength(0);
+        });
+
+        it('should execute multiple delayed actions chronologically and maintain array stability', () => {
+            mockController.getCurrentTime.mockReturnValue(10.0 as ContextTime);
+
+            dispatcher.postEvent('Multi_Delayed' as EventId);
+
+            expect(mockRouter.play).not.toHaveBeenCalled();
+            expect((dispatcher as any).scheduledActions).toHaveLength(2);
+
+            dispatcher.tick(10.5, 500);
+            expect(mockRouter.play).not.toHaveBeenCalled();
+            expect((dispatcher as any).scheduledActions).toHaveLength(2);
+
+            dispatcher.tick(11.2, 700);
+            expect(mockRouter.play).toHaveBeenCalledTimes(1);
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_seq_1');
+            expect((dispatcher as any).scheduledActions).toHaveLength(1);
+
+            dispatcher.tick(12.1, 900);
+            expect(mockRouter.play).toHaveBeenCalledTimes(2);
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_seq_2');
+            expect((dispatcher as any).scheduledActions).toHaveLength(0);
+        });
+
+        it('should handle large time jumps (frame drops / lags) by executing all overdue actions', () => {
+            mockController.getCurrentTime.mockReturnValue(0.0 as ContextTime);
+
+            dispatcher.postEvent('Multi_Delayed' as EventId);
+            expect((dispatcher as any).scheduledActions).toHaveLength(2);
+
+            dispatcher.tick(10.0, 10000);
+
+            expect(mockRouter.play).toHaveBeenCalledTimes(2);
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_seq_1');
+            expect(mockRouter.play).toHaveBeenCalledWith('sfx_seq_2');
+
+            expect((dispatcher as any).scheduledActions).toHaveLength(0);
         });
     });
 });

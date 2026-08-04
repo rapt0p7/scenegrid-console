@@ -1,10 +1,45 @@
 // noinspection D
 
+import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngine.js';
+import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
+import type {
+    AutocompleteBank,
+    AutocompleteEvent,
+    AutocompleteGameParam,
+    AutocompleteSnapshot,
+    AutocompleteSound
+} from '@application/Ports/SceneGridRegistry.js';
+import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
+import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
+import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
+import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
+import type { IPluginFactory } from '@infrastructure';
+import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
+import type {
+    BankId,
+    EventId,
+    GameParamId,
+    LayerId,
+    PlaybackId,
+    RegionId,
+    SnapshotId,
+    SoundId,
+    BusId,
+    TickerTaskId,
+    DeepReadonly,
+    QuantizeType
+} from '@scene-grid/shared';
+import type { Handler } from 'mitt';
+
 import SoundRegistry from '@domain/Configuration/SoundRegistry.js';
 import { VoiceCullingArbiter } from '@domain/Culling/VoiceCullingArbiter.js';
 import { EngineEventDispatcher } from '@domain/Events/EngineEventDispatcher.js';
 import ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 import DuckingManager from '@domain/Managers/DuckingManager.js';
+import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
+import SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 import {
     MixerCoordinator,
     MixerLayerStack,
@@ -13,7 +48,11 @@ import {
     MixerTransitionEngine,
     PRIORITY
 } from '@domain/Mixer/index.js';
+import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestrator.js';
+import { MusicConductor } from '@domain/Orchestration/MusicConductor.js';
+import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
 import Sequencer from '@domain/Orchestration/Sequencer.js';
+import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 import { ConsoleReporter } from '@domain/Validation/Reporters/ConsoleReporter.js';
@@ -43,47 +82,8 @@ import {
     TelemetrySnapshotter,
     CommandReceiver
 } from '@infrastructure';
-import type { IPluginFactory } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 import { SeededPRNG, isDefined, deepFreeze, typedEntries, typedKeys, Milliseconds, Pulses } from '@scene-grid/shared';
-
-import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
-import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
-import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import type {
-    BankId,
-    EventId,
-    GameParamId,
-    LayerId,
-    PlaybackId,
-    RegionId,
-    SnapshotId,
-    SoundId,
-    BusId,
-    TickerTaskId,
-    DeepReadonly,
-    QuantizeType
-} from '@scene-grid/shared';
-import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
-import type { Handler } from 'mitt';
-import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
-import SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
-import { AudioEventOrchestrator } from '@domain/Orchestration/AudioEventOrchestrator.js';
-import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
-import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
-import { MusicConductor } from '@domain/Orchestration/MusicConductor.js';
-import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngine.js';
-import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
-import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
-import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
-import type {
-    AutocompleteBank,
-    AutocompleteEvent,
-    AutocompleteGameParam,
-    AutocompleteSnapshot,
-    AutocompleteSound
-} from '@application/Ports/SceneGridRegistry.js';
 
 export class AudioEngine implements IAudioEngine {
     #contextManager!: AudioContextManager;
@@ -575,6 +575,12 @@ export class AudioEngine implements IAudioEngine {
                 'scatterer-orchestrator' as TickerTaskId,
                 this.#scattererOrchestrator.TICK_RATE,
                 this.#scattererOrchestrator
+            );
+
+            this.#engineTicker.add(
+                'audio-event-orchestrator' as TickerTaskId,
+                this.#eventOrchestrator.TICK_RATE,
+                this.#eventOrchestrator
             );
 
             if (this.#conductor) {

@@ -1,13 +1,15 @@
 // oxlint-disable max-depth
 // noinspection D
 
-import AudioGrid from '@domain/Orchestration/AudioGrid.js';
-import { type IPlaybackInfo, LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
-
 import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+
+import AudioGrid from '@domain/Orchestration/AudioGrid.js';
+import { type IPlaybackInfo, LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
+import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 import {
     PlaybackId,
     RegionId,
@@ -25,8 +27,6 @@ import {
     Beats
 } from '@scene-grid/shared';
 import { isDefined, isAbsent } from '@scene-grid/shared';
-import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
-import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 interface ActiveRegion {
     playbackId: PlaybackId;
@@ -299,7 +299,9 @@ export default class Sequencer implements ISequencer {
         const beatsPerBar = config.smartLoop.beatsPerBar ?? (4 as Beats);
 
         return {
-            grid: new AudioGrid(bpm, beatsPerBar, TimeMath.castToContextTime(track.gridStartTime), this.ppqn)
+            grid: new AudioGrid(bpm, beatsPerBar, TimeMath.castToContextTime(track.gridStartTime), this.ppqn),
+            soundId: track.soundId,
+            state: track.state
         };
     }
 
@@ -325,7 +327,7 @@ export default class Sequencer implements ISequencer {
             snap.targetRegion = track.regionQueue.length > 0 ? track.regionQueue[0].name : null;
             snap.queueLength = track.regionQueue.length;
 
-            this.activeSnapshots[count] = snap as IMusicTrackSnapshot;
+            this.activeSnapshots[count] = snap;
             count++;
         });
 

@@ -1,3 +1,4 @@
+import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 import type {
     BankId,
     EventId,
@@ -10,7 +11,6 @@ import type {
     IConditionConfig,
     Milliseconds
 } from '@scene-grid/shared';
-import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 
 export interface IStopOptions {
     readonly allowTail?: boolean;
@@ -21,6 +21,7 @@ export interface IBaseEventAction {
     readonly delay?: Milliseconds;
     readonly probability?: number;
     readonly condition?: IConditionConfig;
+    readonly tags?: readonly string[];
 }
 
 export interface IPlayAction extends IBaseEventAction {
@@ -108,6 +109,12 @@ export interface IUnloadBankAction extends IBaseEventAction {
     readonly target: BankId;
 }
 
+export interface ICancelPendingAction extends IBaseEventAction {
+    readonly type: 'cancel_pending';
+    readonly targetTags: readonly string[];
+    readonly stopActiveVoices?: boolean;
+}
+
 export type EventAction =
     | IPlayAction
     | IStopAction
@@ -123,7 +130,8 @@ export type EventAction =
     | IRemoveMixerModifierAction
     | ITriggerEventAction
     | ILoadBankAction
-    | IUnloadBankAction;
+    | IUnloadBankAction
+    | ICancelPendingAction;
 
 export interface IEventConfig {
     readonly actions: readonly EventAction[];

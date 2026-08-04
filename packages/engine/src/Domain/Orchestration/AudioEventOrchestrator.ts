@@ -1,4 +1,18 @@
 // oxlint-disable max-lines-per-function
+// noinspection D
+
+import type { EventAction, IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
+import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
+import type { EventId, LayerId, IPRNG, DeepReadonly, IConditionConfig } from '@scene-grid/shared';
+
+import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
+import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
 import {
     isDefined,
     CyclePool,
@@ -6,19 +20,10 @@ import {
     ConditionOperator,
     GameParamId,
     Milliseconds,
-    TimeMath
+    TimeMath,
+    PlaybackId,
+    SoundId
 } from '@scene-grid/shared';
-import type { EventAction, IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
-import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { EventId, LayerId, IPRNG, DeepReadonly, IConditionConfig } from '@scene-grid/shared';
-import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
-import { MixerSnapshotManager, PRIORITY } from '@domain/Mixer/index.js';
-import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
-import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
-import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 interface ScheduledAction {
     readonly eventId: EventId;
@@ -36,8 +41,15 @@ interface IConditionTrace {
     hysteresisDeadZone?: [number, number];
 }
 
+interface TrackedPlayback {
+    playbackId: PlaybackId | SoundId;
+    readonly tags: readonly string[];
+}
+
 export class AudioEventOrchestrator implements ITickable {
+    public readonly TICK_RATE: Milliseconds = 16 as Milliseconds;
     private readonly scheduledActions: ScheduledAction[] = [];
+    private readonly trackedPlaybacks: TrackedPlayback[] = [];
     private readonly conditionStates = new WeakMap<IConditionConfig, boolean>();
     private readonly tmpConditionTrace: IConditionTrace = {
         param: '' as GameParamId,
@@ -144,6 +156,20 @@ export class AudioEventOrchestrator implements ITickable {
                 this.scheduledActions.pop();
             }
         }
+
+        const trackedLength = this.trackedPlaybacks.length;
+        for (let i = trackedLength - 1; i >= 0; i--) {
+            const tracked = this.trackedPlaybacks[i];
+            if (
+                (typeof tracked.playbackId === 'number' &&
+                    this.soundController.getPlaybackState(tracked.playbackId) === 'stopped') ||
+                (typeof tracked.playbackId === 'string' &&
+                    this.sequencer.getPlaybackInfo(tracked.playbackId)?.soundId === tracked.playbackId)
+            ) {
+                this.trackedPlaybacks[i] = this.trackedPlaybacks[this.trackedPlaybacks.length - 1];
+                this.trackedPlaybacks.pop();
+            }
+        }
     }
 
     private executeAction(eventId: EventId, action: EventAction, depth: number = 0): void {
@@ -159,9 +185,20 @@ export class AudioEventOrchestrator implements ITickable {
         }
 
         switch (action.type) {
-            case 'play':
-                this.router.play(action.target);
+            case 'play': {
+                const playbackId = this.router.play(action.target);
+                if (isDefined(playbackId) && action.tags) {
+                    if (Array.isArray(playbackId)) {
+                        const length = playbackId.length;
+                        for (let i = 0; i < length; i++) {
+                            this.trackedPlaybacks.push({ playbackId: playbackId[i] as PlaybackId, tags: action.tags });
+                        }
+                    } else {
+                        this.trackedPlaybacks.push({ playbackId: playbackId as PlaybackId, tags: action.tags });
+                    }
+                }
                 break;
+            }
             case 'stop':
                 this.router.stop(action.target, action.options);
                 break;
@@ -174,9 +211,13 @@ export class AudioEventOrchestrator implements ITickable {
             case 'set_rtpc':
                 this.rtpcAdapter.setValue(action.param, action.value);
                 break;
-            case 'start_loop':
+            case 'start_loop': {
                 this.sequencer.playLoop(action.target, action.startRegion);
+                if (action.tags) {
+                    this.trackedPlaybacks.push({ playbackId: action.target, tags: action.tags });
+                }
                 break;
+            }
             case 'stop_loop':
                 this.sequencer.stopLoop(action.target);
                 break;
@@ -213,6 +254,29 @@ export class AudioEventOrchestrator implements ITickable {
             case 'trigger_event':
                 this.postEvent(action.target, depth + 1);
                 break;
+            case 'cancel_pending': {
+                const targetTags = action.targetTags;
+                for (let i = this.scheduledActions.length - 1; i >= 0; i--) {
+                    const scheduled = this.scheduledActions[i];
+                    if (scheduled.action.tags?.some(t => targetTags.includes(t))) {
+                        this.scheduledActions[i] = this.scheduledActions[this.scheduledActions.length - 1];
+                        this.scheduledActions.pop();
+                    }
+                }
+                for (let i = this.trackedPlaybacks.length - 1; i >= 0; i--) {
+                    const tracked = this.trackedPlaybacks[i];
+                    if (tracked.tags.some(t => targetTags.includes(t))) {
+                        if (typeof tracked.playbackId === 'string') {
+                            this.sequencer.stopLoop(tracked.playbackId);
+                        }
+                        this.router.stop(tracked.playbackId);
+
+                        this.trackedPlaybacks[i] = this.trackedPlaybacks[this.trackedPlaybacks.length - 1];
+                        this.trackedPlaybacks.pop();
+                    }
+                }
+                break;
+            }
         }
 
         this.dispatchTelemetrySuccess(eventId, action);
@@ -221,7 +285,7 @@ export class AudioEventOrchestrator implements ITickable {
     private evaluateCondition(condition: DeepReadonly<IConditionConfig>, outTrace: IConditionTrace): void {
         const currentValue = this.rtpcAdapter.getValue(condition.param) ?? 0;
 
-        const conditionKey = condition as unknown as IConditionConfig;
+        const conditionKey = condition;
 
         const previouslyMet = this.conditionStates.get(conditionKey) ?? false;
 

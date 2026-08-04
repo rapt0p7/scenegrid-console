@@ -29,6 +29,8 @@ export interface TransitionOptions {
 
 export interface IPlaybackInfo {
     readonly grid: IAudioGrid;
+    readonly soundId: SoundId;
+    readonly state: LoopState;
 }
 
 export interface ISequencer {
