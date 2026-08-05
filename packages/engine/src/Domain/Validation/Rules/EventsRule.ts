@@ -1,8 +1,9 @@
 // oxlint-disable max-depth max-lines-per-function
 // noinspection D
 
-import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
 import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
+import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
+
 import { isAbsent, isDefined, typedEntries } from '@scene-grid/shared';
 
 export default class EventsRule implements IValidationRule {
@@ -43,6 +44,15 @@ export default class EventsRule implements IValidationRule {
                     if (context.assertOptionalType(`${actionPath}.probability`, action.probability, 'number')) {
                         if (isDefined(action.probability) && (action.probability < 0 || action.probability > 1)) {
                             context.addError(`Action at "${actionPath}.probability" must be between 0.0 and 1.0.`);
+                        }
+                    }
+                }
+
+                if (isDefined(action.tags)) {
+                    if (context.assertArray(`${actionPath}.tags`, action.tags, false)) {
+                        const tagsArray = action.tags as any[];
+                        for (let t = 0; t < tagsArray.length; t++) {
+                            context.assertRequiredType(`${actionPath}.tags[${t}]`, tagsArray[t], 'string');
                         }
                     }
                 }
@@ -256,6 +266,19 @@ export default class EventsRule implements IValidationRule {
                                 context.addError(
                                     `Event "${eventId}" references missing bank "${targetId}" at ${actionPath}.`
                                 );
+                            }
+                        }
+                        break;
+                    }
+
+                    case 'cancel_pending': {
+                        const targetTags = action.targetTags;
+                        if (isAbsent(targetTags)) {
+                            context.addError(`Action at "${actionPath}" is missing required property "targetTags".`);
+                        } else if (context.assertArray(`${actionPath}.targetTags`, targetTags, false)) {
+                            const tagsArray = targetTags as any[];
+                            for (let t = 0; t < tagsArray.length; t++) {
+                                context.assertRequiredType(`${actionPath}.targetTags[${t}]`, tagsArray[t], 'string');
                             }
                         }
                         break;
