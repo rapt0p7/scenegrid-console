@@ -19,6 +19,7 @@ export type { ISidechain, IPluginFactory, ILimiterNode } from './types/IAudioPlu
 
 export { default as AudioBusSystem } from './busSystem/AudioBusSystem.js';
 export { default as AudioContextManager } from './context/AudioContextManager.js';
+export { default as WorkletLoader } from './context/WorkletLoader.js';
 export { default as AutomationEngine } from './automation/AutomationEngine.js';
 export { default as MasterOutput } from './nodes/MasterOutput.js';
 export { default as SoundPoolManager } from './instance/SoundPoolManager.js';

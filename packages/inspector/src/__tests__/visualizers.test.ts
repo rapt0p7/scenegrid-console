@@ -2,7 +2,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, Mocked } from 'vitest';
+
+import type { IWorkletLoader } from '../types/IWorkletLoader.js';
 
 import { createFrequencyBarsWithRMS, createMeters, createFrequencyCurveWithRMS } from '../visualizers.js';
 
@@ -26,6 +28,7 @@ describe('Visualizers (Smoke Tests)', () => {
     let mockContext: any;
     let mockGainNode: any;
     let container: HTMLElement;
+    let mockWorkletLoader: Mocked<IWorkletLoader>;
     let rafCount = 0;
 
     beforeEach(() => {
@@ -33,6 +36,10 @@ describe('Visualizers (Smoke Tests)', () => {
         rafCount = 0;
 
         container = document.createElement('div');
+
+        mockWorkletLoader = {
+            loadModule: vi.fn()
+        };
 
         mockContext = {
             sampleRate: 44_100,
@@ -126,9 +133,9 @@ describe('Visualizers (Smoke Tests)', () => {
 
     describe('createFrequencyBarsWithRMS', () => {
         it('should initialize AudioWorklet, WebGL and run a render frame without crashing', async () => {
-            await createFrequencyBarsWithRMS(container, mockGainNode, 800, 600);
+            await createFrequencyBarsWithRMS(container, mockGainNode, mockWorkletLoader, 800, 600);
 
-            expect(mockContext.audioWorklet.addModule).toHaveBeenCalledWith('mocked-processor-url');
+            expect(mockWorkletLoader.loadModule).toHaveBeenCalledWith(mockContext, 'mocked-processor-url');
             expect(mockGainNode.connect).toHaveBeenCalledTimes(2);
 
             const canvas = container.querySelector('canvas');
@@ -142,7 +149,7 @@ describe('Visualizers (Smoke Tests)', () => {
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(null);
 
-            await createFrequencyBarsWithRMS(container, mockGainNode, 800, 600);
+            await createFrequencyBarsWithRMS(container, mockGainNode, mockWorkletLoader, 800, 600);
 
             expect(consoleSpy).toHaveBeenCalledWith('WebGL not supported');
             consoleSpy.mockRestore();
@@ -151,9 +158,9 @@ describe('Visualizers (Smoke Tests)', () => {
 
     describe('createMeters', () => {
         it('should create WebGL and 2D canvases, bind messages, and render without crashing', async () => {
-            await createMeters(container, mockGainNode, 450, 150);
+            await createMeters(container, mockGainNode, mockWorkletLoader, 450, 150);
 
-            expect(mockContext.audioWorklet.addModule).toHaveBeenCalled();
+            expect(mockWorkletLoader.loadModule).toHaveBeenCalled();
 
             const canvases = container.querySelectorAll('canvas');
             expect(canvases.length).toBe(2);
@@ -165,7 +172,7 @@ describe('Visualizers (Smoke Tests)', () => {
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(null);
 
-            await createMeters(container, mockGainNode, 450, 150);
+            await createMeters(container, mockGainNode, mockWorkletLoader, 450, 150);
 
             expect(consoleSpy).toHaveBeenCalledWith('WebGL or Canvas 2D not supported');
             consoleSpy.mockRestore();
@@ -174,9 +181,9 @@ describe('Visualizers (Smoke Tests)', () => {
 
     describe('createFrequencyCurveWithRMS', () => {
         it('should initialize and run render frame for curve without crashing', async () => {
-            await createFrequencyCurveWithRMS(container, mockGainNode, 600, 200);
+            await createFrequencyCurveWithRMS(container, mockGainNode, mockWorkletLoader, 600, 200);
 
-            expect(mockContext.audioWorklet.addModule).toHaveBeenCalled();
+            expect(mockWorkletLoader.loadModule).toHaveBeenCalled();
 
             const canvas = container.querySelector('canvas');
             expect(canvas).not.toBeNull();

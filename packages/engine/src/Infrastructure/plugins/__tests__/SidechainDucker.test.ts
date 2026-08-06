@@ -1,8 +1,8 @@
+import WorkletLoader from '@infrastructure/context/WorkletLoader.js';
+import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
 // oxlint-disable unicorn/no-useless-undefined
 import { AudioWorkletNode } from 'standardized-audio-context';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
 
 import SidechainDucker from '../SidechainDucker.js';
 
@@ -25,11 +25,17 @@ vi.mock('standardized-audio-context', () => {
 });
 
 vi.mock('../../worklets/ducker.processor.js?worklet', () => ({
-    default: 'mock-processor-url'
+    default: 'mock-raw-processor-code'
 }));
 
 vi.mock('@infrastructure/utils/safeDisconnect.js', () => ({
     safeDisconnect: vi.fn()
+}));
+
+vi.mock('@infrastructure/context/WorkletLoader.js', () => ({
+    default: {
+        loadModule: vi.fn().mockResolvedValue(undefined)
+    }
 }));
 
 const createMockAudioParameter = () => ({
@@ -248,7 +254,7 @@ describe('SidechainDucker', () => {
         it('should start successfully, create AudioWorkletNode, and route through clipper', async () => {
             await ducker.start();
 
-            expect(mockContext.audioWorklet.addModule).toHaveBeenCalledWith('mock-processor-url');
+            expect(WorkletLoader.loadModule).toHaveBeenCalledWith(mockContext, 'mock-raw-processor-code');
             expect(AudioWorkletNode).toHaveBeenCalledTimes(1);
 
             const processorInstance = (ducker as any).processor;
@@ -263,13 +269,13 @@ describe('SidechainDucker', () => {
             processorInstance.port.onmessage({ data: { envelope: 0.85 } });
             expect(ducker.activeEnvelope).toBe(0.85);
 
-            mockContext.audioWorklet.addModule.mockClear();
+            vi.mocked(WorkletLoader.loadModule).mockClear();
             await ducker.start();
-            expect(mockContext.audioWorklet.addModule).not.toHaveBeenCalled();
+            expect(WorkletLoader.loadModule).not.toHaveBeenCalled();
         });
 
-        it('should catch errors during start if addModule fails', async () => {
-            mockContext.audioWorklet.addModule.mockRejectedValueOnce(new Error('Module Load Failed'));
+        it('should catch errors during start if WorkletLoader fails', async () => {
+            vi.mocked(WorkletLoader.loadModule).mockRejectedValueOnce(new Error('Module Load Failed'));
 
             await ducker.start();
 

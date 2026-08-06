@@ -1,14 +1,16 @@
-// oxlint-disable max-lines-per-function
+// oxlint-disable max-lines-per-function no-underscore-dangle
 // oxlint-disable max-lines
-/* eslint-disable no-param-reassign */
+/* eslint-disable no-param-reassign,@typescript-eslint/naming-convention */
 // noinspection D
+
+import type { AudioWorkletNodeLike, GainNodeLike } from '@scene-grid/engine';
 
 import { AudioWorkletNode } from 'standardized-audio-context';
 
+import type { IWorkletLoader } from './types/IWorkletLoader.js';
+
 // oxlint-disable-next-line import/default
 import processorUrl from './worklets/meter.processor.js?worklet';
-
-import type { AudioWorkletNodeLike, GainNodeLike } from '@scene-grid/engine';
 
 // eslint-disable-next-line max-params
 function map(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
@@ -19,7 +21,7 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
     h /= 360;
     s /= 100;
     l /= 100;
-    let r: number, g: number, b: number;
+    let b: number, g: number, r: number;
     if (s === 0) {
         r = g = b = l;
     } else {
@@ -149,11 +151,12 @@ function drawLine(
 export async function createFrequencyBarsWithRMS(
     container: HTMLElement,
     gainNode: GainNodeLike,
+    workletLoader: IWorkletLoader,
     width: number = 600,
     height: number = 200
 ) {
     const { context } = gainNode;
-    await context.audioWorklet.addModule(processorUrl);
+    await workletLoader.loadModule(context, processorUrl);
     const amplitudeNode: AudioWorkletNodeLike = new AudioWorkletNode!(context as any, 'meter-processor') as any;
     gainNode.connect(amplitudeNode);
     const analyser = context.createAnalyser();
@@ -228,7 +231,7 @@ export async function createFrequencyBarsWithRMS(
             const highIndex = Math.round((highFreq * analyser.fftSize) / context.sampleRate);
             let sum = 0;
             let count = 0;
-            // eslint-disable-next-line @typescript-eslint/naming-convention
+
             for (let index_ = lowIndex; index_ < highIndex; index_++) {
                 if (index_ < bufferLength) {
                     sum += dataArray[index_];
@@ -273,12 +276,13 @@ export async function createFrequencyBarsWithRMS(
 export async function createMeters(
     container: HTMLElement,
     gainNode: GainNodeLike,
+    workletLoader: IWorkletLoader,
     width: number = 450,
     height: number = 150
 ) {
     const { context } = gainNode;
 
-    await context.audioWorklet.addModule(processorUrl);
+    await workletLoader.loadModule(context, processorUrl);
     const meterNode = new AudioWorkletNode!(context as any, 'meter-processor');
     gainNode.connect(meterNode);
 
@@ -476,12 +480,13 @@ export async function createMeters(
 export async function createFrequencyCurveWithRMS(
     container: HTMLElement,
     gainNode: GainNodeLike,
+    workletLoader: IWorkletLoader,
     width: number = 600,
     height: number = 200
 ) {
     const { context } = gainNode;
 
-    await context.audioWorklet.addModule(processorUrl);
+    await workletLoader.loadModule(context, processorUrl);
     const amplitudeNode: AudioWorkletNodeLike = new AudioWorkletNode!(context as any, 'meter-processor') as any;
     gainNode.connect(amplitudeNode);
 

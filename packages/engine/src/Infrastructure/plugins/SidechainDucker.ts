@@ -1,12 +1,5 @@
 // noinspection D
 
-import { AudioWorkletNode } from 'standardized-audio-context';
-
-import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
-import { isDefined, isAbsent } from '@scene-grid/shared';
-// oxlint-disable-next-line import/default
-import processorUrl from '../worklets/ducker.processor.js?worklet';
-
 import type {
     AudioCtx,
     AudioNodeLike,
@@ -16,6 +9,14 @@ import type {
     WaveShaperNodeLike
 } from '@infrastructure/types/IAudioContext';
 import type { ISidechain } from '@infrastructure/types/IAudioPlugins.js';
+
+import WorkletLoader from '@infrastructure/context/WorkletLoader';
+import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
+import { isDefined, isAbsent } from '@scene-grid/shared';
+import { AudioWorkletNode } from 'standardized-audio-context';
+
+// oxlint-disable-next-line import/default
+import processorUrl from '../worklets/ducker.processor.js?worklet';
 
 export default class SidechainDucker implements ISidechain {
     public activeEnvelope: number = 0;
@@ -167,7 +168,7 @@ export default class SidechainDucker implements ISidechain {
         this.running = true;
         try {
             if (isAbsent(this.processor)) {
-                await this.ctx.audioWorklet?.addModule?.(processorUrl);
+                await WorkletLoader.loadModule(this.ctx, processorUrl);
 
                 if (this.isDisposed) return;
 

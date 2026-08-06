@@ -1,11 +1,14 @@
 // noinspection D
 
-import { createFrequencyCurveWithRMS, createMeters } from './visualizers.js';
-
 import type { AudioCtx, GainNodeLike, AudioBusSystem } from '@scene-grid/engine';
+
+import type { IWorkletLoader } from './types/IWorkletLoader.js';
+
+import { createFrequencyCurveWithRMS, createMeters } from './visualizers.js';
 
 export interface DebuggerOptions {
     wrapperSelector?: string;
+    workletLoader: IWorkletLoader;
 }
 
 export default class AudioDebugger {
@@ -20,8 +23,8 @@ export default class AudioDebugger {
     }
 
     // oxlint-disable-next-line max-lines-per-function
-    public async init(options: DebuggerOptions = {}): Promise<void> {
-        const { wrapperSelector = '#wrapper' } = options;
+    public async init(options: DebuggerOptions): Promise<void> {
+        const { wrapperSelector = '#wrapper', workletLoader } = options;
 
         const wrapper = document.querySelector(wrapperSelector);
         if (!wrapper) {
@@ -74,12 +77,15 @@ export default class AudioDebugger {
                 createFrequencyCurveWithRMS(
                     item.specContainer,
                     item.node,
+                    workletLoader,
+                    window.screen.availWidth / uiColumns.length - 4
+                ),
+                createMeters(
+                    item.meterContainer,
+                    item.node,
+                    workletLoader,
                     window.screen.availWidth / uiColumns.length - 4
                 )
-            );
-
-            promises.push(
-                createMeters(item.meterContainer, item.node, window.screen.availWidth / uiColumns.length - 4)
             );
         }
 

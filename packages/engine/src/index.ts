@@ -35,4 +35,5 @@ export type {
     GainNodeLike,
     AudioCtx,
     AudioBusSystem
-} from './Infrastructure/index.ts';
+} from './Infrastructure/index.js';
+export { WorkletLoader } from './Infrastructure/index.js';

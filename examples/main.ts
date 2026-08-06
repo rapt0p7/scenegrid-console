@@ -1,6 +1,6 @@
 // noinspection D
 
-import { AudioEngine } from '@scene-grid/engine';
+import { AudioEngine, WorkletLoader } from '@scene-grid/engine';
 
 import {
     Buses,
@@ -103,7 +103,7 @@ async function bootstrap() {
 
             if (process.env.NODE_ENV !== 'production') {
                 void import('@scene-grid/inspector').then(({ attachDebugUI, initAudioDebugPanel }) => {
-                    void attachDebugUI(audio, { wrapperSelector: '#wrapper' });
+                    void attachDebugUI(audio, { wrapperSelector: '#wrapper', workletLoader: WorkletLoader });
                     initAudioDebugPanel(audio);
                 });
             }

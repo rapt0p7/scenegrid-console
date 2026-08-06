@@ -1,6 +1,7 @@
+import type { Plugin } from 'vite';
+
 import fs from 'node:fs';
 import { transformWithOxc } from 'vite';
-import type { Plugin } from 'vite';
 
 export function audioWorkletIsolator(): Plugin {
     return {
@@ -35,10 +36,7 @@ export function audioWorkletIsolator(): Plugin {
                     .replaceAll('`', '\\`')
                     .replaceAll('$', String.raw`\$`);
 
-                return `
-          const blob = new Blob([\`${escapedCode}\`], { type: 'application/javascript' });
-          export default URL.createObjectURL(blob);
-        `;
+                return `export default \`${escapedCode}\`;`;
             }
             return null;
         }

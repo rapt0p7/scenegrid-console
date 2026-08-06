@@ -1,5 +1,5 @@
 // oxlint-disable unicorn/no-useless-undefined
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, Mocked } from 'vitest';
 
 import AudioDebugger from '../AudioDebugger.js';
 
@@ -8,7 +8,7 @@ vi.mock('../visualizers.js', () => ({
     createMeters: vi.fn().mockResolvedValue(undefined)
 }));
 
-// eslint-disable-next-line import/order
+import { IWorkletLoader } from '../types/IWorkletLoader.js';
 import { createFrequencyCurveWithRMS, createMeters } from '../visualizers.js';
 
 describe('AudioDebugger', () => {
@@ -16,6 +16,7 @@ describe('AudioDebugger', () => {
     let mockBusSystem: any;
     let mockMasterNode: any;
     let wrapperElement: HTMLElement;
+    let mockWorkletLoader: Mocked<IWorkletLoader>;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -26,6 +27,10 @@ describe('AudioDebugger', () => {
 
         mockContext = {
             sampleRate: 44_100
+        };
+
+        mockWorkletLoader = {
+            loadModule: vi.fn()
         };
 
         const createMockGainNode = () => ({
@@ -74,7 +79,7 @@ describe('AudioDebugger', () => {
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
 
-        void debuggerInstance.init({ wrapperSelector: '#non_existent' });
+        void debuggerInstance.init({ wrapperSelector: '#non_existent', workletLoader: mockWorkletLoader });
 
         expect(warnSpy).toHaveBeenCalledWith('[AudioDebugger] Wrapper element "#non_existent" not found.');
         expect(mockBusSystem.getAllBuses).not.toHaveBeenCalled();
@@ -85,7 +90,7 @@ describe('AudioDebugger', () => {
     it('should create DOM structure for Master and all active buses', () => {
         const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
 
-        void debuggerInstance.init({ wrapperSelector: '#wrapper' });
+        void debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
 
         const columns = wrapperElement.querySelectorAll('.bus-column');
         expect(columns.length).toBe(2);
@@ -101,7 +106,7 @@ describe('AudioDebugger', () => {
     it('should initialize custom visualizers', async () => {
         const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
 
-        void debuggerInstance.init({ wrapperSelector: '#wrapper' });
+        void debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
 
         await new Promise(r => setTimeout(r, 0));
 
@@ -114,7 +119,7 @@ describe('AudioDebugger', () => {
 
         const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
 
-        void debuggerInstance.init({ wrapperSelector: '#wrapper' });
+        void debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
 
         await new Promise(r => setTimeout(r, 0));
 

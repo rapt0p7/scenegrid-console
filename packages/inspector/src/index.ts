@@ -4,7 +4,7 @@ import { initAudioDebugPanel } from './AudioDebugPanel.js';
 
 export { AudioDebugger, initAudioDebugPanel };
 
-export async function attachDebugUI(audioEngine: any, options?: DebuggerOptions): Promise<void> {
+export async function attachDebugUI(audioEngine: any, options: DebuggerOptions): Promise<void> {
     if (!audioEngine || !audioEngine._debug) {
         console.warn('[Debug] Cannot attach UI: Invalid AudioEngine instance.');
         return;

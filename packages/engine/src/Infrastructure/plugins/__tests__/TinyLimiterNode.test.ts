@@ -1,3 +1,4 @@
+import WorkletLoader from '@infrastructure/context/WorkletLoader.js';
 // oxlint-disable unicorn/no-useless-undefined
 import { AudioWorkletNode } from 'standardized-audio-context';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -18,7 +19,13 @@ vi.mock('standardized-audio-context', () => {
 });
 
 vi.mock('../../worklets/lookahead-brickwall-limiter.processor.js?worklet', () => ({
-    default: 'mock-limiter-url'
+    default: 'mock-raw-processor-code'
+}));
+
+vi.mock('@infrastructure/context/WorkletLoader.js', () => ({
+    default: {
+        loadModule: vi.fn().mockResolvedValue(undefined)
+    }
 }));
 
 describe('TinyLimiterNode', () => {
@@ -56,7 +63,7 @@ describe('TinyLimiterNode', () => {
 
             const node = await limiter.load();
 
-            expect(mockContext.audioWorklet.addModule).toHaveBeenCalledWith('mock-limiter-url');
+            expect(WorkletLoader.loadModule).toHaveBeenCalledWith(mockContext, 'mock-raw-processor-code');
 
             expect(AudioWorkletNode).toHaveBeenCalledTimes(1);
 
@@ -64,6 +71,7 @@ describe('TinyLimiterNode', () => {
             expect(limiter.inputNode).toBe(node);
             expect(limiter.outputNode).toBe(node);
 
+            // oxlint-disable-next-line no-underscore-dangle
             const passedOptions = (node as any)._mockOptions;
             expect(passedOptions).toEqual({
                 processorOptions: {
@@ -83,6 +91,7 @@ describe('TinyLimiterNode', () => {
 
             const node = await limiter.load();
 
+            // oxlint-disable-next-line no-underscore-dangle
             const passedOptions = (node as any)._mockOptions;
             expect(passedOptions.processorOptions).toEqual(customOptions);
         });

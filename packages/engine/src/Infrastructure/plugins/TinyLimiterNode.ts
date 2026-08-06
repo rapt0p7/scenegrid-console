@@ -1,10 +1,11 @@
+import type { AudioCtx, AudioWorkletNodeLike, AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
+import type { ILimiterNode } from '@infrastructure/types/IAudioPlugins.js';
+
+import WorkletLoader from '@infrastructure/context/WorkletLoader';
 import { AudioWorkletNode } from 'standardized-audio-context';
 
 // oxlint-disable-next-line import/default
 import processorUrl from '../worklets/lookahead-brickwall-limiter.processor.js?worklet';
-
-import type { AudioCtx, AudioWorkletNodeLike, AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
-import type { ILimiterNode } from '@infrastructure/types/IAudioPlugins.js';
 
 export default class TinyLimiterNode implements ILimiterNode {
     private readonly ctx: AudioCtx;
@@ -21,12 +22,12 @@ export default class TinyLimiterNode implements ILimiterNode {
 
     public get inputNode(): AudioNodeLike {
         if (!this.node) throw new Error('[TinyLimiterNode] Node not loaded yet');
-        return this.node as unknown as AudioNodeLike;
+        return this.node;
     }
 
     public get outputNode(): AudioNodeLike {
         if (!this.node) throw new Error('[TinyLimiterNode] Node not loaded yet');
-        return this.node as unknown as AudioNodeLike;
+        return this.node;
     }
 
     public dispose(): void {
@@ -41,7 +42,7 @@ export default class TinyLimiterNode implements ILimiterNode {
     }
 
     async load(): Promise<AudioWorkletNodeLike> {
-        await this.ctx.audioWorklet?.addModule?.(processorUrl);
+        await WorkletLoader.loadModule(this.ctx, processorUrl);
 
         this.node = new AudioWorkletNode!(this.ctx as any, 'lookahead-limiter', {
             processorOptions: this.opts,
