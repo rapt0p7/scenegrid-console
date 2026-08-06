@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Introduce `WorkletLoader` for robust `AudioWorklet` loading
+
+- Add event action tagging and pending cancellation
+
 - Introduce ram quota manager with lru eviction
 
 - Add 'ConcurrencyThrottler' for controlled async task
@@ -234,6 +238,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Update diagram
+
+- Validate action tags and `cancel_pending` type
+
+- Archive implemented orchestrator flushing spec
+
+- Display infinite ram quota in inspector
+
+- Simplify type assertions in `MusicFSM` example
+
+- Upgrade 'openspec' agent definitions to 'v1.7.0'
+
+- Re-archive implemented specs
+
+- Update development dependencies
+
+- Update dev dependencies, linting, and formatting tools
+
+- Update architecture manifests and dev journal
+
 - Update `repowise`
 
 - Update diagram
@@ -660,6 +684,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Removed
+- Remove `import/no-restricted-paths` rule
+
 - Remove redundant `IAudioWorkletProcessor` interface
 
 - Remove unused `connectNodeToBus` method

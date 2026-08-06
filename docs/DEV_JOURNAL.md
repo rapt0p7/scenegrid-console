@@ -360,6 +360,19 @@
 
 ---
 
+## [Phase 24] Focus: Robust AudioWorklet Loading and Action Cancellation
+
+* **Context/Problem:** `AudioWorklet` loading could be brittle or fail silently without proper tracking or error recovery. Additionally, the event orchestrator lacked the ability to tag specific actions or cancel pending actions that were scheduled (e.g., via delays), making it difficult to interrupt complex event sequences once triggered.
+* **Solution:** Introduced `WorkletLoader` in the infrastructure layer to ensure robust loading and registration of AudioWorklets. In the orchestration layer, added support for event action tagging and a `cancel_pending` action type, complete with domain validation. This allows developers to tag delayed or probabilistic actions and explicitly cancel them before execution if game state changes.
+
+*Manual notes (to be filled):*
+
+* **❌ What didn't work:**
+* **⚖️ Trade-off:**
+* **🎯 Next step:**
+
+---
+
 ## [Architectural Invariants] Documented Rules (from docs/architecture commits)
 
 The following explicit rules have been locked in the documentation:
