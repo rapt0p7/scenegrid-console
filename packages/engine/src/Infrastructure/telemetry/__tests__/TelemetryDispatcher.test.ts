@@ -1,49 +1,57 @@
+import type { ITelemetryBatch, ITelemetryTransport, TelemetryPacket } from '@scene-grid/shared';
+
+import { TelemetryDispatcher } from '@infrastructure/telemetry/TelemetryDispatcher.js';
+import { WorkerTelemetryTransport } from '@infrastructure/telemetry/WorkerTelemetryTransport.js';
+// oxlint-disable typescript/strict-void-return
 // noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { BrowserTelemetryTransport } from '@infrastructure/telemetry/BrowserTelemetryTransport.js';
-import { TelemetryDispatcher } from '@infrastructure/telemetry/TelemetryDispatcher.js';
-
-import type { ITelemetryBatch, ITelemetryTransport, TelemetryPacket } from '@scene-grid/shared';
-
 describe('Telemetry Observability Pipeline', () => {
-    describe('BrowserTelemetryTransport', () => {
-        it('should initialize with default channelId and do nothing if not connected', () => {
-            const transport = new BrowserTelemetryTransport();
-            const dummyBatch: ITelemetryBatch = { batchId: 1, size: 1, packets: [] };
+    describe('WorkerTelemetryTransport', () => {
+        let mockPort: MessagePort;
 
-            expect(() => {
-                transport.send(dummyBatch);
-            }).not.toThrow();
+        beforeEach(() => {
+            mockPort = {
+                postMessage: vi.fn(),
+                start: vi.fn()
+            } as unknown as MessagePort;
         });
 
-        it('should send correctly sliced payload via postMessage when connected', () => {
-            const transport = new BrowserTelemetryTransport('custom-telemetry-channel');
-            const mockWindow = { postMessage: vi.fn() } as unknown as Window;
+        it('should call start() on the port upon instantiation', () => {
+            // oxlint-disable-next-line no-new
+            new WorkerTelemetryTransport(mockPort);
+            expect(mockPort.start).toHaveBeenCalledTimes(1);
+        });
 
-            transport.connect(mockWindow);
-
+        it('should send batch payload via postMessage', () => {
+            const transport = new WorkerTelemetryTransport(mockPort);
             const dummyBatch: ITelemetryBatch = {
                 batchId: 10,
                 size: 2,
-                packets: ['packet1', 'packet2', 'packet3', 'packet4'] as unknown as TelemetryPacket[]
+                packets: ['packet1', 'packet2'] as unknown as TelemetryPacket[]
             };
 
             transport.send(dummyBatch);
 
-            expect(mockWindow.postMessage).toHaveBeenCalledTimes(1);
-            expect(mockWindow.postMessage).toHaveBeenCalledWith(
-                {
-                    channel: 'custom-telemetry-channel',
-                    payload: ['packet1', 'packet2']
-                },
-                '*'
-            );
+            expect(mockPort.postMessage).toHaveBeenCalledTimes(1);
+            expect(mockPort.postMessage).toHaveBeenCalledWith(dummyBatch);
+        });
+
+        it('should send manifest wrapper via postMessage', () => {
+            const transport = new WorkerTelemetryTransport(mockPort);
+            const dummyManifest = { version: '1.0', nodes: 5 };
+
+            transport.sendManifest(dummyManifest);
+
+            expect(mockPort.postMessage).toHaveBeenCalledWith({
+                type: 'MANIFEST',
+                payload: dummyManifest
+            });
         });
     });
 
     describe('TelemetryDispatcher', () => {
-        let mockTransport: { send: ReturnType<typeof vi.fn> };
+        let mockTransport: { send: ReturnType<typeof vi.fn>; sendManifest: ReturnType<typeof vi.fn> };
         let dispatcher: TelemetryDispatcher;
 
         const dummyPacket: TelemetryPacket = {
@@ -55,7 +63,7 @@ describe('Telemetry Observability Pipeline', () => {
         };
 
         beforeEach(() => {
-            mockTransport = { send: vi.fn() };
+            mockTransport = { send: vi.fn(), sendManifest: vi.fn() };
             dispatcher = new TelemetryDispatcher(mockTransport as unknown as ITelemetryTransport, 3);
             vi.spyOn(console, 'warn').mockImplementation(() => {});
         });
@@ -139,7 +147,6 @@ describe('Telemetry Observability Pipeline', () => {
             });
 
             dispatcher.dispatch(dummyPacket);
-
             dispatcher.tick(0, 16);
 
             expect(console.warn).toHaveBeenCalledWith('[TelemetryDispatcher] Failed to send telemetry batch:', error);
@@ -153,6 +160,12 @@ describe('Telemetry Observability Pipeline', () => {
             dispatcher.tick(0, 16);
 
             expect(capturedSize).toBe(1);
+        });
+
+        it('should forward manifest to the transport', () => {
+            const dummyManifest = { test: true };
+            dispatcher.dispatchManifest(dummyManifest);
+            expect(mockTransport.sendManifest).toHaveBeenCalledWith(dummyManifest);
         });
     });
 });

@@ -1,17 +1,6 @@
 // oxlint-disable unicorn/no-useless-undefined no-underscore-dangle
 // noinspection D
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AudioContext, registrar } from 'standardized-audio-context-mock';
-
-import { AudioEngine } from '@application/AudioEngine.js';
-import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
-import { PRIORITY } from '@domain/Mixer/MixerLayer.js';
-import AudioRouter from '@domain/Router/AudioRouter.js';
-import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
-import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager, FiltersPlugin } from '@infrastructure';
-import RTPCManager from '@kernel/RTPC/RTPCManager.js';
-
 import type {
     BankId,
     BusId,
@@ -22,6 +11,16 @@ import type {
     SnapshotId,
     SoundId
 } from '@scene-grid/shared';
+
+import { AudioEngine } from '@application/AudioEngine.js';
+import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
+import { PRIORITY } from '@domain/Mixer/MixerLayer.js';
+import AudioRouter from '@domain/Router/AudioRouter.js';
+import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
+import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager, FiltersPlugin } from '@infrastructure';
+import RTPCManager from '@kernel/RTPC/RTPCManager.js';
+import { AudioContext, registrar } from 'standardized-audio-context-mock';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('worker-timers', () => ({
     setInterval: vi.fn((cb: Function, ms: number) => globalThis.setInterval(cb, ms)),
@@ -121,6 +120,24 @@ vi.mock('@domain/Validation/ConsistencyChecker.js', () => ({
         validate: vi.fn().mockReturnValue(true)
     }
 }));
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const mockMessagePort = {
+    start: vi.fn(),
+    postMessage: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    close: vi.fn()
+};
+
+vi.stubGlobal(
+    'SharedWorker',
+    class SharedWorkerMock {
+        public port = mockMessagePort;
+        // oxlint-disable-next-line no-useless-constructor
+        constructor() {}
+    }
+);
 
 describe('AudioEngine', () => {
     let engine: AudioEngine;
@@ -338,7 +355,7 @@ describe('AudioEngine', () => {
             freshEngine.events.on('load:progress', progressSpy);
             freshEngine.events.on('load:complete', completeSpy);
 
-            await freshEngine.banks.load('Bank_A' as BankId);
+            await freshEngine.banks.load('Bank_A');
 
             expect(startSpy).toHaveBeenCalledWith({ totalItems: 2 });
             expect(progressSpy).toHaveBeenCalledTimes(2);
@@ -363,7 +380,7 @@ describe('AudioEngine', () => {
             const completeSpy = vi.fn();
             emptyEngine.events.on('load:complete', completeSpy);
 
-            await emptyEngine.banks.load('Bank_Empty' as BankId);
+            await emptyEngine.banks.load('Bank_Empty');
 
             expect(completeSpy).toHaveBeenCalledWith({ failedItems: [], durationMs: 0 });
         });
@@ -391,7 +408,7 @@ describe('AudioEngine', () => {
             errorEngine.events.on('load:complete', completeSpy);
 
             try {
-                await errorEngine.banks.load('Bank_Mixed' as BankId);
+                await errorEngine.banks.load('Bank_Mixed');
             } catch {
                 // Ignore thrown error for test
             }
@@ -413,8 +430,8 @@ describe('AudioEngine', () => {
             const unloadSpy = vi.fn();
             engine.events.on('unload:complete', unloadSpy);
 
-            await engine.banks.load('Bank_A' as BankId);
-            engine.banks.unload('Bank_A' as BankId);
+            await engine.banks.load('Bank_A');
+            engine.banks.unload('Bank_A');
 
             expect(unloadSpy).toHaveBeenCalledWith({ bankId: 'Bank_A' });
         });
@@ -449,7 +466,7 @@ describe('AudioEngine', () => {
             const fatalError = new Error('Fatal core error');
             vi.mocked(AudioContextManager).mockImplementationOnce(function () {
                 throw fatalError;
-            } as any);
+            });
 
             const brokenEngine = new AudioEngine({
                 manifest: {},
@@ -477,24 +494,24 @@ describe('AudioEngine', () => {
     describe('Facade API (params, mixer, music, misc)', () => {
         describe('banks API', () => {
             it('should load, unload and track bank states', async () => {
-                expect(engine.banks.getState('Bank_A' as BankId)).toBe('UNLOADED');
+                expect(engine.banks.getState('Bank_A')).toBe('UNLOADED');
 
-                const loadPromise = engine.banks.load('Bank_A' as BankId);
-                expect(engine.banks.getState('Bank_A' as BankId)).toBe('LOADING');
+                const loadPromise = engine.banks.load('Bank_A');
+                expect(engine.banks.getState('Bank_A')).toBe('LOADING');
 
                 await loadPromise;
-                expect(engine.banks.getState('Bank_A' as BankId)).toBe('LOADED');
+                expect(engine.banks.getState('Bank_A')).toBe('LOADED');
 
-                engine.banks.unload('Bank_A' as BankId);
-                expect(engine.banks.getState('Bank_A' as BankId)).toBe('UNLOADED');
+                engine.banks.unload('Bank_A');
+                expect(engine.banks.getState('Bank_A')).toBe('UNLOADED');
             });
 
             it('should safely ignore operations on unknown banks', async () => {
-                await expect(engine.banks.load('Bank_Ghost' as BankId)).resolves.not.toThrow();
+                await expect(engine.banks.load('Bank_Ghost')).resolves.not.toThrow();
                 expect(() => {
-                    engine.banks.unload('Bank_Ghost' as BankId);
+                    engine.banks.unload('Bank_Ghost');
                 }).not.toThrow();
-                expect(engine.banks.getState('Bank_Ghost' as BankId)).toBe('UNLOADED');
+                expect(engine.banks.getState('Bank_Ghost')).toBe('UNLOADED');
             });
         });
 
@@ -689,10 +706,10 @@ describe('AudioEngine', () => {
 
     describe('Playback Control (Pause/Resume)', () => {
         it('should delegate pause and resume calls to the router', () => {
-            engine.pause('play_123' as SoundId);
+            engine.pause('play_123');
             expect(pauseSpy).toHaveBeenCalledWith('play_123');
 
-            engine.resume('play_456' as SoundId);
+            engine.resume('play_456');
             expect(resumeSoundSpy).toHaveBeenCalledWith('play_456');
         });
     });
@@ -861,7 +878,7 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
             soundMap: {},
             snapshots: {},
             events: {}
-        } as any);
+        });
 
         await engine._hotReloadConfig({} as any);
         expect(errorSpy).not.toHaveBeenCalled();
@@ -883,7 +900,7 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
             soundMap: {},
             snapshots: {},
             events: {}
-        } as any);
+        });
 
         vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
         await engine.init();
@@ -906,7 +923,7 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
             rtpcManifest: { hp: { defaultValue: 100 } }
         };
 
-        await engine._hotReloadConfig(newConfig as any);
+        await engine._hotReloadConfig(newConfig);
 
         expect(initRTPCSpy).toHaveBeenCalledWith(newConfig.rtpcManifest);
         expect(updateConfigSpy).toHaveBeenCalledWith(newConfig.buses);

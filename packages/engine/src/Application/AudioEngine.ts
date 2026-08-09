@@ -78,12 +78,21 @@ import {
     BankManagerAdapter,
     SwitchHistoryRegistry,
     TelemetryDispatcher,
-    BroadcastTelemetryTransport,
     TelemetrySnapshotter,
+    WorkerTelemetryTransport,
     CommandReceiver
 } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
-import { SeededPRNG, isDefined, deepFreeze, typedEntries, typedKeys, Milliseconds, Pulses } from '@scene-grid/shared';
+import {
+    SeededPRNG,
+    isDefined,
+    deepFreeze,
+    typedEntries,
+    typedKeys,
+    Milliseconds,
+    Pulses,
+    createTelemetryWorker
+} from '@scene-grid/shared';
 
 export class AudioEngine implements IAudioEngine {
     #contextManager!: AudioContextManager;
@@ -241,7 +250,10 @@ export class AudioEngine implements IAudioEngine {
     public async init(parameters?: InitParameters): Promise<void> {
         if (this.#isInitialized) return;
 
-        const transport = new BroadcastTelemetryTransport();
+        const telemetryWorker = createTelemetryWorker({ name: 'SceneGridTelemetry' });
+        const workerPort = telemetryWorker.port;
+
+        const transport = new WorkerTelemetryTransport(workerPort);
         this.#telemetry = new TelemetryDispatcher(transport);
         this.#reporters = [new ConsoleReporter(), new TelemetryConsistencyReporter(this.#telemetry)];
 
@@ -639,7 +651,7 @@ export class AudioEngine implements IAudioEngine {
                     }
                 };
 
-                const receiver = new CommandReceiver(debugPort);
+                const receiver = new CommandReceiver(workerPort, debugPort);
 
                 this.#engineTicker.add(
                     'inspector-command-receiver' as TickerTaskId,

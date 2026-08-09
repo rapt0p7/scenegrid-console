@@ -41,5 +41,6 @@ export { safeDisconnect } from './utils/safeDisconnect.js';
 export { TelemetryDispatcher } from './telemetry/TelemetryDispatcher.js';
 export { BrowserTelemetryTransport } from './telemetry/BrowserTelemetryTransport.js';
 export { BroadcastTelemetryTransport } from './telemetry/BroadcastTelemetryTransport.js';
+export { WorkerTelemetryTransport } from './telemetry/WorkerTelemetryTransport.js';
 export { TelemetrySnapshotter } from './telemetry/TelemetrySnapshotter.js';
 export { CommandReceiver } from './telemetry/CommandReceiver.js';

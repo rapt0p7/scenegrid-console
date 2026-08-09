@@ -1,7 +1,6 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import { useEffect, useRef, useState } from 'react';
 import type {
     ITelemetryBatch,
     ITelemetrySnapshot,
@@ -10,6 +9,10 @@ import type {
     ITelemetryConsistencyReport,
     ITelemetryRamReport
 } from '@scene-grid/shared';
+
+import { createTelemetryWorker } from '@scene-grid/shared';
+import { useEffect, useRef, useState } from 'react';
+
 import type { IEngineManifestDTO } from '../types/ManifestDTO';
 
 const MAX_LOG_LINES = 200;
@@ -17,8 +20,7 @@ const MAX_LOG_LINES = 200;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type UILogPacket = (ITelemetryLifecycleEvent | ITelemetryCauseChain) & { _seq: number };
 
-// oxlint-disable-next-line max-lines-per-function
-export function useTelemetryBus(channelName: string = 'scenegrid_audio_telemetry') {
+export function useTelemetryBus() {
     const [logs, setLogs] = useState<UILogPacket[]>([]);
     const [manifest, setManifest] = useState<IEngineManifestDTO | null>(null);
     const [consistencyReport, setConsistencyReport] = useState<ITelemetryConsistencyReport | null>(null);
@@ -27,10 +29,10 @@ export function useTelemetryBus(channelName: string = 'scenegrid_audio_telemetry
     const sequenceRef = useRef(0);
 
     useEffect(() => {
-        const channel = new BroadcastChannel(channelName);
+        const worker = createTelemetryWorker({ name: 'SceneGridTelemetry' });
+        const port = worker.port;
 
-        // oxlint-disable-next-line unicorn/prefer-add-event-listener
-        channel.onmessage = (
+        const handleMessage = (
             event: MessageEvent<ITelemetryBatch | { type: 'MANIFEST'; payload: IEngineManifestDTO }>
         ) => {
             const data = event.data;
@@ -38,6 +40,11 @@ export function useTelemetryBus(channelName: string = 'scenegrid_audio_telemetry
 
             if ('type' in data && data.type === 'MANIFEST') {
                 setManifest(data.payload);
+                setLogs([]);
+                setConsistencyReport(null);
+                setRamReport(null);
+                latestSnapshot.current = null;
+                sequenceRef.current = 0;
                 return;
             }
 
@@ -77,10 +84,14 @@ export function useTelemetryBus(channelName: string = 'scenegrid_audio_telemetry
             }
         };
 
+        port.addEventListener('message', handleMessage);
+        port.start();
+
         return () => {
-            channel.close();
+            port.removeEventListener('message', handleMessage);
+            port.close();
         };
-    }, [channelName]);
+    }, []);
 
     return { logs, latestSnapshot, manifest, consistencyReport, ramReport };
 }

@@ -1,25 +1,30 @@
-import { useEffect, useRef, useCallback } from 'react';
 import type { InspectorCommand } from '@scene-grid/shared';
 
+import { createTelemetryWorker } from '@scene-grid/shared';
+import { useEffect, useRef, useCallback } from 'react';
+
 export const useCommandTransmitter = () => {
-    const channelRef = useRef<BroadcastChannel | null>(null);
+    const portRef = useRef<MessagePort | null>(null);
 
     useEffect(() => {
-        channelRef.current = new BroadcastChannel('scenegrid_commands');
+        const worker = createTelemetryWorker({ name: 'SceneGridTelemetry' });
+        portRef.current = worker.port;
+        portRef.current.start();
 
         return () => {
-            channelRef.current?.close();
-            channelRef.current = null;
+            portRef.current?.close();
+            portRef.current = null;
         };
     }, []);
 
     const sendCommand = useCallback((command: InspectorCommand) => {
-        if (!channelRef.current) {
-            console.warn('[Simulator] Cannot send command: Channel is disconnected.');
+        if (!portRef.current) {
+            console.warn('[Simulator] Cannot send command: Worker port is disconnected.');
             return;
         }
+
         // oxlint-disable-next-line unicorn/require-post-message-target-origin
-        channelRef.current.postMessage(command);
+        portRef.current.postMessage(command);
     }, []);
 
     return { sendCommand };

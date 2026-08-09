@@ -1,18 +1,17 @@
+import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type { InspectorCommand, Milliseconds } from '@scene-grid/shared';
-import { BroadcastIpcAdapter } from './BroadcastIpcAdapter.js';
-import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
 
 export class CommandReceiver implements ITickable {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public static TICK_RATE: Milliseconds = 16 as Milliseconds;
     private readonly queue: InspectorCommand[] = [];
-    private transport = new BroadcastIpcAdapter<InspectorCommand>('scenegrid_commands');
-
-    constructor(private readonly enginePort: IInspectorDebugPort) {
-        this.transport.subscribe(cmd => {
-            this.queue.push(cmd);
-        });
+    constructor(
+        private readonly port: MessagePort,
+        private readonly enginePort: IInspectorDebugPort
+    ) {
+        this.port.addEventListener('message', this.handleMessage);
+        this.port.start();
     }
 
     public tick(_currentTimeSec: number, _deltaTimeMs: number): void {
@@ -26,7 +25,7 @@ export class CommandReceiver implements ITickable {
     }
 
     public dispose(): void {
-        this.transport.dispose();
+        this.port.removeEventListener('message', this.handleMessage);
     }
 
     private processCommand(cmd: InspectorCommand): void {
@@ -65,9 +64,19 @@ export class CommandReceiver implements ITickable {
                         cmd.transitionRegionName,
                         cmd.options
                     );
+                    break;
+                default:
+                    console.warn(`[CommandReceiver] Unhandled command type: ${(cmd as any).type}`);
             }
         } catch (error) {
             console.error(`[CommandReceiver] Failed to execute command ${cmd.type}`, error);
         }
     }
+
+    private handleMessage = (event: MessageEvent) => {
+        const data = event.data;
+        if (!data || typeof data !== 'object' || !('type' in data)) return;
+
+        this.queue.push(data as InspectorCommand);
+    };
 }

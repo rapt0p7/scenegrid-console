@@ -26,3 +26,10 @@ export type { ITelemetryTransport } from './Telemetry/ITelemetryTransport.js';
 export type * from './Telemetry/TelemetryEvents.js';
 export type * from './Telemetry/TelemetryBatch.js';
 export type * from './Telemetry/IMusicTrackSnapshot.js';
+
+export function createTelemetryWorker(options?: WorkerOptions): SharedWorker {
+    return new SharedWorker(new URL('./Workers/TelemetryWorker.ts', import.meta.url), {
+        ...options,
+        type: 'module'
+    });
+}
