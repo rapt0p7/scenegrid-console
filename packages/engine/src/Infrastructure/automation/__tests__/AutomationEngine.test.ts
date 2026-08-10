@@ -1,13 +1,14 @@
+import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
+import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
+import type { ContextTime, Milliseconds, TickerTaskId } from '@scene-grid/shared';
+
+import { AudioContext as MockAudioContext, registrar } from 'standardized-audio-context-mock';
 // noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AudioContext as MockAudioContext, registrar } from 'standardized-audio-context-mock';
-
-import AutomationEngine from '../AutomationEngine.js';
 
 import type { AudioCtx } from '../../types/IAudioContext.js';
-import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
-import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
-import type { ContextTime, Milliseconds, TickerTaskId } from '@scene-grid/shared';
+
+import AutomationEngine from '../AutomationEngine.js';
 
 describe('AutomationEngine', () => {
     let mockContext: AudioCtx;
@@ -41,7 +42,7 @@ describe('AutomationEngine', () => {
                 capturedTickTarget = target;
             }),
             remove: vi.fn()
-        } as unknown as EngineTicker;
+        };
 
         engine = new AutomationEngine(mockContext, mockTicker);
     });
@@ -54,7 +55,7 @@ describe('AutomationEngine', () => {
 
     function triggerTick() {
         if (capturedTickTarget) {
-            capturedTickTarget.tick(mockContext.currentTime as ContextTime, AutomationEngine.TICK_RATE ?? 15);
+            capturedTickTarget.tick(mockContext.currentTime as ContextTime, 15 as Milliseconds);
         }
     }
 
@@ -95,7 +96,7 @@ describe('AutomationEngine', () => {
         it('should register target to EngineTicker on init', () => {
             expect(mockTicker.add).toHaveBeenCalledWith(
                 'automation-engine',
-                AutomationEngine.TICK_RATE ?? 15,
+                AutomationEngine.TICK_DIVIDER,
                 expect.any(Object)
             );
             expect(capturedTickTarget).toBeDefined();

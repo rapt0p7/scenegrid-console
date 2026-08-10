@@ -1,9 +1,10 @@
-import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
-import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type {
     ITelemetrySnapshot,
     IRtpcSnapshot,
@@ -16,13 +17,12 @@ import type {
     IMusicTrackSnapshot,
     Milliseconds
 } from '@scene-grid/shared';
+
 import { isDefined } from '@scene-grid/shared';
-import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 
 export class TelemetrySnapshotter implements ITickable {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public TICK_RATE: Milliseconds = 100 as Milliseconds;
-    private lastSnapshotTimeMs: number = 0;
+    public readonly TICK_DIVIDER: number = 10;
     private readonly snapshotDto: ITelemetrySnapshot;
     private readonly rtpcPool: IRtpcSnapshot[];
     private readonly switchPool: ISwitchSnapshot[];
@@ -82,11 +82,6 @@ export class TelemetrySnapshotter implements ITickable {
 
     public tick(currentTimeSec: number, _deltaTime: Milliseconds): void {
         const currentTimeMs = currentTimeSec * 1000;
-
-        if (currentTimeMs - this.lastSnapshotTimeMs < this.TICK_RATE) {
-            return;
-        }
-        this.lastSnapshotTimeMs = currentTimeMs;
 
         // oxlint-disable-next-line typescript/no-explicit-any
         (this.snapshotDto as any).timestampMs = currentTimeMs;

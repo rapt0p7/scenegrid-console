@@ -1,11 +1,12 @@
 import type { ICullingArbiter, ICullingContext } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type { Milliseconds } from '@scene-grid/shared';
+
+import { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 export class CullingRunner {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE: Milliseconds = 500 as Milliseconds;
+    public static TICK_DIVIDER: number = 50;
     constructor(
         private readonly arbiter: ICullingArbiter,
         private readonly controller: ISoundController,

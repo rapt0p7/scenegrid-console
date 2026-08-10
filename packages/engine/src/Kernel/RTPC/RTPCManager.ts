@@ -7,7 +7,7 @@ const MAX_PARAMS = 1024;
 
 export default class RTPCManager implements IRTPCManager {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE: Milliseconds = 30 as Milliseconds;
+    public static TICK_DIVIDER: number = 3;
 
     private paramToIndex = new Map<GameParamId, number>();
     private indexToParam: GameParamId[] = Array.from({ length: MAX_PARAMS });

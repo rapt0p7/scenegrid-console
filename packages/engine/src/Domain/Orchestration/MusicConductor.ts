@@ -1,18 +1,19 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import type { ContextTime, DeepReadonly, IConditionConfig, LayerId, Milliseconds, Pulses } from '@scene-grid/shared';
-import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
-import type MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
 import type { IMusicFSMConfig, IMusicTransitionEdge } from '@domain/Configuration/Ports/IMusicFSMConfig.js';
-import type { IConductorState } from '@domain/Orchestration/Ports/IConductorState.js';
-import { evaluateEdges } from '@domain/Orchestration/MusicFsmEvaluator.js';
-import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
+import type { IConductorState } from '@domain/Orchestration/Ports/IConductorState.js';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
+import type { ContextTime, DeepReadonly, IConditionConfig, LayerId, Milliseconds, Pulses } from '@scene-grid/shared';
+
+import { evaluateEdges } from '@domain/Orchestration/MusicFsmEvaluator.js';
 import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
 
 export class MusicConductor implements ITickable {
-    public readonly TICK_RATE: Milliseconds = 16 as Milliseconds;
+    public readonly TICK_DIVIDER: number = 1;
     private readonly state: IConductorState;
     private config!: DeepReadonly<IMusicFSMConfig>;
     private readonly conductorMixerLayer = 'music_fsm' as LayerId;

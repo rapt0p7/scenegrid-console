@@ -1,16 +1,15 @@
 // noinspection D
 
-import mitt from 'mitt';
-
-import { isFilterEqual } from '@domain/BusSystem/ValueObjects/filterEquals.js';
-import { isDefined, type Milliseconds, typedEntries, typedKeys } from '@scene-grid/shared';
-
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
+import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ITransitionOptions, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { BusId, DeepReadonly } from '@scene-grid/shared';
 import type { Emitter } from 'mitt';
-import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
+
+import { isFilterEqual } from '@domain/BusSystem/ValueObjects/filterEquals.js';
+import { isDefined, type Milliseconds, typedEntries, typedKeys } from '@scene-grid/shared';
+import mitt from 'mitt';
 
 type MixerFSMState =
     | { type: 'IDLE' }
@@ -25,7 +24,7 @@ type MixerFSMState =
 
 export default class MixerTransitionEngine {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE: Milliseconds = 16 as Milliseconds;
+    public static TICK_DIVIDER: number = 1;
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly events: Emitter<{ 'transition:start': { duration: Milliseconds } }> = mitt();
 

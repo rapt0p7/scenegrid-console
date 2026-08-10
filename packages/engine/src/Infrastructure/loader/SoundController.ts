@@ -3,6 +3,13 @@
 
 import type { IControllerPlayOptions, ISoundController, VirtualReason } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
+import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
+import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
+import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
+import type { AudioCtx } from '@infrastructure/types/IAudioContext';
+import type { ILogicalVoice } from '@infrastructure/types/ILogicalVoice.js';
+import type { ISoundOptions } from '@infrastructure/types/ISoundOptions.js';
 import type {
     BusId,
     PlaybackId,
@@ -13,13 +20,7 @@ import type {
     Seconds,
     Milliseconds
 } from '@scene-grid/shared';
-import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
-import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
-import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
-import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
-import type { AudioCtx } from '@infrastructure/types/IAudioContext';
-import type { ILogicalVoice } from '@infrastructure/types/ILogicalVoice.js';
-import type { ISoundOptions } from '@infrastructure/types/ISoundOptions.js';
+
 import { CyclePool } from '@scene-grid/shared';
 
 export interface SoundDescriptor {
@@ -35,7 +36,7 @@ interface VirtualVoiceTimer {
 
 export class SoundController implements ISoundController {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE: Milliseconds = 16 as Milliseconds;
+    public static TICK_DIVIDER: number = 1;
     public readonly activeVoices = new Map<PlaybackId, ILogicalVoice>();
 
     private readonly lastPlayTimes = new Map<SoundId, Milliseconds>();

@@ -47,7 +47,7 @@ interface TrackedPlayback {
 }
 
 export class AudioEventOrchestrator implements ITickable {
-    public readonly TICK_RATE: Milliseconds = 16 as Milliseconds;
+    public readonly TICK_DIVIDER: number = 1;
     private readonly scheduledActions: ScheduledAction[] = [];
     private readonly trackedPlaybacks: TrackedPlayback[] = [];
     private readonly conditionStates = new WeakMap<IConditionConfig, boolean>();

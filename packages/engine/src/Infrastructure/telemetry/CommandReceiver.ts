@@ -1,10 +1,10 @@
 import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
-import type { InspectorCommand, Milliseconds } from '@scene-grid/shared';
+import type { InspectorCommand } from '@scene-grid/shared';
 
 export class CommandReceiver implements ITickable {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE: Milliseconds = 16 as Milliseconds;
+    public static TICK_DIVIDER: number = 1;
     private readonly queue: InspectorCommand[] = [];
     constructor(
         private readonly port: MessagePort,

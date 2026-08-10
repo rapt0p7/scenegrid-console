@@ -1,16 +1,15 @@
 // oxlint-disable unicorn/no-useless-undefined
 // noinspection D
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
+import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
+import type { IPluginFactory } from '@infrastructure';
+import type { AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
+import type { BusId, ContextTime, Milliseconds, Seconds } from '@scene-grid/shared';
 
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 import AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
-
-import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
-import type { BusId, ContextTime, Milliseconds, Seconds } from '@scene-grid/shared';
-import type { IPluginFactory } from '@infrastructure';
-import type { AudioNodeLike } from '@infrastructure/types/IAudioContext.js';
-import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@infrastructure', () => ({
     safeDisconnect: vi.fn((node: any) => {
@@ -118,7 +117,7 @@ describe('AudioBusSystem (Routing, Fallbacks & Edge Cases)', () => {
 
         await busSystem.initialize(mockTicker);
 
-        expect(mockTicker.add).toHaveBeenCalledWith('audio-bus-system', 20, expect.any(Object));
+        expect(mockTicker.add).toHaveBeenCalledWith('audio-bus-system', 2, expect.any(Object));
         expect(capturedTickTarget).toBeDefined();
 
         const processFrameSpy = vi.spyOn(AudioBus.prototype, 'processFrame').mockImplementation(() => {});
@@ -581,7 +580,7 @@ describe('AudioBusSystem (Internal Edge Cases & 100% Coverage)', () => {
             context: mockContext,
             automation: mockAutomation,
             masterOutput: mockMasterOutput,
-            busConfig: { sfx: {} } as any,
+            busConfig: { sfx: {} },
             pluginFactory: mockPluginFactory
         });
         expect(systemNoGain.getDefaultGain('sfx' as BusId)).toBe(0);
@@ -821,8 +820,8 @@ describe('AudioBusSystem - HMR (updateConfig)', () => {
             context: mockContext,
             automation: mockAutomation as any,
             masterOutput: { input: {} } as any,
-            busConfig: initialConfig as any,
-            pluginFactory: mockPluginFactory as any
+            busConfig: initialConfig,
+            pluginFactory: mockPluginFactory
         });
         await system.initialize(mockTicker as any);
 
@@ -874,8 +873,8 @@ describe('AudioBusSystem - HMR (updateConfig)', () => {
             context: mockContext,
             automation: { ramp: vi.fn(), set: vi.fn() } as any,
             masterOutput: { input: {} } as any,
-            busConfig: initialConfig as any,
-            pluginFactory: mockPluginFactory as any
+            busConfig: initialConfig,
+            pluginFactory: mockPluginFactory
         });
 
         await system.initialize({ add: vi.fn(), remove: vi.fn() } as any);
@@ -889,7 +888,7 @@ describe('AudioBusSystem - HMR (updateConfig)', () => {
             master: { gain: 1 }
         };
 
-        await system.updateConfig(newConfig as any);
+        await system.updateConfig(newConfig);
 
         expect(applySendSpy).toHaveBeenCalledWith('sfx', 'verb', 1.0, 100);
 

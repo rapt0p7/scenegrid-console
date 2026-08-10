@@ -1,13 +1,11 @@
 // oxlint-disable typescript/strict-void-return
 // noinspection D
 
-import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
-import { TelemetrySnapshotter } from '@infrastructure/telemetry/TelemetrySnapshotter.js';
-
-import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type {
     GameParamId,
     SoundId,
@@ -18,7 +16,9 @@ import type {
     RegionId,
     Milliseconds
 } from '@scene-grid/shared';
-import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
+
+import { TelemetrySnapshotter } from '@infrastructure/telemetry/TelemetrySnapshotter.js';
+import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 
 describe('TelemetrySnapshotter', () => {
     let mockDispatcher: { dispatch: ReturnType<typeof vi.fn> };
@@ -83,15 +83,12 @@ describe('TelemetrySnapshotter', () => {
         );
     });
 
-    it('should not dispatch if TICK_RATE_MS has not elapsed', () => {
-        snapshotter.tick(0.05, 50 as Milliseconds);
-        expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
-
-        snapshotter.tick(0.099, 49 as Milliseconds);
-        expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
-
-        snapshotter.tick(0.1, 1 as Milliseconds);
+    it('should dispatch snapshot unconditionally on every tick call, relying on external EngineTicker throttling', () => {
+        snapshotter.tick(0.1, 100 as Milliseconds);
         expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+
+        snapshotter.tick(0.2, 100 as Milliseconds);
+        expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(2);
     });
 
     it('should collect RTPCs correctly and fallback to 0 if undefined', () => {

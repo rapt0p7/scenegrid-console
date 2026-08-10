@@ -1,15 +1,16 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import { isDefined, isAbsent } from '@scene-grid/shared';
 import type { IContainerSoundConfig, IScattererSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
 import type { PlaybackId, IPRNG, ContextTime, Milliseconds } from '@scene-grid/shared';
+
+import { isDefined, isAbsent } from '@scene-grid/shared';
 import { TimeMath } from '@scene-grid/shared';
-import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
 
 interface ActiveScatterer {
     readonly playbackId: PlaybackId;
@@ -20,7 +21,7 @@ interface ActiveScatterer {
 }
 
 export class ScattererOrchestrator implements ITickable {
-    public readonly TICK_RATE: Milliseconds = 16 as Milliseconds;
+    public readonly TICK_DIVIDER: number = 1;
 
     private readonly activeSessions: ActiveScatterer[] = [];
 

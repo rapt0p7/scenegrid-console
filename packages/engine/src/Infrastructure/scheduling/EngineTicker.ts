@@ -1,30 +1,56 @@
+import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
+import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
+import type { ContextTime, Milliseconds, TickerTaskId } from '@scene-grid/shared';
+
 import * as workerTimers from 'worker-timers';
 
-import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
-import { ContextTime, Milliseconds, TickerTaskId } from '@scene-grid/shared';
-import { ITickable } from '@domain/Shared/Ports/ITickable.js';
-
 interface TickerTask {
-    id: TickerTaskId;
-    target: ITickable;
-    interval: Milliseconds;
-    accumulator: number;
+    readonly id: TickerTaskId;
+    readonly target: ITickable;
+    readonly divider: number;
+    lastRunTime: number;
 }
 
 export class EngineTicker implements IEngineTicker {
     private tickerId: number | null = null;
-    private lastTickTime: number = 0;
     private readonly tasks: TickerTask[] = [];
-    private readonly BASE_TICK_RATE = 15;
+    private currentTick: number = 0;
+    private readonly BASE_TICK_RATE: Milliseconds = 10 as Milliseconds;
 
     constructor(private readonly getContextTime: () => ContextTime) {}
+
+    public add(id: TickerTaskId, divider: number, target: ITickable): void {
+        if (this.tasks.some(t => t.id === id)) return;
+        const safeDivider = Math.max(1, Math.round(divider));
+
+        this.tasks.push({
+            id,
+            divider: safeDivider,
+            target,
+            lastRunTime: performance.now()
+        });
+    }
+
+    public remove(id: string): void {
+        const index = this.tasks.findIndex(t => t.id === id);
+        if (index !== -1) {
+            this.tasks[index] = this.tasks[this.tasks.length - 1];
+            this.tasks.pop();
+        }
+    }
 
     public start(): void {
         if (this.tickerId !== null) return;
 
-        this.lastTickTime = performance.now();
+        this.currentTick = 0;
+
+        const now = performance.now();
+        for (let i = 0; i < this.tasks.length; i++) {
+            this.tasks[i].lastRunTime = now;
+        }
+
         this.tickerId = workerTimers.setInterval(() => {
-            this.tick();
+            this.onTick();
         }, this.BASE_TICK_RATE);
     }
 
@@ -35,37 +61,21 @@ export class EngineTicker implements IEngineTicker {
         }
     }
 
-    public add(id: TickerTaskId, interval: Milliseconds, target: ITickable): void {
-        if (this.tasks.some(t => t.id === id)) return;
-
-        this.tasks.push({ id, target, interval, accumulator: 0 });
-    }
-
-    public remove(id: TickerTaskId): void {
-        const index = this.tasks.findIndex(t => t.id === id);
-
-        if (index !== -1) {
-            this.tasks[index] = this.tasks[this.tasks.length - 1];
-            this.tasks.pop();
-        }
-    }
-
-    private tick(): void {
-        const now = performance.now();
-        const deltaTimeMs = now - this.lastTickTime;
-        this.lastTickTime = now;
-
-        const audioCurrentTime = this.getContextTime();
-
+    private onTick(): void {
+        this.currentTick++;
         const length = this.tasks.length;
+        if (length === 0) return;
+
+        const currentContextTime = this.getContextTime();
+        const now = performance.now();
 
         for (let i = 0; i < length; i++) {
             const task = this.tasks[i];
-            task.accumulator += deltaTimeMs;
 
-            if (task.accumulator >= task.interval) {
-                task.accumulator %= task.interval;
-                task.target.tick(audioCurrentTime, task.interval);
+            if (this.currentTick % task.divider === 0) {
+                const physicalDeltaTime = (now - task.lastRunTime) as Milliseconds;
+                task.lastRunTime = now;
+                task.target.tick(currentContextTime, physicalDeltaTime);
             }
         }
     }

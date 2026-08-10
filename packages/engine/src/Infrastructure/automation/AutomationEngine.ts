@@ -1,9 +1,10 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
+import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { AudioCtx, AudioParamLike } from '@infrastructure/types/IAudioContext.js';
-import { TickerTaskId, ContextTime, Milliseconds, Seconds, TimeMath } from '@scene-grid/shared';
+
+import { type TickerTaskId, type ContextTime, type Milliseconds, type Seconds, TimeMath } from '@scene-grid/shared';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const isChromeAndroid =
@@ -24,17 +25,17 @@ interface PendingRamp {
 export default class AutomationEngine {
     readonly #ctx: AudioCtx;
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static TICK_RATE = 16 as Milliseconds;
+    public static TICK_DIVIDER: number = 1;
     private static readonly CURVE_STEPS = 100;
     private static readonly CONSTANT_CURVE_BUFFER = new Float32Array(AutomationEngine.CURVE_STEPS);
     private readonly DIGITAL_SILENCE = 0.000_01;
 
     #pending: PendingRamp[] = [];
 
-    constructor(context: AudioCtx, ticker: EngineTicker) {
+    constructor(context: AudioCtx, ticker: IEngineTicker) {
         this.#ctx = context;
 
-        ticker.add('automation-engine' as TickerTaskId, AutomationEngine.TICK_RATE, this);
+        ticker.add('automation-engine' as TickerTaskId, AutomationEngine.TICK_DIVIDER, this);
     }
 
     set(parameter: AudioParamLike, value: number): void {

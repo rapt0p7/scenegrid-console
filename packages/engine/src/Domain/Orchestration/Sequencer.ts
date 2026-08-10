@@ -58,10 +58,10 @@ type MutableMusicSnapshot = {
 };
 
 export default class Sequencer implements ISequencer {
+    private static readonly TICK_DIVIDER: number = 2;
     private tracks: Map<SoundId, TrackContext> = new Map();
     private readonly snapshotPool: MutableMusicSnapshot[] = [];
     private readonly activeSnapshots: IMusicTrackSnapshot[] = [];
-    private readonly scheduleInterval = 25 as Milliseconds;
     private readonly lookaheadWindowSec = 0.1 as Seconds;
 
     constructor(
@@ -554,6 +554,6 @@ export default class Sequencer implements ISequencer {
     }
 
     private startScheduler(): void {
-        this.ticker.add('sequencer' as TickerTaskId, this.scheduleInterval, this);
+        this.ticker.add('sequencer' as TickerTaskId, Sequencer.TICK_DIVIDER, this);
     }
 }

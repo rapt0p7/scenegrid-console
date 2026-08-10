@@ -550,19 +550,19 @@ export class AudioEngine implements IAudioEngine {
                 this.#telemetry
             );
 
-            this.#engineTicker.add('telemetry' as TickerTaskId, this.#telemetry.TICK_RATE, this.#telemetry);
+            this.#engineTicker.add('telemetry' as TickerTaskId, this.#telemetry.TICK_DIVIDER, this.#telemetry);
 
-            this.#engineTicker.add('snapshotter' as TickerTaskId, snapshotter.TICK_RATE, snapshotter);
+            this.#engineTicker.add('snapshotter' as TickerTaskId, snapshotter.TICK_DIVIDER, snapshotter);
 
-            this.#engineTicker.add('rtpc-manager' as TickerTaskId, RTPCManager.TICK_RATE, this.#rtpcManager);
+            this.#engineTicker.add('rtpc-manager' as TickerTaskId, RTPCManager.TICK_DIVIDER, this.#rtpcManager);
 
-            this.#engineTicker.add('bus-system' as TickerTaskId, RTPCManager.TICK_RATE, {
+            this.#engineTicker.add('bus-system' as TickerTaskId, RTPCManager.TICK_DIVIDER, {
                 tick: () => {
                     this.#busSystem.tickRTPC(this.#rtpcManager);
                 }
             });
 
-            this.#engineTicker.add('instance-rtpc' as TickerTaskId, RTPCManager.TICK_RATE, {
+            this.#engineTicker.add('instance-rtpc' as TickerTaskId, RTPCManager.TICK_DIVIDER, {
                 tick: () => {
                     this.#instanceRTPCBinder.tickRTPC();
                 }
@@ -570,33 +570,37 @@ export class AudioEngine implements IAudioEngine {
 
             this.#engineTicker.add(
                 'sound-controller' as TickerTaskId,
-                SoundController.TICK_RATE,
+                SoundController.TICK_DIVIDER,
                 this.#soundController
             );
-            this.#engineTicker.add('culling-runner' as TickerTaskId, CullingRunner.TICK_RATE, this.#cullingRunner);
+            this.#engineTicker.add('culling-runner' as TickerTaskId, CullingRunner.TICK_DIVIDER, this.#cullingRunner);
             mixerTransitionEngine.events.on('transition:start', () => {
                 this.#cullingRunner.tick(this.#contextManager.currentTime, 0 as Milliseconds);
             });
             this.#engineTicker.add(
                 'mixer-state-manager' as TickerTaskId,
-                MixerTransitionEngine.TICK_RATE,
+                MixerTransitionEngine.TICK_DIVIDER,
                 mixerTransitionEngine
             );
 
             this.#engineTicker.add(
                 'scatterer-orchestrator' as TickerTaskId,
-                this.#scattererOrchestrator.TICK_RATE,
+                this.#scattererOrchestrator.TICK_DIVIDER,
                 this.#scattererOrchestrator
             );
 
             this.#engineTicker.add(
                 'audio-event-orchestrator' as TickerTaskId,
-                this.#eventOrchestrator.TICK_RATE,
+                this.#eventOrchestrator.TICK_DIVIDER,
                 this.#eventOrchestrator
             );
 
             if (this.#conductor) {
-                this.#engineTicker.add('music-conductor' as TickerTaskId, this.#conductor.TICK_RATE, this.#conductor);
+                this.#engineTicker.add(
+                    'music-conductor' as TickerTaskId,
+                    this.#conductor.TICK_DIVIDER,
+                    this.#conductor
+                );
             }
 
             this.#isInitialized = true;
@@ -655,7 +659,7 @@ export class AudioEngine implements IAudioEngine {
 
                 this.#engineTicker.add(
                     'inspector-command-receiver' as TickerTaskId,
-                    CommandReceiver.TICK_RATE,
+                    CommandReceiver.TICK_DIVIDER,
                     receiver
                 );
             }

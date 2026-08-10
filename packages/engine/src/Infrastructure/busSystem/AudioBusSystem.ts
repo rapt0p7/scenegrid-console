@@ -1,17 +1,17 @@
 // noinspection D
 
-import AudioBus from '@infrastructure/busSystem/AudioBus.js';
-
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem';
 import type { IBus, IBuses } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IDuckingConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import { BusId, TickerTaskId, Milliseconds, ContextTime, TimeMath } from '@scene-grid/shared';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type { EngineTicker } from '@infrastructure/scheduling/EngineTicker.js';
 import type { AudioCtx, AudioNodeLike, GainNodeLike } from '@infrastructure/types/IAudioContext.js';
 import type { ILimiterNode, IPluginFactory, ISidechain } from '@infrastructure/types/IAudioPlugins.js';
 import type { IMasterOutput } from '@infrastructure/types/IMasterOutput.js';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+
+import AudioBus from '@infrastructure/busSystem/AudioBus.js';
+import { BusId, TickerTaskId, Milliseconds, ContextTime, TimeMath } from '@scene-grid/shared';
 import { typedEntries, typedKeys, isDefined } from '@scene-grid/shared';
 
 export default class AudioBusSystem implements IAudioBusSystem {
@@ -28,7 +28,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
     private readonly masterOutput: IMasterOutput;
     private readonly pluginFactory: IPluginFactory;
     private masterLimiter?: ILimiterNode;
-    private readonly TICK_RATE: Milliseconds = 20 as Milliseconds;
+    private readonly TICK_DIVIDER: number = 2;
     constructor(
         {
             context,
@@ -74,7 +74,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
         await this.initBuses();
 
-        ticker.add('audio-bus-system' as TickerTaskId, this.TICK_RATE, this);
+        ticker.add('audio-bus-system' as TickerTaskId, this.TICK_DIVIDER, this);
     }
 
     public tick(currentTime: ContextTime) {
