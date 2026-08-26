@@ -1,13 +1,13 @@
+import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
+import type { IVoiceConfig } from '@infrastructure/types/IVoiceConfig.js';
+import type { SoundId } from '@scene-grid/shared';
+
+import { AudioContext as MockAudioContext, registrar } from 'standardized-audio-context-mock';
 /* eslint-disable @typescript-eslint/naming-convention */
 // oxlint-disable unicorn/no-useless-undefined
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AudioContext as MockAudioContext, registrar } from 'standardized-audio-context-mock';
 
 import SoundPoolManager from '../SoundPoolManager.js';
-
-import type { SoundId } from '@scene-grid/shared';
-import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
-import type { IVoiceConfig } from '@infrastructure/types/IVoiceConfig.js';
 
 function createMockInstance(initialId: string): ISoundInstance {
     const listeners: Record<string, Array<(...arguments_: any[]) => any>> = {};
@@ -70,8 +70,10 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
     let mockConfigs: Record<string, IVoiceConfig>;
     let pool: SoundPoolManager;
     let fakeBuffer: AudioBuffer;
+    let warnSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
+        warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         mockCtx = new MockAudioContext();
         fakeBuffer = mockCtx.createBuffer(2, 44100, 44100) as unknown as AudioBuffer;
 
@@ -91,6 +93,7 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
     });
 
     afterEach(() => {
+        warnSpy.mockRestore();
         vi.unstubAllGlobals();
         vi.restoreAllMocks();
         registrar.reset(mockCtx as any);
@@ -206,6 +209,286 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
             expect(inst1.stop).toHaveBeenCalled();
             expect(inst2.stop).not.toHaveBeenCalled();
             expect(inst2.state).toBe('virtual');
+        });
+
+        it('should pre-allocate all instances to globalVoiceLimit length during initialization', () => {
+            const factory = vi.fn((id: string) => createMockInstance(id));
+
+            const poolManager = new SoundPoolManager(factory, { globalVoiceLimit: 5 });
+
+            expect(factory).toHaveBeenCalledTimes(5);
+            expect(poolManager.globalVoiceLimit).toBe(5);
+        });
+
+        it('should default policy to "steal_oldest" when policy option is omitted', () => {
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                maxPolyphony: 2,
+                globalVoiceLimit: 10
+            });
+            manager.acquire('laser' as SoundId, fakeBuffer);
+            manager.acquire('laser' as SoundId, fakeBuffer);
+
+            const inst3 = manager.acquire('laser' as SoundId, fakeBuffer);
+
+            expect(inst3).not.toBe('MAX_POLYPHONY');
+            expect(typeof inst3).toBe('object');
+        });
+
+        it('should use configured priority value instead of masking it with 128 during acquire', () => {
+            const configs: Record<string, IVoiceConfig> = {
+                sfx_high: { priority: 50 },
+                sfx_mid: { priority: 100 }
+            };
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 1,
+                voiceConfigResolver: id => configs[id]
+            });
+            manager.acquire('sfx_mid' as SoundId, fakeBuffer);
+
+            const vipInst = manager.acquire('sfx_high' as SoundId, fakeBuffer);
+
+            expect(vipInst).not.toBe('PRIORITY_STEAL_FAILED');
+            expect(typeof vipInst).toBe('object');
+        });
+
+        it('should log warning message when priority steal fails', () => {
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            const customPool = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 1,
+                voiceConfigResolver: id => (id === 'sfx_high' ? { priority: 10 } : { priority: 200 })
+            });
+
+            customPool.acquire('sfx_high' as SoundId, fakeBuffer);
+
+            const result = customPool.acquire('sfx_low' as SoundId, fakeBuffer);
+
+            expect(result).toBe('PRIORITY_STEAL_FAILED');
+            expect(consoleSpy).toHaveBeenCalledWith('[Pool] Rejected "sfx_low": No victims with lower priority.');
+
+            consoleSpy.mockRestore();
+        });
+
+        it('should automatically release instance when "ended" event fires', () => {
+            const inst = pool.acquire('sfx_high' as SoundId, fakeBuffer) as ISoundInstance;
+            expect(pool.getActiveVoices().length).toBe(1);
+
+            inst.stop();
+
+            expect(pool.getActiveVoices().length).toBe(0);
+        });
+
+        it('should emit "released" event on pool events emitter when an instance is released', () => {
+            const releasedListener = vi.fn();
+            pool.events.on('released', releasedListener);
+            const inst = pool.acquire('sfx_high' as SoundId, fakeBuffer) as ISoundInstance;
+
+            pool.release(inst);
+
+            expect(releasedListener).toHaveBeenCalledTimes(1);
+            expect(releasedListener).toHaveBeenCalledWith(inst);
+        });
+
+        it('should not rebind instances of other soundIds when purging a specific soundId', () => {
+            // oxlint-disable-next-line no-unused-vars
+            const inst1 = pool.acquire('test' as SoundId, fakeBuffer) as ISoundInstance;
+            const inst2 = pool.acquire('other' as SoundId, fakeBuffer) as ISoundInstance;
+
+            pool.purgeSound('test' as SoundId);
+
+            expect(inst2.id).toBe('other');
+            expect(inst2.rebind).not.toHaveBeenCalledWith('__RESERVED__', expect.anything());
+        });
+
+        it('should set stackPtr to -1 on full dispose so subsequent acquire calls fail when pool is empty', () => {
+            pool.acquire('sfx_high' as SoundId, fakeBuffer);
+            pool.dispose();
+
+            const result = pool.acquire('sfx_high' as SoundId, fakeBuffer);
+
+            expect(result).toBe('PRIORITY_STEAL_FAILED');
+        });
+
+        it('should select the instance with the weakest priority value among active instances', () => {
+            const configs: Record<string, IVoiceConfig> = {
+                sfx_mid: { priority: 100 },
+                sfx_low: { priority: 200 },
+                sfx_high: { priority: 50 }
+            };
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 2,
+                voiceConfigResolver: id => configs[id]
+            });
+            const midInst = manager.acquire('sfx_mid' as SoundId, fakeBuffer) as ISoundInstance;
+            const lowInst = manager.acquire('sfx_low' as SoundId, fakeBuffer) as ISoundInstance;
+
+            manager.acquire('sfx_high' as SoundId, fakeBuffer);
+
+            expect(lowInst.stop).toHaveBeenCalled();
+            expect(midInst.stop).not.toHaveBeenCalled();
+        });
+
+        it('should fallback to default priority 128 without throwing when active instance has no voice config', () => {
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 1,
+                voiceConfigResolver: () => undefined
+            });
+            manager.acquire('unconfigured_sound' as SoundId, fakeBuffer);
+
+            expect(() => {
+                manager.acquire('new_sound' as SoundId, fakeBuffer);
+            }).not.toThrow();
+        });
+
+        it('should only count active instances matching the specific soundId for maxPolyphony check', () => {
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                maxPolyphony: 2,
+                globalVoiceLimit: 10,
+                policy: 'steal_oldest',
+                voiceConfigResolver: () => ({ priority: 128 })
+            });
+            const soundA1 = manager.acquire('soundA' as SoundId, fakeBuffer) as ISoundInstance;
+            const soundA2 = manager.acquire('soundA' as SoundId, fakeBuffer) as ISoundInstance;
+
+            const soundB = manager.acquire('soundB' as SoundId, fakeBuffer) as ISoundInstance;
+
+            expect(typeof soundB).toBe('object');
+            expect(soundA1.stop).not.toHaveBeenCalled();
+            expect(soundA2.stop).not.toHaveBeenCalled();
+            expect(manager.getActiveVoices().length).toBe(3);
+        });
+
+        it('should correctly select active instances with priority 0 during candidate search', () => {
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 1,
+                voiceConfigResolver: () => ({ priority: 0 })
+            });
+            const inst1 = manager.acquire('sound_zero' as SoundId, fakeBuffer) as ISoundInstance;
+
+            const inst2 = manager.acquire('sound_zero2' as SoundId, fakeBuffer);
+
+            expect(inst2).not.toBe('PRIORITY_STEAL_FAILED');
+            expect(inst1.stop).toHaveBeenCalled();
+        });
+
+        it('should correctly select active loop instances with priority 0 during candidate search', () => {
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 1,
+                voiceConfigResolver: () => ({ priority: 0 })
+            });
+            const loopInst = manager.acquire('loop_zero' as SoundId, fakeBuffer) as ISoundInstance;
+            loopInst.setLoop(true);
+
+            const nextInst = manager.acquire('sound_zero2' as SoundId, fakeBuffer);
+
+            expect(nextInst).not.toBe('PRIORITY_STEAL_FAILED');
+            expect(loopInst.stop).toHaveBeenCalled();
+        });
+
+        it('should skip virtual instances during priority stealing even if virtual instance has weaker priority', () => {
+            const configs: Record<string, IVoiceConfig> = {
+                high_prio: { priority: 50 },
+                low_prio_virtual: { priority: 200 },
+                new_sound: { priority: 50 }
+            };
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 2,
+                voiceConfigResolver: id => configs[id]
+            });
+
+            const playingInst = manager.acquire('high_prio' as SoundId, fakeBuffer) as ISoundInstance;
+            (playingInst as any).state = 'playing';
+
+            const virtualInst = manager.acquire('low_prio_virtual' as SoundId, fakeBuffer) as ISoundInstance;
+            (virtualInst as any).state = 'virtual';
+
+            manager.acquire('new_sound' as SoundId, fakeBuffer);
+
+            expect(virtualInst.stop).not.toHaveBeenCalled();
+            expect(playingInst.stop).toHaveBeenCalled();
+        });
+
+        it('should steal the weakest loop instance when multiple loops with different priorities exist', () => {
+            const configs: Record<string, IVoiceConfig> = {
+                mid_loop: { priority: 100 },
+                low_loop: { priority: 200 },
+                new_sound: { priority: 50 }
+            };
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 2,
+                voiceConfigResolver: id => configs[id]
+            });
+            const midLoop = manager.acquire('mid_loop' as SoundId, fakeBuffer) as ISoundInstance;
+            midLoop.setLoop(true);
+
+            const lowLoop = manager.acquire('low_loop' as SoundId, fakeBuffer) as ISoundInstance;
+            lowLoop.setLoop(true);
+
+            manager.acquire('new_sound' as SoundId, fakeBuffer);
+
+            expect(lowLoop.stop).toHaveBeenCalled();
+            expect(midLoop.stop).not.toHaveBeenCalled();
+        });
+
+        it('should steal the oldest loop instance when multiple loop instances have identical priorities', () => {
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 2,
+                voiceConfigResolver: () => ({ priority: 200 })
+            });
+            const oldLoop = manager.acquire('loop_a' as SoundId, fakeBuffer) as ISoundInstance;
+            oldLoop.setLoop(true);
+
+            const newLoop = manager.acquire('loop_b' as SoundId, fakeBuffer) as ISoundInstance;
+            newLoop.setLoop(true);
+
+            manager.acquire('new_sound' as SoundId, fakeBuffer);
+
+            expect(oldLoop.stop).toHaveBeenCalled();
+            expect(newLoop.stop).not.toHaveBeenCalled();
+        });
+
+        it('should steal an active non-loop instance when active priority equals requested priority', () => {
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 1,
+                voiceConfigResolver: () => ({ priority: 128 })
+            });
+            manager.acquire('sound1' as SoundId, fakeBuffer);
+
+            const result = manager.acquire('sound2' as SoundId, fakeBuffer);
+
+            expect(result).not.toBe('PRIORITY_STEAL_FAILED');
+            expect(typeof result).toBe('object');
+        });
+
+        it('should not steal a loop instance if loop priority is stronger than requested priority', () => {
+            const configs: Record<string, IVoiceConfig> = {
+                high_prio_loop: { priority: 10 },
+                low_prio_requested: { priority: 50 }
+            };
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 1,
+                voiceConfigResolver: id => configs[id]
+            });
+            const loopInst = manager.acquire('high_prio_loop' as SoundId, fakeBuffer) as ISoundInstance;
+            loopInst.setLoop(true);
+
+            const result = manager.acquire('low_prio_requested' as SoundId, fakeBuffer);
+
+            expect(result).toBe('PRIORITY_STEAL_FAILED');
+            expect(loopInst.stop).not.toHaveBeenCalled();
+        });
+
+        it('should steal an active loop instance when active loop priority equals requested priority', () => {
+            const manager = new SoundPoolManager(soundId => createMockInstance(soundId), {
+                globalVoiceLimit: 1,
+                voiceConfigResolver: () => ({ priority: 128 })
+            });
+            const loopInst = manager.acquire('loop1' as SoundId, fakeBuffer) as ISoundInstance;
+            loopInst.setLoop(true);
+
+            const result = manager.acquire('sound2' as SoundId, fakeBuffer);
+
+            expect(result).not.toBe('PRIORITY_STEAL_FAILED');
+            expect(typeof result).toBe('object');
         });
     });
 });

@@ -596,11 +596,7 @@ export class AudioEngine implements IAudioEngine {
             );
 
             if (this.#conductor) {
-                this.#engineTicker.add(
-                    'music-conductor' as TickerTaskId,
-                    this.#conductor.TICK_DIVIDER,
-                    this.#conductor
-                );
+                this.#engineTicker.add('music-conductor' as TickerTaskId, MusicConductor.TICK_DIVIDER, this.#conductor);
             }
 
             this.#isInitialized = true;

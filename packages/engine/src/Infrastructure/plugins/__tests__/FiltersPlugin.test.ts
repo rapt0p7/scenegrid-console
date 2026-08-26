@@ -1,3 +1,7 @@
+// oxlint-disable import/no-named-as-default-member
+// noinspection D
+
+import fc from 'fast-check';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import FiltersPlugin from '../FiltersPlugin.js';
@@ -6,6 +10,7 @@ describe('FiltersPlugin', () => {
     let mockContext: any;
     let mockAutomation: any;
     let mockFilter: any;
+    // oxlint-disable-next-line no-unused-vars
     let mockConvolver: any;
     let mockBuffer: any;
     let mockLeftChannel: Float32Array;
@@ -36,7 +41,7 @@ describe('FiltersPlugin', () => {
         mockContext = {
             sampleRate: 10,
             createBiquadFilter: vi.fn().mockReturnValue(mockFilter),
-            createConvolver: vi.fn().mockReturnValue(mockConvolver),
+            createConvolver: vi.fn(() => ({ buffer: null })),
             createBuffer: vi.fn().mockReturnValue(mockBuffer)
         };
 
@@ -58,7 +63,9 @@ describe('FiltersPlugin', () => {
             const node = FiltersPlugin.createNode(mockContext, mockAutomation, { type: 'reverb' });
 
             expect(createReverbSpy).toHaveBeenCalledWith(mockContext, { type: 'reverb' });
-            expect(node).toBe(mockConvolver);
+            expect(mockContext.createConvolver).toHaveBeenCalledTimes(1);
+            expect(node).toBeDefined();
+            expect((node as any)?.buffer).toBe(mockBuffer);
         });
 
         it('should catch errors silently if setting filter.type throws an error', () => {
@@ -95,6 +102,28 @@ describe('FiltersPlugin', () => {
             });
 
             expect(mockAutomation.set).not.toHaveBeenCalled();
+        });
+
+        it('should assign the specified filter type to the biquad filter node', () => {
+            mockFilter.type = 'allpass';
+
+            const node = FiltersPlugin.createNode(mockContext, mockAutomation, {
+                type: 'bandpass'
+            });
+
+            expect(node).toBe(mockFilter);
+            expect((node as any).type).toBe('bandpass');
+        });
+
+        it('should fall back to "allpass" when config.type is a falsy non-empty value', () => {
+            mockFilter.type = 'lowpass';
+
+            const node = FiltersPlugin.createNode(mockContext, mockAutomation, {
+                type: 0 as any
+            });
+
+            expect(node).toBe(mockFilter);
+            expect((node as any).type).toBe('allpass');
         });
     });
 
@@ -171,6 +200,114 @@ describe('FiltersPlugin', () => {
             });
 
             expect(mockAutomation.ramp).toHaveBeenCalledWith(mockFilter.Q, 10, 300, 'linear');
+        });
+    });
+
+    describe('createReverb', () => {
+        it('should attach the cached impulse buffer to newly created convolver nodes on cache hits', () => {
+            const firstNode = (FiltersPlugin as any).createReverb(mockContext, {
+                reverbTime: 2,
+                reverbDecay: 2
+            });
+            const cachedImpulse = firstNode.buffer;
+            expect(mockContext.createBuffer).toHaveBeenCalledTimes(1);
+
+            const secondNode = (FiltersPlugin as any).createReverb(mockContext, {
+                reverbTime: 2,
+                reverbDecay: 2
+            });
+
+            expect(mockContext.createBuffer).toHaveBeenCalledTimes(1);
+            expect(secondNode).not.toBe(firstNode);
+            expect(secondNode.buffer).toBe(cachedImpulse);
+        });
+    });
+
+    describe('generateImpulseResponse', () => {
+        it('should compute exact recursive dampening, noise normalization, and exponential decay values', () => {
+            vi.spyOn(Math, 'random').mockReturnValue(0.75);
+
+            const sampleRate = 2;
+            const duration = 1;
+            const decay = 2;
+            const length = sampleRate * duration;
+
+            const leftChannel = new Float32Array(length);
+            const rightChannel = new Float32Array(length);
+            const buffer = {
+                getChannelData: vi.fn(ch => (ch === 0 ? leftChannel : rightChannel))
+            };
+
+            const ctx: any = {
+                sampleRate,
+                createBuffer: vi.fn().mockReturnValue(buffer)
+            };
+
+            const expectedSample0 = 0.25;
+
+            const expectedSample1 = 0.09375;
+
+            (FiltersPlugin as any).generateImpulseResponse(ctx, duration, decay);
+
+            expect(leftChannel[0]).toBeCloseTo(expectedSample0, 5);
+            expect(leftChannel[1]).toBeCloseTo(expectedSample1, 5);
+            expect(rightChannel[0]).toBeCloseTo(expectedSample0, 5);
+            expect(rightChannel[1]).toBeCloseTo(expectedSample1, 5);
+        });
+
+        it('should generate stereo noise channels independently', () => {
+            vi.spyOn(Math, 'random').mockReturnValueOnce(0.75).mockReturnValueOnce(0.25);
+
+            const leftChannel = new Float32Array(1);
+            const rightChannel = new Float32Array(1);
+            const buffer = {
+                getChannelData: vi.fn(ch => (ch === 0 ? leftChannel : rightChannel))
+            };
+            const ctx: any = {
+                sampleRate: 1,
+                createBuffer: vi.fn().mockReturnValue(buffer)
+            };
+
+            (FiltersPlugin as any).generateImpulseResponse(ctx, 1, 1);
+
+            expect(leftChannel[0]).toBeCloseTo(0.25, 5);
+            expect(rightChannel[0]).toBeCloseTo(-0.25, 5);
+        });
+    });
+
+    describe('generateImpulseResponse invariants', () => {
+        it('should always decay towards zero over time and stay bounded within [-1, 1]', () => {
+            fc.assert(
+                fc.property(
+                    fc.integer({ min: 10, max: 100 }),
+                    fc.integer({ min: 1, max: 5 }),
+                    fc.integer({ min: 1, max: 4 }),
+                    (sampleRate, duration, decay) => {
+                        const length = sampleRate * duration;
+                        const leftChannel = new Float32Array(length);
+                        const rightChannel = new Float32Array(length);
+                        const buffer = {
+                            getChannelData: (ch: number) => (ch === 0 ? leftChannel : rightChannel)
+                        };
+                        const ctx: any = {
+                            sampleRate,
+                            createBuffer: vi.fn().mockReturnValue(buffer)
+                        };
+
+                        (FiltersPlugin as any).generateImpulseResponse(ctx, duration, decay);
+
+                        for (let i = 0; i < length; i++) {
+                            expect(leftChannel[i]).toBeGreaterThanOrEqual(-1);
+                            expect(leftChannel[i]).toBeLessThanOrEqual(1);
+                        }
+
+                        const lastIndex = length - 1;
+                        const tailEnvelope = Math.pow(1 - lastIndex / length, decay);
+                        expect(Math.abs(leftChannel[lastIndex])).toBeLessThanOrEqual(tailEnvelope);
+                        expect(Math.abs(rightChannel[lastIndex])).toBeLessThanOrEqual(tailEnvelope);
+                    }
+                )
+            );
         });
     });
 });

@@ -324,6 +324,297 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
         );
     });
 
+    it('should garbage collect finished string-based playbacks (loops) in tick() when playbackInfo matches soundId, handle missing info safely, and maintain array bounds', () => {
+        const customMap: IEventMap = {
+            ['Loop_Finished' as EventId]: {
+                actions: [{ type: 'start_loop', target: 'bgm_finished' as SoundId, tags: ['cutscene'] } as any]
+            },
+            ['Loop_Active' as EventId]: {
+                actions: [{ type: 'start_loop', target: 'bgm_active' as SoundId, tags: ['cutscene'] } as any]
+            }
+        };
+        const customDispatcher = new AudioEventOrchestrator(
+            customMap,
+            mockRouter,
+            mockRtpcAdapter,
+            mockSequencer,
+            mockMixer,
+            mockController,
+            mockPrng,
+            mockBankManager,
+            mockTelemetry
+        );
+
+        mockSequencer.getPlaybackInfo.mockImplementation((id: string) => {
+            // oxlint-disable-next-line typescript/no-unsafe-return
+            if (id === 'bgm_finished') return { soundId: 'bgm_finished' as SoundId } as any;
+            // oxlint-disable-next-line unicorn/no-useless-undefined
+            return undefined;
+        });
+
+        customDispatcher.postEvent('Loop_Finished' as EventId);
+        customDispatcher.postEvent('Loop_Active' as EventId);
+
+        customDispatcher.tick(2.0, 16.6);
+
+        const tracked = (customDispatcher as any).trackedPlaybacks;
+        expect(tracked).toHaveLength(1);
+        expect(tracked[0].playbackId).toBe('bgm_active');
+    });
+
+    it('should track each individual playback ID when router.play returns an array of IDs for a tagged action', () => {
+        mockRouter.play.mockReturnValue([101, 102]);
+
+        dispatcher.postEvent('Tagged_Play' as EventId);
+
+        const tracked = (dispatcher as any).trackedPlaybacks;
+        expect(tracked).toHaveLength(2);
+        expect(tracked[0]).toEqual({ playbackId: 101, tags: ['cutscene'] });
+        expect(tracked[1]).toEqual({ playbackId: 102, tags: ['cutscene'] });
+    });
+
+    it('should NOT track playbacks if the action has no tags or if router.play returns undefined', () => {
+        mockRouter.play.mockReturnValue(100);
+        dispatcher.postEvent('Player_Jump' as EventId);
+
+        expect((dispatcher as any).trackedPlaybacks).toHaveLength(0);
+
+        // @ts-expect-error Mocking for test
+        // oxlint-disable-next-line unicorn/no-useless-undefined
+        mockRouter.play.mockReturnValue(undefined);
+        dispatcher.postEvent('Tagged_Play' as EventId);
+
+        expect((dispatcher as any).trackedPlaybacks).toHaveLength(0);
+    });
+
+    it('should initialize telemetry pool objects with complete initiator defaults and dispatch exact blocked telemetry details', () => {
+        const pooledObject = (dispatcher as any).telemetryPool.getNext();
+        expect(pooledObject.initiator).toEqual({
+            type: 'EVENT',
+            method: undefined,
+            eventId: ''
+        });
+
+        mockController.getCurrentTime.mockReturnValue(2.5 as ContextTime);
+        mockRtpcAdapter.getValue.mockReturnValue(80);
+
+        dispatcher.postEvent('Event_With_Condition' as EventId);
+
+        expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({
+                timestampMs: 2500,
+                initiator: {
+                    type: 'EVENT',
+                    eventId: 'Event_With_Condition',
+                    method: undefined
+                }
+            })
+        );
+    });
+
+    it('should execute action when PRNG value is EXACTLY equal to action probability threshold', () => {
+        const customMap: IEventMap = {
+            ['Exact_Prob_Event' as EventId]: {
+                actions: [{ type: 'play', target: 'sfx_exact_prob' as SoundId, probability: 0.5 }]
+            }
+        };
+        const customDispatcher = new AudioEventOrchestrator(
+            customMap,
+            mockRouter,
+            mockRtpcAdapter,
+            mockSequencer,
+            mockMixer,
+            mockController,
+            mockPrng,
+            mockBankManager,
+            mockTelemetry
+        );
+
+        mockPrng.next.mockReturnValue(0.5);
+
+        customDispatcher.postEvent('Exact_Prob_Event' as EventId);
+
+        expect(mockRouter.play).toHaveBeenCalledWith('sfx_exact_prob');
+    });
+
+    it('should execute zero-delay or untimed actions synchronously without adding them to scheduledActions', () => {
+        const customMap: IEventMap = {
+            ['Zero_Delay_Event' as EventId]: {
+                actions: [{ type: 'play', target: 'sfx_zero_delay' as SoundId, delay: 0 as Milliseconds }]
+            }
+        };
+        const customDispatcher = new AudioEventOrchestrator(
+            customMap,
+            mockRouter,
+            mockRtpcAdapter,
+            mockSequencer,
+            mockMixer,
+            mockController,
+            mockPrng,
+            mockBankManager,
+            mockTelemetry
+        );
+
+        customDispatcher.postEvent('Zero_Delay_Event' as EventId);
+
+        expect(mockRouter.play).toHaveBeenCalledWith('sfx_zero_delay');
+        expect((customDispatcher as any).scheduledActions).toHaveLength(0);
+    });
+
+    it('should execute scheduled action when tick currentTimeMs EXACTLY matches executeAt timestamp', () => {
+        mockController.getCurrentTime.mockReturnValue(5.0 as ContextTime);
+        dispatcher.postEvent('Event_With_Delay' as EventId);
+
+        dispatcher.tick(6.5, 1500);
+
+        expect(mockRouter.play).toHaveBeenCalledWith('sfx_delayed');
+        expect((dispatcher as any).scheduledActions).toHaveLength(0);
+    });
+
+    it('should execute nested event actions at depth <= 10 without triggering max recursion block', () => {
+        dispatcher.postEvent('Player_Nested' as EventId);
+
+        expect(mockMixer.clearLayer).toHaveBeenCalledWith('stun_layer');
+        expect(console.error).not.toHaveBeenCalled();
+        expect(mockTelemetry.dispatch).not.toHaveBeenCalledWith(
+            expect.objectContaining({
+                result: expect.objectContaining({
+                    reason: expect.stringContaining('Max recursion depth')
+                })
+            })
+        );
+    });
+
+    it('should NOT add untagged start_loop actions to trackedPlaybacks', () => {
+        dispatcher.postEvent('Start_Combat_Music' as EventId);
+
+        expect(mockSequencer.playLoop).toHaveBeenCalledWith('bgm_combat', 'intro');
+        expect((dispatcher as any).trackedPlaybacks).toHaveLength(0);
+    });
+
+    it('should cancel actions matching ANY target tag using .some() and maintain array integrity during swap-and-pop', () => {
+        const customMap: IEventMap = {
+            ['Multi_Tagged_Delayed' as EventId]: {
+                actions: [
+                    {
+                        type: 'play',
+                        target: 'sfx_multi_delayed' as SoundId,
+                        delay: 5000 as Milliseconds,
+                        tags: ['cutscene', 'ui']
+                    } as any
+                ]
+            },
+            ['Single_Tagged_Delayed' as EventId]: {
+                actions: [
+                    {
+                        type: 'play',
+                        target: 'sfx_single_delayed' as SoundId,
+                        delay: 5000 as Milliseconds,
+                        tags: ['gameplay']
+                    } as any
+                ]
+            },
+            ['Multi_Tagged_Play' as EventId]: {
+                actions: [{ type: 'play', target: 'sfx_multi_play' as SoundId, tags: ['cutscene', 'ui'] } as any]
+            },
+            ['Single_Tagged_Play' as EventId]: {
+                actions: [{ type: 'play', target: 'sfx_single_play' as SoundId, tags: ['gameplay'] } as any]
+            },
+            ['Cancel_Cutscene' as EventId]: {
+                actions: [{ type: 'cancel_pending', targetTags: ['cutscene'] } as any]
+            }
+        };
+        const customDispatcher = new AudioEventOrchestrator(
+            customMap,
+            mockRouter,
+            mockRtpcAdapter,
+            mockSequencer,
+            mockMixer,
+            mockController,
+            mockPrng,
+            mockBankManager,
+            mockTelemetry
+        );
+
+        mockController.getCurrentTime.mockReturnValue(0 as ContextTime);
+        customDispatcher.postEvent('Multi_Tagged_Delayed' as EventId);
+        customDispatcher.postEvent('Single_Tagged_Delayed' as EventId);
+
+        mockRouter.play.mockReturnValueOnce(101).mockReturnValueOnce(102);
+        customDispatcher.postEvent('Multi_Tagged_Play' as EventId);
+        customDispatcher.postEvent('Single_Tagged_Play' as EventId);
+
+        customDispatcher.postEvent('Cancel_Cutscene' as EventId);
+
+        const scheduled = (customDispatcher as any).scheduledActions;
+        expect(scheduled).toHaveLength(1);
+        expect(scheduled[0].action.target).toBe('sfx_single_delayed');
+
+        const tracked = (customDispatcher as any).trackedPlaybacks;
+        expect(tracked).toHaveLength(1);
+        expect(tracked[0].playbackId).toBe(102);
+    });
+
+    it('should NOT call sequencer.stopLoop when cancelling numeric playbacks in cancel_pending', () => {
+        mockRouter.play.mockReturnValue(42);
+        dispatcher.postEvent('Tagged_Play' as EventId);
+
+        dispatcher.postEvent('Cancel_Cutscene' as EventId);
+
+        expect(mockRouter.stop).toHaveBeenCalledWith(42);
+        expect(mockSequencer.stopLoop).not.toHaveBeenCalled();
+    });
+
+    it('should default previouslyMet to false on first evaluation inside hysteresis dead zone and emit correct hysteresisDeadZone tuple in telemetry', () => {
+        mockRtpcAdapter.getValue.mockReturnValue(22);
+
+        dispatcher.postEvent('Event_With_Hysteresis' as EventId);
+
+        expect(mockRouter.play).not.toHaveBeenCalled();
+
+        expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({
+                conditionTrace: expect.objectContaining({
+                    hysteresisDeadZone: [15, 25]
+                })
+            })
+        );
+    });
+
+    it('should execute actions safely without throwing when telemetry dispatcher is omitted', () => {
+        const noTelemetryDispatcher = new AudioEventOrchestrator(
+            testEventMap,
+            mockRouter,
+            mockRtpcAdapter,
+            mockSequencer,
+            mockMixer,
+            mockController,
+            mockPrng,
+            mockBankManager
+        );
+
+        expect(() => {
+            noTelemetryDispatcher.postEvent('Player_Jump' as EventId);
+        }).not.toThrow();
+        expect(() => {
+            noTelemetryDispatcher.postEvent('Unknown_Event' as EventId);
+        }).not.toThrow();
+    });
+
+    it('should reset conditionTrace to undefined when reusing pooled telemetry objects for non-condition blocked events', () => {
+        mockRtpcAdapter.getValue.mockReturnValue(80);
+        dispatcher.postEvent('Event_With_Condition' as EventId);
+
+        dispatcher.postEvent('Unknown_Event' as EventId);
+
+        expect(mockTelemetry.dispatch).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                result: expect.objectContaining({ type: 'BLOCKED' }),
+                conditionTrace: undefined
+            })
+        );
+    });
+
     describe('Sequencer Integration Actions', () => {
         it('should route "start_loop" action to sequencer', () => {
             dispatcher.postEvent('Start_Combat_Music' as EventId);

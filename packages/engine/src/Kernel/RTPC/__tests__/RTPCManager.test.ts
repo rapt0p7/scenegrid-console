@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-// noinspection D
-import { describe, it, expect, beforeEach } from 'vitest';
+import type { GameParamId, Milliseconds } from '@scene-grid/shared';
 
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
-
-import type { GameParamId, Milliseconds } from '@scene-grid/shared';
+/* eslint-disable @typescript-eslint/naming-convention */
+// noinspection D
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
     let manager: RTPCManager;
@@ -223,6 +222,199 @@ describe('RTPCManager (Kernel Layer / Zero-Allocation Pull Model)', () => {
             manager.resetOverrides();
 
             expect((manager as any).isInterpolating).toBe(true);
+        });
+    });
+
+    describe('RTPCManager (Structural Integrity & Mutant Assassins)', () => {
+        it('should initialize isInterpolating to false (Line 15)', () => {
+            const newManager = new RTPCManager();
+            expect((newManager as any).isInterpolating).toBe(false);
+        });
+
+        it('should pre-allocate indexToParam array to MAX_PARAMS (1024) to prevent dynamic resizing (Line 13)', () => {
+            const freshManager = new RTPCManager();
+
+            expect((freshManager as any).indexToParam.length).toBe(1024);
+        });
+
+        it('should cleanly reset isInterpolating to false (Line 98)', () => {
+            manager.configureParam('P1' as GameParamId, 1000 as Milliseconds, 1000 as Milliseconds);
+            manager.setValue('P1' as GameParamId, 100);
+
+            expect((manager as any).isInterpolating).toBe(true);
+
+            manager.reset();
+
+            expect((manager as any).isInterpolating).toBe(false);
+        });
+
+        it('should return early from setValue if target matches value to avoid waking interpolator (Line 37)', () => {
+            manager.configureParam('HP' as GameParamId, 1000 as Milliseconds, 1000 as Milliseconds);
+            manager.setValue('HP' as GameParamId, 100);
+            (manager as any).isInterpolating = false;
+
+            manager.setValue('HP' as GameParamId, 100);
+
+            expect((manager as any).isInterpolating).toBe(false);
+        });
+
+        it('should skip tick processing entirely if not interpolating (Line 103)', () => {
+            manager.setValue('HP' as GameParamId, 100);
+            manager.tick(0, 30 as Milliseconds);
+
+            (manager as any).target[0] = 200;
+            (manager as any).isInterpolating = false;
+
+            manager.tick(0, 30 as Milliseconds);
+
+            expect(manager.getValue('HP' as GameParamId)).toBe(100);
+        });
+
+        it('should ignore properties from prototype chain in setValues (Line 89)', () => {
+            const base = { PROTOTYPE_PARAM: 100 };
+            const params = Object.create(base);
+            params.OWN_PARAM = 50;
+
+            manager.setValues(params);
+
+            expect(manager.getValue('OWN_PARAM' as GameParamId)).toBe(50);
+            expect(manager.getValue('PROTOTYPE_PARAM' as GameParamId)).toBe(0);
+        });
+
+        it('should not wake up interpolator in resetOverrides if no overrides caused drift (Lines 63, 75)', () => {
+            manager.setValue('P1' as GameParamId, 10);
+            (manager as any).isInterpolating = false;
+
+            manager.resetOverrides();
+
+            expect((manager as any).isInterpolating).toBe(false);
+        });
+
+        it('should only reset actively overridden flags in resetOverrides (Line 66)', () => {
+            manager.setValue('P1' as GameParamId, 10);
+            (manager as any).target[0] = 100;
+            (manager as any).isInterpolating = false;
+
+            manager.resetOverrides();
+
+            expect((manager as any).isInterpolating).toBe(false);
+        });
+
+        it('should strictly evaluate threshold in resetOverrides without Float32 precision loss (Line 69)', () => {
+            manager.setValue('P1' as GameParamId, 0);
+            manager.setOverride('P1' as GameParamId, 100, true);
+            (manager as any).isInterpolating = false;
+
+            (manager as any).current = [0];
+            (manager as any).target = [1e-4];
+
+            manager.resetOverrides();
+
+            expect((manager as any).isInterpolating).toBe(false);
+        });
+
+        it('should evaluate exact mathematical difference (subtraction), not sum, in resetOverrides (Line 69)', () => {
+            manager.setValue('P1' as GameParamId, 0);
+            manager.setOverride('P1' as GameParamId, 100, true);
+            (manager as any).isInterpolating = false;
+
+            (manager as any).current[0] = 10;
+            (manager as any).target[0] = -10;
+
+            manager.resetOverrides();
+
+            expect((manager as any).isInterpolating).toBe(true);
+        });
+
+        it('should strictly evaluate threshold when disabling override without Float32 precision loss (Line 56)', () => {
+            manager.setValue('P1' as GameParamId, 0);
+            manager.setOverride('P1' as GameParamId, 100, true);
+            (manager as any).isInterpolating = false;
+
+            (manager as any).current = [0];
+            (manager as any).target = [1e-4];
+
+            manager.setOverride('P1' as GameParamId, 100, false);
+
+            expect((manager as any).isInterpolating).toBe(false);
+        });
+
+        it('should strictly bound internal loops to prevent out-of-bounds array access (Lines 65, 108)', () => {
+            manager.setValue('P1' as GameParamId, 10);
+            manager.configureParam('P1' as GameParamId, 1000 as Milliseconds, 1000 as Milliseconds);
+            manager.setValue('P1' as GameParamId, 20);
+
+            const outOfBoundsIndex = (manager as any).nextFreeIndex;
+
+            (manager as any).current[outOfBoundsIndex] = 50;
+            (manager as any).target[outOfBoundsIndex] = 100;
+            (manager as any).overrideFlags[outOfBoundsIndex] = 1;
+
+            manager.resetOverrides();
+            manager.tick(0, 30 as Milliseconds);
+
+            expect((manager as any).overrideFlags[outOfBoundsIndex]).toBe(1);
+            expect((manager as any).current[outOfBoundsIndex]).toBe(50);
+        });
+
+        it('should strictly evaluate < 1e-4 bounds without triggering on exact equality (Line 112)', () => {
+            (manager as any).current = [0];
+            (manager as any).target = [1e-4];
+            (manager as any).nextFreeIndex = 1;
+            (manager as any).isInterpolating = true;
+
+            manager.tick(0, 30 as Milliseconds);
+
+            expect((manager as any).isInterpolating).toBe(true);
+        });
+
+        it('should prevent redundant memory writes when current already equals target (Line 113)', () => {
+            let redundantWrite = false;
+
+            const fakeCurrent: any = [];
+            Object.defineProperty(fakeCurrent, '0', {
+                get: () => 0,
+                set: () => {
+                    redundantWrite = true;
+                }
+            });
+
+            (manager as any).current = fakeCurrent;
+            (manager as any).target = [0];
+            (manager as any).nextFreeIndex = 1;
+            (manager as any).isInterpolating = true;
+
+            manager.tick(0, 30 as Milliseconds);
+
+            expect(redundantWrite).toBe(false);
+        });
+
+        it('should instantly snap to target if slew time is 0 to avoid alpha zeroing (Line 123)', () => {
+            manager.configureParam('P1' as GameParamId, 0 as Milliseconds, 0 as Milliseconds);
+            manager.setValue('P1' as GameParamId, 100);
+            (manager as any).current[0] = 0;
+            (manager as any).isInterpolating = true;
+
+            manager.tick(0, 0 as Milliseconds);
+
+            expect(manager.getValue('P1' as GameParamId)).toBe(100);
+        });
+
+        it('should evaluate attack direction strictly to select correct slew coefficient (Line 121)', () => {
+            manager.configureParam('P1' as GameParamId, 5000 as Milliseconds, 10000 as Milliseconds);
+            manager.setValue('P1' as GameParamId, 50);
+            (manager as any).current[0] = 50;
+            (manager as any).isInterpolating = true;
+
+            const absSpy = vi.spyOn(Math, 'abs').mockReturnValue(1);
+            const maxSpy = vi.spyOn(Math, 'max');
+
+            manager.tick(0, 30 as Milliseconds);
+
+            expect(maxSpy).toHaveBeenCalledWith(0.001, 2);
+
+            absSpy.mockRestore();
+            maxSpy.mockRestore();
         });
     });
 });

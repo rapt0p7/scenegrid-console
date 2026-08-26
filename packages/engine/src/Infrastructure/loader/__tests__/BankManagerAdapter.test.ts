@@ -1,9 +1,11 @@
-// oxlint-disable require-await
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { BankManagerAdapter } from '../BankManagerAdapter.js';
 import type { IBankManifest } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
+
 import { BankId, SoundId } from '@scene-grid/shared';
+// oxlint-disable require-await
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+import { BankManagerAdapter } from '../BankManagerAdapter.js';
 
 describe('BankManagerAdapter', () => {
     let mockLoader: any;
@@ -127,5 +129,111 @@ describe('BankManagerAdapter', () => {
             adapter.unloadBank('unknown' as any);
             expect(mockRouter.stop).not.toHaveBeenCalled();
         });
+    });
+
+    it('should not reload or trigger batch loading if bank is already in LOADED state', async () => {
+        const adapter = createAdapter();
+        const bankId = 'bank_1' as BankId;
+        await adapter.loadBank(bankId);
+        expect(adapter.getBankState(bankId)).toBe('LOADED');
+        expect(mockLoader.loadBatch).toHaveBeenCalledTimes(1);
+        expect(mockEvents.onStart).toHaveBeenCalledTimes(1);
+
+        await adapter.loadBank(bankId);
+
+        expect(mockLoader.loadBatch).toHaveBeenCalledTimes(1);
+        expect(mockEvents.onStart).toHaveBeenCalledTimes(1);
+        expect(adapter.getBankState(bankId)).toBe('LOADED');
+    });
+
+    it('should log a descriptive warning and abort loading when bank is not in manifest', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const adapter = createAdapter();
+        const unknownBankId = 'missing_bank' as BankId;
+
+        await adapter.loadBank(unknownBankId);
+
+        expect(warnSpy).toHaveBeenCalledWith('[BankManager] Bank "missing_bank" not found in manifest.');
+        expect(mockLoader.loadBatch).not.toHaveBeenCalled();
+        expect(mockEvents.onStart).not.toHaveBeenCalled();
+        expect(adapter.getBankState(unknownBankId)).toBe('UNLOADED');
+
+        warnSpy.mockRestore();
+    });
+
+    it('should ignore sounds missing from soundManifest and only load defined entries', async () => {
+        const customBankManifest: IBankManifest = {
+            ['partial_bank' as BankId]: {
+                id: 'partial_bank' as BankId,
+                sounds: ['s1' as SoundId, 'unregistered_sound' as SoundId]
+            }
+        };
+        const customSoundManifest: ISpriteSoundManifest = {
+            ['s1' as SoundId]: { url: 'url1', priority: 'high' }
+        };
+        const adapter = new BankManagerAdapter(
+            customBankManifest,
+            customSoundManifest,
+            mockLoader,
+            mockPool,
+            mockRouter,
+            mockPrecalculatedSizes,
+            mockEvents
+        );
+
+        await adapter.loadBank('partial_bank' as BankId);
+
+        expect(mockEvents.onStart).toHaveBeenCalledWith(1);
+        expect(mockLoader.loadBatch).toHaveBeenCalledWith(
+            {
+                s1: { url: 'url1', priority: 'high', expectedSizeMb: 1.5 }
+            },
+            expect.any(Function),
+            expect.any(Function)
+        );
+        expect(adapter.getBankState('partial_bank' as BankId)).toBe('LOADED');
+    });
+
+    it('should calculate and pass exact elapsed durationMs (endTime - startTime) to onComplete', async () => {
+        const perfSpy = vi.spyOn(performance, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(1250);
+
+        const adapter = createAdapter();
+
+        await adapter.loadBank('bank_1' as BankId);
+
+        expect(mockEvents.onComplete).toHaveBeenCalledWith([], 250);
+
+        perfSpy.mockRestore();
+    });
+
+    it('should skip undefined sound metadata when purging URLs during unloadBank', () => {
+        const customBankManifest: IBankManifest = {
+            ['partial_bank' as BankId]: {
+                id: 'partial_bank' as BankId,
+                sounds: ['s1' as SoundId, 'unregistered_sound' as SoundId]
+            }
+        };
+        const customSoundManifest: ISpriteSoundManifest = {
+            ['s1' as SoundId]: { url: 'url1', priority: 'high' }
+        };
+        const adapter = new BankManagerAdapter(
+            customBankManifest,
+            customSoundManifest,
+            mockLoader,
+            mockPool,
+            mockRouter,
+            mockPrecalculatedSizes,
+            mockEvents
+        );
+
+        adapter.unloadBank('partial_bank' as BankId);
+
+        expect(mockRouter.stop).toHaveBeenCalledWith('s1', { allowTail: false });
+        expect(mockRouter.stop).toHaveBeenCalledWith('unregistered_sound', { allowTail: false });
+        expect(mockPool.purgeSound).toHaveBeenCalledWith('s1');
+        expect(mockPool.purgeSound).toHaveBeenCalledWith('unregistered_sound');
+        expect(mockLoader.purgeUrls).toHaveBeenCalledWith(['url1']);
+        expect(adapter.getBankState('partial_bank' as BankId)).toBe('UNLOADED');
+        expect(mockEvents.onUnload).toHaveBeenCalledWith('partial_bank');
     });
 });

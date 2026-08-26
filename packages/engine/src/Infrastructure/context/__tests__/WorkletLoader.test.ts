@@ -7,7 +7,7 @@ import WorkletLoader from '../WorkletLoader.js';
 describe('WorkletLoader (Fallback & CSP Mechanics)', () => {
     let audioContext: AudioContext;
     let addModuleSpy: ReturnType<typeof vi.fn>;
-    const rawWorkletCode = 'class TestProcessor extends AudioWorkletProcessor {}';
+    let rawWorkletCode = 'class TestProcessor extends AudioWorkletProcessor {}';
     const mockBlobUrl = 'blob:http://localhost/1234-5678-90ab';
     const expectedBase64 = 'Y2xhc3MgVGVzdFByb2Nlc3NvciBleHRlbmRzIEF1ZGlvV29ya2xldFByb2Nlc3NvciB7fQ==';
     const mockDataUri = `data:application/javascript;base64,${expectedBase64}`;
@@ -42,9 +42,13 @@ describe('WorkletLoader (Fallback & CSP Mechanics)', () => {
 
         expect(URL.createObjectURL).toHaveBeenCalledOnce();
 
+        const [createdBlob] = vi.mocked(URL.createObjectURL).mock.calls[0] as [Blob];
+        expect(createdBlob).toBeInstanceOf(Blob);
+        expect(createdBlob.type).toBe('application/javascript');
+        await expect(createdBlob.text()).resolves.toBe(rawWorkletCode);
+
         expect(addModuleSpy).toHaveBeenCalledTimes(1);
         expect(addModuleSpy).toHaveBeenCalledWith(mockBlobUrl);
-
         expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockBlobUrl);
     });
 
@@ -64,14 +68,34 @@ describe('WorkletLoader (Fallback & CSP Mechanics)', () => {
         expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockBlobUrl);
     });
 
-    it('should throw a detailed error if both blob: and data: fallback methods fail', async () => {
-        addModuleSpy.mockRejectedValue(new Error('CSP Violation: All scripts blocked'));
+    it('should throw a detailed error chaining the root cause if both blob: and data: fallback methods fail', async () => {
+        const blobError = new Error('CSP Violation: blob: blocked');
+        const dataError = new Error('CSP Violation: data: blocked');
+        addModuleSpy.mockRejectedValueOnce(blobError);
+        addModuleSpy.mockRejectedValueOnce(dataError);
 
-        await expect(WorkletLoader.loadModule(audioContext, rawWorkletCode)).rejects.toThrow(
-            /Failed to load AudioWorkletProcessor.*CSP/
+        let caughtError: Error | undefined;
+        try {
+            await WorkletLoader.loadModule(audioContext, rawWorkletCode);
+        } catch (error) {
+            caughtError = error as Error;
+        }
+
+        expect(caughtError).toBeInstanceOf(Error);
+        expect(caughtError?.message).toBe(
+            `Failed to load AudioWorkletProcessor. CSP blocked both blob: and data: URIs.\nBlob Error: ${blobError}\nData URI Error: ${dataError}`
         );
-
+        expect(caughtError?.cause).toBe(dataError);
         expect(addModuleSpy).toHaveBeenCalledTimes(2);
         expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockBlobUrl);
+    });
+
+    it('should throw an informative error when AudioWorklet is not supported in the context', async () => {
+        const unsupportedContext = {} as BaseAudioContext;
+        rawWorkletCode = 'class TestProcessor extends AudioWorkletProcessor {}';
+
+        await expect(WorkletLoader.loadModule(unsupportedContext, rawWorkletCode)).rejects.toThrowError(
+            new Error('AudioWorklet is not supported in this environment.')
+        );
     });
 });

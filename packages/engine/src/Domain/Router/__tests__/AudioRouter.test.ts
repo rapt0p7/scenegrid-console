@@ -1,16 +1,19 @@
+// oxlint-disable unicorn/no-useless-undefined
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import AudioRouter from '@domain/Router/AudioRouter.js';
-import { ContextTime, Milliseconds, SeededPRNG } from '@scene-grid/shared';
-import type { PlaybackId, SoundId, IPRNG } from '@scene-grid/shared';
-import type { Mocked } from 'vitest';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import type { Mocked } from 'vitest';
+
+import { AnySoundConfig } from '@domain/Configuration/Ports/ISoundConfig';
+import { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
+import AudioRouter from '@domain/Router/AudioRouter.js';
+import { PlaybackId, SoundId, IPRNG, TimeMath, Seconds } from '@scene-grid/shared';
+import { ContextTime, Milliseconds, SeededPRNG } from '@scene-grid/shared';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const testSoundMap: any = {
     'simple_sound': { busId: 'sfx' },
@@ -85,7 +88,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
         prng = new SeededPRNG(seed);
 
         mockController = {
-            play: vi.fn().mockReturnValue(1 as PlaybackId),
+            play: vi.fn().mockReturnValue(1),
             stopById: vi.fn(),
             stopAll: vi.fn(),
             routeToBus: vi.fn(),
@@ -98,7 +101,8 @@ describe('AudioRouter (Command Dispatcher)', () => {
             getPosition: vi.fn(),
             setPosition: vi.fn(),
             playVirtual: vi.fn(),
-            getCurrentTime: vi.fn().mockReturnValue(0)
+            getCurrentTime: vi.fn().mockReturnValue(0),
+            crossfade: vi.fn()
         } as unknown as Mocked<ISoundController>;
 
         mockDuckingManager = { triggerDucking: vi.fn() };
@@ -491,8 +495,24 @@ describe('AudioRouter (Command Dispatcher)', () => {
             expect(capturedOptions.onRevive).toBeDefined();
             expect(typeof capturedOptions.onRevive).toBe('function');
 
-            capturedOptions.onRevive(99 as PlaybackId);
+            capturedOptions.onRevive(99);
             expect(applyConfigSpy).toHaveBeenCalledWith(99, testSoundMap['simple_sound']);
+        });
+
+        it('should invoke applyConfigToPlayback when onRevive is executed for layered sounds', () => {
+            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+            let capturedOptions: any;
+            mockController.play.mockImplementation((name, options) => {
+                capturedOptions = options;
+                return 100 as PlaybackId;
+            });
+
+            router.play('layer_sound' as SoundId);
+            applyConfigSpy.mockClear();
+
+            capturedOptions.onRevive(100);
+
+            expect(applyConfigSpy).toHaveBeenCalledWith(100, testSoundMap['layer_sound']);
         });
     });
 
@@ -589,10 +609,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
 
     describe('Layered Sounds Edge Cases (handleLayering)', () => {
         it('should skip a layer and continue if soundController.play returns null for that specific layer', () => {
-            mockController.play = vi
-                .fn()
-                .mockReturnValueOnce(10 as PlaybackId)
-                .mockReturnValueOnce(null);
+            mockController.play = vi.fn().mockReturnValueOnce(10).mockReturnValueOnce(null);
 
             const result = router.play('layer_sound' as SoundId);
 
@@ -614,7 +631,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
             const firstLayerOptions = capturedOptions[0];
             expect(typeof firstLayerOptions.onRevive).toBe('function');
 
-            firstLayerOptions.onRevive(1 as PlaybackId);
+            firstLayerOptions.onRevive(1);
 
             expect(applyConfigSpy).toHaveBeenCalledWith(1, testSoundMap['layer_sound']);
         });
@@ -703,6 +720,544 @@ describe('AudioRouter (Command Dispatcher)', () => {
             expect(mockController.playVirtual).toHaveBeenCalledWith('scatterer_sound');
 
             expect(mockScattererOrchestrator.start).toHaveBeenCalledWith(77, testSoundMap['scatterer_sound'], 1.5);
+        });
+    });
+
+    describe('AudioRouter.play recursion depth', () => {
+        it('should block playback when recursion depth exceeds 10', () => {
+            vi.spyOn(router, 'getSoundConfig').mockReturnValue({ isContainer: true } as any);
+            // @ts-expect-error: Mocking for test
+            vi.spyOn(router, 'handleContainer').mockImplementation((name, config, options, depth) => {
+                return router.play(name, options, depth + 1);
+            });
+            const result = router.play('test-sound' as SoundId, {}, 11);
+
+            expect(result).toBeNull();
+            expect(mockController.play).not.toHaveBeenCalled();
+        });
+
+        it('should allow playback when recursion depth is exactly 10', () => {
+            vi.spyOn(router, 'getSoundConfig').mockReturnValue({});
+            const result = router.play('test-sound' as SoundId, {}, 10);
+
+            expect(result).toBe(1);
+            expect(mockController.play).toHaveBeenCalled();
+        });
+    });
+
+    describe('performCrossfade', () => {
+        it('should delegate crossfade operation to soundController with target parameters', () => {
+            const outId = 1 as PlaybackId;
+            const inId = 2 as PlaybackId;
+            const duration = 1000 as Milliseconds;
+
+            router.performCrossfade(outId, inId, duration);
+
+            expect(mockController.crossfade).toHaveBeenCalledWith(outId, inId, duration);
+        });
+    });
+
+    describe('applyConfigToPlayback edge cases', () => {
+        it('should not route to bus when busId is undefined in config', () => {
+            const playbackId = 10 as PlaybackId;
+            const config: AnySoundConfig = {};
+
+            router.applyConfigToPlayback(playbackId, config);
+
+            expect(mockController.routeToBus).not.toHaveBeenCalled();
+        });
+
+        it('should not trigger ducking when ducking is null or ducking.target is undefined', () => {
+            const playbackId = 10 as PlaybackId;
+            const configNullDucking: any = { ducking: null };
+            const configNoTarget: any = { ducking: { target: undefined } };
+
+            expect(() => {
+                router.applyConfigToPlayback(playbackId, configNullDucking);
+            }).not.toThrow();
+            expect(mockDuckingManager.triggerDucking).not.toHaveBeenCalled();
+
+            router.applyConfigToPlayback(playbackId, configNoTarget);
+            expect(mockDuckingManager.triggerDucking).not.toHaveBeenCalled();
+        });
+
+        it('should not bind RTPC when rtpc property is missing or falsy in config', () => {
+            const playbackId = 10 as PlaybackId;
+            const config: any = { rtpc: undefined };
+
+            router.applyConfigToPlayback(playbackId, config);
+
+            expect(mockInstanceRTPCBinder.bind).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('Telemetry Dispatching & Optional Chaining', () => {
+        it('should handle missing telemetry dispatcher gracefully without throwing on error path', () => {
+            const routerWithoutTelemetry = new AudioRouter({
+                soundController: mockController,
+                duckingManager: mockDuckingManager,
+                containerPolicy: mockContainerPolicy,
+                historyRegistry: mockHistoryRegistry,
+                soundMap: testSoundMap,
+                rtpcAdapter: mockRtpcAdapter,
+                instanceRTPCBinder: mockInstanceRTPCBinder,
+                switchPolicy: mockSwitchPolicy,
+                switchHistoryRegistry: mockSwitchRegistry,
+                prng,
+                telemetry: undefined as any
+            });
+
+            expect(() => {
+                routerWithoutTelemetry.play('unknown_sound' as SoundId);
+            }).not.toThrow();
+        });
+
+        it('should dispatch cause chain telemetry with correct timestampMs and reason when sound config is missing', () => {
+            mockController.getCurrentTime.mockReturnValue(2.5 as ContextTime);
+
+            router.play('unknown_sound' as SoundId);
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'CAUSE_CHAIN',
+                timestampMs: 2500,
+                initiator: { type: 'API', method: 'router.play' },
+                result: { type: 'BLOCKED', reason: 'Config not found for SoundId: unknown_sound' }
+            });
+        });
+
+        it('should dispatch cause chain telemetry with correct payload when scatterer orchestrator is missing', () => {
+            mockController.getCurrentTime.mockReturnValue(1.0 as ContextTime);
+
+            router.play('scatterer_sound' as SoundId);
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'CAUSE_CHAIN',
+                timestampMs: 1000,
+                initiator: { type: 'API', method: 'router.handleScatterer' },
+                result: { type: 'BLOCKED', reason: 'ScattererOrchestrator not initialized for: scatterer_sound' }
+            });
+        });
+
+        it('should dispatch cause chain telemetry with correct payload when switch fails to resolve', () => {
+            mockController.getCurrentTime.mockReturnValue(3.0 as ContextTime);
+            mockRtpcAdapter.getValue.mockReturnValue(99);
+            mockSwitchPolicy.evaluateNext.mockReturnValue({ soundId: null, nextState: {} });
+
+            router.play('switch_sound' as SoundId);
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'CAUSE_CHAIN',
+                timestampMs: 3000,
+                initiator: { type: 'API', method: 'router.handleSwitch' },
+                result: {
+                    type: 'BLOCKED',
+                    reason: 'Switch "switch_sound" failed to resolve. Group: "surface" = 99'
+                }
+            });
+        });
+    });
+
+    describe('Playback Delay & Target Time Calculation', () => {
+        it('should set when to 0 (immediate) when relative delay is 0, even if getCurrentTime is non-zero', () => {
+            mockController.getCurrentTime.mockReturnValue(10.0 as ContextTime);
+
+            router.play('simple_sound' as SoundId);
+
+            expect(mockController.play).toHaveBeenCalledWith(
+                'simple_sound',
+                expect.objectContaining({
+                    when: 0
+                })
+            );
+        });
+
+        it('should calculate absolute target time correctly when options.when is provided', () => {
+            mockController.getCurrentTime.mockReturnValue(5.0 as ContextTime);
+
+            router.play('simple_sound' as SoundId, { when: 3 as ContextTime });
+
+            expect(mockController.play).toHaveBeenCalledWith(
+                'simple_sound',
+                expect.objectContaining({
+                    when: TimeMath.castToContextTime(8.0 as Seconds)
+                })
+            );
+        });
+
+        it('should calculate layer delay and seek offset accurately in handleLayering', () => {
+            testSoundMap['layered_delay_seek'] = {
+                isLayered: true,
+                layers: [{ src: 'layer1.wav', delay: 500, seek: 1000 as Milliseconds }]
+            };
+            mockController.getCurrentTime.mockReturnValue(10.0 as ContextTime);
+
+            router.play('layered_delay_seek' as SoundId);
+
+            expect(mockController.play).toHaveBeenCalledWith(
+                'layer1.wav',
+                expect.objectContaining({
+                    when: TimeMath.castToContextTime(10.5 as Seconds),
+                    offset: 1
+                })
+            );
+        });
+    });
+
+    describe('Playback Control (stop) Edge Cases', () => {
+        it('should default allowTail to true when stop options argument is omitted', () => {
+            testSoundMap['sound_with_tail'] = { busId: 'sfx', tail: 'tail_sound' };
+            testSoundMap['tail_sound'] = { busId: 'sfx' };
+            mockController.getActivePlaybacks.mockReturnValue([50 as PlaybackId]);
+            mockController.getSoundId.mockReturnValue('sound_with_tail' as SoundId);
+
+            router.stop(50 as PlaybackId);
+
+            expect(mockController.play).toHaveBeenCalledWith('tail_sound', expect.any(Object));
+            expect(mockController.stopById).toHaveBeenCalledWith(50, undefined);
+        });
+
+        it('should stop playback directly without config/tail lookup if getSoundId returns undefined', () => {
+            mockController.getActivePlaybacks.mockReturnValue([99 as PlaybackId]);
+            mockController.getSoundId.mockReturnValue(undefined);
+
+            router.stop(99 as PlaybackId);
+
+            expect(mockController.stopById).toHaveBeenCalledWith(99, undefined);
+        });
+
+        it('should set position for all tail playbacks when tail sound resolves to an array', () => {
+            testSoundMap['multi_tail_sound'] = { busId: 'sfx', tail: 'tail_layer' };
+            testSoundMap['tail_layer'] = {
+                isLayered: true,
+                layers: [{ src: 't1.wav' }, { src: 't2.wav' }]
+            };
+            mockController.getActivePlaybacks.mockReturnValue([70 as PlaybackId]);
+            mockController.getSoundId.mockReturnValue('multi_tail_sound' as SoundId);
+            mockController.getPosition.mockReturnValue({ x: 1, y: 2, z: 3 });
+            mockController.play.mockReturnValueOnce(101 as PlaybackId).mockReturnValueOnce(102 as PlaybackId);
+
+            router.stop(70 as PlaybackId);
+
+            expect(mockController.setPosition).toHaveBeenCalledTimes(2);
+            expect(mockController.setPosition).toHaveBeenNthCalledWith(1, 101, 1, 2, 3);
+            expect(mockController.setPosition).toHaveBeenNthCalledWith(2, 102, 1, 2, 3);
+        });
+
+        it('should not attempt to update position if getPosition returns undefined', () => {
+            testSoundMap['sound_with_tail_nopos'] = { busId: 'sfx', tail: 'tail_sound' };
+            mockController.getActivePlaybacks.mockReturnValue([80 as PlaybackId]);
+            mockController.getSoundId.mockReturnValue('sound_with_tail_nopos' as SoundId);
+            mockController.getPosition.mockReturnValue(undefined);
+
+            expect(() => {
+                router.stop(80 as PlaybackId);
+            }).not.toThrow();
+            expect(mockController.setPosition).not.toHaveBeenCalled();
+        });
+
+        it('should filter active playbacks strictly matching target soundId when stopping by SoundId', () => {
+            mockController.getActivePlaybacks.mockReturnValue([10 as PlaybackId, 20 as PlaybackId]);
+            mockController.getSoundId.mockImplementation(id => (id === 10 ? 'target_sound' : 'other_sound') as SoundId);
+
+            router.stop('target_sound' as SoundId);
+
+            expect(mockController.stopById).toHaveBeenCalledTimes(1);
+            expect(mockController.stopById).toHaveBeenCalledWith(10, undefined);
+        });
+    });
+
+    describe('Recursion Depth & Array Resolution', () => {
+        it('should allow container resolution when container depth is 9 (child plays at depth 10)', () => {
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: 'simple_sound',
+                nextState: {}
+            });
+
+            const result = (router as any).handleContainer('container_sound', testSoundMap['container_sound'], {}, 9);
+
+            expect(result).toBe(1);
+            expect(mockController.play).toHaveBeenCalledWith('simple_sound', expect.any(Object));
+        });
+
+        it('should increment recursion depth and terminate when a switch container references itself recursively', () => {
+            testSoundMap['recursive_switch'] = {
+                isSwitch: true,
+                switchGroup: 'surface'
+            };
+            mockRtpcAdapter.getValue.mockReturnValue(0);
+            mockSwitchPolicy.evaluateNext.mockReturnValue({
+                soundId: 'recursive_switch',
+                nextState: {}
+            });
+
+            const result = router.play('recursive_switch' as SoundId);
+
+            expect(result).toBeNull();
+            expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Max recursion depth reached'));
+        });
+    });
+
+    describe('Sound Config Type Guard Flag Validation', () => {
+        it('should play as standard sound when isContainer is explicitly false', () => {
+            testSoundMap['false_container'] = { busId: 'sfx', isContainer: false };
+
+            const result = router.play('false_container' as SoundId);
+
+            expect(result).toBe(1);
+            expect(mockController.play).toHaveBeenCalledWith('false_container', expect.any(Object));
+            expect(mockContainerPolicy.evaluateNext).not.toHaveBeenCalled();
+        });
+
+        it('should play as standard sound when isLayered is explicitly false', () => {
+            testSoundMap['false_layered'] = { busId: 'sfx', isLayered: false };
+
+            const result = router.play('false_layered' as SoundId);
+
+            expect(result).toBe(1);
+            expect(mockController.play).toHaveBeenCalledWith('false_layered', expect.any(Object));
+        });
+
+        it('should play as standard sound when isSwitch is explicitly false', () => {
+            testSoundMap['false_switch'] = { busId: 'sfx', isSwitch: false };
+
+            const result = router.play('false_switch' as SoundId);
+
+            expect(result).toBe(1);
+            expect(mockController.play).toHaveBeenCalledWith('false_switch', expect.any(Object));
+            expect(mockSwitchPolicy.evaluateNext).not.toHaveBeenCalled();
+        });
+
+        it('should play as standard sound when isScatterer is explicitly false', () => {
+            testSoundMap['false_scatterer'] = { busId: 'sfx', isScatterer: false };
+
+            const result = router.play('false_scatterer' as SoundId);
+
+            expect(result).toBe(1);
+            expect(mockController.play).toHaveBeenCalledWith('false_scatterer', expect.any(Object));
+            expect(mockController.playVirtual).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('Telemetry Dispatching & Error Logging', () => {
+        it('should not throw when telemetry is omitted and max recursion depth is reached in play', () => {
+            const routerNoTelemetry = new AudioRouter({
+                soundController: mockController,
+                duckingManager: mockDuckingManager,
+                containerPolicy: mockContainerPolicy,
+                historyRegistry: mockHistoryRegistry,
+                soundMap: testSoundMap,
+                rtpcAdapter: mockRtpcAdapter,
+                instanceRTPCBinder: mockInstanceRTPCBinder,
+                switchPolicy: mockSwitchPolicy,
+                switchHistoryRegistry: mockSwitchRegistry,
+                prng,
+                telemetry: undefined as any
+            });
+
+            expect(() => {
+                routerNoTelemetry.play('simple_sound' as SoundId, {}, 11);
+            }).not.toThrow();
+        });
+
+        it('should dispatch exact cause chain payload when max recursion depth is reached in play', () => {
+            mockController.getCurrentTime.mockReturnValue(2.5 as ContextTime);
+
+            router.play('simple_sound' as SoundId, {}, 11);
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'CAUSE_CHAIN',
+                timestampMs: 2500,
+                initiator: { type: 'API', method: 'router.play' },
+                result: { type: 'BLOCKED', reason: 'Max recursion depth reached for SoundId: simple_sound' }
+            });
+        });
+
+        it('should dispatch exact cause chain payload when max recursion depth is reached in handleContainer', () => {
+            mockController.getCurrentTime.mockReturnValue(1.5 as ContextTime);
+
+            (router as any).handleContainer('container_sound', testSoundMap['container_sound'], {}, 11);
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'CAUSE_CHAIN',
+                timestampMs: 1500,
+                initiator: { type: 'API', method: 'router.handleContainer' },
+                result: { type: 'BLOCKED', reason: 'Max recursion depth reached for container: container_sound' }
+            });
+        });
+
+        it('should dispatch exact cause chain payload when container resolves to an empty source', () => {
+            mockController.getCurrentTime.mockReturnValue(3.0 as ContextTime);
+            mockContainerPolicy.evaluateNext.mockReturnValue({ soundId: null, nextState: {} });
+
+            router.play('container_sound' as SoundId);
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'CAUSE_CHAIN',
+                timestampMs: 3000,
+                initiator: { type: 'API', method: 'router.handleContainer' },
+                result: { type: 'BLOCKED', reason: 'Container "container_sound" resolved to empty source.' }
+            });
+        });
+
+        it('should log exact warning message when switch container fails to resolve', () => {
+            mockRtpcAdapter.getValue.mockReturnValue(99);
+            mockSwitchPolicy.evaluateNext.mockReturnValue({ soundId: null, nextState: {} });
+
+            router.play('switch_sound' as SoundId);
+
+            expect(console.warn).toHaveBeenCalledWith(
+                '[AudioRouter] Switch Container "switch_sound" failed to resolve. ' +
+                    'Group: "surface", Current Value: "99". ' +
+                    'Check your SoundMap for missing keys or add a defaultSwitch.'
+            );
+        });
+    });
+
+    describe('Variation & Layering Delay Calculation', () => {
+        it('should set when to 0 for layers without delay even when getCurrentTime is non-zero', () => {
+            testSoundMap['layer_nodelay'] = {
+                isLayered: true,
+                layers: [{ src: 'layer1.wav' }]
+            };
+            mockController.getCurrentTime.mockReturnValue(10.0 as ContextTime);
+
+            router.play('layer_nodelay' as SoundId);
+
+            expect(mockController.play).toHaveBeenCalledWith(
+                'layer1.wav',
+                expect.objectContaining({
+                    when: 0
+                })
+            );
+        });
+    });
+
+    describe('Play Options Delay Calculation', () => {
+        it('should apply delay from IPlayOptions when options.when is not provided', () => {
+            router.play('simple_sound' as SoundId, { delay: 500 as Milliseconds });
+
+            expect(mockController.play).toHaveBeenCalledWith(
+                'simple_sound',
+                expect.objectContaining({
+                    when: TimeMath.castToContextTime(0.5 as Seconds)
+                })
+            );
+        });
+    });
+
+    describe('Standard Play onRevive Callback', () => {
+        it('should invoke applyConfigToPlayback when onRevive callback is executed', () => {
+            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+            let capturedOptions: any;
+            mockController.play.mockImplementation((name, options) => {
+                capturedOptions = options;
+                return 88 as PlaybackId;
+            });
+
+            router.play('simple_sound' as SoundId);
+
+            expect(applyConfigSpy).toHaveBeenCalledWith(88, testSoundMap['simple_sound']);
+
+            applyConfigSpy.mockClear();
+
+            capturedOptions.onRevive(88);
+
+            expect(applyConfigSpy).toHaveBeenCalledTimes(1);
+            expect(applyConfigSpy).toHaveBeenCalledWith(88, testSoundMap['simple_sound']);
+        });
+    });
+
+    describe('stop() with Unmapped Playback ID', () => {
+        it('should stop playback directly and skip getSoundConfig when getSoundId returns undefined', () => {
+            const getSoundConfigSpy = vi.spyOn(router, 'getSoundConfig');
+            mockController.getActivePlaybacks.mockReturnValue([999 as PlaybackId]);
+            mockController.getSoundId.mockReturnValue(undefined);
+
+            router.stop(999 as PlaybackId);
+
+            expect(mockController.stopById).toHaveBeenCalledWith(999, undefined);
+            expect(getSoundConfigSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('Loop Bounds in Array Processing', () => {
+        it('should resolve active playbacks without accessing out-of-bounds index', () => {
+            mockController.getActivePlaybacks.mockReturnValue([10 as PlaybackId, 20 as PlaybackId]);
+            mockController.getSoundId.mockImplementation(id => {
+                if (id === undefined) {
+                    throw new Error('Out of bounds access with undefined playbackId!');
+                }
+                return 'simple_sound' as SoundId;
+            });
+
+            expect(() => {
+                router.stop('simple_sound' as SoundId);
+            }).not.toThrow();
+
+            expect(mockController.getSoundId).toHaveBeenCalledTimes(4);
+            expect(mockController.getSoundId).not.toHaveBeenCalledWith(undefined);
+        });
+
+        it('should apply config to container array results without out-of-bounds calls', () => {
+            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: 'layer_sound',
+                nextState: {}
+            });
+            mockController.play.mockReturnValueOnce(100 as PlaybackId).mockReturnValueOnce(101 as PlaybackId);
+
+            router.play('container_sound' as SoundId);
+
+            expect(applyConfigSpy).toHaveBeenCalledTimes(4);
+            expect(applyConfigSpy).not.toHaveBeenCalledWith(undefined, expect.anything());
+        });
+
+        it('should apply config to switch array results without out-of-bounds calls', () => {
+            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+            mockRtpcAdapter.getValue.mockReturnValue(0);
+            mockSwitchPolicy.evaluateNext.mockReturnValue({
+                soundId: 'layer_sound',
+                nextState: {}
+            });
+            mockController.play.mockReturnValueOnce(200 as PlaybackId).mockReturnValueOnce(201 as PlaybackId);
+
+            router.play('switch_sound' as SoundId);
+
+            expect(applyConfigSpy).toHaveBeenCalledTimes(4);
+            expect(applyConfigSpy).not.toHaveBeenCalledWith(undefined, expect.anything());
+        });
+    });
+
+    describe('Null Playback Handling in Container and Switch', () => {
+        it('should return null and not invoke applyConfigToPlayback when container source fails to play', () => {
+            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+            mockContainerPolicy.evaluateNext.mockReturnValue({
+                soundId: 'failing_source',
+                nextState: {}
+            });
+            testSoundMap['failing_source'] = { busId: 'sfx' };
+            mockController.play.mockReturnValue(null);
+
+            const result = router.play('container_sound' as SoundId);
+
+            expect(result).toBeNull();
+            expect(applyConfigSpy).not.toHaveBeenCalled();
+        });
+
+        it('should return null and not invoke applyConfigToPlayback when switch source fails to play', () => {
+            const applyConfigSpy = vi.spyOn(router, 'applyConfigToPlayback');
+            mockRtpcAdapter.getValue.mockReturnValue(0);
+            mockSwitchPolicy.evaluateNext.mockReturnValue({
+                soundId: 'failing_source',
+                nextState: {}
+            });
+            testSoundMap['failing_source'] = { busId: 'sfx' };
+            mockController.play.mockReturnValue(null);
+
+            const result = router.play('switch_sound' as SoundId);
+
+            expect(result).toBeNull();
+            expect(applyConfigSpy).not.toHaveBeenCalled();
         });
     });
 });

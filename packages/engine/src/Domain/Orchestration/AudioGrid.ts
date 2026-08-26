@@ -1,8 +1,11 @@
-import { TimeMath } from '@scene-grid/shared';
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
 import type { GridDivision, BPM, Beats, ContextTime, Pulses, Seconds } from '@scene-grid/shared';
 
+import { TimeMath } from '@scene-grid/shared';
+
 export default class AudioGrid implements IAudioGrid {
+    static readonly DEFAULT_BEATS_PER_BAR: Beats = 4 as Beats;
+    static readonly DEFAULT_PPQN: Pulses = 960 as Pulses;
     readonly #bpm: BPM;
     readonly #ppqn: Pulses;
     readonly #beatsPerBar: Beats;
@@ -11,9 +14,9 @@ export default class AudioGrid implements IAudioGrid {
     // eslint-disable-next-line max-params
     constructor(
         bpm: BPM,
-        beatsPerBar: Beats = 4 as Beats,
+        beatsPerBar: Beats = AudioGrid.DEFAULT_BEATS_PER_BAR,
         startTime: ContextTime = 0 as ContextTime,
-        ppqn: Pulses = 960 as Pulses
+        ppqn: Pulses = AudioGrid.DEFAULT_PPQN
     ) {
         this.#bpm = bpm;
         this.#beatsPerBar = beatsPerBar;

@@ -1,8 +1,9 @@
 // noinspection D
 
 import type { MathCurveDefinition, Point2D } from './MathCurve.js';
-import { isDefined } from '../guards.js';
+
 import { DeepReadonly } from '../DeepReadonly.js';
+import { isDefined } from '../guards.js';
 
 function isPiecewiseCurve(curve: DeepReadonly<MathCurveDefinition>): curve is DeepReadonly<Point2D[]> {
     return Array.isArray(curve);
@@ -46,10 +47,6 @@ export function evaluateRTPCCurve(inputValue: number, curve: DeepReadonly<MathCu
     let eased = t;
 
     switch (type) {
-        case 'linear': {
-            eased = t;
-            break;
-        }
         case 'logarithmic': {
             eased = Math.log10(1 + 9 * t);
             break;

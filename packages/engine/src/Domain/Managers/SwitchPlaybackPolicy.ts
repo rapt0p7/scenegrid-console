@@ -1,9 +1,10 @@
 // noinspection D
 
 import type { ISwitchSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { SoundId } from '@scene-grid/shared';
-import { isDefined } from '@scene-grid/shared';
 import type { ISwitchPlaybackState } from '@domain/Managers/Ports/ISwitchPlaybackState.js';
+import type { SoundId } from '@scene-grid/shared';
+
+import { isDefined } from '@scene-grid/shared';
 
 export default class SwitchPlaybackPolicy {
     // oxlint-disable-next-line max-lines-per-function
@@ -34,20 +35,18 @@ export default class SwitchPlaybackPolicy {
         if (config.hysteresis && isDefined(currentState?.currentSwitchKey) && targetKey !== null) {
             const prevKey = Number(currentState.currentSwitchKey);
 
-            if (!Number.isNaN(prevKey) && targetKey !== prevKey) {
-                if (targetKey > prevKey) {
-                    if (currentValue < targetKey + config.hysteresis) {
-                        targetKey = prevKey;
-                    }
-                } else if (targetKey < prevKey) {
-                    if (currentValue > prevKey - config.hysteresis) {
-                        targetKey = prevKey;
-                    }
+            if (targetKey > prevKey) {
+                if (currentValue < targetKey + config.hysteresis) {
+                    targetKey = prevKey;
+                }
+            } else if (targetKey < prevKey) {
+                if (currentValue > prevKey - config.hysteresis) {
+                    targetKey = prevKey;
                 }
             }
         }
 
-        const soundId = targetKey !== null ? config.switches[targetKey] : config.defaultSwitch;
+        const soundId = targetKey === null ? config.defaultSwitch : config.switches[targetKey];
 
         return {
             soundId: soundId ?? null,

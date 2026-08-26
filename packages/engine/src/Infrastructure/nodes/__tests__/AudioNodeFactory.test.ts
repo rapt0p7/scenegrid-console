@@ -1,7 +1,8 @@
+import { AudioNodeFactory } from '@infrastructure/nodes/AudioNodeFactory.js';
+import fc from 'fast-check';
+// oxlint-disable import/no-named-as-default-member
 // noinspection D
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-import { AudioNodeFactory } from '@infrastructure/nodes/AudioNodeFactory.js';
 
 vi.mock('../../utils/clamp', () => ({
     default: (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
@@ -220,6 +221,106 @@ describe('AudioNodeFactory', () => {
             expect(pannerMock.refDistance).toBe(0.1);
             expect(pannerMock.maxDistance).toBe(100_000);
             expect(pannerMock.rolloffFactor).toBe(10);
+        });
+    });
+
+    it('should fallback to PannerNode with AudioParam coordinates and clamp negative pan values', () => {
+        delete mockContextManager.context.createStereoPanner;
+        const modernPanner = {
+            panningModel: '',
+            positionX: { value: 0 },
+            positionY: { value: 999 },
+            positionZ: { value: 999 }
+        };
+        mockContextManager.context.createPanner.mockReturnValue(modernPanner);
+
+        const panner = factory.createStereoPanner(-0.5) as any;
+
+        expect(panner.panningModel).toBe('equalpower');
+        expect(panner.positionX.value).toBe(-0.5);
+        expect(panner.positionY.value).toBe(0);
+        expect(panner.positionZ.value).toBe(1);
+
+        factory.createStereoPanner(-10);
+        expect(modernPanner.positionX.value).toBe(-1);
+    });
+
+    it('should safely return fallback PannerNode when neither positionX nor setPosition is defined', () => {
+        delete mockContextManager.context.createStereoPanner;
+        const minimalPanner = { panningModel: '' };
+        mockContextManager.context.createPanner.mockReturnValue(minimalPanner);
+
+        expect(() => factory.createStereoPanner(0.5)).not.toThrow();
+        expect(minimalPanner.panningModel).toBe('equalpower');
+    });
+
+    it('should mutate BiquadFilter and clamp negative gain to the lower limit of -40 dB', () => {
+        const filter = {
+            type: 'peaking',
+            frequency: { value: 1000 },
+            Q: { value: 1 },
+            gain: { value: 0 }
+        } as any;
+
+        factory.mutateFilter(filter, { type: 'peaking', gain: -15 });
+
+        expect(filter.gain.value).toBe(-15);
+
+        factory.mutateFilter(filter, { type: 'peaking', gain: -100 });
+
+        expect(filter.gain.value).toBe(-40);
+    });
+
+    it('should safely initialize 3D panner when neither positionX nor setPosition is available', () => {
+        const barePanner = {
+            panningModel: '',
+            distanceModel: '',
+            refDistance: 0,
+            maxDistance: 0,
+            rolloffFactor: 0
+        };
+        mockContextManager.context.createPanner.mockReturnValue(barePanner);
+
+        expect(() => factory.create3DPanner()).not.toThrow();
+        expect(barePanner.panningModel).toBe('HRTF');
+    });
+
+    it('should clamp negative offset values between -1 and 1 when creating ConstantSource', () => {
+        const normalNegativeSource = factory.createConstantSource(-0.4) as any;
+        const extremeNegativeSource = factory.createConstantSource(-10) as any;
+
+        expect(normalNegativeSource.offset.value).toBe(-0.4);
+        expect(extremeNegativeSource.offset.value).toBe(-1);
+    });
+
+    describe('AudioNodeFactory (Property-Based Tests)', () => {
+        it('should always clamp constant source offset within [-1, 1]', () => {
+            fc.assert(
+                fc.property(fc.double({ noNaN: true }), offset => {
+                    const source = factory.createConstantSource(offset) as any;
+
+                    expect(source.offset.value).toBeGreaterThanOrEqual(-1);
+                    expect(source.offset.value).toBeLessThanOrEqual(1);
+                })
+            );
+        });
+
+        it('should always clamp filter gain within [-40, 40]', () => {
+            fc.assert(
+                fc.property(fc.double({ noNaN: true }), gain => {
+                    const filter = {
+                        type: 'peaking',
+                        frequency: { value: 1000 },
+                        Q: { value: 1 },
+                        gain: { value: 0 }
+                    } as any;
+
+                    factory.mutateFilter(filter, { type: 'peaking', gain });
+
+                    expect(filter.gain.value).toBeGreaterThanOrEqual(-40);
+                    expect(filter.gain.value).toBeLessThanOrEqual(40);
+                })
+            );
         });
     });
 });

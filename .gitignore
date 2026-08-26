@@ -170,3 +170,8 @@ docs/Project_Source_Code.md
 .agents/mcp_config.json
 .vscode
 /docs/config.json
+
+# stryker temp files
+.stryker-tmp
+
+reports

@@ -1,7 +1,5 @@
 // noinspection D
 
-import { isDefined, isAbsent, type Milliseconds } from '@scene-grid/shared';
-
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type {
     AudioBufferLike,
@@ -11,6 +9,8 @@ import type {
     ConvolverNodeNodeLike
 } from '@infrastructure/types/IAudioContext.js';
 import type { IFilterConfig, IReverbFilterConfig } from '@infrastructure/types/IFilter.js';
+
+import { isDefined, isAbsent, type Milliseconds } from '@scene-grid/shared';
 
 // oxlint-disable-next-line typescript/no-extraneous-class
 export default class FiltersPlugin {
@@ -24,7 +24,7 @@ export default class FiltersPlugin {
         if (isAbsent(config.type) || (config.type as string) === '') return null;
 
         if (config.type === 'reverb') {
-            return this.createReverb(context, config as unknown as IReverbFilterConfig);
+            return this.createReverb(context, config);
         }
 
         const filter = context.createBiquadFilter();

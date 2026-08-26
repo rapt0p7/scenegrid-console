@@ -304,4 +304,231 @@ describe('SidechainDucker', () => {
             expect((ducker as any).duckingGain.gain.setTargetAtTime).toHaveBeenCalledWith(1, 100, 0.05);
         });
     });
+
+    it('should initialize clipper with a [-1, 1] Float32Array curve', () => {
+        // oxlint-disable-next-line no-unused-vars
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+
+        const createdWaveShaper = mockContext.createWaveShaper.mock.results[0].value;
+        expect(createdWaveShaper.curve).toEqual(new Float32Array([-1, 1]));
+    });
+
+    it('should return early without querying or modifying internal maps when source is invalid or not tracked', () => {
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+        const trackedSource = createMockNode();
+        const untrackedSource = createMockNode();
+        ducker.addSource(trackedSource as any, 0.5);
+
+        const mapGetSpy = vi.spyOn((ducker as any).sourceGainMap, 'get');
+        const sourcesDeleteSpy = vi.spyOn((ducker as any).sources, 'delete');
+        vi.mocked(safeDisconnect).mockClear();
+
+        ducker.removeSource(null as any);
+        ducker.removeSource(untrackedSource as any);
+
+        expect(mapGetSpy).not.toHaveBeenCalled();
+        expect(sourcesDeleteSpy).not.toHaveBeenCalled();
+        expect(safeDisconnect).not.toHaveBeenCalled();
+        expect((ducker as any).sources.has(trackedSource)).toBe(true);
+    });
+
+    it('should set isDisposed to true and prevent start() from initializing', async () => {
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+        ducker.dispose();
+
+        await ducker.start();
+
+        expect((ducker as any).isDisposed).toBe(true);
+        expect(WorkletLoader.loadModule).not.toHaveBeenCalled();
+        expect(AudioWorkletNode).not.toHaveBeenCalled();
+    });
+
+    it('should catch error and log warning when restoring graph connection fails during dispose', () => {
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+        const nextNode = createMockNode();
+        ducker.insertLookahead(nextNode as any);
+        const error = new Error('Reconnection error');
+        mockTargetGain.connect.mockImplementationOnce(() => {
+            throw error;
+        });
+
+        ducker.dispose();
+
+        expect(console.warn).toHaveBeenCalledWith(
+            '[SidechainDucker] Failed to restore graph connection during dispose',
+            error
+        );
+    });
+
+    it('should set running to true immediately and prevent concurrent start calls while loading worklet', async () => {
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+        let resolveLoad!: () => void;
+        const loadPromise = new Promise<void>(resolve => {
+            resolveLoad = resolve;
+        });
+        vi.mocked(WorkletLoader.loadModule).mockReturnValueOnce(loadPromise);
+
+        const firstStart = ducker.start();
+        expect((ducker as any).running).toBe(true);
+
+        const secondStart = ducker.start();
+
+        resolveLoad();
+        await Promise.all([firstStart, secondStart]);
+
+        expect(WorkletLoader.loadModule).toHaveBeenCalledTimes(1);
+        expect(AudioWorkletNode).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not start if already running even when processor is absent', async () => {
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+        (ducker as any).running = true;
+
+        await ducker.start();
+
+        expect(WorkletLoader.loadModule).not.toHaveBeenCalled();
+    });
+
+    it('should not reload worklet module or recreate processor if processor already exists', async () => {
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+        const existingProcessor = {
+            connect: vi.fn(),
+            disconnect: vi.fn(),
+            port: { onmessage: null }
+        };
+        (ducker as any).processor = existingProcessor;
+
+        await ducker.start();
+
+        expect(WorkletLoader.loadModule).not.toHaveBeenCalled();
+        expect(AudioWorkletNode).not.toHaveBeenCalled();
+        expect((ducker as any).processor).toBe(existingProcessor);
+    });
+
+    it('should abort start and not instantiate AudioWorkletNode if disposed during module loading', async () => {
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+        let resolveLoad!: () => void;
+        const loadPromise = new Promise<void>(resolve => {
+            resolveLoad = resolve;
+        });
+        vi.mocked(WorkletLoader.loadModule).mockReturnValueOnce(loadPromise);
+
+        const startPromise = ducker.start();
+        ducker.dispose();
+        resolveLoad();
+        await startPromise;
+
+        expect(AudioWorkletNode).not.toHaveBeenCalled();
+        expect((ducker as any).processor).toBeNull();
+    });
+
+    it('should reset running flag to false on initialization failure and allow retry', async () => {
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+        vi.mocked(WorkletLoader.loadModule).mockRejectedValueOnce(new Error('Load Failed'));
+
+        await ducker.start();
+
+        expect((ducker as any).running).toBe(false);
+
+        vi.mocked(WorkletLoader.loadModule).mockResolvedValueOnce(undefined);
+        await ducker.start();
+
+        expect(AudioWorkletNode).toHaveBeenCalledTimes(1);
+        expect((ducker as any).running).toBe(true);
+    });
+
+    it('should set running to false when stopped and allow restarting', async () => {
+        const ducker = new SidechainDucker({
+            ctx: mockContext,
+            targetGainNode: mockTargetGain
+        });
+        await ducker.start();
+        expect((ducker as any).running).toBe(true);
+
+        ducker.stop();
+
+        expect((ducker as any).running).toBe(false);
+
+        await ducker.start();
+
+        expect(AudioWorkletNode).toHaveBeenCalledTimes(2);
+        expect((ducker as any).running).toBe(true);
+    });
+
+    describe('removeAllSources', () => {
+        it('should disconnect all sources from gains, disconnect gains from mergeGain, and clear maps', () => {
+            const ducker = new SidechainDucker({
+                ctx: mockContext,
+                targetGainNode: mockTargetGain
+            });
+            const sourceA = createMockNode();
+            const sourceB = createMockNode();
+            ducker.addSource(sourceA as any, 0.4);
+            ducker.addSource(sourceB as any, 0.7);
+
+            const gainA = (ducker as any).sourceGainMap.get(sourceA);
+            const gainB = (ducker as any).sourceGainMap.get(sourceB);
+            const mergeGain = (ducker as any).mergeGain;
+
+            vi.mocked(safeDisconnect).mockClear();
+
+            ducker.removeAllSources();
+
+            expect(sourceA.disconnect).toHaveBeenCalledWith(gainA);
+            expect(sourceB.disconnect).toHaveBeenCalledWith(gainB);
+            expect(safeDisconnect).toHaveBeenCalledWith(gainA, mergeGain);
+            expect(safeDisconnect).toHaveBeenCalledWith(gainB, mergeGain);
+            expect((ducker as any).sources.size).toBe(0);
+            expect((ducker as any).sourceGainMap.size).toBe(0);
+            expect((ducker as any).intensityMap.size).toBe(0);
+        });
+
+        it('should catch source disconnect errors and still safely disconnect the gain node', () => {
+            const ducker = new SidechainDucker({
+                ctx: mockContext,
+                targetGainNode: mockTargetGain
+            });
+            const source = createMockNode();
+            source.disconnect.mockImplementationOnce(() => {
+                throw new Error('Disconnect failed');
+            });
+            ducker.addSource(source as any, 0.5);
+            const gain = (ducker as any).sourceGainMap.get(source);
+            const mergeGain = (ducker as any).mergeGain;
+
+            vi.mocked(safeDisconnect).mockClear();
+
+            expect(() => {
+                ducker.removeAllSources();
+            }).not.toThrow();
+            expect(safeDisconnect).toHaveBeenCalledWith(gain, mergeGain);
+        });
+    });
 });

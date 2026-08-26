@@ -13,7 +13,7 @@ import { evaluateEdges } from '@domain/Orchestration/MusicFsmEvaluator.js';
 import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
 
 export class MusicConductor implements ITickable {
-    public readonly TICK_DIVIDER: number = 1;
+    public static readonly TICK_DIVIDER: number = 1;
     private readonly state: IConductorState;
     private config!: DeepReadonly<IMusicFSMConfig>;
     private readonly conductorMixerLayer = 'music_fsm' as LayerId;

@@ -7,7 +7,7 @@ import type AutomationEngine from '@infrastructure/automation/AutomationEngine.j
 import type AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
 import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
-import type { AudioCtx } from '@infrastructure/types/IAudioContext';
+import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 import type { ILogicalVoice } from '@infrastructure/types/ILogicalVoice.js';
 import type { ISoundOptions } from '@infrastructure/types/ISoundOptions.js';
 import type {
@@ -52,7 +52,6 @@ export class SoundController implements ISoundController {
         reason: undefined
     }));
 
-    // eslint-disable-next-line max-params
     constructor(
         private readonly pool: SoundPoolManager,
         private readonly scheduler: PlaybackScheduler,

@@ -1,16 +1,13 @@
+import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import type { BusId, ContextTime, Milliseconds, PlaybackId, Seconds, SoundId } from '@scene-grid/shared';
+
+import { VirtualReason } from '@domain/Shared/Ports/ISoundController';
+import { SoundInstance } from '@infrastructure';
+import { SoundController } from '@infrastructure/loader/SoundController.js';
+/* eslint-disable @typescript-eslint/naming-convention */
 // oxlint-disable no-underscore-dangle
 // noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach, Mocked } from 'vitest';
-
-import { SoundInstance } from '@infrastructure';
-import { SoundController } from '@infrastructure/loader/SoundController.js';
-
-import type { BusId, ContextTime, Milliseconds, PlaybackId, Seconds, SoundId } from '@scene-grid/shared';
-import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
-import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
-import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
-import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
-import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 describe('SoundController', () => {
     let mockPool: any;
@@ -30,15 +27,19 @@ describe('SoundController', () => {
         fakeBuffer = {} as AudioBuffer;
 
         fakeInstance = {
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             _poolIndex: 5,
             setLoop: vi.fn(),
             setRate: vi.fn(),
             stop: vi.fn(),
+            pause: vi.fn(),
+            resume: vi.fn(),
+            virtualize: vi.fn(),
+            devirtualize: vi.fn(),
+            forceNaturalEnd: vi.fn(),
             setPosition: vi.fn(),
             cancelScheduled: vi.fn(),
             on: vi.fn().mockReturnValue(() => 'unsubscribed'),
-            gainParam: {},
+            gainParam: { value: 1, cancelScheduledValues: vi.fn() },
             sidechainTriggerNode: {},
             connectTo: vi.fn(),
             disconnectRoute: vi.fn(),
@@ -55,21 +56,21 @@ describe('SoundController', () => {
             dispose: vi.fn(),
             globalVoiceLimit: 32,
             events: { on: vi.fn(), emit: vi.fn() }
-        } as unknown as SoundPoolManager;
+        };
 
         mockScheduler = {
             schedulePlay: vi.fn()
-        } as unknown as PlaybackScheduler;
+        };
 
         mockContext = {
             currentTime: 123.45,
             sampleRate: 48_000
-        } as unknown as AudioCtx;
+        };
 
         mockAutomation = {
             set: vi.fn(),
             ramp: vi.fn()
-        } as unknown as AutomationEngine;
+        };
 
         mockBusSystem = {
             getBus: vi.fn().mockReturnValue({ inputNode: {} }),
@@ -776,100 +777,757 @@ describe('SoundController', () => {
             expect(controller.getCurrentVolume(physicalId)).toBe(1.0);
         });
     });
-});
 
-describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {
-    let controller: SoundController;
-    let mockContext: any;
-    let mockPool: any;
-    let mockBufferResolver: any;
+    describe('Voice Lifecycle: Virtualization on a Deaf Bus', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+            vi.spyOn(performance, 'now').mockReturnValue(100);
 
-    beforeEach(() => {
-        vi.useFakeTimers();
-        vi.spyOn(performance, 'now').mockReturnValue(100);
+            mockContext = {
+                currentTime: 0,
+                createBufferSource: vi.fn().mockReturnValue({
+                    start: vi.fn(),
+                    stop: vi.fn(),
+                    connect: vi.fn(),
+                    disconnect: vi.fn(),
+                    addEventListener: vi.fn(),
+                    removeEventListener: vi.fn(),
+                    playbackRate: { value: 1 },
+                    loop: false
+                })
+            };
 
-        mockContext = {
-            currentTime: 0,
-            createBufferSource: vi.fn().mockReturnValue({
-                start: vi.fn(),
-                stop: vi.fn(),
-                connect: vi.fn(),
-                disconnect: vi.fn(),
-                addEventListener: vi.fn(),
-                removeEventListener: vi.fn(),
-                playbackRate: { value: 1 },
-                loop: false
-            })
-        };
+            const mockBuffer = { duration: 2 } as AudioBuffer;
 
-        const mockBuffer = { duration: 2 } as AudioBuffer;
+            mockBufferResolver = vi.fn().mockReturnValue(mockBuffer);
 
-        mockBufferResolver = vi.fn().mockReturnValue(mockBuffer);
+            mockPool = {
+                globalVoiceLimit: 32,
+                events: { on: vi.fn(), emit: vi.fn() },
+                acquire: vi.fn().mockImplementation((id, buffer) => {
+                    const instance = new SoundInstance(
+                        id,
+                        { context: mockContext } as any,
+                        {
+                            createGain: vi.fn().mockReturnValue({
+                                gain: { value: 1, setTargetAtTime: vi.fn() },
+                                connect: vi.fn(),
+                                disconnect: vi.fn()
+                            })
+                        } as any,
+                        buffer,
+                        { ramp: vi.fn() } as any
+                    );
+                    instance._poolIndex = 1;
+                    return instance;
+                }),
+                dispose: vi.fn()
+            };
 
-        mockPool = {
-            globalVoiceLimit: 32,
-            events: { on: vi.fn(), emit: vi.fn() },
-            acquire: vi.fn().mockImplementation((id, buffer) => {
-                const instance = new SoundInstance(
-                    id,
-                    { context: mockContext } as any,
-                    {
-                        createGain: vi.fn().mockReturnValue({
-                            gain: { value: 1, setTargetAtTime: vi.fn() },
-                            connect: vi.fn(),
-                            disconnect: vi.fn()
-                        })
-                    } as any,
-                    buffer,
-                    { ramp: vi.fn() } as any
-                );
-                instance._poolIndex = 1;
-                return instance;
-            }),
-            dispose: vi.fn()
-        };
+            mockScheduler = {
+                schedulePlay: vi.fn().mockImplementation((instance, when, offset, duration) => {
+                    instance.play(when, offset, duration);
+                })
+            };
+            mockBusSystem = { removeSidechainSource: vi.fn() };
 
-        const mockScheduler = {
-            schedulePlay: vi.fn().mockImplementation((instance, when, offset, duration) => {
-                instance.play(when, offset, duration);
-            })
-        };
-        const mockBusSystem = { removeSidechainSource: vi.fn() };
+            const mockRegistry = new Map([['test_sound' as SoundId, { options: { url: 'test.wav' } }]]);
 
-        const mockRegistry = new Map([['test_sound' as SoundId, { options: { url: 'test.wav' } }]]);
+            controller = new SoundController(
+                mockPool,
+                mockScheduler,
+                mockContext,
+                {} as any,
+                mockRegistry,
+                mockBusSystem,
+                mockBufferResolver as any
+            );
+        });
 
-        controller = new SoundController(
-            mockPool,
-            mockScheduler as any,
-            mockContext,
-            {} as any,
-            mockRegistry,
-            mockBusSystem as any,
-            mockBufferResolver
-        );
+        afterEach(() => {
+            vi.useRealTimers();
+            vi.restoreAllMocks();
+        });
+
+        it('should remove voice from activeVoices when virtualized and its logical duration ends', () => {
+            const playbackId = controller.play('test_sound' as SoundId, {}) as PlaybackId;
+
+            expect(playbackId).not.toBeNull();
+            expect(controller.activeVoices.has(playbackId)).toBe(true);
+
+            mockContext.currentTime = 0.5;
+
+            controller.virtualize(playbackId);
+
+            expect(controller.getPlaybackState(playbackId)).toBe('virtual');
+            expect(controller.activeVoices.has(playbackId)).toBe(true);
+
+            mockContext.currentTime = 2.1;
+            controller.tick();
+
+            expect(controller.activeVoices.has(playbackId)).toBe(false);
+        });
     });
 
-    afterEach(() => {
-        vi.useRealTimers();
-        vi.restoreAllMocks();
+    describe('Registration (Default Options)', () => {
+        it('should register sound with default empty url when options parameter is omitted', () => {
+            controller.register('default_sound' as SoundId);
+
+            const descriptor = (controller as any).registry.get('default_sound');
+            expect(descriptor).toBeDefined();
+            expect(descriptor.options).toEqual({ url: '' });
+        });
     });
 
-    it('should remove voice from activeVoices when virtualized and its logical duration ends', () => {
-        const playbackId = controller.play('test_sound' as SoundId, {}) as PlaybackId;
+    describe('Playback Control (resumeAll)', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+            controller.register('other_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
 
-        expect(playbackId).not.toBeNull();
-        expect(controller.activeVoices.has(playbackId)).toBe(true);
+        it('should resume all voices across all sounds when soundId is omitted', () => {
+            const inst1 = { ...fakeInstance, resume: vi.fn(), pause: vi.fn() };
+            const inst2 = { ...fakeInstance, resume: vi.fn(), pause: vi.fn() };
+            mockPool.acquire.mockReturnValueOnce(inst1).mockReturnValueOnce(inst2);
 
-        mockContext.currentTime = 0.5;
+            const id1 = controller.play('test_sound' as SoundId, {})!;
+            const id2 = controller.play('other_sound' as SoundId, {})!;
+            controller.pauseAll();
 
-        controller.virtualize(playbackId);
+            controller.resumeAll();
 
-        expect(controller.getPlaybackState(playbackId)).toBe('virtual');
-        expect(controller.activeVoices.has(playbackId)).toBe(true);
+            expect(inst1.resume).toHaveBeenCalledTimes(1);
+            expect(inst2.resume).toHaveBeenCalledTimes(1);
+            expect(controller.getLogicalState(id1)).toBe('playing');
+            expect(controller.getLogicalState(id2)).toBe('playing');
+        });
 
-        mockContext.currentTime = 2.1;
-        controller.tick();
+        it('should only resume voices matching the specified soundId when filtering', () => {
+            const inst1 = { ...fakeInstance, resume: vi.fn(), pause: vi.fn() };
+            const inst2 = { ...fakeInstance, resume: vi.fn(), pause: vi.fn() };
+            mockPool.acquire.mockReturnValueOnce(inst1).mockReturnValueOnce(inst2);
 
-        expect(controller.activeVoices.has(playbackId)).toBe(false);
+            const id1 = controller.play('test_sound' as SoundId, {})!;
+            const id2 = controller.play('other_sound' as SoundId, {})!;
+            controller.pauseAll();
+
+            controller.resumeAll('test_sound' as SoundId);
+
+            expect(inst1.resume).toHaveBeenCalledTimes(1);
+            expect(inst2.resume).not.toHaveBeenCalled();
+            expect(controller.getLogicalState(id1)).toBe('playing');
+            expect(controller.getLogicalState(id2)).toBe('paused');
+        });
+    });
+
+    describe('Crossfade', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+            controller.register('other_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should cancel scheduled values and ramp out/in voices using equal-power curve', () => {
+            const cancelSpyOut = vi.fn();
+            const cancelSpyIn = vi.fn();
+            const gainOut = { cancelScheduledValues: cancelSpyOut };
+            const gainIn = { cancelScheduledValues: cancelSpyIn };
+
+            const instOut = { ...fakeInstance, gainParam: gainOut };
+            const instIn = { ...fakeInstance, gainParam: gainIn };
+
+            mockPool.acquire.mockReturnValueOnce(instOut).mockReturnValueOnce(instIn);
+
+            const outId = controller.play('test_sound' as SoundId, {})!;
+            const inId = controller.play('other_sound' as SoundId, {})!;
+
+            controller.crossfade(outId, inId, 500 as Milliseconds);
+
+            expect(cancelSpyOut).toHaveBeenCalledWith(0);
+            expect(cancelSpyIn).toHaveBeenCalledWith(0);
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(gainOut, 0, 500, 'equal-power');
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(gainIn, 1, 500, 'equal-power');
+        });
+
+        it('should warn when in-voice is missing with correct out=true, in=false formatting', () => {
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            const outId = controller.play('test_sound' as SoundId, {})!;
+            const missingInId = 999 as PlaybackId;
+
+            controller.crossfade(outId, missingInId, 300 as Milliseconds);
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                `[SoundController.crossfade] MISSING VOICE out=true in=false outId=${outId} inId=${missingInId}`
+            );
+            expect(mockAutomation.ramp).not.toHaveBeenCalled();
+            warnSpy.mockRestore();
+        });
+
+        it('should warn when out-voice is missing with correct out=false, in=true formatting', () => {
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            const inId = controller.play('test_sound' as SoundId, {})!;
+            const missingOutId = 888 as PlaybackId;
+
+            controller.crossfade(missingOutId, inId, 300 as Milliseconds);
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                `[SoundController.crossfade] MISSING VOICE out=false in=true outId=${missingOutId} inId=${inId}`
+            );
+            warnSpy.mockRestore();
+        });
+    });
+
+    describe('getVirtualReason and getPlaybackPositionSec Edge Cases', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should return the assigned virtual reason for a virtualized voice and undefined when active or missing', () => {
+            const id = controller.play('test_sound' as SoundId, {})!;
+
+            expect(controller.getVirtualReason(id)).toBeUndefined();
+            expect(controller.getVirtualReason(999 as PlaybackId)).toBeUndefined();
+
+            controller.virtualize(id, 'CULLED_BY_PRIORITY' as VirtualReason);
+            expect(controller.getVirtualReason(id)).toBe('CULLED_BY_PRIORITY');
+        });
+
+        it('should return physicalInstance.currentTime directly when physicalInstance is present and active', () => {
+            const id = controller.play('test_sound' as SoundId, {})!;
+            fakeInstance.currentTime = 5.5;
+
+            const pos = controller.getPlaybackPositionSec(id);
+
+            expect(pos).toBe(5.5);
+        });
+
+        it('should calculate time via startOffset when physicalInstance is null but voice is active', () => {
+            const id = controller.play('test_sound' as SoundId, { offset: 1.5 as Seconds })!;
+            mockContext.currentTime = 130.45;
+            const voice = controller.getLogicalVoice(id)!;
+            voice.physicalInstance = null;
+
+            const pos = controller.getPlaybackPositionSec(id);
+
+            expect(pos).toBeCloseTo(8.5);
+        });
+    });
+
+    describe('Virtual Queue Management (#removeFromVirtualQueue)', () => {
+        it('should remove the exact targeted timer at a non-zero index using swap-and-pop', () => {
+            controller.register('s1' as SoundId, { url: '', cooldownMs: 0 });
+            controller.register('s2' as SoundId, { url: '', cooldownMs: 0 });
+            controller.register('s3' as SoundId, { url: '', cooldownMs: 0 });
+
+            const id1 = controller.play('s1' as SoundId, {})!;
+            const id2 = controller.play('s2' as SoundId, {})!;
+            const id3 = controller.play('s3' as SoundId, {})!;
+
+            controller.virtualize(id1);
+            controller.virtualize(id2);
+            controller.virtualize(id3);
+
+            const timers = (controller as any).virtualTimers;
+            expect(timers.map((t: any) => t.playbackId)).toEqual([id1, id2, id3]);
+
+            controller.devirtualize(id2);
+
+            expect(timers).toHaveLength(2);
+            expect(timers.map((t: any) => t.playbackId)).toEqual([id1, id3]);
+        });
+    });
+
+    describe('Virtualization Constraints', () => {
+        it('should NOT add looping voice to virtualTimers queue upon virtualization', () => {
+            const id = controller.play('test_sound' as SoundId, { loop: true })!;
+            fakeInstance.isLooping = true;
+            fakeInstance.duration = 10;
+
+            controller.virtualize(id);
+
+            const timers = (controller as any).virtualTimers;
+            expect(timers.find((t: any) => t.playbackId === id)).toBeUndefined();
+        });
+
+        it('should NOT add zero-duration voice to virtualTimers queue upon virtualization', () => {
+            const id = controller.play('test_sound' as SoundId, {})!;
+            fakeInstance.isLooping = false;
+            fakeInstance.duration = 0;
+
+            controller.virtualize(id);
+
+            const timers = (controller as any).virtualTimers;
+            expect(timers.find((t: any) => t.playbackId === id)).toBeUndefined();
+        });
+    });
+
+    describe('Virtual Voice Expiration (tick)', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should NOT expire timer if currentTime is strictly less than endTime', () => {
+            fakeInstance.duration = 10;
+            fakeInstance.currentTime = 2;
+            fakeInstance.playbackRate = 1;
+            mockContext.currentTime = 100;
+            const id = controller.play('test_sound' as SoundId, {})!;
+            controller.virtualize(id);
+
+            mockContext.currentTime = 107.9;
+            controller.tick();
+
+            expect((controller as any).virtualTimers).toHaveLength(1);
+            expect(controller.activeVoices.has(id)).toBe(true);
+        });
+
+        it('should trigger forceNaturalEnd and pop timer when currentTime exactly equals endTime', () => {
+            fakeInstance.duration = 5;
+            fakeInstance.currentTime = 0;
+            fakeInstance.playbackRate = 1;
+            fakeInstance.forceNaturalEnd = vi.fn();
+            mockContext.currentTime = 50;
+            const id = controller.play('test_sound' as SoundId, {})!;
+            controller.virtualize(id);
+
+            mockContext.currentTime = 55.0;
+            controller.tick();
+
+            expect(fakeInstance.forceNaturalEnd).toHaveBeenCalledTimes(1);
+            expect((controller as any).virtualTimers).toHaveLength(0);
+        });
+    });
+
+    describe('Sidechain Management and Pool Index Boundaries', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should properly clear sidechain triggers on instance release when poolIndex is 0', () => {
+            fakeInstance._poolIndex = 0;
+            const id = controller.play('test_sound' as SoundId, {})!;
+            controller.addSidechainTrigger(id, 'music' as BusId, 0.9);
+
+            const releasedHandler = mockPool.events.on.mock.calls.find((call: any[]) => call[0] === 'released')[1];
+
+            releasedHandler(fakeInstance);
+
+            expect(mockBusSystem.removeSidechainSource).toHaveBeenCalledWith(
+                fakeInstance.sidechainTriggerNode,
+                'music'
+            );
+        });
+    });
+
+    describe('Lifecycle Telemetry Dispatches', () => {
+        it('should dispatch accurate LIFECYCLE events for START, PAUSE, RESUME, and API_STOP', () => {
+            mockContext.currentTime = 2.5;
+            controller.register('telemetry_sound' as SoundId, { url: '' });
+
+            const id = controller.play('telemetry_sound' as SoundId, {})!;
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'LIFECYCLE',
+                timestampMs: 2500,
+                action: 'START',
+                playbackId: id,
+                soundId: 'telemetry_sound',
+                reason: undefined
+            });
+
+            mockContext.currentTime = 3.0;
+            controller.pauseById(id);
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'LIFECYCLE',
+                timestampMs: 3000,
+                action: 'PAUSE',
+                playbackId: id,
+                soundId: 'telemetry_sound',
+                reason: undefined
+            });
+
+            mockContext.currentTime = 3.5;
+            controller.resumeById(id);
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'LIFECYCLE',
+                timestampMs: 3500,
+                action: 'RESUME',
+                playbackId: id,
+                soundId: 'telemetry_sound',
+                reason: undefined
+            });
+
+            mockContext.currentTime = 4.0;
+            controller.stopById(id);
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'LIFECYCLE',
+                timestampMs: 4000,
+                action: 'STOP',
+                playbackId: id,
+                soundId: 'telemetry_sound',
+                reason: 'API_STOP'
+            });
+        });
+
+        it('should dispatch LIFECYCLE VIRTUALIZE and REVIVE events with reasons', () => {
+            mockContext.currentTime = 1.0;
+            controller.register('virt_sound' as SoundId, { url: '', cooldownMs: 0 });
+            const id = controller.play('virt_sound' as SoundId, {})!;
+            mockTelemetry.dispatch.mockClear();
+
+            controller.virtualize(id, 'CULLED_BY_DISTANCE' as VirtualReason);
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'LIFECYCLE',
+                timestampMs: 1000,
+                action: 'VIRTUALIZE',
+                playbackId: id,
+                soundId: 'virt_sound',
+                reason: 'CULLED_BY_DISTANCE'
+            });
+
+            controller.devirtualize(id);
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'LIFECYCLE',
+                timestampMs: 1000,
+                action: 'REVIVE',
+                playbackId: id,
+                soundId: 'virt_sound',
+                reason: undefined
+            });
+        });
+
+        it('should dispatch LIFECYCLE VIRTUALIZE event on playVirtual', () => {
+            mockContext.currentTime = 5.0;
+
+            const ghostId = controller.playVirtual('ghost_sound' as SoundId, 'VIRTUAL_BY_API');
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'LIFECYCLE',
+                timestampMs: 5000,
+                action: 'VIRTUALIZE',
+                playbackId: ghostId,
+                soundId: 'ghost_sound',
+                reason: 'VIRTUAL_BY_API'
+            });
+        });
+
+        it('should dispatch LIFECYCLE STOP event with NATURAL_END on voice ended', () => {
+            mockContext.currentTime = 10.0;
+            controller.register('end_sound' as SoundId, { url: '' });
+            const id = controller.play('end_sound' as SoundId, {})!;
+            const endedCallback = fakeInstance.on.mock.calls.find((call: any[]) => call[0] === 'ended')[1];
+            fakeInstance._currentPlaybackId = id;
+
+            endedCallback(fakeInstance);
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'LIFECYCLE',
+                timestampMs: 10000,
+                action: 'STOP',
+                playbackId: id,
+                soundId: 'end_sound',
+                reason: 'NATURAL_END'
+            });
+        });
+
+        it('should dispatch CAUSE_CHAIN telemetry with exact millisecond timestamp and initiator on pool rejection', () => {
+            mockContext.currentTime = 2.5;
+            mockPool.acquire.mockReturnValueOnce('POOL_EXHAUSTED');
+            controller.register('blocked_sound' as SoundId, { url: '' });
+
+            controller.play('blocked_sound' as SoundId, {});
+
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'CAUSE_CHAIN',
+                timestampMs: 2500,
+                initiator: { type: 'API', method: 'controller.play' },
+                result: {
+                    type: 'BLOCKED',
+                    reason: 'Pool rejected play for blocked_sound. Reason: POOL_EXHAUSTED'
+                }
+            });
+        });
+
+        it('should operate safely without throwing when telemetry dispatcher is omitted', () => {
+            const controllerWithoutTelemetry = new SoundController(
+                mockPool,
+                mockScheduler,
+                mockContext,
+                mockAutomation,
+                new Map() as any,
+                mockBusSystem,
+                mockBufferResolver as any
+            );
+            controllerWithoutTelemetry.register('sound' as SoundId, { url: '' });
+
+            expect(() => {
+                const id = controllerWithoutTelemetry.play('sound' as SoundId, {})!;
+                controllerWithoutTelemetry.pauseById(id);
+                controllerWithoutTelemetry.resumeById(id);
+                controllerWithoutTelemetry.virtualize(id);
+                controllerWithoutTelemetry.devirtualize(id);
+                controllerWithoutTelemetry.stopById(id);
+            }).not.toThrow();
+        });
+    });
+
+    describe('Initial State and Guard Conditions', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+            controller.register('other_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should initialize logical voice position to { x: 0, y: 0, z: 0 } upon play', () => {
+            controller.register('init_sound' as SoundId, { url: '' });
+
+            const id = controller.play('init_sound' as SoundId, {})!;
+            const voice = controller.getLogicalVoice(id);
+
+            expect(voice?.position).toEqual({ x: 0, y: 0, z: 0 });
+        });
+
+        it('should only stop voices matching soundId when stopAll(soundId) is called', () => {
+            const inst1 = { ...fakeInstance, stop: vi.fn() };
+            const inst2 = { ...fakeInstance, stop: vi.fn() };
+            mockPool.acquire.mockReturnValueOnce(inst1).mockReturnValueOnce(inst2);
+
+            const id1 = controller.play('test_sound' as SoundId, {})!;
+            const id2 = controller.play('other_sound' as SoundId, {})!;
+
+            const stopByIdSpy = vi.spyOn(controller, 'stopById');
+
+            controller.stopAll('test_sound' as SoundId);
+
+            expect(stopByIdSpy).toHaveBeenCalledWith(id1);
+            expect(stopByIdSpy).not.toHaveBeenCalledWith(id2);
+            expect(inst1.stop).toHaveBeenCalledTimes(1);
+            expect(inst2.stop).not.toHaveBeenCalled();
+        });
+
+        it('should safely do nothing when stopById, pauseById, resumeById, or setVolume is called for non-existent playbackId', () => {
+            expect(() => {
+                controller.stopById(999 as PlaybackId);
+                controller.pauseById(999 as PlaybackId);
+                controller.resumeById(999 as PlaybackId);
+                controller.setVolume(999 as PlaybackId, 0.5);
+            }).not.toThrow();
+        });
+
+        it('should return undefined safely from getLogicalState when voice is missing', () => {
+            expect(controller.getLogicalState(999 as PlaybackId)).toBeUndefined();
+        });
+
+        it('should default curveType to linear and delay to 0 in fadeVolume when omitted', () => {
+            const id = controller.play('test_sound' as SoundId, {})!;
+
+            controller.fadeVolume(id, 0.2, 800 as Milliseconds);
+
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(fakeInstance.gainParam, 0.2, 800, 'linear', 0);
+        });
+
+        it('should safely handle pauseById and resumeById when physical instance lacks pause/resume methods', () => {
+            const instanceWithoutMethods = { ...fakeInstance };
+            delete instanceWithoutMethods.pause;
+            delete instanceWithoutMethods.resume;
+            mockPool.acquire.mockReturnValueOnce(instanceWithoutMethods);
+
+            const id = controller.play('test_sound' as SoundId, {})!;
+
+            expect(() => {
+                controller.pauseById(id);
+                controller.resumeById(id);
+            }).not.toThrow();
+        });
+    });
+
+    describe('Sidechain Optional Chaining Guards', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should safely no-op when adding or removing sidechain triggers on an instance with out-of-bounds poolIndex', () => {
+            const instOutOfBounds = {
+                ...fakeInstance,
+                _poolIndex: 999,
+                sidechainTriggerNode: {}
+            };
+            mockPool.acquire.mockReturnValueOnce(instOutOfBounds);
+            const id = controller.play('test_sound' as SoundId, {})!;
+
+            expect(() => {
+                controller.addSidechainTrigger(id, 'music' as BusId, 0.8);
+                controller.removeSidechainTrigger(id, 'music' as BusId);
+            }).not.toThrow();
+        });
+    });
+
+    describe('stopById Virtual Node Guard', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should NOT delete activeVoice on stopById if physicalInstance is null and isVirtualNode is false', () => {
+            const id = controller.play('test_sound' as SoundId, {})!;
+            const voice = controller.getLogicalVoice(id)!;
+            voice.physicalInstance = null;
+            (voice as any).isVirtualNode = false;
+
+            controller.stopById(id);
+
+            expect(controller.activeVoices.has(id)).toBe(true);
+        });
+    });
+
+    describe('getPlaybackPositionSec Numeric CurrentTime Guard', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should return 0 when voice is playing and physical but currentTime property is non-numeric', () => {
+            const instWithoutTime = { ...fakeInstance };
+            delete instWithoutTime.currentTime;
+            mockPool.acquire.mockReturnValueOnce(instWithoutTime);
+
+            mockContext.currentTime = 500;
+            const id = controller.play('test_sound' as SoundId, { offset: 2 as Seconds })!;
+
+            const pos = controller.getPlaybackPositionSec(id);
+
+            expect(pos).toBe(0);
+        });
+    });
+
+    describe('virtualize Scheduling Constraints', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should NOT push timer when sound is looping even if duration is positive', () => {
+            const loopingInst = {
+                ...fakeInstance,
+                virtualize: vi.fn(),
+                isLooping: true,
+                duration: 10,
+                currentTime: 0,
+                playbackRate: 1
+            };
+            mockPool.acquire.mockReturnValueOnce(loopingInst);
+            const id = controller.play('test_sound' as SoundId, {})!;
+
+            controller.virtualize(id);
+
+            const timers = (controller as any).virtualTimers;
+            expect(timers.find((t: any) => t.playbackId === id)).toBeUndefined();
+        });
+
+        it('should NOT push timer when non-looping sound has duration of 0', () => {
+            const zeroDurationInst = {
+                ...fakeInstance,
+                virtualize: vi.fn(),
+                isLooping: false,
+                duration: 0,
+                currentTime: 0,
+                playbackRate: 1
+            };
+            mockPool.acquire.mockReturnValueOnce(zeroDurationInst);
+            const id = controller.play('test_sound' as SoundId, {})!;
+
+            controller.virtualize(id);
+
+            const timers = (controller as any).virtualTimers;
+            expect(timers.find((t: any) => t.playbackId === id)).toBeUndefined();
+        });
+    });
+
+    describe('virtualize / devirtualize Sidechain Integrity', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should NOT call busSystem when sidechainTriggerNode is missing during virtualize/devirtualize', () => {
+            const instNoTrigger = {
+                ...fakeInstance,
+                _poolIndex: 2,
+                virtualize: vi.fn(),
+                devirtualize: vi.fn(),
+                sidechainTriggerNode: undefined
+            };
+            mockPool.acquire.mockReturnValueOnce(instNoTrigger);
+            const id = controller.play('test_sound' as SoundId, {})!;
+
+            controller.virtualize(id);
+            controller.devirtualize(id);
+
+            expect(mockBusSystem.removeSidechainSource).not.toHaveBeenCalled();
+            expect(mockBusSystem.addSidechainSource).not.toHaveBeenCalled();
+        });
+
+        it('should not throw when virtualize/devirtualize is called on an instance with out-of-bounds poolIndex', () => {
+            const instOutOfBounds = {
+                ...fakeInstance,
+                _poolIndex: 999,
+                virtualize: vi.fn(),
+                devirtualize: vi.fn(),
+                sidechainTriggerNode: {}
+            };
+            mockPool.acquire.mockReturnValueOnce(instOutOfBounds);
+            const id = controller.play('test_sound' as SoundId, {})!;
+
+            expect(() => {
+                controller.virtualize(id);
+                controller.devirtualize(id);
+            }).not.toThrow();
+        });
+    });
+
+    describe('#handleVoiceEnded Guard', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should safely do nothing when ended event fires on an instance with undefined playbackId', () => {
+            controller.play('test_sound' as SoundId, {})!;
+            const endedCallback = fakeInstance.on.mock.calls.find((call: any[]) => call[0] === 'ended')![1];
+
+            const deleteSpy = vi.spyOn(controller.activeVoices, 'delete');
+            mockTelemetry.dispatch.mockClear();
+
+            const unassignedInstance = { ...fakeInstance, _currentPlaybackId: undefined };
+            endedCallback(unassignedInstance);
+
+            expect(deleteSpy).not.toHaveBeenCalled();
+            expect(mockTelemetry.dispatch).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('#handleInstanceReleased Integrity', () => {
+        beforeEach(() => {
+            controller.register('test_sound' as SoundId, { url: '', cooldownMs: 0 });
+        });
+
+        it('should early-return safely without throwing when poolIndex is undefined or negative', () => {
+            const releasedHandler = mockPool.events.on.mock.calls.find((call: any[]) => call[0] === 'released')[1];
+
+            expect(() => {
+                releasedHandler({ _poolIndex: undefined, sidechainTriggerNode: {} });
+                releasedHandler({ _poolIndex: -1, sidechainTriggerNode: {} });
+            }).not.toThrow();
+            expect(mockBusSystem.removeSidechainSource).not.toHaveBeenCalled();
+        });
+
+        it('should clear targetBuses but NOT call removeSidechainSource when sidechainTriggerNode is undefined', () => {
+            fakeInstance._poolIndex = 3;
+            const id = controller.play('test_sound' as SoundId, {})!;
+            controller.addSidechainTrigger(id, 'music' as BusId, 0.7);
+
+            const releasedHandler = mockPool.events.on.mock.calls.find((call: any[]) => call[0] === 'released')[1];
+
+            const instanceWithoutTrigger = { _poolIndex: 3, sidechainTriggerNode: undefined };
+            releasedHandler(instanceWithoutTrigger);
+
+            expect(mockBusSystem.removeSidechainSource).not.toHaveBeenCalled();
+            const sidechainMap = (controller as any)['#sidechainLinks']?.[3];
+            if (sidechainMap) {
+                expect(sidechainMap.size).toBe(0);
+            }
+        });
     });
 });

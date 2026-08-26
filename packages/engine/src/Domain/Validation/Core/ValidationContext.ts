@@ -1,7 +1,4 @@
-// oxlint-disable typescript/no-unnecessary-type-parameters
-import type { IValidationContext, TypeMap } from '@domain/Validation/Ports/IValidationContext.js';
-import { type DeepReadonly, type IConsistencyReportData, isAbsent } from '@scene-grid/shared';
-import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
+import type { IMusicFSMConfig } from '@domain/Configuration/Ports/IMusicFSMConfig.js';
 import type {
     AnySoundConfig,
     IContainerSoundConfig,
@@ -10,11 +7,14 @@ import type {
     ISmartLoopSoundConfig,
     ISwitchSoundConfig
 } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { IMusicFSMConfig } from '@domain/Configuration/Ports/IMusicFSMConfig.js';
-import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
-import { ConsoleReporter } from '@domain/Validation/Reporters/ConsoleReporter.js';
-import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload.js';
 import type { IConsistencyCheckerOptions } from '@domain/Validation/Ports/IConsistencyCheckerOptions.js';
+import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload.js';
+import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
+// oxlint-disable typescript/no-unnecessary-type-parameters
+import type { IValidationContext, TypeMap } from '@domain/Validation/Ports/IValidationContext.js';
+
+import { ConsoleReporter } from '@domain/Validation/Reporters/ConsoleReporter.js';
+import { type DeepReadonly, type IConsistencyReportData, isAbsent } from '@scene-grid/shared';
 
 export default class ValidationContext implements IValidationContext {
     public config: DeepReadonly<Required<IConsistencyCheckerPayload>>;
@@ -24,7 +24,7 @@ export default class ValidationContext implements IValidationContext {
 
     constructor(config: DeepReadonly<IConsistencyCheckerPayload>, options?: IConsistencyCheckerOptions) {
         this.config = {
-            soundMap: config.soundMap ?? ({} as ISoundMap),
+            soundMap: config.soundMap ?? {},
             manifest: config.manifest ?? {},
             buses: config.buses ?? {},
             snapshots: config.snapshots ?? {},

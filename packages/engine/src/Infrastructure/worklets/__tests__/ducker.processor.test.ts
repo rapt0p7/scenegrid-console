@@ -157,4 +157,222 @@ describe('DuckerProcessor', () => {
             await expect(import('../ducker.processor.js')).rejects.toThrow('Fatal System Error');
         });
     });
+
+    it('should expose an empty parameterDescriptors static array', () => {
+        const descriptors = capturedDuckerClass.parameterDescriptors;
+
+        expect(descriptors).toEqual([]);
+    });
+
+    it('should calculate exact attack coefficient and step response', () => {
+        const sampleRate = 44_100;
+        const attackTime = 0.03;
+        const expectedCoeff = Math.exp(-1 / (attackTime * sampleRate));
+        const processor = new capturedDuckerClass({
+            processorOptions: { attack: attackTime, release: 0.25 }
+        });
+        const sampleValue = 0.5;
+        const inputs = [[new Float32Array([sampleValue])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = (1 - expectedCoeff) * sampleValue;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 7);
+        expect(outputs[0][0][0]).toBeCloseTo(1 - expectedEnvelope, 7);
+    });
+
+    it('should calculate exact release coefficient and step response', () => {
+        const sampleRate = 44_100;
+        const releaseTime = 0.25;
+        const expectedCoeff = Math.exp(-1 / (releaseTime * sampleRate));
+        const processor = new capturedDuckerClass({
+            processorOptions: { attack: 0.03, release: releaseTime }
+        });
+        processor.activeEnvelope = 0.8;
+        const sampleValue = 0.2;
+        const inputs = [[new Float32Array([sampleValue])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = expectedCoeff * 0.8 + (1 - expectedCoeff) * sampleValue;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 7);
+        expect(outputs[0][0][0]).toBeCloseTo(1 - expectedEnvelope, 7);
+    });
+
+    it('should treat zero-length input channels as no signal and reset envelope', () => {
+        const processor = new capturedDuckerClass({});
+        processor.activeEnvelope = 0.75;
+        const inputs = [[new Float32Array(0)]];
+        const outL = new Float32Array(4).fill(0);
+        const outputs = [[outL]];
+
+        const result = processor.process(inputs, outputs, {});
+
+        expect(result).toBe(true);
+        expect(outL[0]).toBe(1);
+        expect(processor.activeEnvelope).toBe(0);
+    });
+
+    it('should safely handle completely empty inputs array without crashing', () => {
+        const processor = new capturedDuckerClass({});
+        processor.activeEnvelope = 0.5;
+        const outL = new Float32Array(4).fill(0);
+        const outputs = [[outL]];
+
+        const result = processor.process([], outputs, {});
+
+        expect(result).toBe(true);
+        expect(outL[0]).toBe(1);
+        expect(processor.activeEnvelope).toBe(0);
+    });
+
+    it('should zero left channel denormals (< 1e-7) during active envelope release', () => {
+        const processor = new capturedDuckerClass({});
+        processor.activeEnvelope = 0.5;
+        const expectedCoeff = Math.exp(-1 / (0.25 * 44_100));
+        const inputs = [[new Float32Array([5e-8]), new Float32Array([0])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = expectedCoeff * 0.5;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 8);
+    });
+
+    it('should zero right channel denormals (< 1e-7) during active envelope release', () => {
+        const processor = new capturedDuckerClass({});
+        processor.activeEnvelope = 0.5;
+        const expectedCoeff = Math.exp(-1 / (0.25 * 44_100));
+        const inputs = [[new Float32Array([0]), new Float32Array([5e-8])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = expectedCoeff * 0.5;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 8);
+    });
+
+    it('should not zero signals at or above the 1e-7 denormal threshold', () => {
+        const processor = new capturedDuckerClass({});
+        processor.activeEnvelope = 0.5;
+        const expectedCoeff = Math.exp(-1 / (0.25 * 44_100));
+        const inputs = [[new Float32Array([1e-7]), new Float32Array([0])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = expectedCoeff * 0.5 + (1 - expectedCoeff) * 1e-7;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 8);
+    });
+
+    it('should preserve regular signals on right channel when left channel is silent', () => {
+        const processor = new capturedDuckerClass({});
+        const attackCoeff = Math.exp(-1 / (0.03 * 44_100));
+        const inputs = [[new Float32Array([0]), new Float32Array([0.6])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = (1 - attackCoeff) * 0.6;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 7);
+    });
+
+    it('should track the maximum absolute peak between left and right channels', () => {
+        const processor = new capturedDuckerClass({});
+        const attackCoeff = Math.exp(-1 / (0.03 * 44_100));
+        const inputs = [[new Float32Array([0.8]), new Float32Array([0.2])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = (1 - attackCoeff) * 0.8;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 7);
+    });
+
+    it('should select attack branch when sample exceeds active envelope', () => {
+        const processor = new capturedDuckerClass({});
+        processor.activeEnvelope = 0.2;
+        const attackCoeff = Math.exp(-1 / (0.03 * 44_100));
+        const sample = 0.6;
+        const inputs = [[new Float32Array([sample])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = attackCoeff * 0.2 + (1 - attackCoeff) * sample;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 7);
+    });
+
+    it('should select release branch when sample is below active envelope', () => {
+        const processor = new capturedDuckerClass({});
+        processor.activeEnvelope = 0.6;
+        const releaseCoeff = Math.exp(-1 / (0.25 * 44_100));
+        const sample = 0.2;
+        const inputs = [[new Float32Array([sample])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = releaseCoeff * 0.6 + (1 - releaseCoeff) * sample;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 7);
+    });
+
+    it('should perform correct linear interpolation during attack with non-unit sample and non-zero envelope', () => {
+        const processor = new capturedDuckerClass({});
+        processor.activeEnvelope = 0.2;
+        const attackCoeff = Math.exp(-1 / (0.03 * 44_100));
+        const sample = 0.5;
+        const inputs = [[new Float32Array([sample])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = attackCoeff * 0.2 + (1 - attackCoeff) * sample;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 7);
+    });
+
+    it('should perform correct additive interpolation during release with non-zero sample', () => {
+        const processor = new capturedDuckerClass({});
+        processor.activeEnvelope = 0.8;
+        const releaseCoeff = Math.exp(-1 / (0.25 * 44_100));
+        const sample = 0.4;
+        const inputs = [[new Float32Array([sample])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        const expectedEnvelope = releaseCoeff * 0.8 + (1 - releaseCoeff) * sample;
+        expect(processor.activeEnvelope).toBeCloseTo(expectedEnvelope, 7);
+    });
+
+    it('should not snap activeEnvelope to 0 when it is exactly 1e-5', () => {
+        const processor = new capturedDuckerClass({});
+        const sampleRate = 44_100;
+        const releaseCoeff = Math.exp(-1 / (0.25 * sampleRate));
+
+        processor.activeEnvelope = 1e-5 / releaseCoeff;
+
+        const inputs = [[new Float32Array([0])]];
+        const outputs = [[new Float32Array(1)]];
+
+        processor.process(inputs, outputs, {});
+
+        expect(processor.activeEnvelope).toBe(1e-5);
+        expect(outputs[0][0][0]).toBeCloseTo(1 - 1e-5, 7);
+    });
+
+    it('should safely fill only defined channels when output contains undefined slots during fallback', () => {
+        const processor = new capturedDuckerClass({});
+        const outL = new Float32Array(4).fill(0);
+        const outputs = [[outL, undefined as unknown as Float32Array]];
+
+        expect(() => {
+            processor.process([], outputs, {});
+        }).not.toThrow();
+
+        expect(outL[0]).toBe(1);
+        expect(processor.activeEnvelope).toBe(0);
+    });
 });

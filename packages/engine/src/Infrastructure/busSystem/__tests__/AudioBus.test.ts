@@ -1,11 +1,10 @@
+import type { AudioCtx, AutomationEngine, GainNodeLike, IPluginFactory } from '@infrastructure';
+import type { BusId, GameParamId, Milliseconds, Seconds } from '@scene-grid/shared';
+
+import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 // noinspection D
 /* eslint-disable @typescript-eslint/naming-convention */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-import AudioBus from '@infrastructure/busSystem/AudioBus.js';
-
-import type { BusId, GameParamId, Milliseconds, Seconds } from '@scene-grid/shared';
-import type { AudioCtx, AutomationEngine, GainNodeLike, IPluginFactory } from '@infrastructure';
 
 function createMockContext() {
     const mockNode = {
@@ -585,6 +584,727 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
         expect(mockAutomation.ramp).toHaveBeenCalledWith(bus.inputNode.gain, 0.5, 120, 'linear');
         expect((bus as any).targetParams.gain.rtpc).toBe(0.5);
     });
+
+    describe('getLogicalTargetGain()', () => {
+        it('should return the initial logical gain and updated values after setLogicalGain', () => {
+            const bus = new AudioBus({
+                id: 'sfx_bus' as BusId,
+                config: { gain: 0.75 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(bus.getLogicalTargetGain()).toBe(0.75);
+
+            bus.setLogicalGain(0.3, 0 as Milliseconds);
+
+            expect(bus.getLogicalTargetGain()).toBe(0.3);
+        });
+    });
+
+    describe('constructor() default gain resolution', () => {
+        it('should respect non-unit initial gain configs (e.g. 0.5) without defaulting to 1', () => {
+            const bus = new AudioBus({
+                id: 'sfx_bus' as BusId,
+                config: { gain: 0.5 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(bus.getLogicalTargetGain()).toBe(0.5);
+            expect(bus.inputNode.gain.value).toBe(0.5);
+            expect(mockAutomation.set).toHaveBeenCalledWith(bus.inputNode.gain, 0.5);
+        });
+    });
+
+    describe('processFrame() dirty state optimization', () => {
+        it('should not schedule parameter automation on clean frames', () => {
+            const bus = new AudioBus({
+                id: 'sfx_bus' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            mockAutomation.ramp.mockClear();
+
+            bus.processFrame(0 as Seconds);
+
+            expect(mockAutomation.ramp).not.toHaveBeenCalled();
+
+            bus.setLogicalGain(0.5, 50 as Milliseconds);
+            bus.processFrame(1 as Seconds);
+            expect(mockAutomation.ramp).toHaveBeenCalledTimes(1);
+
+            mockAutomation.ramp.mockClear();
+            bus.processFrame(2 as Seconds);
+
+            expect(mockAutomation.ramp).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('getConfig()', () => {
+        it('should clone and return all original bus configuration properties', () => {
+            const customConfig = { gain: 0.6, name: 'ambience_bus', parent: 'master' };
+            const bus = new AudioBus({
+                id: 'ambience' as BusId,
+                config: customConfig,
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            const config = bus.getConfig();
+
+            expect(config.gain).toBe(0.6);
+            expect((config as any).name).toBe('ambience_bus');
+            expect((config as any).parent).toBe('master');
+        });
+
+        it('should delete the filter key when filter is removed or absent', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            bus.safeReplaceFilter(null, 5 as Milliseconds);
+            mockContext.currentTime += 0.02;
+            bus.processFrame(mockContext.currentTime);
+
+            const config = bus.getConfig();
+
+            expect(Object.prototype.hasOwnProperty.call(config, 'filter')).toBe(false);
+            expect('filter' in config).toBe(false);
+        });
+    });
+
+    describe('constructor() routerMasterGain routing', () => {
+        it('should connect postFilterGain to routerMasterGain when routerMasterGain is provided', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(bus.analyzerTapNode.connect).toHaveBeenCalledWith(mockMasterGain);
+        });
+
+        it('should not attempt to connect postFilterGain when routerMasterGain is null', () => {
+            const bus = new AudioBus({
+                id: 'master' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: null,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(bus.analyzerTapNode.connect).not.toHaveBeenCalledWith(null);
+            expect(bus.analyzerTapNode.connect).not.toHaveBeenCalledWith(undefined);
+        });
+    });
+
+    describe('coldStart() initialization edge cases', () => {
+        it('should retain non-biquad filter config (reverb) without overwriting with biquad properties', () => {
+            const mockConvolver = { connect: vi.fn(), disconnect: vi.fn() };
+            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(mockConvolver);
+            const reverbConfig = { type: 'reverb' as any, reverbTime: 2.5 };
+
+            const bus = new AudioBus({
+                id: 'reverb_bus' as BusId,
+                config: { gain: 1, filter: reverbConfig },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: null,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(bus.getConfig().filter).toEqual(reverbConfig);
+        });
+
+        it('should safely construct when created filter node lacks frequency AudioParam', () => {
+            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce({
+                type: 'lowpass',
+                frequency: undefined,
+                Q: { value: 1 },
+                connect: vi.fn(),
+                disconnect: vi.fn()
+            });
+
+            const bus = new AudioBus({
+                id: 'custom_bus' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: null,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(bus.getConfig().filter).toEqual({
+                type: 'lowpass',
+                frequency: undefined,
+                Q: 1
+            });
+        });
+
+        it('should safely construct when created filter node lacks Q AudioParam', () => {
+            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce({
+                type: 'lowpass',
+                frequency: { value: 2000 },
+                Q: undefined,
+                connect: vi.fn(),
+                disconnect: vi.fn()
+            });
+
+            const bus = new AudioBus({
+                id: 'custom_bus' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 2000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: null,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(bus.getConfig().filter).toEqual({
+                type: 'lowpass',
+                frequency: 2000,
+                Q: undefined
+            });
+        });
+
+        it('should log a descriptive warning with the bus ID when filter creation throws', () => {
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            mockPluginFactory.getFiltersPlugin().createNode.mockImplementationOnce(() => {
+                throw new Error('AudioContext unavailable');
+            });
+
+            // oxlint-disable-next-line no-new
+            new AudioBus({
+                id: 'ui_bus' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: null,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                '[AudioBus] Failed to create filter for bus "ui_bus"',
+                expect.any(Error)
+            );
+            warnSpy.mockRestore();
+        });
+
+        it('should wire preFilterGain directly to postFilterGain when config has no filter', () => {
+            const bus = new AudioBus({
+                id: 'clean_bus' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: null,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(bus.duckerTapNode.connect).toHaveBeenCalledWith(bus.analyzerTapNode);
+            expect(bus.getConfig().filter).toBeUndefined();
+        });
+    });
+
+    describe('safeReplaceFilter() and executePhysicalFilterSwap() lifecycle', () => {
+        it('should execute filter swap at the exact target execution timestamp', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            mockContext.currentTime = 1.0;
+            bus.safeReplaceFilter({ type: 'highpass', frequency: 600 }, 10 as Milliseconds);
+
+            bus.processFrame(1.012 as Seconds);
+
+            expect(bus.getConfig().filter?.type).toBe('highpass');
+        });
+
+        it('should not execute swap on idle frame when swapState is inactive', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            mockAutomation.ramp.mockClear();
+
+            bus.processFrame(5.0 as Seconds);
+
+            expect(mockAutomation.ramp).not.toHaveBeenCalled();
+        });
+
+        it('should extract parameters when swapping with an existing Biquad AudioNode instance', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            const mockBiquadNode = {
+                type: 'bandpass',
+                frequency: { value: 1500 },
+                Q: { value: 3.5 },
+                connect: vi.fn(),
+                disconnect: vi.fn()
+            };
+
+            bus.safeReplaceFilter(mockBiquadNode as any, 5 as Milliseconds);
+            mockContext.currentTime += 0.02;
+            bus.processFrame(mockContext.currentTime);
+
+            expect(bus.getConfig().filter).toEqual({
+                type: 'bandpass',
+                frequency: 1500,
+                Q: 3.5
+            });
+        });
+
+        it('should safely handle Biquad AudioNode instances where frequency or Q parameters are omitted', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            const mockMinimalNode = {
+                type: 'notch',
+                frequency: undefined,
+                Q: undefined,
+                connect: vi.fn(),
+                disconnect: vi.fn()
+            };
+
+            bus.safeReplaceFilter(mockMinimalNode as any, 5 as Milliseconds);
+            mockContext.currentTime += 0.02;
+            bus.processFrame(mockContext.currentTime);
+
+            expect(bus.getConfig().filter).toEqual({
+                type: 'notch',
+                frequency: undefined,
+                Q: undefined
+            });
+        });
+
+        it('should reconnect pre-to-post and clear active filter when replacing fails', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            expect(bus.getConfig().filter).toBeDefined();
+
+            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValueOnce(null);
+
+            bus.safeReplaceFilter({ type: 'invalid' as any }, 0 as Milliseconds);
+            mockContext.currentTime += 0.01;
+            bus.processFrame(mockContext.currentTime);
+
+            expect(bus.getConfig().filter).toBeUndefined();
+            expect(bus.duckerTapNode.connect).toHaveBeenLastCalledWith(bus.analyzerTapNode);
+        });
+
+        it('should deactivate swapState after execution and not re-execute on subsequent frames', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            bus.safeReplaceFilter({ type: 'highpass', frequency: 500 }, 10 as Milliseconds);
+            mockContext.currentTime += 0.02;
+            bus.processFrame(mockContext.currentTime);
+
+            mockPluginFactory.getFiltersPlugin().createNode.mockClear();
+
+            bus.processFrame(mockContext.currentTime + 0.02);
+
+            expect(mockPluginFactory.getFiltersPlugin().createNode).not.toHaveBeenCalled();
+        });
+
+        it('should safely disconnect previous filter node when replaced or removed', () => {
+            const mockFilter = {
+                frequency: { value: 1000 },
+                Q: { value: 1 },
+                type: 'lowpass',
+                connect: vi.fn(),
+                disconnect: vi.fn()
+            };
+            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValue(mockFilter);
+
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            bus.safeReplaceFilter(null, 5 as Milliseconds);
+            mockContext.currentTime += 0.02;
+            bus.processFrame(mockContext.currentTime);
+
+            expect(mockFilter.disconnect).toHaveBeenCalled();
+        });
+
+        it('should safely no-op in connectFilter/disconnectFilter when filterNode is absent', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+            expect(() => {
+                (bus as any).connectFilter();
+                (bus as any).disconnectFilter();
+            }).not.toThrow();
+
+            expect(warnSpy).not.toHaveBeenCalled();
+            warnSpy.mockRestore();
+        });
+    });
+
+    describe('updateFilterParams() robustness', () => {
+        it('should safely return early when config is null on a valid filter node', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            expect(() => {
+                bus.updateFilterParams(null);
+            }).not.toThrow();
+        });
+
+        it('should return early when updating a non-Biquad filter node with standard filter config', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            (bus as any).filterNode = { connect: vi.fn(), disconnect: vi.fn() };
+            mockAutomation.ramp.mockClear();
+
+            bus.updateFilterParams({ type: 'lowpass', frequency: 500, Q: 2 });
+            bus.processFrame(mockContext.currentTime);
+
+            expect(mockAutomation.ramp).not.toHaveBeenCalled();
+        });
+
+        it('should ignore filter updates if config type is reverb', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            mockAutomation.ramp.mockClear();
+
+            bus.updateFilterParams({ type: 'reverb' } as any);
+            bus.processFrame(mockContext.currentTime);
+
+            expect(mockAutomation.ramp).not.toHaveBeenCalled();
+        });
+
+        it('should only automate frequency when Q is omitted in update config', () => {
+            const mockFilter = {
+                type: 'lowpass',
+                frequency: { value: 1000 },
+                Q: { value: 2.0 },
+                connect: vi.fn(),
+                disconnect: vi.fn()
+            };
+            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValue(mockFilter);
+
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            mockAutomation.ramp.mockClear();
+
+            bus.updateFilterParams({ type: 'lowpass', frequency: 500 });
+            bus.processFrame(mockContext.currentTime);
+
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(mockFilter.frequency, 500, 30, 'exponential');
+            expect(mockAutomation.ramp).not.toHaveBeenCalledWith(
+                mockFilter.Q,
+                expect.anything(),
+                expect.anything(),
+                expect.anything()
+            );
+        });
+
+        it('should only automate Q when frequency is omitted in update config', () => {
+            const mockFilter = {
+                type: 'lowpass',
+                frequency: { value: 1000 },
+                Q: { value: 1 },
+                connect: vi.fn(),
+                disconnect: vi.fn()
+            };
+            mockPluginFactory.getFiltersPlugin().createNode.mockReturnValue(mockFilter);
+
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            mockAutomation.ramp.mockClear();
+
+            bus.updateFilterParams({ type: 'lowpass', Q: 4 });
+            bus.processFrame(mockContext.currentTime);
+
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(mockFilter.Q, 4, 30, 'linear');
+            expect(mockAutomation.ramp).not.toHaveBeenCalledWith(
+                mockFilter.frequency,
+                expect.anything(),
+                expect.anything(),
+                expect.anything()
+            );
+        });
+    });
+
+    describe('updateSend() and physical routing lifecycle', () => {
+        it('should initialize default send state and apply duration ramp without NaN', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
+
+            bus.updateSend({
+                targetBusId: 'aux' as BusId,
+                targetNode: mockTargetNode,
+                targetGain: 0.7,
+                duration: 40 as Milliseconds
+            });
+            bus.processFrame(mockContext.currentTime);
+
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(expect.any(Object), 0.7, 40, 'linear');
+        });
+
+        it('should preserve active RTPC send modifiers when updating logical send gain', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
+
+            bus.updateSend({
+                targetBusId: 'verb' as BusId,
+                targetNode: mockTargetNode,
+                targetGain: 1.0,
+                duration: 0 as Milliseconds
+            });
+            bus.processFrame(mockContext.currentTime);
+
+            bus.bindRTPC({
+                sendLevel: {
+                    sendTargetBus: 'verb' as BusId,
+                    gameParam: 'depth' as GameParamId,
+                    curve: [{ x: 100, y: 0.5 }]
+                }
+            });
+            mockRtpcManager.getValue.mockReturnValue(100);
+            bus.tickRTPC(mockRtpcManager);
+            bus.processFrame(mockContext.currentTime);
+
+            mockAutomation.ramp.mockClear();
+
+            bus.updateSend({
+                targetBusId: 'verb' as BusId,
+                targetNode: mockTargetNode,
+                targetGain: 0.8,
+                duration: 25 as Milliseconds
+            });
+            bus.processFrame(mockContext.currentTime);
+
+            expect(mockAutomation.ramp).toHaveBeenCalledWith(expect.any(Object), 0.4, 25, 'linear');
+        });
+
+        it('should reuse existing send GainNode on subsequent updates without creating new nodes', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
+
+            bus.updateSend({
+                targetBusId: 'verb' as BusId,
+                targetNode: mockTargetNode,
+                targetGain: 0.5,
+                duration: 0 as Milliseconds
+            });
+            bus.processFrame(mockContext.currentTime);
+
+            const createGainCallsBefore = mockContext.createGain.mock.calls.length;
+
+            bus.updateSend({
+                targetBusId: 'verb' as BusId,
+                targetNode: mockTargetNode,
+                targetGain: 0.9,
+                duration: 10 as Milliseconds
+            });
+            bus.processFrame(mockContext.currentTime);
+
+            expect(mockContext.createGain.mock.calls.length).toBe(createGainCallsBefore);
+        });
+
+        it('should safely disconnect send GainNode from targetNode on removal', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            const mockTargetNode = { connect: vi.fn(), disconnect: vi.fn() } as any;
+
+            bus.updateSend({
+                targetBusId: 'verb' as BusId,
+                targetNode: mockTargetNode,
+                targetGain: 1.0,
+                duration: 0 as Milliseconds
+            });
+            bus.processFrame(mockContext.currentTime);
+
+            const sendGainNode = (bus as any).sendGains.get('verb');
+            const disconnectSpy = vi.spyOn(sendGainNode, 'disconnect');
+
+            bus.updateSend({
+                targetBusId: 'verb' as BusId,
+                targetNode: mockTargetNode,
+                targetGain: null,
+                duration: 20 as Milliseconds
+            });
+            bus.processFrame(mockContext.currentTime);
+            vi.advanceTimersByTime(80);
+
+            expect(disconnectSpy).toHaveBeenCalledWith(mockTargetNode);
+        });
+    });
+
+    describe('applyRTPCTarget() dispatching', () => {
+        it('should not register send targets when sendLevel RTPC config omits sendTargetBus', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+
+            bus.bindRTPC({
+                sendLevel: {
+                    gameParam: 'depth' as GameParamId,
+                    curve: [{ x: 0, y: 0.5 }]
+                }
+            });
+            mockRtpcManager.getValue.mockReturnValue(100);
+
+            bus.tickRTPC(mockRtpcManager);
+            bus.processFrame(mockContext.currentTime);
+
+            expect((bus as any).targetParams.sends.size).toBe(0);
+            expect((bus as any).sendGains.size).toBe(0);
+        });
+
+        it('should silently ignore pitch RTPC target on bus without logging unhandled warnings', () => {
+            const bus = new AudioBus({
+                id: 'sfx' as BusId,
+                config: { gain: 1 },
+                context: mockContext,
+                automation: mockAutomation,
+                routerMasterGain: mockMasterGain,
+                pluginFactory: mockPluginFactory
+            });
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+            bus.bindRTPC({
+                pitch: {
+                    gameParam: 'doppler' as GameParamId,
+                    curve: [{ x: 0, y: 1 }]
+                }
+            });
+            mockRtpcManager.getValue.mockReturnValue(50);
+
+            bus.tickRTPC(mockRtpcManager);
+
+            expect(warnSpy).not.toHaveBeenCalled();
+            warnSpy.mockRestore();
+        });
+    });
 });
 
 describe('AudioBus (Internal Branch Coverage & Edge Cases)', () => {
@@ -637,7 +1357,7 @@ describe('AudioBus (Internal Branch Coverage & Edge Cases)', () => {
             bus.tickRTPC(mockAdapter);
         }).not.toThrow();
 
-        bus.bindRTPC({ gain: undefined } as any);
+        bus.bindRTPC({ gain: undefined });
         expect(() => {
             bus.tickRTPC(mockAdapter);
         }).not.toThrow();

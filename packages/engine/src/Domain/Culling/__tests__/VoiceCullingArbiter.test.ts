@@ -1,9 +1,11 @@
+import type { BusId, Milliseconds, PlaybackId, SoundId } from '@scene-grid/shared';
+
 // noinspection D
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { VoiceCullingArbiter } from '../VoiceCullingArbiter.js';
 import type { ICullingContext, CullingDecisions } from '../Ports/ICullingArbiter.js';
-import type { BusId, Milliseconds, PlaybackId, SoundId } from '@scene-grid/shared';
+
+import { VoiceCullingArbiter } from '../VoiceCullingArbiter.js';
 
 describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
     let arbiter: VoiceCullingArbiter;
@@ -204,6 +206,97 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
             delete soundRouting['orphan'];
             decisions = arbiter.evaluate(mockContext, 1000 as Milliseconds);
             expect(decisions.virtualizeCount).toBe(0);
+        });
+    });
+
+    describe('Pre-allocated Pool Integrity & Mutation Guarding', () => {
+        it('should pre-allocate virtualize decisions with default reason DEAF_BUS', () => {
+            const decisions = arbiter.evaluate(mockContext, 0 as Milliseconds);
+
+            expect(decisions.toVirtualize[0].reason).toBe('DEAF_BUS');
+        });
+
+        it('should initialize virtualize pool elements with default playbackId and reason', () => {
+            const decisions = arbiter.evaluate(mockContext, 0 as Milliseconds);
+
+            expect(decisions.toVirtualize[0]).toEqual({
+                playbackId: 0 as PlaybackId,
+                reason: 'DEAF_BUS'
+            });
+        });
+
+        it('should pre-allocate devirtualize pool with capacity equal to maxPlaybacks', () => {
+            const decisions = arbiter.evaluate(mockContext, 0 as Milliseconds);
+
+            expect(decisions.toDevirtualize.length).toBe(128);
+        });
+
+        it('should not evaluate out-of-bounds indices beyond activePlaybacks length', () => {
+            const pId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0);
+            soundIds[undefined as any] = 'fallback_sound' as SoundId;
+            soundRouting['fallback_sound'] = 'music' as BusId;
+
+            const decisions = arbiter.evaluate(mockContext, 1500 as Milliseconds);
+
+            expect(decisions.virtualizeCount).toBe(1);
+            expect(decisions.toVirtualize[0].playbackId).toBe(pId);
+        });
+
+        it('should skip playbacks with missing soundId even if resolveBusId handles undefined', () => {
+            activePlaybacks.push(1 as PlaybackId);
+            soundRouting['undefined'] = 'music' as BusId;
+            busVolumes['music'] = 0;
+
+            const decisions = arbiter.evaluate(mockContext, 1500 as Milliseconds);
+
+            expect(decisions.virtualizeCount).toBe(0);
+        });
+
+        it('should treat volume exactly equal to cullingThreshold as muted and virtualize after hysteresis', () => {
+            const pId = addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0.01);
+
+            const decisions = arbiter.evaluate(mockContext, 1500 as Milliseconds);
+
+            expect(decisions.virtualizeCount).toBe(1);
+            expect(getActiveVirtIds(decisions)).toContain(pId);
+        });
+
+        it('should ignore virtual playbacks with unresolved busId and not devirtualize them', () => {
+            addMockPlayback(1, 'orphan', 'unknown_bus', 'virtual', 'playing', 1);
+            delete soundRouting['orphan'];
+
+            const decisions = arbiter.evaluate(mockContext, 1000 as Milliseconds);
+
+            expect(decisions.devirtualizeCount).toBe(0);
+        });
+
+        it('should NOT recommend virtualization for playbacks already in virtual or stopped state', () => {
+            addMockPlayback(1, 'drone', 'bg', 'virtual', 'playing', 0);
+            addMockPlayback(2, 'sfx', 'bg', 'stopped', 'playing', 0);
+
+            const decisions = arbiter.evaluate(mockContext, 1500 as Milliseconds);
+
+            expect(decisions.virtualizeCount).toBe(0);
+        });
+
+        it('should set decision reason to DEAF_BUS when virtualizing a muted voice', () => {
+            addMockPlayback(1, 'violins', 'music', 'playing', 'playing', 0);
+
+            const decisions = arbiter.evaluate(mockContext, 1500 as Milliseconds);
+
+            expect(decisions.virtualizeCount).toBe(1);
+            expect(decisions.toVirtualize[0].reason).toBe('DEAF_BUS');
+        });
+
+        it('should accurately increment devirtualizeCount and populate devirtualizePool sequentially', () => {
+            const pId1 = addMockPlayback(1, 'violins', 'music', 'virtual', 'playing', 1);
+            const pId2 = addMockPlayback(2, 'flute', 'music', 'virtual', 'playing', 1);
+
+            const decisions = arbiter.evaluate(mockContext, 0 as Milliseconds);
+
+            expect(decisions.devirtualizeCount).toBe(2);
+            expect(decisions.toDevirtualize[0]).toBe(pId1);
+            expect(decisions.toDevirtualize[1]).toBe(pId2);
         });
     });
 });

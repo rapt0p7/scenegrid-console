@@ -26,10 +26,7 @@ export class PlaybackScheduler {
     }
 
     #onInstanceEnded = (instance: ISoundInstance): void => {
-        const slot = this.#findSlotByInstance(instance);
-        if (slot !== -1) {
-            this.#cleanupSlot(slot);
-        }
+        this.#cleanupSlot(this.#findSlotByInstance(instance));
     };
 
     // eslint-disable-next-line max-params
@@ -63,6 +60,7 @@ export class PlaybackScheduler {
         instance.stop(when);
 
         const existingSlot = this.#findSlotByInstance(instance);
+        // stryker disable next-line ConditionalExpression: Equivalent mutant (TypedArray ignores negative index writes)
         if (existingSlot !== -1) {
             this.#stopTimes[existingSlot] = when;
         }
@@ -93,13 +91,18 @@ export class PlaybackScheduler {
     }
 
     public clearInstance(instance: ISoundInstance): void {
-        const slot = this.#findSlotByInstance(instance);
-        if (slot !== -1) {
-            this.#cleanupSlot(slot);
-        }
+        this.#cleanupSlot(this.#findSlotByInstance(instance));
     }
 
+    public getScheduledStopTime(instance: ISoundInstance): ContextTime | null {
+        const slot = this.#findSlotByInstance(instance);
+        return slot === -1 ? null : (this.#stopTimes[slot] as ContextTime);
+    }
+
+    // stryker disable next-line all: Defensive guard against slot index boundaries
     #cleanupSlot(slot: number): void {
+        if (slot < 0 || slot >= this.#capacity) return;
+
         const unsubscribe = this.#offCallbacks[slot];
         if (unsubscribe) {
             unsubscribe();
@@ -119,6 +122,7 @@ export class PlaybackScheduler {
     }
 
     #findFreeSlot(): number {
+        // stryker disable next-line EqualityOperator: Equivalent mutant (out-of-bounds Array access returns undefined !== null)
         for (let index = 0; index < this.#capacity; index++) {
             if (this.#instanceRefs[index] === null) return index;
         }
@@ -126,6 +130,7 @@ export class PlaybackScheduler {
     }
 
     #findSlotByInstance(instance: ISoundInstance): number {
+        // stryker disable next-line EqualityOperator: Equivalent mutant (out-of-bounds Array access returns undefined !== instance)
         for (let index = 0; index < this.#capacity; index++) {
             if (this.#instanceRefs[index] === instance) return index;
         }

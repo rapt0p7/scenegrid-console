@@ -1,15 +1,11 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
-import { evaluateRTPCCurve, isDefined, isAbsent, clamp, typedEntries, DeepReadonly } from '@scene-grid/shared';
-
 import type { IAudioBus } from '@domain/BusSystem/Ports/IAudioBus.js';
 import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { BusId, Milliseconds, Seconds } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type {
     AudioCtx,
@@ -20,6 +16,10 @@ import type {
     StereoPannerNodeLike
 } from '@infrastructure/types/IAudioContext.js';
 import type { IPluginFactory } from '@infrastructure/types/IAudioPlugins.js';
+import type { BusId, Milliseconds, Seconds } from '@scene-grid/shared';
+
+import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
+import { evaluateRTPCCurve, isDefined, isAbsent, clamp, typedEntries, DeepReadonly } from '@scene-grid/shared';
 
 export default class AudioBus implements IAudioBus {
     public logicalTargetGain: number = 1;
@@ -91,6 +91,7 @@ export default class AudioBus implements IAudioBus {
         this.config = structuredClone(config);
         this.currentFilterConfig = this.config.filter;
         this.defaultGain = config.gain ?? 1;
+        this.logicalTargetGain = this.defaultGain;
         this.routerMasterGain = routerMasterGain;
         this.pluginFactory = pluginFactory;
 
@@ -222,7 +223,7 @@ export default class AudioBus implements IAudioBus {
         this.scheduleUpdate();
     }
 
-    public updateFilterParams(config: IFilter | null): void {
+    public updateFilterParams(config: Partial<IFilter> | null): void {
         if (isAbsent(this.filterNode) || isAbsent(config)) return;
 
         if (!this.isBiquadFilterNode(this.filterNode)) return;
@@ -234,7 +235,7 @@ export default class AudioBus implements IAudioBus {
             this.scheduleUpdate();
         }
 
-        if (isDefined(config.Q) && isDefined(this.filterNode.Q)) {
+        if ('Q' in config && isDefined(config.Q) && isDefined(this.filterNode.Q)) {
             this.automation.ramp(this.filterNode.Q, config.Q, 30 as Milliseconds, 'linear');
         }
     }

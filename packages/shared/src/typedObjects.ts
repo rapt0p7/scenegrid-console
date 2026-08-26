@@ -1,12 +1,21 @@
-export function typedEntries<T extends object>(obj: T): Array<[keyof T, T[keyof T]]> {
-    return Object.entries(obj) as Array<[keyof T, T[keyof T]]>;
+type KeyValuePair = [PropertyKey, unknown];
+
+type EntriesOf<T> = Required<{
+    [K in keyof T]: [K, T[K]];
+}>[keyof T][];
+
+type ObjectFromEntries<T> = T extends readonly [infer Key extends PropertyKey, infer Value][]
+    ? { [key in Key]: Value }
+    : never;
+
+export function typedEntries<const T extends object>(obj: T): EntriesOf<T> {
+    return Object.entries(obj) as EntriesOf<T>;
 }
 
-export function typedKeys<T extends object>(obj: T): Array<keyof T> {
-    return Object.keys(obj) as Array<keyof T>;
+export function typedKeys<const T extends object>(obj: T): (keyof typeof obj)[] {
+    return Object.keys(obj) as (keyof typeof obj)[];
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export function typedFromEntries<K extends PropertyKey, V>(entries: Iterable<readonly [K, V]>): Record<K, V> {
-    return Object.fromEntries(entries) as Record<K, V>;
+export function typedFromEntries<const T extends KeyValuePair>(entries: T[]): ObjectFromEntries<T[]> {
+    return Object.fromEntries(entries) as ObjectFromEntries<T[]>;
 }

@@ -299,4 +299,21 @@ describe('TelemetrySnapshotter', () => {
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
         expect(dispatchCall.musicTracks).toHaveLength(0);
     });
+
+    it('should handle null sequencer music snapshots gracefully', () => {
+        mockSequencer.getMusicSnapshot.mockReturnValue(null as any);
+
+        snapshotter.tick(1, 16 as any);
+        // @ts-expect-error accessing private property for verification
+        expect(snapshotter.snapshotDto.musicTracks).toEqual([]);
+    });
+
+    it('should correctly convert seconds to milliseconds for timestamp', () => {
+        const testCases = [0, 1, 999999];
+        for (const sec of testCases) {
+            snapshotter.tick(sec, 16 as any);
+            // @ts-expect-error accessing private property for verification
+            expect(snapshotter.snapshotDto.timestampMs).toBe(sec * 1000);
+        }
+    });
 });

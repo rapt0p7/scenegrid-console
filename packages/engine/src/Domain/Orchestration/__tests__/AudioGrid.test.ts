@@ -1,7 +1,8 @@
+import type { Beats, BPM, ContextTime, Pulses } from '@scene-grid/shared';
+
 import { describe, it, expect } from 'vitest';
 
 import AudioGrid from '../AudioGrid.js';
-import type { Beats, BPM, ContextTime, GridDivision, Pulses } from '@scene-grid/shared';
 
 describe('AudioGrid', () => {
     describe('Initialization & Defaults', () => {
@@ -16,6 +17,20 @@ describe('AudioGrid', () => {
             const grid = new AudioGrid(60 as BPM, 3 as Beats, 10 as ContextTime);
 
             expect(grid.getNextBarTime(11 as ContextTime)).toBe(13);
+        });
+
+        it('should respect custom beatsPerBar and ppqn', () => {
+            const grid = new AudioGrid(60 as BPM, 3 as Beats, 10 as ContextTime, 480 as Pulses);
+
+            expect(grid.ppqn).toBe(480);
+            expect(grid.beatsPerBar).toBe(3);
+        });
+
+        it('should set default beatsPerBar and ppqn', () => {
+            const grid = new AudioGrid(120 as BPM);
+
+            expect(grid.ppqn).toBe(AudioGrid.DEFAULT_PPQN);
+            expect(grid.beatsPerBar).toBe(AudioGrid.DEFAULT_BEATS_PER_BAR);
         });
     });
 
@@ -88,14 +103,30 @@ describe('AudioGrid', () => {
             expect(offsetGrid.getPulseAtTime(6.0 as ContextTime)).toBe(960);
             expect(offsetGrid.getPulseAtTime(2.0 as ContextTime)).toBe(0);
         });
+
+        it('should return 0 instantly on exact startTime without falling through to calculation logic (Line 68)', () => {
+            const offsetGrid = new AudioGrid(120 as BPM, 4 as Beats, 5.5 as ContextTime, 960 as Pulses);
+
+            let calls = 0;
+            const dynamicTime = {
+                valueOf() {
+                    calls++;
+                    if (calls === 1) return 5.5;
+
+                    return 99999;
+                }
+            } as unknown as ContextTime;
+
+            expect(offsetGrid.getPulseAtTime(dynamicTime)).toBe(0);
+        });
     });
 
     describe('getNextDivisionTime', () => {
         const grid = new AudioGrid(120 as BPM, 4 as Beats, 0 as ContextTime, 960 as Pulses);
 
         it('should correctly calculate the next 1/4 note division (implicit default fallback)', () => {
-            expect(grid.getNextDivisionTime(0.2 as ContextTime, '1/4' as GridDivision)).toBe(0.5);
-            expect(grid.getNextDivisionTime(0.6 as ContextTime, '1/4' as GridDivision)).toBe(1.0);
+            expect(grid.getNextDivisionTime(0.2 as ContextTime, '1/4')).toBe(0.5);
+            expect(grid.getNextDivisionTime(0.6 as ContextTime, '1/4')).toBe(1.0);
         });
 
         it('should correctly calculate the next 1/8 note division', () => {

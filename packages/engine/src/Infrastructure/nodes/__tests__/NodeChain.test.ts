@@ -3,8 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { NodeChain } from '../NodeChain.js';
 
-import type { AudioNodeFactory } from '@infrastructure/nodes/AudioNodeFactory.js';
-
 describe('NodeChain (Deep Module & Zero-Allocation)', () => {
     let mockFactory: any;
     let createdGains: any[];
@@ -54,7 +52,7 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
                 return node;
             }),
             mutate3DPanner: vi.fn()
-        } as unknown as AudioNodeFactory;
+        };
     });
 
     describe('Initialization & Internal Graph', () => {
@@ -253,6 +251,49 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
             expect(spatialPanner.disconnect).toHaveBeenCalled();
 
             expect(outputNode.disconnect).toHaveBeenCalled();
+        });
+    });
+
+    describe('mainFilterNode', () => {
+        it('should return null when initialized without filters', () => {
+            const chain = new NodeChain(mockFactory);
+
+            expect(chain.mainFilterNode).toBeNull();
+        });
+
+        it('should return null when active filters are cleared from a populated pool', () => {
+            const chain = new NodeChain(mockFactory, {
+                initialFilters: [{ type: 'lowpass', frequency: 1000 }]
+            });
+            expect(chain.mainFilterNode).toBe(createdFilters[0]);
+
+            chain.setFilters([]);
+
+            expect(chain.mainFilterNode).toBeNull();
+        });
+    });
+
+    describe('setPannerMode', () => {
+        it('should disconnect the active panner when disabling panning', () => {
+            const chain = new NodeChain(mockFactory, { hasPanner: true });
+            const stereoPanner = createdPanners[0];
+            stereoPanner.disconnect.mockClear();
+
+            chain.setPannerMode({});
+
+            expect(stereoPanner.disconnect).toHaveBeenCalledTimes(1);
+            expect(chain.pannerNode).toBeNull();
+        });
+
+        it('should disconnect the previous 3D panner when switching to stereo panning', () => {
+            const chain = new NodeChain(mockFactory, { spatial: true });
+            const spatialPanner = createdPanners[0];
+            spatialPanner.disconnect.mockClear();
+
+            chain.setPannerMode({ hasPanner: true });
+
+            expect(spatialPanner.disconnect).toHaveBeenCalled();
+            expect(chain.pannerNode).toBe(createdPanners[1]);
         });
     });
 });

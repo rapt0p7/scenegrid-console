@@ -1,9 +1,10 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
+import type { RTPCTargetProperty, IRTPCConfig } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IComponentValidationRule } from '@domain/Validation/Ports/IComponentValidationRule.js';
 import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
-import type { RTPCTargetProperty, IRTPCConfig } from '@domain/Configuration/Ports/IRTPCConfig.js';
+
 import { DeepReadonly, isAbsent } from '@scene-grid/shared';
 import { isDefined, typedEntries } from '@scene-grid/shared';
 
@@ -28,7 +29,7 @@ export class RTPCRule implements IComponentValidationRule<RtpcMap> {
                 continue;
             }
 
-            const rConfig = config as IRTPCConfig;
+            const rConfig = config;
 
             if (!context.assertRequiredType(`${configPath}.gameParam`, rConfig.gameParam, 'string')) continue;
 
@@ -68,7 +69,7 @@ export class RTPCRule implements IComponentValidationRule<RtpcMap> {
             if (targetName === 'sendLevel') {
                 if (isAbsent(rConfig.sendTargetBus)) {
                     context.addError(`${configPath} is missing 'sendTargetBus'.`);
-                } else if (!validBuses.includes(rConfig.sendTargetBus as string)) {
+                } else if (!validBuses.includes(rConfig.sendTargetBus)) {
                     context.addError(`${configPath} references unknown bus "${rConfig.sendTargetBus}".`);
                 }
             } else if (isDefined(rConfig.sendTargetBus)) {

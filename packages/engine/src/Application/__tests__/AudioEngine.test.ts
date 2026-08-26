@@ -13,8 +13,10 @@ import type {
 } from '@scene-grid/shared';
 
 import { AudioEngine } from '@application/AudioEngine.js';
+import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
 import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 import { PRIORITY } from '@domain/Mixer/MixerLayer.js';
+import { MusicConductor } from '@domain/Orchestration/MusicConductor.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
 import ConsistencyChecker from '@domain/Validation/ConsistencyChecker.js';
 import { SoundController, SoundPoolManager, SoundInstance, AudioContextManager, FiltersPlugin } from '@infrastructure';
@@ -100,7 +102,9 @@ vi.mock('@infrastructure', async importOriginal => {
 
         CullingRunner: vi.fn().mockImplementation(function (arbiter, controller, contextProvider) {
             (globalThis as any).__mockCullingContext = contextProvider;
-            return { start: vi.fn(), stop: vi.fn() };
+            const runnerInstance = { start: vi.fn(), stop: vi.fn(), tick: vi.fn() };
+            (globalThis as any).__mockCullingRunnerInstance = runnerInstance;
+            return runnerInstance;
         }),
         SidechainDucker: vi.fn().mockImplementation(function () {
             return { insertLookahead: vi.fn(), start: vi.fn(), activeEnvelope: 0 };
@@ -111,6 +115,11 @@ vi.mock('@infrastructure', async importOriginal => {
                 inputNode: { connect: vi.fn() },
                 outputNode: { connect: vi.fn() }
             };
+        }),
+        TelemetrySnapshotter: vi.fn().mockImplementation(function (...args: unknown[]) {
+            (globalThis as any).__mockSnapshotterArgs = args;
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            return { TICK_DIVIDER: 1 as any, tick: vi.fn() };
         })
     };
 });
@@ -849,6 +858,361 @@ describe('AudioEngine', () => {
 
             expect(clickCall).toBeDefined();
             expect(clickCall![5]!.spatial).toBeUndefined();
+        });
+    });
+
+    it('should safely ignore bank load and unload if engine is not initialized', async () => {
+        const uninitEngine = new AudioEngine({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        });
+        await expect(uninitEngine.banks.load('Bank_A')).resolves.not.toThrow();
+        expect(() => {
+            uninitEngine.banks.unload('Bank_A');
+        }).not.toThrow();
+    });
+
+    it('should call resume on unlock()', async () => {
+        (engine._debug.contextManager as any).resume = vi.fn().mockResolvedValue(undefined);
+        const resumeSpy = vi.spyOn(engine._debug.contextManager, 'resume');
+        await engine.unlock();
+        expect(resumeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should call suspend on suspend()', async () => {
+        (engine._debug.contextManager as any).suspend = vi.fn().mockResolvedValue(undefined);
+        const suspendSpy = vi.spyOn(engine._debug.contextManager, 'suspend');
+        await engine.suspend();
+        expect(suspendSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should safely instantiate reserved and unmapped sounds', async () => {
+        const infra = await import('@infrastructure');
+        vi.spyOn(infra.EngineTicker.prototype, 'start').mockImplementation(() => {});
+
+        const testEngine = new AudioEngine({
+            manifest: { ['ghost' as SoundId]: { url: 'ghost.mp3' } },
+            soundMap: {},
+            buses: {},
+            snapshots: {},
+            events: {},
+            banks: {}
+        });
+        await testEngine.init();
+
+        const poolCalls = vi.mocked(infra.SoundPoolManager).mock.calls;
+        const instanceFactory = poolCalls.at(-1)![0];
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        expect(instanceFactory('__RESERVED__' as SoundId)).toBeDefined();
+        expect(() => instanceFactory('ghost' as SoundId)).not.toThrow();
+
+        const bufferLoaderInstance = vi.mocked(infra.AudioBufferLoader).mock.results.at(-1)!.value;
+        bufferLoaderInstance.getBuffer.mockReturnValueOnce(null);
+
+        instanceFactory('ghost' as SoundId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Buffer for "ghost" not found'));
+        warnSpy.mockRestore();
+    });
+
+    it('should log initiation and completion messages', async () => {
+        const infra = await import('@infrastructure');
+        vi.spyOn(infra.EngineTicker.prototype, 'start').mockImplementation(() => {});
+        const localLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+        const testEngine = new AudioEngine({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        });
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        await testEngine.init();
+        await testEngine._hotReloadConfig({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        });
+
+        expect(localLogSpy).toHaveBeenCalledWith(expect.stringContaining('Initiating Hot Reload'));
+        expect(localLogSpy).toHaveBeenCalledWith(expect.stringContaining('Hot Reload complete!'));
+        localLogSpy.mockRestore();
+    });
+
+    it('should catch errors during apply phase and log gracefully', async () => {
+        const infra = await import('@infrastructure');
+        vi.spyOn(infra.EngineTicker.prototype, 'start').mockImplementation(() => {});
+        const localErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        const testEngine = new AudioEngine({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        });
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        await testEngine.init();
+
+        vi.spyOn(testEngine._debug.busSystem, 'updateConfig').mockRejectedValueOnce(new Error('Apply Fail'));
+
+        await testEngine._hotReloadConfig({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        });
+        expect(localErrorSpy).toHaveBeenCalledWith(
+            expect.stringContaining('Hot Reload failed during apply phase'),
+            expect.any(Error)
+        );
+        localErrorSpy.mockRestore();
+    });
+
+    it('should capture and handle OOM Eviction telemetry and logs correctly', async () => {
+        const infra = await import('@infrastructure');
+        vi.spyOn(infra.EngineTicker.prototype, 'start').mockImplementation(() => {});
+
+        const testEngine = new AudioEngine({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        });
+        await testEngine.init();
+
+        const dispatchSpy = vi.spyOn(infra.TelemetryDispatcher.prototype, 'dispatch');
+        const localErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        const bufferCalls = vi.mocked(infra.AudioBufferLoader).mock.calls;
+        const bufferLoaderMockArgs = bufferCalls.at(-1)!;
+        const onEvict = bufferLoaderMockArgs[4] as (url: string) => void;
+
+        onEvict('audio/large.mp3');
+
+        expect(localErrorSpy).toHaveBeenCalledWith(expect.stringContaining('CRITICAL OOM EVICTION'));
+        expect(dispatchSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                type: 'CAUSE_CHAIN',
+                initiator: { type: 'RAM_QUOTA_MANAGER' },
+                result: { type: 'OOM_CRITICAL_EVICTION', targetUrl: 'audio/large.mp3' }
+            })
+        );
+
+        expect(vi.mocked(ConsistencyChecker.validate).mock.calls[0][1]?.reporters).toHaveLength(2);
+        localErrorSpy.mockRestore();
+        dispatchSpy.mockRestore();
+    });
+
+    it('should initialize CommandReceiver in non-production environments and map debug calls', async () => {
+        const infra = await import('@infrastructure');
+
+        let capturedDebugPort: any = null;
+        const origReceiver = infra.CommandReceiver;
+
+        (infra as any).CommandReceiver = vi.fn().mockImplementation(function (this: any, w: any, d: any) {
+            capturedDebugPort = d;
+            return this;
+        });
+
+        const testEngine = new AudioEngine({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        });
+        await testEngine.init();
+
+        expect(capturedDebugPort).not.toBeNull();
+        expect(capturedDebugPort.stopAll).toBeDefined();
+
+        expect(() => capturedDebugPort.stopAll()).not.toThrow();
+        expect(() => capturedDebugPort.pauseAll()).not.toThrow();
+        expect(() => capturedDebugPort.resumeAll()).not.toThrow();
+        expect(() => capturedDebugPort.clearAllOverrides()).not.toThrow();
+        expect(() => capturedDebugPort.fireEvent('test' as any)).not.toThrow();
+        expect(() => capturedDebugPort.applySnapshot('test' as any, 500)).not.toThrow();
+        expect(() => capturedDebugPort.setRtpcOverride('test' as any, 1, true)).not.toThrow();
+        expect(() => capturedDebugPort.playLoop('test' as any, 'region')).not.toThrow();
+        expect(() => capturedDebugPort.stopLoop('test' as any)).not.toThrow();
+        expect(() => capturedDebugPort.transitionMusicTo('test' as any, 'region', 'trans', {})).not.toThrow();
+
+        (infra as any).CommandReceiver = origReceiver;
+    });
+
+    it('should log the exact success message on successful init (kills line 671)', async () => {
+        const logSpy = vi.spyOn(console, 'log');
+
+        const freshEngine = new AudioEngine({
+            manifest: {},
+            buses: { master: { gain: 1 } },
+            soundMap: {},
+            snapshots: {},
+            events: {},
+            banks: {}
+        });
+        await freshEngine.init();
+
+        expect(logSpy).toHaveBeenCalledWith('[AudioEngine] Successfully Initialized');
+    });
+
+    it('should validate the new config against the same reporters used at init time (kills line 737)', async () => {
+        const testEngine = new AudioEngine({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        });
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        await testEngine.init();
+
+        const validateSpy = vi.mocked(ConsistencyChecker.validate);
+        validateSpy.mockClear();
+
+        await testEngine._hotReloadConfig({
+            manifest: {},
+            banks: {},
+            buses: {},
+            soundMap: {},
+            snapshots: {},
+            events: {}
+        });
+
+        expect(validateSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({ reporters: expect.arrayContaining([expect.anything(), expect.anything()]) })
+        );
+    });
+
+    it('should default the snapshotter voice limit to 128 when globalVoiceLimit is omitted', async () => {
+        const noLimitEngine = new AudioEngine({
+            manifest: {},
+            buses: { master: { gain: 1 } },
+            soundMap: {},
+            snapshots: {},
+            events: {},
+            banks: {}
+        });
+
+        await noLimitEngine.init();
+
+        const snapshotterArgs = (globalThis as any).__mockSnapshotterArgs;
+        expect(snapshotterArgs.at(-1)).toBe(128);
+    });
+
+    it('should invoke busSystem.tickRTPC via the registered bus-system ticker task (kills line 560)', async () => {
+        const infra = await import('@infrastructure');
+        const addSpy = vi.spyOn(infra.EngineTicker.prototype, 'add');
+
+        const testEngine = new AudioEngine({
+            manifest: {},
+            buses: { master: { gain: 1 } },
+            soundMap: {},
+            snapshots: {},
+            events: {},
+            banks: {}
+        });
+        await testEngine.init();
+
+        const busSystemTask = addSpy.mock.calls.find(call => call[0] === 'bus-system')?.[2] as { tick: () => void };
+        expect(busSystemTask).toBeDefined();
+
+        const tickRTPCSpy = vi.spyOn(testEngine._debug.busSystem, 'tickRTPC');
+        busSystemTask.tick();
+
+        expect(tickRTPCSpy).toHaveBeenCalledWith(testEngine._debug.rtpcManager);
+
+        addSpy.mockRestore();
+        tickRTPCSpy.mockRestore();
+    });
+
+    it('should invoke instanceRTPCBinder.tickRTPC via the registered instance-rtpc ticker task (kills line 566)', async () => {
+        const tickRTPCSpy = vi.spyOn(InstanceRTPCBinder.prototype, 'tickRTPC').mockImplementation(() => {});
+        const infra = await import('@infrastructure');
+        const addSpy = vi.spyOn(infra.EngineTicker.prototype, 'add');
+
+        const testEngine = new AudioEngine({
+            manifest: {},
+            buses: { master: { gain: 1 } },
+            soundMap: {},
+            snapshots: {},
+            events: {},
+            banks: {}
+        });
+        await testEngine.init();
+
+        const instanceRtpcTask = addSpy.mock.calls.find(call => call[0] === 'instance-rtpc')?.[2] as {
+            tick: () => void;
+        };
+        expect(instanceRtpcTask).toBeDefined();
+
+        instanceRtpcTask.tick();
+
+        expect(tickRTPCSpy).toHaveBeenCalledTimes(1);
+
+        addSpy.mockRestore();
+        tickRTPCSpy.mockRestore();
+    });
+
+    describe('Music Conductor wiring', () => {
+        it('should create, tick, and start the MusicConductor when musicFSM is configured', async () => {
+            const startSpy = vi.spyOn(MusicConductor.prototype, 'start').mockImplementation(() => {});
+            const initSpy = vi.spyOn(MusicConductor.prototype, 'init').mockImplementation(() => {});
+
+            const musicEngine = new AudioEngine({
+                manifest: {},
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {},
+                musicFSM: { states: {}, initial: 'idle' } as any
+            });
+            await musicEngine.init();
+
+            expect(initSpy).toHaveBeenCalledWith(musicEngine.config.musicFSM);
+
+            musicEngine.conductor.start();
+            expect(startSpy).toHaveBeenCalledTimes(1);
+
+            startSpy.mockRestore();
+            initSpy.mockRestore();
+        });
+
+        it('should NOT wire a conductor ticker task when musicFSM is absent (kills line 598)', async () => {
+            const noMusicEngine = new AudioEngine({
+                manifest: {},
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            const startSpy = vi.spyOn(MusicConductor.prototype, 'start').mockImplementation(() => {});
+
+            await noMusicEngine.init();
+            noMusicEngine.conductor.start();
+
+            expect(startSpy).not.toHaveBeenCalled();
+            startSpy.mockRestore();
         });
     });
 });

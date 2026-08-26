@@ -1,24 +1,17 @@
-import type { DeepReadonly, IConditionConfig, MusicStateId } from '@scene-grid/shared';
 import type { IMusicFSMConfig, IMusicTransitionEdge } from '@domain/Configuration/Ports/IMusicFSMConfig.js';
+import type { DeepReadonly, IConditionConfig, MusicStateId } from '@scene-grid/shared';
 
 export function evaluateEdges(
     fsmConfig: DeepReadonly<IMusicFSMConfig>,
     currentStateId: MusicStateId,
     checkCondition: (cond: DeepReadonly<IConditionConfig>) => boolean
 ): DeepReadonly<IMusicTransitionEdge> | null {
-    let edge = findActiveEdge(fsmConfig.globalEdges, checkCondition);
-
-    if (edge) return edge;
+    const globalEdge = findActiveEdge(fsmConfig.globalEdges, checkCondition);
+    if (globalEdge) return globalEdge;
 
     const currentNode = fsmConfig.states[currentStateId];
 
-    if (currentNode?.edges) {
-        edge = findActiveEdge(currentNode.edges, checkCondition);
-
-        if (edge) return edge;
-    }
-
-    return null;
+    return currentNode?.edges ? findActiveEdge(currentNode.edges, checkCondition) : null;
 }
 
 function findActiveEdge(
@@ -29,7 +22,6 @@ function findActiveEdge(
 
     for (let i = 0; i < length; i++) {
         const edge = edges[i];
-
         if (evaluateConditions(edge.conditions, checkCondition)) return edge;
     }
 
@@ -41,8 +33,6 @@ function evaluateConditions(
     checkCondition: (cond: DeepReadonly<IConditionConfig>) => boolean
 ): boolean {
     const length = conditions.length;
-
-    if (length === 0) return true;
 
     for (let i = 0; i < length; i++) {
         if (!checkCondition(conditions[i])) return false;
