@@ -62,9 +62,9 @@ describe('evaluateRTPCCurve', () => {
 
         test.prop([curveArb])('should clamp to last point if input is >= max x', curve => {
             const lastPoint = curve.at(-1);
-            const input = lastPoint.x + Math.abs(lastPoint.x * 0.1) + 1;
-            expect(evaluateRTPCCurve(input, curve)).toBe(lastPoint.y);
-            expect(evaluateRTPCCurve(lastPoint.x, curve)).toBe(lastPoint.y);
+            const input = lastPoint!.x + Math.abs(lastPoint!.x * 0.1) + 1;
+            expect(evaluateRTPCCurve(input, curve)).toBe(lastPoint!.y);
+            expect(evaluateRTPCCurve(lastPoint!.x, curve)).toBe(lastPoint!.y);
         });
 
         test.prop([pointArb, pointArb])(

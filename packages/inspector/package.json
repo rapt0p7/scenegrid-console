@@ -18,7 +18,6 @@
     },
     "dependencies": {
         "@radix-ui/colors": "3.0.0",
-        "@scene-grid/engine": "*",
         "@scene-grid/shared": "*",
         "@xyflow/react": "12.11.0",
         "clsx": "2.1.1",

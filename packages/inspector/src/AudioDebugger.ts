@@ -1,7 +1,6 @@
 // noinspection D
 
-import type { AudioCtx, GainNodeLike, AudioBusSystem } from '@scene-grid/engine';
-
+import type { IAudioBusSystemProxy, IGainNodeProxy } from './types/EngineProxies.js';
 import type { IWorkletLoader } from './types/IWorkletLoader.js';
 
 import { createFrequencyCurveWithRMS, createMeters } from './visualizers.js';
@@ -12,12 +11,10 @@ export interface DebuggerOptions {
 }
 
 export default class AudioDebugger {
-    private readonly context: AudioCtx;
-    private readonly busSystem: AudioBusSystem;
-    private readonly masterNode: GainNodeLike;
+    private readonly busSystem: IAudioBusSystemProxy;
+    private readonly masterNode: IGainNodeProxy;
 
-    constructor(context: AudioCtx, busSystem: AudioBusSystem, masterNode: GainNodeLike) {
-        this.context = context;
+    constructor(busSystem: IAudioBusSystemProxy, masterNode: IGainNodeProxy) {
         this.busSystem = busSystem;
         this.masterNode = masterNode;
     }

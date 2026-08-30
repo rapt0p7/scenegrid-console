@@ -77,7 +77,7 @@ describe('AudioDebugger', () => {
 
     it('should safely return and warn if wrapper selector is not found', () => {
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
+        const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
 
         void debuggerInstance.init({ wrapperSelector: '#non_existent', workletLoader: mockWorkletLoader });
 
@@ -88,7 +88,7 @@ describe('AudioDebugger', () => {
     });
 
     it('should create DOM structure for Master and all active buses', () => {
-        const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
+        const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
 
         void debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
 
@@ -104,7 +104,7 @@ describe('AudioDebugger', () => {
     });
 
     it('should initialize custom visualizers', async () => {
-        const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
+        const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
 
         void debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
 
@@ -117,7 +117,7 @@ describe('AudioDebugger', () => {
     it('should gracefully handle buses with missing postFilterGain nodes', async () => {
         mockBusSystem.getAllBuses.mockReturnValue(new Map([['broken_bus', { postFilterGain: null }]]));
 
-        const debuggerInstance = new AudioDebugger(mockContext, mockBusSystem, mockMasterNode);
+        const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
 
         void debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
 

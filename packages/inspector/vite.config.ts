@@ -21,7 +21,6 @@ export default defineConfig({
         rollupOptions: {
             external: [
                 '@scene-grid/shared',
-                '@scene-grid/engine',
                 'tweakpane',
                 '@tweakpane/core',
                 '@tweakpane/plugin-essentials',

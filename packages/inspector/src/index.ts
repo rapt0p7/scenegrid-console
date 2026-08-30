@@ -10,9 +10,9 @@ export async function attachDebugUI(audioEngine: any, options: DebuggerOptions):
         return;
     }
 
-    const { contextManager, busSystem } = audioEngine._debug;
+    const { busSystem } = audioEngine._debug;
 
-    const debuggerInstance = new AudioDebugger(contextManager.context, busSystem, busSystem.getMasterNode());
+    const debuggerInstance = new AudioDebugger(busSystem, busSystem.getMasterNode());
 
     await debuggerInstance.init(options);
 }

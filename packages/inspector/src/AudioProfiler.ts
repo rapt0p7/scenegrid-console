@@ -1,6 +1,6 @@
 // oxlint-disable no-underscore-dangle
 // noinspection D
-import type { ISoundInstance } from '@scene-grid/engine';
+import type { ISoundInstanceProxy } from './types/EngineProxies.js';
 
 export class AudioProfiler {
     public readonly metrics = {
@@ -46,7 +46,7 @@ export class AudioProfiler {
         const pool = this.engine._debug?.poolManager;
         if (!pool || typeof pool.getActiveVoices !== 'function') return;
 
-        const activeVoices = pool.getActiveVoices() as ReadonlySet<ISoundInstance>;
+        const activeVoices = pool.getActiveVoices() as ReadonlySet<ISoundInstanceProxy>;
         let hw = 0;
         let virtual = 0;
         const currentDump = [];

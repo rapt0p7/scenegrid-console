@@ -1,18 +1,16 @@
 // oxlint-disable max-lines-per-function no-underscore-dangle
 // oxlint-disable max-lines
-/* eslint-disable no-param-reassign,@typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
-
-import type { AudioWorkletNodeLike, GainNodeLike } from '@scene-grid/engine';
 
 import { AudioWorkletNode } from 'standardized-audio-context';
 
+import type { IAudioWorkletNodeProxy, IGainNodeProxy } from './types/EngineProxies.js';
 import type { IWorkletLoader } from './types/IWorkletLoader.js';
 
 // oxlint-disable-next-line import/default
 import processorUrl from './worklets/meter.processor.js?worklet';
 
-// eslint-disable-next-line max-params
 function map(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
     return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
@@ -43,7 +41,6 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
     return [r, g, b];
 }
 
-// eslint-disable-next-line max-params
 function createOrthoMatrix(
     left: number,
     right: number,
@@ -54,7 +51,7 @@ function createOrthoMatrix(
 ): Float32Array {
     const rl = right - left;
     const tb = top - bottom;
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+
     const function_ = far - near;
     return new Float32Array([
         2 / rl,
@@ -105,7 +102,6 @@ function loadShader(gl: WebGLRenderingContext, type: number, source: string): We
     return shader;
 }
 
-// eslint-disable-next-line max-params
 function drawRect(
     gl: WebGLRenderingContext,
     programInfo: any,
@@ -125,7 +121,6 @@ function drawRect(
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
-// eslint-disable-next-line max-params
 function drawLine(
     gl: WebGLRenderingContext,
     programInfo: any,
@@ -147,17 +142,16 @@ function drawLine(
     gl.drawArrays(gl.LINES, 0, 2);
 }
 
-// eslint-disable-next-line max-params
 export async function createFrequencyBarsWithRMS(
     container: HTMLElement,
-    gainNode: GainNodeLike,
+    gainNode: IGainNodeProxy,
     workletLoader: IWorkletLoader,
     width: number = 600,
     height: number = 200
 ) {
     const { context } = gainNode;
     await workletLoader.loadModule(context, processorUrl);
-    const amplitudeNode: AudioWorkletNodeLike = new AudioWorkletNode!(context as any, 'meter-processor') as any;
+    const amplitudeNode: IAudioWorkletNodeProxy = new AudioWorkletNode!(context, 'meter-processor') as any;
     gainNode.connect(amplitudeNode);
     const analyser = context.createAnalyser();
     analyser.fftSize = 1024;
@@ -272,10 +266,9 @@ export async function createFrequencyBarsWithRMS(
     requestAnimationFrame(render);
 }
 
-// eslint-disable-next-line max-params
 export async function createMeters(
     container: HTMLElement,
-    gainNode: GainNodeLike,
+    gainNode: IGainNodeProxy,
     workletLoader: IWorkletLoader,
     width: number = 450,
     height: number = 150
@@ -283,7 +276,7 @@ export async function createMeters(
     const { context } = gainNode;
 
     await workletLoader.loadModule(context, processorUrl);
-    const meterNode = new AudioWorkletNode!(context as any, 'meter-processor');
+    const meterNode = new AudioWorkletNode!(context, 'meter-processor');
     gainNode.connect(meterNode);
 
     let currentRMS = 0;
@@ -313,7 +306,7 @@ export async function createMeters(
     container.append(textCanvas);
 
     const gl = webglCanvas.getContext('webgl', { antialias: false });
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+
     const context_ = textCanvas.getContext('2d');
 
     if (!gl || !context_) {
@@ -476,10 +469,9 @@ export async function createMeters(
     requestAnimationFrame(render);
 }
 
-// eslint-disable-next-line max-params
 export async function createFrequencyCurveWithRMS(
     container: HTMLElement,
-    gainNode: GainNodeLike,
+    gainNode: IGainNodeProxy,
     workletLoader: IWorkletLoader,
     width: number = 600,
     height: number = 200
@@ -487,7 +479,7 @@ export async function createFrequencyCurveWithRMS(
     const { context } = gainNode;
 
     await workletLoader.loadModule(context, processorUrl);
-    const amplitudeNode: AudioWorkletNodeLike = new AudioWorkletNode!(context as any, 'meter-processor') as any;
+    const amplitudeNode: IAudioWorkletNodeProxy = new AudioWorkletNode!(context, 'meter-processor') as any;
     gainNode.connect(amplitudeNode);
 
     const analyser = context.createAnalyser();
