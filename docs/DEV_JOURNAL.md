@@ -373,6 +373,19 @@
 
 ---
 
+## [Phase 25] Focus: Inspector Decoupling, Deterministic Scheduling, and Test Rigor
+
+* **Context/Problem:** The `inspector` was tightly coupled to the `engine`, potentially impacting runtime performance and preventing it from running reliably in an isolated environment. Additionally, scheduling needed to be more deterministic regardless of frame rate fluctuations, and the test suite required stronger validation against false positives.
+* **Solution:** Decoupled the `inspector` from the `engine` utilizing a Proxy architecture and a `SharedWorker` for synchronization, enabling the DevTools to run in complete isolation. Introduced a tick divider for deterministic scheduling. Finally, strengthened the test suite by integrating mutation testing and implemented the `OpenWiki` documentation system for continuous knowledge management.
+
+*Manual notes (to be filled):*
+
+* **❌ What didn't work:**
+* **⚖️ Trade-off:**
+* **🎯 Next step:**
+
+---
+
 ## [Architectural Invariants] Documented Rules (from docs/architecture commits)
 
 The following explicit rules have been locked in the documentation:

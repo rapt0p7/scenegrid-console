@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Add `OpenWiki` documentation system
+
+- Introduce tick divider for deterministic scheduling
+
+- Introduce sharedworker for inspector-engine sync
+
 - Introduce `WorkletLoader` for robust `AudioWorklet` loading
 
 - Add event action tagging and pending cancellation
@@ -238,6 +244,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Decouple `inspector` from `engine` using proxy
+
+- Update `openwiki`
+
+- Update `repowise`
+
+- Update 'openspec' agent workflow and skill configurations
+
+- Configure 'logical-thinking-process' skill for ai agents
+
+- Updated changelog and dev journal
+
 - Update diagram
 
 - Validate action tags and `cancel_pending` type
@@ -634,6 +652,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Fixed
+- Strengthen test suite with mutation testing
+
 - Improve scheduling precision and transition handling
 
 - Adjust `CullingRunner` and telemetry bus data expectations

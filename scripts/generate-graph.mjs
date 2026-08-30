@@ -12,7 +12,7 @@ const MMD_OUTPUT_PATH = 'docs/dependency-graph.mmd';
 const SVG_OUTPUT_PATH = 'docs/diagram.svg';
 const MERMAID_CONFIG_PATH = 'docs/config.json';
 
-const DEPCRUISE_CMD = `npx depcruise packages/engine/src packages/shared/src --config .dependency-cruiser.cjs --include-only "^packages/(engine|shared)/src" --exclude "(__tests__|\\\\.test\\\\.ts$|\\\\.spec\\\\.ts$)" --output-type mermaid`;
+const DEPCRUISE_CMD = `npx depcruise packages/engine/src packages/shared/src --config .dependency-cruiser.cjs --include-only "^packages/(engine|shared)/src" --exclude "(__benchmarks__|__tests__|\\.test\\.ts$|\\.spec\\.ts$|\\.bench\\.ts$|\\.d\\.ts$)" --output-type mermaid`;
 const MERMAID_CLI_CMD = `npx mmdc -i ${MMD_OUTPUT_PATH} -o ${SVG_OUTPUT_PATH} -c ${MERMAID_CONFIG_PATH}`;
 
 const CLASS_DEFINITIONS = `

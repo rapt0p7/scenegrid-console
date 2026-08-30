@@ -155,9 +155,9 @@ subgraph 1M["Kernel"]
 subgraph 1N["RTPC"]
 subgraph 1O["Ports"]
 1P["IRTPCManifest.ts"]
-5Z["IRTPCManager.ts"]
+60["IRTPCManager.ts"]
 end
-5Y["RTPCManager.ts"]
+5Z["RTPCManager.ts"]
 end
 end
 subgraph 4B["Infrastructure"]
@@ -165,17 +165,11 @@ subgraph 4B["Infrastructure"]
 subgraph 4D["automation"]
 4E["AutomationEngine.ts"]
 end
-subgraph 4F["scheduling"]
-4G["EngineTicker.ts"]
-5E["PlaybackScheduler.ts"]
-5M["CullingContextProvider.ts"]
-5N["CullingRunner.ts"]
-end
-subgraph 4H["types"]
-4I["IAudioContext.ts"]
-4M["IAudioPlugins.ts"]
-4N["IFiltersPlugin.ts"]
-4O["IFilter.ts"]
+subgraph 4F["types"]
+4G["IAudioContext.ts"]
+4K["IAudioPlugins.ts"]
+4L["IFiltersPlugin.ts"]
+4M["IFilter.ts"]
 4R["IMasterOutput.ts"]
 4X["IAudioContextManager.ts"]
 54["INodeChain.ts"]
@@ -186,12 +180,18 @@ subgraph 4H["types"]
 5F["ILogicalVoice.ts"]
 5G["ISoundOptions.ts"]
 end
-subgraph 4J["busSystem"]
-4K["AudioBusSystem.ts"]
-4L["AudioBus.ts"]
+subgraph 4H["busSystem"]
+4I["AudioBusSystem.ts"]
+4J["AudioBus.ts"]
 end
-subgraph 4P["utils"]
-4Q["safeDisconnect.ts"]
+subgraph 4N["utils"]
+4O["safeDisconnect.ts"]
+end
+subgraph 4P["scheduling"]
+4Q["EngineTicker.ts"]
+5E["PlaybackScheduler.ts"]
+5M["CullingContextProvider.ts"]
+5N["CullingRunner.ts"]
 end
 subgraph 4S["context"]
 4T["AudioContextManager.ts"]
@@ -230,15 +230,14 @@ subgraph 5R["telemetry"]
 5V["CommandReceiver.ts"]
 5W["TelemetryDispatcher.ts"]
 5X["TelemetrySnapshotter.ts"]
+5Y["WorkerTelemetryTransport.ts"]
 end
-subgraph 60["worklets"]
-61["ducker.processor.ts"]
-62["lookahead-brickwall-limiter.processor.ts"]
+subgraph 61["worklets"]
+62["ducker.processor.ts"]
+63["lookahead-brickwall-limiter.processor.ts"]
 end
 end
-63["audio.d.ts"]
 64["index.ts"]
-65["vite-env.d.ts"]
 end
 end
 subgraph G["shared"]
@@ -274,6 +273,9 @@ subgraph 10["Telemetry"]
 14["TelemetryEvents.ts"]
 end
 17["typedObjects.ts"]
+subgraph 65["Workers"]
+66["TelemetryWorker.ts"]
+end
 end
 end
 end
@@ -306,7 +308,7 @@ end
 4-->4C
 4-->4C
 4-->1P
-4-->5Y
+4-->5Z
 4-->I
 4-->I
 6-->7
@@ -557,7 +559,6 @@ W-->N
 3B-->I
 3D-->1E
 3D-->1G
-3D-->1F
 3D-->3F
 3D-->3H
 3D-->3G
@@ -673,7 +674,7 @@ W-->N
 4A-->3G
 4A-->I
 4C-->4E
-4C-->4K
+4C-->4I
 4C-->4T
 4C-->4Y
 4C-->50
@@ -688,7 +689,7 @@ W-->N
 4C-->5L
 4C-->5M
 4C-->5N
-4C-->4G
+4C-->4Q
 4C-->5E
 4C-->5P
 4C-->5Q
@@ -697,82 +698,83 @@ W-->N
 4C-->5V
 4C-->5W
 4C-->5X
-4C-->4I
-4C-->4M
+4C-->5Y
+4C-->4G
+4C-->4K
 4C-->56
 4C-->5G
 4C-->58
-4C-->4Q
+4C-->4O
+4E-->34
 4E-->4G
-4E-->4I
 4E-->I
-4G-->34
-4G-->2W
-4G-->I
-4K-->25
-4K-->B
-4K-->1G
-4K-->27
-4K-->4E
-4K-->4L
+4I-->25
+4I-->B
+4I-->1G
+4I-->27
+4I-->4E
+4I-->4J
+4I-->4Q
+4I-->4G
+4I-->4K
+4I-->4R
+4I-->I
+4J-->26
+4J-->B
+4J-->C
+4J-->F
+4J-->27
+4J-->4E
+4J-->4G
+4J-->4K
+4J-->4O
+4J-->I
+4J-->I
 4K-->4G
-4K-->4I
-4K-->4M
-4K-->4R
-4K-->I
-4L-->26
-4L-->B
-4L-->C
-4L-->F
-4L-->27
+4K-->4L
 4L-->4E
-4L-->4I
+4L-->4G
 4L-->4M
-4L-->4Q
-4L-->I
-4L-->I
-4M-->4I
-4M-->4N
-4N-->4E
-4N-->4I
-4N-->4O
-4Q-->4I
-4R-->4I
+4O-->4G
+4Q-->34
+4Q-->2W
+4Q-->I
+4R-->4G
 4T-->4E
 4T-->4U
 4T-->4V
 4T-->4W
-4T-->4I
+4T-->4G
 4T-->4X
 4T-->I
-4U-->4I
+4U-->4G
 4V-->4E
-4V-->4I
+4V-->4G
 4V-->I
-4W-->4I
-4X-->4I
+4W-->4G
+4X-->4G
 50-->4E
 50-->4T
 50-->52
 50-->53
 50-->53
-50-->4I
+50-->4G
 50-->55
 50-->56
 50-->I
 52-->4T
-52-->4I
-52-->4O
+52-->4G
+52-->4M
 52-->I
 53-->52
-53-->4I
-53-->4O
+53-->4G
+53-->4M
 53-->54
-54-->4I
-54-->4O
+54-->4G
+54-->4M
 55-->I
 56-->52
-56-->4I
+56-->4G
 56-->55
 56-->I
 57-->56
@@ -793,10 +795,10 @@ W-->N
 5D-->2B
 5D-->2O
 5D-->4E
-5D-->4K
+5D-->4I
 5D-->57
 5D-->5E
-5D-->4I
+5D-->4G
 5D-->5F
 5D-->5G
 5D-->I
@@ -809,20 +811,20 @@ W-->N
 5G-->52
 5H-->4E
 5H-->4T
-5H-->4I
+5H-->4G
 5H-->I
 5J-->4E
-5J-->4I
-5J-->4O
+5J-->4G
+5J-->4M
 5J-->I
 5K-->4Y
-5K-->4I
-5K-->4M
-5K-->4Q
+5K-->4G
+5K-->4K
+5K-->4O
 5K-->I
 5L-->4Y
-5L-->4I
-5L-->4M
+5L-->4G
+5L-->4K
 5M-->25
 5M-->1F
 5M-->1Y
@@ -841,7 +843,6 @@ W-->N
 5S-->5T
 5S-->I
 5U-->I
-5V-->5T
 5V-->39
 5V-->2W
 5V-->I
@@ -856,9 +857,10 @@ W-->N
 5X-->2W
 5X-->I
 5X-->I
-5Y-->5Z
 5Y-->I
+5Z-->60
 5Z-->I
+60-->I
 64-->4
 64-->7
 64-->1Q
@@ -873,10 +875,12 @@ W-->N
 64-->1K
 64-->4C
 64-->4C
-64-->5Z
+64-->60
 64-->1P
 64-->1C
 64-->I
+66-->13
+66-->14
 
 
 
@@ -983,18 +987,14 @@ class 47 domain;
 class 48 domain;
 class 49 domain;
 class 1P ports;
-class 5Z ports;
-class 5Y kernel;
+class 60 ports;
+class 5Z kernel;
 class 4C infrastructure;
 class 4E infrastructure;
-class 4G infrastructure;
-class 5E infrastructure;
-class 5M infrastructure;
-class 5N infrastructure;
-class 4I ports;
+class 4G ports;
+class 4K ports;
+class 4L ports;
 class 4M ports;
-class 4N ports;
-class 4O ports;
 class 4R ports;
 class 4X ports;
 class 54 ports;
@@ -1004,9 +1004,13 @@ class 58 ports;
 class 5B ports;
 class 5F ports;
 class 5G ports;
-class 4K infrastructure;
-class 4L infrastructure;
+class 4I infrastructure;
+class 4J infrastructure;
+class 4O infrastructure;
 class 4Q infrastructure;
+class 5E infrastructure;
+class 5M infrastructure;
+class 5N infrastructure;
 class 4T infrastructure;
 class 4U infrastructure;
 class 4V infrastructure;
@@ -1031,11 +1035,10 @@ class 5U infrastructure;
 class 5V infrastructure;
 class 5W infrastructure;
 class 5X infrastructure;
-class 61 infrastructure;
+class 5Y infrastructure;
 class 62 infrastructure;
-class 63 defaultNode;
+class 63 infrastructure;
 class 64 defaultNode;
-class 65 defaultNode;
 class I shared;
 class J shared;
 class L shared;
@@ -1057,3 +1060,4 @@ class 12 ports;
 class 13 shared;
 class 14 shared;
 class 17 shared;
+class 66 shared;
