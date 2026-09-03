@@ -1,0 +1,224 @@
+# Migrations
+
+What changed in each version that an existing project may need to know about or act on — not limited to changes to the `context/` entry *format*. Also covers structural/placement conventions (e.g. how `context/index.md` is ordered) and config defaults added to `AGENTS.md`/`AGENTS.local.md`. Not every release needs an entry here — only ones with something an existing project should check. See `setup.md` for how and when this file gets consulted; note that "consulted" doesn't always mean "asks the user to act" — a purely informational entry (e.g. a config field silently backfilled to a default) is recorded here for completeness but needs no prompt.
+
+Entries below assume 0.2.0 as the starting point — nothing before it tracked a `context-schema` at all, and 0.2.0 itself introduced no `context/` entry format change.
+
+## 0.11.0 — CI linting available (informational, no action required)
+
+**What changed:** the project init wizard now offers to wire `keep-the-why-lint` — a structural linter for `.keep-the-why` and the context directory, gated by the project's `context-schema` — into the project's CI (GitHub Actions or GitLab CI, detected from the repository) and, where pre-commit is already in use, into pre-commit. Purely additive: no config field, no entry-format change, nothing an existing project must do.
+
+**Existing projects:** optional. To add it, apply the same detection rules and snippets as the wizard would — `references/ci-linting.md` — by hand or by asking the agent. The workflow file's presence is the only state there is.
+
+**Already wired with `@latest`?** The first published snippet referenced `uses: oliver-zehentleitner/keep-the-why@latest`; that tag follows *skill* releases and didn't carry `action.yml` until the next one, so the job fails at setup ("Can't find 'action.yml'"). Switch the ref to `@lint-latest` (moves with every linter publish) or `@lint-v<version>` — a one-word mechanical fix, do it now rather than next time touched.
+
+## 0.11.0 — Core rules renumbered (15 → 11)
+
+**What changed:** `SKILL.md`'s 15 core rules were merged down to 11 — no rule's logic changed, but most rule *numbers* did. Merges: old 1+14 → 1 (never invent / clarify ambiguity), old 3+4+5 → 3 (adapt to what exists), old 9+10 → 7 (privacy / don't commit unasked). Full old → new map:
+
+```text
+1 → 1    4 → 3    7 → 5    10 → 7    13 → 10
+2 → 2    5 → 3    8 → 6    11 → 8    14 → 1
+3 → 3    6 → 4    9 → 7    12 → 9    15 → 11
+```
+
+**Migrating an existing project:** informational for most — nothing in `.keep-the-why` or the `context/` entry format changed. But a project whose own files quote rule numbers (a `context/` entry citing "rule 13's proportionality gate", a `CONTRIBUTING.md` pointing at "rule 10") now points at the wrong rule. One mechanical pass, once: grep the project for `rule <number>` references to this skill's core rules and remap them per the table — cheap, complete, and a stale number actively misleads, so don't defer it to "next touched". `CHANGELOG.md`-style historical records keep the numbering that was current at the time; only living documents (context entries, docs, contributor guides) get remapped.
+
+## 0.10.0 — Project/personal config moves into dedicated `.keep-the-why` files
+
+**What changed:** the project config block (`<!-- keep-the-why:config -->`) moves out of the entry-point file (`AGENTS.md`, or whatever a project already uses) into a dedicated `.keep-the-why` file at the project root. The personal config block (`<!-- keep-the-why:local -->`) moves out of `AGENTS.local.md` into a dedicated, non-project file at `~/.keep-the-why/<id>.md`, keyed by a new `id` field the project file now carries. See "Why dedicated files, not entry-point blocks" in `context/config-format.md` for the reasoning, and `references/setup.md` for the full format and detection logic. Three optional additions ship alongside the relocation, none of which existing projects are required to adopt: a `personal-defaults` block a project can offer new developers (plus a machine-wide `~/.keep-the-why/config` policy governing whether that's asked about or auto-applied), `pinned-version`/`pinned-path` fields for pinning to a vendored skill copy, and `context/AGENTS.md` + `context/CLAUDE.md` guard files. Not a `context/` entry-format change — existing entries are untouched — but it needs real action from an existing project, not a silent backfill.
+
+**Migrating an existing project (do this now, not on next touch — the whole point only holds once it's actually done):** steps 1, 3 and 4 are a mechanical relocation of state the project already opted into — perform them directly in the session that finds the legacy block, no "shall I migrate?" question first; step 2 is the only question in this list.
+
+1. Generate the project's `id` (see "Project config" in `setup.md`) and create `.keep-the-why`, with the header line every `.keep-the-why` gets (see `setup.md`), carrying over every existing field from the old `AGENTS.md` block verbatim (`context`, `init`, `context-schema`, `capture-confirmation`, `source-reference`), plus the new `id` field. Verbatim includes `context-schema`: the relocation step itself copies the old value (say, `0.9.2`) — it is not a schema migration. The normal behind-schema comparison (`setup.md`, "Context schema and migrations") then runs against the new file exactly as it would have against the old block, and advances the field the way it always does: right away when nothing between the two versions applies to this project, otherwise only after the applicable migration has actually been done or explicitly deferred by the user.
+2. Ask whether the project wants to add a `personal-defaults` block for future developers — same question the project init wizard now asks, framed the same way.
+3. Remove the `<!-- keep-the-why:config -->` block from the entry-point file, along with any prose that specifically pointed at it or at `AGENTS.local.md` for this skill's own state — don't replace it with a general "this project uses Keep the Why" mention; that's the project's own editorial call (a README section, the badge), not this skill's to add. **Do leave one line noting the project was migrated and that any Keep the Why skill installation reading this file needs to be at `metadata.version` 0.10.0 or later.** This is the one exception to "don't write pointers into the entry-point file": an older installed skill won't know to look for `.keep-the-why` at all, but it's still an LLM reading the whole file, not a program doing a literal marker match — a plain-English note left where it's already looking is something it can actually notice and act on, unlike a change to detection logic it was never taught.
+4. If `context/` doesn't already have `AGENTS.md` and `CLAUDE.md` guard files (see "Guarding `context/` itself" in `setup.md`), add them now, in the same pass.
+5. Separately, per developer, the *next* time each one activates the skill in this checkout (this doesn't happen all at once for everyone the moment the project-level part above lands, and that's fine — it's driven by local file presence, not by anything shared or git-tracked): if this checkout still has a `<!-- keep-the-why:local -->` block in `AGENTS.local.md`, carry its values and `last:` timestamps over verbatim into `~/.keep-the-why/<id>.md`, then remove the block from `AGENTS.local.md` — a pure relocation of that developer's own already-stated preferences, no questions needed. A developer who never had a personal block before this migration isn't affected by this step at all; they go through ordinary first-activation handling (personal wizard, or the project's `personal-defaults` if it offers one) exactly as if the project had always used `.keep-the-why`.
+
+**Known limitation:** an installed skill older than 0.10.0 has no way to know `.keep-the-why` exists — it looks for the config block in the entry-point file, doesn't find it (step 3 removed it), and could mistake an already-migrated project for one that was never set up. Not fixable retroactively (an old skill can't be taught a convention that didn't exist when it was released) — the one-line note step 3 leaves behind exists specifically to make this visible before it causes confusion, and updating the skill before opening an already-migrated project avoids it entirely.
+
+**Example — before (`AGENTS.md`):**
+
+```markdown
+<!-- keep-the-why:config -->
+- context: `context/`
+- init: complete
+- context-schema: 0.9.2
+- capture-confirmation: confirm-when-unsure
+- source-reference: never
+<!-- /keep-the-why:config -->
+```
+
+**Example — after (`.keep-the-why`, new file; `AGENTS.md` keeps only the version note):**
+
+```markdown
+This is machine-readable project state for the Keep the Why skill
+(https://keepthewhy.com). See context/index.md, or this project's own
+README, for what Keep the Why actually is.
+
+<!-- keep-the-why:config -->
+- id: acme---widget-service
+- context: `context/`
+- init: complete
+- context-schema: 0.9.2
+- capture-confirmation: confirm-when-unsure
+- source-reference: never
+<!-- /keep-the-why:config -->
+```
+
+`context-schema` is shown at `0.9.2` here on purpose: the relocation carries every field over verbatim (step 1) and doesn't stand in for the schema migrations between `0.9.2` and the installed version — those go through the normal "behind → check `migrations.md` → discuss now / defer / stop asking" flow (`setup.md`, "Context schema and migrations") in the same session, and `context-schema` advances when that check completes (immediately if nothing applies).
+
+```markdown
+Keep the Why's config for this project migrated to .keep-the-why on
+2026-08-31 — requires skill version 0.10.0 or later to read it.
+```
+
+## 0.10.0 — `context/index.md` entries sorted alphabetically
+
+**What changed:** new entries in `context/index.md` are inserted in alphabetical order by filename instead of appended at the end — see `context/entry-format.md` and [#194](https://github.com/oliver-zehentleitner/keep-the-why/issues/194). Not a `context/` entry-format change, but it does need action in an existing project: the merge-conflict reduction this convention exists for only works once the whole list is actually sorted.
+
+**Migrating an existing project:**
+
+1. Resort `context/index.md` fully, once, alphabetically by filename. Unlike a per-entry field backfill, this is mechanical (no per-entry judgment) and cheap even for a large index — do it now rather than waiting for entries to be touched individually.
+2. Insert any new entries in sorted position from that point on.
+
+**Example — before:**
+
+```markdown
+- [release-and-distribution.md](release-and-distribution.md) — ...
+- [config-format.md](config-format.md) — ...
+- [entry-format.md](entry-format.md) — ...
+```
+
+**Example — after:**
+
+```markdown
+- [config-format.md](config-format.md) — ...
+- [entry-format.md](entry-format.md) — ...
+- [release-and-distribution.md](release-and-distribution.md) — ...
+```
+
+## 0.9.0 — `Type` accepts multiple values
+
+**What changed:** an entry that genuinely documents more than one kind of thing now gets one `**Type:**` line per applicable value, instead of being forced to pick a single one. Supersedes point 2 of the 0.7.0 migration below — that guidance said to pick whichever value a future search is more likely to be about when an entry straddles two; the current guidance is to add a line for each value that genuinely applies instead. `undefined` stays exclusive — it never combines with the other four, since it means none of them fit.
+
+**Changed guidance (see `references/repository-structure.md` and `context/entry-format.md`):**
+
+- **Type:** one line per value that genuinely applies (`decision` | `workaround` | `incident` | `constraint`) — most entries still get exactly one; `undefined — <reason>` stays a single, exclusive line used only when none of the four fit.
+
+**Migrating an existing entry:**
+
+1. Not a backfill pass. An entry that already picked one value under the old "pick whichever" guidance doesn't need a dedicated pass to recover the value it left out — same "next time touched" rule as the 0.7.0 and 0.8.0 migrations below.
+2. When you do touch such an entry, add a second `**Type:**` line if a second value genuinely applies now — don't add one just because the field technically allows it if the original single value still covers the entry fully.
+3. Project-wide, once: check `context/README.md`'s "Reading the entries" Type line — it already describes Type generically ("what kind of thing it is: decision, workaround, incident, or constraint") without claiming single-valued, so no wording change is required there. Nothing to do for this step.
+
+**Example — before:**
+
+```markdown
+**Type:** workaround
+**Status:** active
+**Evidence:** confirmed
+```
+
+**Example — after (only once a second value genuinely applies):**
+
+```markdown
+**Type:** workaround
+**Type:** incident
+**Status:** active
+**Evidence:** confirmed
+```
+
+## 0.8.0 — `undefined` Type value added
+
+**What changed:** entries where none of the four Type values (`decision` | `workaround` | `incident` | `constraint`) cleanly fit now record `**Type:** undefined — <reason>` instead of leaving the field blank. Supersedes point 3 of the 0.7.0 migration below — that guidance said to leave Type out when nothing fits; the current guidance is to mark it `undefined` with a reason instead, so misfit cases stay filterable rather than indistinguishable from entries that never considered Type at all.
+
+**New value (see `references/repository-structure.md`):**
+
+- **Type:** `undefined` — used only after actively confirming none of the four values fit; always followed by `— <short reason>`.
+
+**Migrating an existing entry:**
+
+1. Not a backfill pass. Entries that currently skip Type because nothing fit don't need a dedicated pass — same "next time touched" rule as the 0.7.0 migration below.
+2. When you do touch one and confirm none of the four values fit, add `**Type:** undefined — <short reason>` rather than leaving the field blank.
+3. Project-wide, once: if `context/README.md`'s "Reading the entries" Type line doesn't mention `undefined`, update it to match `references/setup.md`'s current template.
+
+**Example — before:**
+
+```markdown
+**Status:** active
+**Evidence:** confirmed
+```
+
+**Example — after:**
+
+```markdown
+**Type:** undefined — documents a naming convention, not a decision/workaround/incident/constraint
+**Status:** active
+**Evidence:** confirmed
+```
+
+## 0.7.0 — Type field added
+
+**What changed:** entries can now carry a **Type** header field (`decision` | `workaround` | `incident` | `constraint`), placed before **Status**. It categorizes what kind of thing an entry is, independent of Status/Evidence, so a tool or agent can filter — "every incident," "every workaround" — without loading full topic files to find out.
+
+**New field (see `references/repository-structure.md`):**
+
+- **Type:** decision | workaround | incident | constraint — optional, filled in when one value clearly fits.
+
+**Migrating an existing entry:**
+
+1. Not a backfill pass. Add **Type** to an entry the next time it's touched anyway, same as any other maintenance edit — matches "Retrofitting an existing project" in `repository-structure.md`.
+2. If an entry genuinely straddles two values (a workaround adopted because of an incident), pick whichever a future search is more likely to be about. Don't split the entry or leave Type blank just because more than one value would fit.
+3. If nothing fits cleanly, leave it out rather than forcing a wrong-feeling value — Type is there to help filtering, not to gate whether an entry counts. (Superseded by the `undefined` value above — for a project migrating straight to the current version, apply that guidance instead of this step.)
+4. Project-wide, once: if `context/README.md`'s "Reading the entries" section doesn't mention Type at all, add it — same wording as `references/setup.md`'s current template.
+
+**Example — before:**
+
+```markdown
+**Status:** active
+**Evidence:** confirmed
+```
+
+**Example — after:**
+
+```markdown
+**Type:** workaround
+**Status:** active
+**Evidence:** confirmed
+```
+
+## 0.3.0 — Evidence split from Status
+
+**What changed:** `context/` entries previously classified evidence as one of confirmed, inferred, unknown, *or* superseded — treating "superseded" as if it were a fourth evidence level. It isn't: whether a decision is still current (Status) and how well it's evidenced (Evidence) are independent questions. A superseded decision can have been thoroughly confirmed when it was still active. Also added: an optional Source/Verification pair for confirmed entries whose claim is worth tracing or could be checked against other evidence.
+
+**New fields (see `SKILL.md` rules 2 and 5):**
+
+- **Status:** active | superseded | open | needs-review
+- **Evidence:** confirmed | inferred | unknown *(unchanged values, now its own field)*
+- **Source** and **Verification** (corroborated | uncorroborated | contradicted) — optional, only add where there's a real answer, per the proportionality principle. A `contradicted` verification must explain what contradicts it.
+
+**Migrating an existing entry:**
+
+1. If it currently has a single `Confirmed` / `Inferred` / `Unknown` marker with no mention of being superseded → that value becomes **Evidence**. Add **Status: active**.
+2. If it currently says `Superseded` (with or without a separate confirmed/inferred/unknown marker) → **Status: superseded**. If an evidence value was recorded alongside it, keep it as **Evidence**. If not, set **Evidence: unknown** and flag the entry for review — don't guess what the original evidence level was.
+3. Don't add **Source**/**Verification** retroactively just because the fields now exist — only add them where there's a genuine answer (rule 10's proportionality gate applies here too).
+4. `Superseded` annotations already in prose (e.g. `> Superseded 2026-03: see below`) don't need to be rewritten — that's still how supersession gets recorded; **Status: superseded** is the structured counterpart for anything that also carries an Evidence/Status header.
+
+**Example — before:**
+
+```markdown
+**Status:** active
+**Confirmed** (2026-03-14, via maintainer interview)
+```
+
+**Example — after:**
+
+```markdown
+**Status:** active
+**Evidence:** confirmed
+**Source:** maintainer interview, 2026-03-14
+```
+
+(Verification omitted here — nothing to corroborate or contradict this against; adding it would be filler, not signal.)

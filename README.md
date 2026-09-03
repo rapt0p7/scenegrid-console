@@ -10,6 +10,7 @@
 [![Formatted with Oxfmt](https://img.shields.io/badge/formatted%20with-Oxfmt-blue)](https://oxc.rs)
 [![License: PolyForm](https://img.shields.io/badge/License-PolyForm%20Noncommercial-purple.svg?style=flat-square)](./LICENSE.md)
 [![Web Audio API](https://img.shields.io/badge/Web_Audio-API-ffb244.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+[![Keep the Why](https://keepthewhy.com/assets/badge.svg)](https://keepthewhy.com)
 
 > **Understand your audio system before it plays.**
 > _Independent research project started ~mid 2025._
