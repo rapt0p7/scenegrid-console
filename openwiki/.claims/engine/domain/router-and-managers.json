@@ -1,0 +1,196 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:63572762d7aeffc49dc30a666d6546b2bebd4c1df78411536224bc7259c63eeb",
+    "claims": [
+        {
+            "id": "claim_5d07c3c4b6d54f4db9ce5ab1c3952a4c",
+            "statement": "This page describes the runtime decision layer between authored sound configuration and concrete playback, not an isolated class inventory.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/ContainerPlaybackPolicy.ts#L11-L46",
+                    "version": "repo-lines-v1:sha256:36e2fb297257a953a29ae59c4c50b0bf2ed3b5933c35af629719366acb759145:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MTkyMzMzNmEyZmVlODVhYWZjNDI0MDFiNWE5OWQ0MGI5OTcxM2NjYmI5NjBlZWUxNmQ2ZTU0ZjRjZmNiMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhYzEwYmNkODlhNGZiZGNhYzMwYTcwOTQzNzllNzU3MjYxYmJhYjUyNGFhOGMwYzRjYjQ2ZjBhMzE4NTdlZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4MTM3YTAzOTYyNGJhMjYyODM4NWE5NjEyZmQyZmU0NTM0ODViOTg1MDhjYzgxODIwNTExMjllMDZmNDA3ZDAifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/DuckingManager.ts#L18-L30",
+                    "version": "repo-lines-v1:sha256:82a158a8aac97fc8f6610c5b7015629980fb64488afb050dec04a3519dc891b3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkMmYyOTUzOGQ0OTQ2YWYyOGNiY2QwNTIzNTVkY2RiMDEwNDMyYmFjNjYwZGVkMjVmMWIxZDkxODRlZTY5ZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiYTlhZDViY2I5NWVjYTA4ODAzNzc1NWRjNzBmZjZmYmEwMGEwNzI0NDE3YjEyZWY5OGNkMDgzZjdlNmRhMmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/InstanceRTPCBinder.ts#L25-L82",
+                    "version": "repo-lines-v1:sha256:d447ecbb4d680b87811e7a6643542fcd0f462f67bfed5fd83276cb8ab97fae53:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzZjMxMjAyYmU2MzJmZDRjNzExODJiYWU1OGJiMDg3OGZlMTVkYWU0NzA0YmJjOTA4YjBhMmZhZjIyNzY2ZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5YjQ5NmFmMjAzMjlhMDcwNmM1NTZjNDQwZmIzOTI5YjJmZjJiZjllNTI2YjFlOTU4ZTVmYmM0ZDJlMzU0MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/SwitchPlaybackPolicy.ts#L11-L55",
+                    "version": "repo-lines-v1:sha256:c0e88c9725f7a2b3b06de5b130ce80b3a7ae5727931aa37a412ca81896151308:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA3ZGUyNTBhMTI5ZjNjYjU2NTQ0MmI4YmI3NDk0M2EwNjJiNjI5YTRhMjY0NWM4ZjM3OGQ3ODAzN2Y4OTM1MjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5ZDVmM2FjN2ZjOGE4OGVjN2U0MzRjOTYzNDI4Y2JjZmZkOThkYTZmMzkyMDIyZmQ2YTQwNTAzODkxMTc5MWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/AudioRouter.ts#L82-L167",
+                    "version": "repo-lines-v1:sha256:2607f52fcee859967ee1d6be8f8f8878a862447a4203a156e1268c6f010b4d55:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5YzU3MGQ1ZjRmNzNjMzI3ZDdiOTM0NDNmZDY3NjE4NjYwNDE3MTRlN2EyZTcxYmZlNTBhZTMyYWFmNzM5YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMjc5MDFmNDY4ZjY3MTViYjUxNWRkNGU0ZmU2OGQ0ZWI2YmU3MDM5ZjAxYmYxNmNiNmY0YzA3MWM4MDFhMTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjYWU1ZjQxNTNmMDU0Y2I4ZDhiZjdmYmVhMTU0YTRiNGU1NmQyOTljOGE1MjlhZjQ4ZWM1NTA5YTU3NWQ3ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI5Y2NkZDMyMzE0NDA3ZDJiYWY4ZmM3ZjE1YTA5M2E4ZTEwOTRlZjQzNzgyZDU1NzFhOWZlMzU1N2Q0ZjRjNjkifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_f2e21b64fdaf4c749c60c10eda066d32",
+            "statement": "`AudioRouter.play()` is the main entrypoint and routes by authored sound shape: containers, layered sounds, switches, scatterers, or ordinary sounds with variation applied before playback scheduling.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/AudioRouter.ts#L104-L167",
+                    "version": "repo-lines-v1:sha256:7f862a1180e0a0da492062862e8af55b2fef54ba16aea6121bfab05c9f0b1c32:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzZTEzNzhmNDRkOTk2NWE5OGJlMzM2ZjZkNTkzOTAxYjhiNjZjNWUxOWQ3OGZkOWNiOGI5MjVlNTMwYjExOTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMjc5MDFmNDY4ZjY3MTViYjUxNWRkNGU0ZmU2OGQ0ZWI2YmU3MDM5ZjAxYmYxNmNiNmY0YzA3MWM4MDFhMTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhMDY2ZGIxNGMyNzJhMzVhNWJiNDhlZDcyMmJhODQxMDM4MjhmMDA5NGYwZDlkYzAwYjRkYWFlY2MxZGUyNDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI5Y2NkZDMyMzE0NDA3ZDJiYWY4ZmM3ZjE1YTA5M2E4ZTEwOTRlZjQzNzgyZDU1NzFhOWZlMzU1N2Q0ZjRjNjkifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/VariationResolver.ts#L11-L35",
+                    "version": "repo-lines-v1:sha256:302fd1a5010152566e9fd049994bc807ec198ef558fbbda1751af296989db012:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwMmI4MTdhMjM0MjgwN2U5NTE3NmE1MDVlMDNhZjZjMGEwZmI5MzNiMWE4Mzk1YTJmNTBlYjkxODZmYTVjMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1YzRjM2RkNWJlNGQ2YjViOWM0YTQwMTFjMWFlNTZjNzBhYWJkYjFhNjY0MjdjM2UzNWRlM2NjZGMyZjViMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_36070a104267467d8c916393ad4177fb",
+            "statement": "`AudioRouter` rejects missing config, caps recursive resolution depth, and returns `null` rather than inventing a fallback when selection cannot be resolved.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/AudioRouter.ts#L104-L127",
+                    "version": "repo-lines-v1:sha256:2d4c77a6a3f473d52787152e068f5a4fc3bc31db37bcae026ab100f783de9206:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzZTEzNzhmNDRkOTk2NWE5OGJlMzM2ZjZkNTkzOTAxYjhiNjZjNWUxOWQ3OGZkOWNiOGI5MjVlNTMwYjExOTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhMDY2ZGIxNGMyNzJhMzVhNWJiNDhlZDcyMmJhODQxMDM4MjhmMDA5NGYwZDlkYzAwYjRkYWFlY2MxZGUyNDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFjMmM5YmQ0ZjBiZjhlZTg0OTI2ZDc0ZjJmNDE5N2M2NmYxY2UxNGIyNjRlNTIwOWQyNjg3ZjI1NGRiYTc1MzEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L218-L224",
+                    "version": "repo-lines-v1:sha256:efee4a81df399174749a0c7ce3e91576249ff85f3c4a1ad628ef3c486cc38488:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzI5ODZiMDAyYmE0ODUzNWYyOTBlZGY5YTcwNmQ2MGI3YThkYjQzNjlmZGYwNTUzNjY2ZjcwN2FkMjViZjM4ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTEwNTljOGNmYjVhMDcyYzZmNjRkZDNkMWJmZGJjMzU2ZmJlYzkzYWVlYzg4NzkxZGE3ZWRiYTg5YzA4ODVkZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDYxMzJjYmFiMjI3MGI3ZGRiYzhlNmI1MTNjYTlkZjZlMzE0OGI3ZjExZjk0ZmU0NjZiOTZiZDYxZTA5ZWI4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmUyNzc0ZDk2NjMxYWJmNmUzMzZjYjdkY2JkODkyMjA2ODExMDFjMTc0OWY5ODM0YTIzNTUyOThiYjgzMWQ0MSJ9"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L289-L303",
+                    "version": "repo-lines-v1:sha256:6059b66321358bd0fd6bb843f14400cff38e77dc96fa098dd2873cffa57f5064:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzMWYzNDhmNmJjZjQxNTQ0NzUzNWMxNDc5YmEzZjg0ZWRlMzNjOWZhY2VlNzJhNmMwNzk2Y2U4MGNkNTgxODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0NWNmZTJhYTRmMTg2NmVlZDFiOWExMWQxMjhlYjgwY2Y0N2RkYzhhYTA5ZmQ3YzUyMTFkMDQ3ZDFmMjZlOTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzZjA1YmQ1ODhkZDY3MjE4YTRmMTk5YTk4NjVjYTM1YmEzZDdjYTQyNjFlOTVlNTZjYTUwY2Y3OTdkZjdhNDYifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L354-L365",
+                    "version": "repo-lines-v1:sha256:1f371a6e1f1f04c3a52fd0a4511da5336ca85f807b6550e45f9d1b2b6c6dff91:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjMTMyODNkNmVlMjg2ZTdmMTdhYTQ2N2E0ODIwY2FmOGQ0YTAzNmZmOWQxMzhiYWM4MmNkYzMxMTU1MGRmMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNiNmIxNDRhYmU1ZDZiZDc0ODkxZTQ3OTJlZGQ4ZWJhNmUxZDI2OTEwMzI4YWNjMGE5M2I1ZTY0YTlmYjY2MjEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_9ec314971e59465885b262708ee92b8a",
+            "statement": "Container playback is policy- and history-driven: `ContainerPlaybackPolicy` supports sequence, random, and random_no_repeat modes, returns the selected sound plus the next history state, and yields `null` when a container has no sources.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/ContainerPlaybackPolicy.ts#L11-L46",
+                    "version": "repo-lines-v1:sha256:36e2fb297257a953a29ae59c4c50b0bf2ed3b5933c35af629719366acb759145:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MTkyMzMzNmEyZmVlODVhYWZjNDI0MDFiNWE5OWQ0MGI5OTcxM2NjYmI5NjBlZWUxNmQ2ZTU0ZjRjZmNiMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhYzEwYmNkODlhNGZiZGNhYzMwYTcwOTQzNzllNzU3MjYxYmJhYjUyNGFhOGMwYzRjYjQ2ZjBhMzE4NTdlZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4MTM3YTAzOTYyNGJhMjYyODM4NWE5NjEyZmQyZmU0NTM0ODViOTg1MDhjYzgxODIwNTExMjllMDZmNDA3ZDAifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_98c4462e39d8411c991e78fadbf1dc81",
+            "statement": "Switch playback is stateful and history-sensitive: `SwitchPlaybackPolicy` resolves string keys directly, otherwise chooses the highest numeric threshold at or below the current value, applies hysteresis around boundaries, and can return the configured default or `null` when no mapping exists.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/SwitchPlaybackPolicy.ts#L11-L55",
+                    "version": "repo-lines-v1:sha256:c0e88c9725f7a2b3b06de5b130ce80b3a7ae5727931aa37a412ca81896151308:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA3ZGUyNTBhMTI5ZjNjYjU2NTQ0MmI4YmI3NDk0M2EwNjJiNjI5YTRhMjY0NWM4ZjM3OGQ3ODAzN2Y4OTM1MjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5ZDVmM2FjN2ZjOGE4OGVjN2U0MzRjOTYzNDI4Y2JjZmZkOThkYTZmMzkyMDIyZmQ2YTQwNTAzODkxMTc5MWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L226-L267",
+                    "version": "repo-lines-v1:sha256:d4aacbb8ce28d31df7e5a199e7b6846706c5d846631e17d93cbe61eedd0e862c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTc3YzA1ZDY2MzU4MzJkMDkxZGU2YjdjNzIzZjE3ZmQxMWRmOGMzZDE5ZDIyNmVjZmE5N2Q2NmFmNDZmYzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhODQ3MjZlNDFhMzQ3ZjdkMTc4NzA3MGZlNmE3YTY1MDA4YTZkOTBiMTk5MjgzMTJkY2QwNDA4MWMyZDFkNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUxMWVkYzViNGE4Yjc2MzY5NDRkM2I4ZWZiZTBkZTc2NzQwM2M3ZThjOGI2MzJjMDA5ZDQ1ZDMxZWI4M2VjYjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlZDU3MGJmYjEwZDNiNDliODg3YWE2OWNhY2Q4OGMzYjA5ZjQ4MzI1YTk3MGZjMjNlOGJmMTRiNTkxNmMxNjcifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L305-L351",
+                    "version": "repo-lines-v1:sha256:bff26b179258500bece9b82930a9fcb881f77613e7c9b71dcef744325766b6ce:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlZjVhMGVmYjA3OTI4YWU1ZTg2NzY5YzkwY2VlNzIxNDRiOGVmNDdiZjBmMTI2YjVmOWRiMGJmOTc3Yjc3MTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjNDdkOGRlYzBmODA0YTllNjRhNjMzZmJjMTMyZDc2ZGYyMmRjMjUwMjc3MTdlMDQwY2JkNDVkMTAxMTBhOWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxNTAwZTk2MTY0ZTQwY2JhZGI0MjdiZDQ1MzU3ODU2OTUwYTAxNzFkOTRjMWUxODJmY2U4ODg0Njc3ODYyOWIifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_18acc138fc464c7ba0defa16974bea53",
+            "statement": "`AudioRouter.applyConfigToPlayback()` performs post-selection wiring by routing the voice to a bus, triggering ducking, and binding instance RTPC targets when the config declares those fields.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/DuckingManager.ts#L18-L30",
+                    "version": "repo-lines-v1:sha256:82a158a8aac97fc8f6610c5b7015629980fb64488afb050dec04a3519dc891b3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkMmYyOTUzOGQ0OTQ2YWYyOGNiY2QwNTIzNTVkY2RiMDEwNDMyYmFjNjYwZGVkMjVmMWIxZDkxODRlZTY5ZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiYTlhZDViY2I5NWVjYTA4ODAzNzc1NWRjNzBmZjZmYmEwMGEwNzI0NDE3YjEyZWY5OGNkMDgzZjdlNmRhMmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/InstanceRTPCBinder.ts#L25-L57",
+                    "version": "repo-lines-v1:sha256:c6e993d6ea7c5f3e900a447ab66cbb872f30b4c63f5cb1140a7aced1bf56cd5b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzZjMxMjAyYmU2MzJmZDRjNzExODJiYWU1OGJiMDg3OGZlMTVkYWU0NzA0YmJjOTA4YjBhMmZhZjIyNzY2ZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5YjQ5NmFmMjAzMjlhMDcwNmM1NTZjNDQwZmIzOTI5YjJmZjJiZjllNTI2YjFlOTU4ZTVmYmM0ZDJlMzU0MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxMmQxMjcyMjljZjBhMDcxODU5MTkyOTg3MjM2YzllZjJmOTY4M2Y5ZTc5MGJjMWY3YzYyNGRhYmZmYjZhYzQifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/AudioRouter.ts#L86-L98",
+                    "version": "repo-lines-v1:sha256:6bf3fe2db1c6b0579d0470b9084f070255bb9d54a4fa1c505051ede58c389b0f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNzdiNjllNzM0NmExYWVhZDgxNjlmYWVkYTcwZWRlNWMwZjg2Mjc4Yjc0ODI0NzU3ZjVlNTNiM2E4NjkzY2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFjNGM4MGE4ODMwMDZhNTFlYmE1MTdkOTQyZGI4OTZkMTk2NDgxOGNlMTRkMzMzN2Q5MzE0Zjk2ZWY4Yzk2MTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiZmZiOGU2ZjhjOWNlMTI2MDU2NzJmMjBmN2JjNjU1ZWUzMTRkMzJiZTZhNmE0MjgxZWU2MTI0NDVhMzU4M2IifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_5d69125c1fba422181dd5ab526501287",
+            "statement": "`DuckingManager` is a thin adapter over sidechain triggering: it accepts one bus or many, defaults missing intensities to `1`, and can clear all sidechain triggers through the bus system.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/DuckingManager.ts#L14-L30",
+                    "version": "repo-lines-v1:sha256:5180056a03532b8c4c844148a746fbff7cf30b4519eccdec3908da543aad7292:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmYTNmMmZjYThkMmI4ODFlZTU5MTljZDgyZDgwNTZkNmRlZmU4M2E5NTQzZDMzMDE5NjI5Y2FhNzY0MGFiOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5YjQ5NmFmMjAzMjlhMDcwNmM1NTZjNDQwZmIzOTI5YjJmZjJiZjllNTI2YjFlOTU4ZTVmYmM0ZDJlMzU0MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/__tests__/DuckingManager.test.ts#L51-L81",
+                    "version": "repo-lines-v1:sha256:5fd76c40c4e09aacc1f173a6036d67050f0f744781775cb801e3785b1b9c9458:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0Yzk1MGYyNGMzOTU0N2E3NGIzZTE0ZGM2YTVjMDIzNzk2ODhjN2U3MTI0ZDY2OTUyNzEyNzgyMDg5MjE0YjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDExY2FmNDNlOTdlZjM2OWU2YmVlZDFhMjY4YmQwNTgzOGYyOWI5ZGQyNTRiZjY5YmE2NDg4NDE0NzIzNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwMDllNDViNmQ3NzM5YjUwYTU2OTRmYzY2NTQyODE5NDdiZDdjMWYwNTY4MjE3NzEwMWQ2ZTdiMDk3NTZlYWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_dcac9e07c44241889d0a84ffe828e3a1",
+            "statement": "`InstanceRTPCBinder` stores live playback bindings, applies mapped RTPC values immediately and on tick, and unregisters bindings when the voice ends so stale instance state does not accumulate.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/InstanceRTPCBinder.ts#L25-L82",
+                    "version": "repo-lines-v1:sha256:d447ecbb4d680b87811e7a6643542fcd0f462f67bfed5fd83276cb8ab97fae53:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzZjMxMjAyYmU2MzJmZDRjNzExODJiYWU1OGJiMDg3OGZlMTVkYWU0NzA0YmJjOTA4YjBhMmZhZjIyNzY2ZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5YjQ5NmFmMjAzMjlhMDcwNmM1NTZjNDQwZmIzOTI5YjJmZjJiZjllNTI2YjFlOTU4ZTVmYmM0ZDJlMzU0MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_599ffc144eb6452389562e50eae7d920",
+            "statement": "`VoiceCullingArbiter` manages virtualization pressure by tracking muted durations per playback, virtualizing voices only after hysteresis, devirtualizing when audio returns, and skipping ghost voices and playbacks that are no longer active.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Culling/VoiceCullingArbiter.ts#L11-L94",
+                    "version": "repo-lines-v1:sha256:20ab55e4b23eb240e9f2531c4077dc2bdb2b207f8856ad7eb84e2df8bf1385d2:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5YzI3YjE3ZDMyMGYzZmU5ZmM5NGU5YTNiOTBiNWM4MmIwN2QyODE3NzlmY2JiZGY2MGJjNTMwZDMxYmViNDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2OTY5NTQ1YzM4ODc2OWU2NDQ1NWU3ZjVjYjUyNjJlM2JhZWYxMWRlMmNhMWZmZjk5YjNjY2Y0MjY4YTU3MTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_327539b59ad7469798850d91e809a91c",
+            "statement": "The router's failure paths are intentionally fail-closed: missing sound ids are ignored, scatterer playback is blocked until its orchestrator is present, and a switch route may legitimately resolve to `null` without a fallback asset.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/AudioRouter.ts#L116-L167",
+                    "version": "repo-lines-v1:sha256:ae4d3ae42f39bbcd1323f91a242c0c18777ffc3d35c0b26df11f4333452e74c6:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MjhkYjc1Mjk5ODI0MzU4MzcwNzU2MTViYTM2NDkxZjI1MjVlODMzOTJlYWNhYzE0ZDZjMzZjOTM1ZDE2ODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMjc5MDFmNDY4ZjY3MTViYjUxNWRkNGU0ZmU2OGQ0ZWI2YmU3MDM5ZjAxYmYxNmNiNmY0YzA3MWM4MDFhMTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjZkZmU2NDg0NTY1YmIxMmNlYjhhMzJhYTgxNmU4YmM3MzI3Y2YyNjY3MzlkYzkxOTMwOWMzNmRkMWJkNjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI5Y2NkZDMyMzE0NDA3ZDJiYWY4ZmM3ZjE1YTA5M2E4ZTEwOTRlZjQzNzgyZDU1NzFhOWZlMzU1N2Q0ZjRjNjkifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/AudioRouter.ts#L251-L260",
+                    "version": "repo-lines-v1:sha256:be90933b4dde109e1d8f555a0fa836ec4003575f949c91487ab8f004ca72aa81:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2NTg4ZTA4YjllNzhmMGU5ZWNlYWJkZmNhODI0ZTg5MzU2MmFiY2NhZDEyZWViNTg1OTJkNWQwNGEzNzgyNTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkNTlmMjBlMjU3MTYwZTE5ZTlmNGQ2OWI2Y2NjNjEwMzhiMDQ3ZjRmNDY1YjQzZDU5NTYyNWRmNDBhNGYyYWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2ZjRmOTc1NGY5ODRlZWI5NmE5MmRjMjg2ZWFjYjk1MTQ1Y2VlMTY3ZDY0OTczYWYyZGY3OWI5NzZjNTlkOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFmMGNjNjgzNjgxZDY0MTk0N2IxM2JmYjZlOWZiYjgzZmQxMzIzMjliZmRkMDkxZTFlOTkxNzNjZjJiMjM4MzkifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L253-L268",
+                    "version": "repo-lines-v1:sha256:3451111e607d2ecfeb305db09805f2d2e0c5b599fa8cf650a55fab1c73bbf32b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ZjUzNTcxNDVjM2E3YWE3NTJlZGFlNWM3MTA4NzYzY2M5ZDQ5NjU3MDdmZjg2ZDhhNThlZGM3NTRjZGQ5MjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhZjA2MGNmMTc4MzcwODBkN2VlZmIzMGFiODg2NTk5NDhlOGZiMzMyYTRhNWRiNDlmNzFkZWJlMjlmNGVmMTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiNTAxMWY5ZGIzZjllM2E1NjI1MjJkZmNlMjg4YzI5ZDZmMTY4NjdkN2U2NDM1Y2M5ZDM5NGNjYzFlZDBhYmEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L706-L706",
+                    "version": "repo-lines-v1:sha256:520303d6d81ff3ac056f29f75e78e9de818384b4945abf8e59064e46f697425d:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTIwMzAzZDZkODFmZjNhYzA1NmYyOWY3NWU3OGU5ZGU4MTgzODRiNDk0NWFiZjhlNTkwNjRlNDZmNjk3NDI1ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTIwMzAzZDZkODFmZjNhYzA1NmYyOWY3NWU3OGU5ZGU4MTgzODRiNDk0NWFiZjhlNTkwNjRlNDZmNjk3NDI1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjRhYWJlYTNiNjZjYTBiNTUxMGEyOTY0YzJiNTI5OGM5MGI5MGUxYTY1OWM0ODIwOTY3M2MxMjAxMWQ0ODllMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWVjYjQwMjY3ZGFhMzIzYTlmYjc2N2FmZGNhOTQ0ZjZjMGVlZWNjYzk5YTg5YTZiMTBhY2IxMDhkYTYwYWY1YiJ9"
+                }
+            ]
+        },
+        {
+            "id": "claim_ec3f2fc51d5f4f92be6d4c65d45a0c9e",
+            "statement": "Representative tests for this subsystem focus on routing vetoes, recursive container protection, switch and container selection, tail playback behavior, and ducking fan-out.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/__tests__/DuckingManager.test.ts#L51-L81",
+                    "version": "repo-lines-v1:sha256:5fd76c40c4e09aacc1f173a6036d67050f0f744781775cb801e3785b1b9c9458:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0Yzk1MGYyNGMzOTU0N2E3NGIzZTE0ZGM2YTVjMDIzNzk2ODhjN2U3MTI0ZDY2OTUyNzEyNzgyMDg5MjE0YjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDExY2FmNDNlOTdlZjM2OWU2YmVlZDFhMjY4YmQwNTgzOGYyOWI5ZGQyNTRiZjY5YmE2NDg4NDE0NzIzNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwMDllNDViNmQ3NzM5YjUwYTU2OTRmYzY2NTQyODE5NDdiZDdjMWYwNTY4MjE3NzEwMWQ2ZTdiMDk3NTZlYWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L177-L224",
+                    "version": "repo-lines-v1:sha256:5e6fa137b07938534f77bdbac674fe20c0e7f4bc4c950490e174c56806c12b13:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2YmQ2NmE5NTkwODliMDJhNTYxMGYzNjI1M2FmMThmN2Y2OTQ5Y2FkN2YxNWIzOTZkNTU4YTk1YTk0YTc5MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0YWFiNTk2M2NiZmFlODI0ODdkMTQyZmRjYWRiMzk5MTQ1NDA1ODdmZDU2YjRhZjIxYTUyNWY0NzhlY2Y1MjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlMjc3NGQ5NjYzMWFiZjZlMzM2Y2I3ZGNiZDg5MjIwNjgxMTAxYzE3NDlmOTgzNGEyMzU1Mjk4YmI4MzFkNDEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L226-L383",
+                    "version": "repo-lines-v1:sha256:eeb97fc44d9ecc8c78d7a7494bbbc434aa7c5d2a7046216e02a439aa383ba9dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTU4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyN2U3N2MwNWQ2NjM1ODMyZDA5MWRlNmI3YzcyM2YxN2ZkMTFkZjhjM2QxOWQyMjZlY2ZhOTdkNjZhZjQ2ZmM1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5MTA1OWM4Y2ZiNWEwNzJjNmY2NGRkM2QxYmZkYmMzNTZmYmVjOTNhZWVjODg3OTFkYTdlZGJhODljMDg4NWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlMTFlZGM1YjRhOGI3NjM2OTQ0ZDNiOGVmYmUwZGU3Njc0MDNjN2U4YzhiNjMyYzAwOWQ0NWQzMWViODNlY2IyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1YjU1MDVkYjExMjA5NDFlNTQzNDY2MDRkODY0MDQ5ZDRhNjY4ZjViYzJmZjY5ZTYwOTk2ODc5MTgzNjc4ZmNkIn0"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts#L385-L443",
+                    "version": "repo-lines-v1:sha256:3b3fdd90d36351c8ae5b197b93a99eee8928494761cbb13bc55362c89cccc32b:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0YzkxNTcxNGNhOGNlZjIzZmFmODc4YjAxMmU0ZTIzZmQ4YTU2ZDI0NDcwOGQ0YjA2YzI0MWZiMzJiZTVlZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzNGRkOTVkZDYyMDdmZTkwZTFkNmE0OTc1YmY4MjE3N2ZlYjRhYzJhOTA2NmFjNzRlZTdhZmUyNmI4MmFlN2EifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.0",
+        "at": "2026-09-03T11:15:32.736Z"
+    }
+}

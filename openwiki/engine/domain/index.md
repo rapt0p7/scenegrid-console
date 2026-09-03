@@ -1,7 +1,7 @@
 # Files
 
-- [Configuration and sound registry](configuration.md) - Manifest-backed configuration types and the sound registry that bridge authoring data to runtime playback identities.
-- [Mixer state and transitions](mixer.md) - Mixer snapshots, layer coordination, state resolution, and the timed transition engine that applies gains, filters, sends, and RTPC binding.
-- [Orchestration and music control](orchestration.md) - Event orchestration, music FSM evaluation, smart-loop sequencing, scatterer behavior, and quantized transition logic.
-- [Routing and playback managers](router-and-managers.md) - Audio routing, container and switch policies, ducking, RTPC binding, and the configuration-to-playback selection logic.
-- [Validation pipeline](validation.md) - The engine configuration validation pipeline, including `ConsistencyChecker`, reporter fan-out, validation context, and the major rule families.
+- [Domain Configuration and Registry](configuration.md) - Domain input contracts for sound, bank, event, RTPC, and music FSM manifests, plus the sound registry that resolves authored sound IDs into runtime descriptors.
+- [Domain Mixer and Snapshot Resolution](mixer.md) - Mixer snapshot layering, priority order, and the transition engine that resolves layered state into live bus updates and telemetry.
+- [Domain orchestration](orchestration.md) - Event dispatch, sequenced music control, music FSM evaluation, scatterer spawning, and quantized loop-transition coordination in the engine domain.
+- [Router and Playback Managers](router-and-managers.md) - Runtime routing and playback decision logic that selects concrete sounds, applies culling and playback policies, and wires ducking and RTPC state onto active voices.
+- [Domain Validation and Consistency Checking](validation.md) - The engine startup validation gate that checks configuration structure, cross-reference consistency, and routing safety before initialization completes.

@@ -1,0 +1,164 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:960cc6d856dcfe0f2e60f86c7c666228526674899e666e1c8c19547253dd5ee3",
+    "claims": [
+        {
+            "id": "claim_d1554243856e47829c130cc448fba9c8",
+            "statement": "`AudioBufferLoader` resolves the first supported URL from a candidate list, deduplicates in-flight loads for the same URL, caches decoded buffers, and returns cached buffers on later lookups while refreshing their MRU position.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/AudioBufferLoader.ts#L175-L185",
+                    "version": "repo-lines-v1:sha256:a7249aa4b166be63bbf9b0a5736cd973b568ac6acdbe4c4e8a262a690a3d4a91:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkNDQzMmE0YzM4NTJmMzE3MTlmZjZiOWRiZDk1Nzk2ZGIwMjYyMDFmM2ZiNmVmMjA1ODc4NTk4Mjg5NTBkNWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlYWRmNmM1MDUzNTMwNGM2Njk1OWY1ODE5NmFiMWY3Y2FiOTc3MzM3NGYxYmM4NTVlNzIzZTUyNDEwYTBhZDQifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/AudioBufferLoader.ts#L70-L115",
+                    "version": "repo-lines-v1:sha256:294323eb9a41a0db9cf25f71e66347478d2ed461ddec0cc2918a984e0fc32cc9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyNDNkNGIxOTBiOGQ1ZTk1MmI1MjIwMDgzMjQ1ZTMzYjdhOTdmYWEwM2U5YmJhM2ZlMjExMzM1NjIzNjVkZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5MjQ4MTQ0MTYxZDhiYjY1NDdjMzIyNjNhYTBmMzgxN2U4Y2U1ZmE3N2UzNjExY2NmNjViZmI2YWJiNTY2ZjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4ZDU3YmIxZmUxM2E4ZjkzMGNkM2RhZjc2YzhjYzg2NjMzMGY2YWQzNDI2NzI3ZDliMzc4YzliM2UxNjM4M2YifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_efe4d789937a425eb548900f63d7f16a",
+            "statement": "`AudioBufferLoader.loadBatch()` returns an empty result immediately for an empty batch and otherwise loads every request, reporting per-item progress and per-item errors through callbacks without aborting the whole batch.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/AudioBufferLoader.ts#L118-L147",
+                    "version": "repo-lines-v1:sha256:4ee3d04cf925a4b578885b8357c219bf56f8cfec52af01a74ee396dff72f7b4d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3NTQ3ZWZkMGMxMjNkN2Q0MmY4NTJkNzdhMmRhZjBhNDg1MmRiYWI3YWYxNTAxNDUwNDFhNTNhNDgxYzAyODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0NGI1MGYzY2QzOTdjODA1Mzk3ZjM1MjM2YWViNmRjNWMzYTQyNjk1YTVhYjdiNTIwODZiMDQ2YjliNTY4ODQifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/AudioBufferLoader.test.ts#L73-L115",
+                    "version": "repo-lines-v1:sha256:0b867e3a1bc3945ac5bdf92aa3fcb90de365e7c878785bafa871911d1eb7c5a1:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3YWY5NDMyNTY0NjM2ZWQxZjYxYmMyMmM1OTJjOGI5MDQ2M2IwNWUxZjEyMWFmMTVhZjNkOGFmMTBkZTMyZTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVhNGFiNjEwZDEzZGYwMWExZDQwZWY5NjQ4ODI5ZWI0OTRhMzZjN2Y0YjJhZTlkY2JlYWUyMWM3MjJlNzhlMTgifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_67180ebdd94b4853ab4a2597bd84d742",
+            "statement": "`AudioBufferLoader` enforces a RAM quota by evicting lower-priority cached buffers first, can emergency-evict high-priority entries when needed, and exposes cache reset and purge entrypoints for unload-time cleanup.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/AudioBufferLoader.ts#L149-L173",
+                    "version": "repo-lines-v1:sha256:0adc27fe22fbeb7d60bd765f33b9d1b75b58fe4ba76b7892753144b7d0141128:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4YTNiMzI4MGZkNDMwOTIyMmQwYmY3ODVmM2U3NTBiMDRkZjYyMTlkNWYxZjc4YjdiNTU0YTFjNDM0NjgxZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5MzRiMjI4ZGE2OGI2NWNjOWYyNTUzYTY0Njg1Nzk3YjBmNGFmMDFhYzkzZDkwMjEyMjA1MGNiY2M2MzMyNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhiNzljOWU3N2EzMzdlY2MwMTA4ZWMzNWQwYzJkMDRmMGYzNjBkNGY5OGI5M2NhZTQ1ZDE4MjE5ZTg1ODlmYTQifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/AudioBufferLoader.ts#L197-L239",
+                    "version": "repo-lines-v1:sha256:1e3a3336c8acd52e0c44ffa84f2c59d29b7899be4c6dfdb648c2ce841217fb53:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NmFkNTg3MDA4NDVlOTRmYjY3MmZkOTRiNDEwNTA3ZmE0ZWY4ZGRhMDE4ZWQyYjkwMmQ4NWNiOTY2Y2UwMWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0YmNhMDQxODgxMmYyNTI2YmFjMjU4ZjUxZDA2MTNjYzQ2YWM1NzkzZTIyOThmNmVlYjBhY2U2ZTNjYWI3ZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFiNDM0MjVlOTU5MDE4M2Y4ZDQ5NzI0OGU1OTU5OGQ5NzQ3OGM1YjY4N2FmOTAyNzY5OWYxZDM1MmU2MWI3ZGMifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/AudioBufferLoader.test.ts#L138-L178",
+                    "version": "repo-lines-v1:sha256:200a92ebd33ea3f6fec0ee8d2d7bb3c016d87d670833ee8be67ba81b0be4fa0f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0MGFjNDU1OGViNmY0MTVlZGY2YWU1ZGI5OTM2MDJmZGQxOGQ0MjlhYTNjYTIxMzRmYmIyZDA3MmRiYmQ4MDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjODkyYjNhZTY0NDMyYzc2NGMzM2JiNzU0ZjYyMTRlYTAzN2Q0MDlmYzgzZjQ0NjYzY2MwNjQ0NjlhYTg2ZTcifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/AudioBufferLoader.test.ts#L186-L249",
+                    "version": "repo-lines-v1:sha256:35d2531c11d99bd7a811e6f2a469f9a3415d55fa482ad285c1754cf298e48ce7:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxYTIxNzMyMTUwM2NkNjhiYTAxZGZjZmRkN2ViNzUxZTk2NmUwMTlhMmEwMGQzMzQzOGE5OGE5Yzc0MDQ0NTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU4MTE2M2Q0NGU2NDBmMDU1NWUwOTk0YmM3NTdlYzFiYjRmYjMzNTRjZTdkODNkMTY0M2I3MjU4ZjY5ODJjM2UifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_c5be64ab55884047bfd44ed6abc2065f",
+            "statement": "`BankManagerAdapter` is the bank lifecycle coordinator: it tracks per-bank state, skips duplicate loads for banks already `LOADED` or `LOADING`, builds buffer requests from the bank and sound manifests, and translates loader callbacks into bank-level progress, error, and completion events.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts#L19-L100",
+                    "version": "repo-lines-v1:sha256:e93d1f0d019c92b667d13066c26ffdb980c34044b04bd080032d0be4f4301e26:eyJzZWxlY3RlZExpbmVDb3VudCI6ODIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NTA1MDMyYjBkNTE0NTg2NzVmZGY0MjM5ZmQyMjI3MWI5MWMyMjhkZGUyNjQ0MzcxNDYwZmQ0ZDNhNGUyYjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAyYWYwZGRmNTgwNTQ5MWNiNzFhYzhmY2UzMTY3ZTVkNjQyOTI4OGQ3OWM1ODBkYTQ1NmVkODIzMDRmMjgwNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhZjJjNWZmMzZiMWQ2YzlkZjMzMTI1OTQyNTE4Zjk2NTE5YTJhZjA4M2YxM2EzNmM0NDIxOTA1YmUyNTVmMzEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/BankManagerAdapter.test.ts#L134-L207",
+                    "version": "repo-lines-v1:sha256:0d870554bc08226bcaacbca8f278156f9c51e278923ce1ca4cb05c7ffd1a3a8e:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1NGYxNGUwMGZiNTJjYTIzN2Q1MzI0OTEwNjFkNGZjMTkzYWNmZDEwMzMyNzAyMTE0Yzk2MzViOTE0ZDQ1NDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjYTAwYTg1N2FjZWJhNTJlZTYwY2JhMTUwNGRkNDJiMzVlMmMxZDc4OGE4OGNiM2U0ZDM4ZGJhOTljZDE3OTEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/BankManagerAdapter.test.ts#L61-L100",
+                    "version": "repo-lines-v1:sha256:3cb4b8c7b64edff401fe9cad1d4bddee0da73dbacabd0b12e4f5bc328d0de880:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxYjQzNmQ5YTNhMWYxODEyMDgxYWE2MDRhZWEyMDFlMDUwNWNjZDU3ZTE5ZTYzMzUyYjRiNjdiZjhiOWRjY2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI5Y2Y5NmRlMzc1MGUyYTU2YjcyMTQxZDYwYjNlNWQ5NThhYzA4NjVmMWQ2ZDBjYjY0ZTUwYmRhYWM1ODg0YzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3OGJlMDhmNzQ5YjM2NWEyNjRkMjQ1MjlmNDJhNzJmOTYwZGExNGYxOTUyZjZmOGRjM2ZmYTEyODJmYmM0ZjUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_8a793c70056a429fb61b5e5222c1c13d",
+            "statement": "`BankManagerAdapter` unloads a bank by stopping each routed sound without tail playback, purging pooled voices, removing cached buffer URLs, resetting the bank state to `UNLOADED`, and emitting an unload event when configured.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts#L102-L124",
+                    "version": "repo-lines-v1:sha256:95844adbfa113531143477c17a1fca9fdc5410eccc5560e6ee67b97311a9f5d3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkMTg4ZWI5MDk3NTBjYmNlZTE3MThlYzNlMWUzMDY0NzIxYzBhMGQ4NmZkMjY1ZjVmMGZkZGI1YTIyNjgxMGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/BankManagerAdapter.test.ts#L103-L125",
+                    "version": "repo-lines-v1:sha256:6049a4d7ccfa1f2cd8695a5c3b1bd3ecf576e234b5984fcd5e13ef5d68cbc018:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1Njc4YWVkMDdkNmY1ODQ3YTc4NTdlMTZjNDk3NGEzZWQ4NWIxNmRhNDM2NGM1ZDE0N2JmY2Y1YzQzMTAzZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0YzJkN2UzZThjNDI2MGYwNjgwZGFjYmRkMTEwNjU1ZjA1YjQ2OTgyYTcyMWY3YjI5Y2RlZjU2MzRlOTQyZGMifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/BankManagerAdapter.test.ts#L209-L238",
+                    "version": "repo-lines-v1:sha256:f04393d3cc6efe4873fdab09efab5055198a563977be2b118d12995b3efcdd95:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkYWI4NDUwMDdlN2Q3NDVlNDg0OTMzNGZlY2Y4NTA1ZTg1YTUzYWYzYzRmMDY4ZmU1NGU1NDkyYmM0Y2FiZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwZWFjNGJmYjFmMGQ2NzFhNTQ5MTJhOGE3Y2M0MjNjNjIzOTRjMDgwZDY1NzQ1YWM4ODk0ZTlkMTNmMTcxZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_120246a0857e4849818b62ee5418e47b",
+            "statement": "`SoundController` resolves buffers at play time through an injected resolver, fails closed when a sound is unregistered, a buffer is missing, or the cooldown window has not elapsed, and only acquires a pooled instance after those checks pass.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/SoundController.ts#L101-L145",
+                    "version": "repo-lines-v1:sha256:9edfa0bab6db59248b943585df1412b85a92e590cb25f0c39cf5571a788f1488:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzNGEzZTA0N2Y4OWNmZTM2NTg2NDQ2MzFlMmI2YWRlMDQ0MWQyN2I5NzQwZjUwMzI1MjBlMWQwY2U2MmI3NzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3ZWQxZjVmZWQ2MWM4MGU1ZTllMmMxYzhhYWYxYTM4NDA4ZTIxYWIzNWQ3YjA2MTE2YzdhODZlMThkY2FkMjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ODdjN2E0ZjRlM2Q0MWYxZmU5MGJmYjI5OTk1MWRhZGMwOThjOWM0YWZlNTdiZThkNjlkNTUxYzQ3NTE0YWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0Yzg0NDIxYzQ2MjVkMzI3YmRhMTI3ZDViZmU4NDkxMmRhMGM4NTlmNTIwZTUyZmEzM2Q3MTY2Nzc0ZGEzM2UifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/SoundController.test.ts#L130-L178",
+                    "version": "repo-lines-v1:sha256:efd21cf46fb0b4e15086bb47413cb2950f9a008e1dc5ecdb77b92def88f33d4a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZTNlN2ZiOWYwMWRlMDdlZGU4YmUzZjcwOGI4OTljMWZiNGY0MjEwYjNiZmQ3ZDUyOTJhZTI5NmQxZGZiMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2Yzg1MGZkY2VkMzQ0MjU1YTNlMDkzNWYzZmIyODdjMzBjZjc0ZWNjN2QxMzIyZTVlZTMwMGRhYWU0ZmU3YmEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_aa8a6284a480480bbad6f8f48130fe3c",
+            "statement": "`SoundController` exposes the playback-control surface used by higher-level runtime code, including registration, spatial routing, bus and sidechain wiring, pause/resume/stop operations, and virtual-voice ticking.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/SoundController.ts#L180-L320",
+                    "version": "repo-lines-v1:sha256:c2802d14126b0699215878ec1131024dcbe01e89355c31d0aa9c57a245ec76dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIzMTVhYTgzZmY5OWEzMzk4ZTExNmJkNDE4ODFjYzkyMDU2OGQ3ODUzNjU2OGIxY2QxMjE3MWZhNzk4ZTJjOTgxIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJkMDA0NjU4MzBmZDhmM2I3Mzg3ZWUyMzMzNmQ0OTIxN2M0NmRjOTQwNGViOTM1N2JlNDVjZDE3NWVjZWYwMzc3IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmOGI3YjkyYTE2ZGVmN2NmMWU0ZmY5Nzk4MzA0YTU2NDU3ZDU1NWRmOWQ1ZTQxODZjNWVkMzA5N2E1ZjNjYzEyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIyZmUyYjM2NDJjOWIwNmEzZjZlZjJlYTAzMGYzODYwODQ1ZDRiNDVjYmJlMmNmODIwNjhhMjFmY2UyMzU0NDE0In0"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/SoundController.ts#L37-L67",
+                    "version": "repo-lines-v1:sha256:a43bcb55855782b0e42b812b5c91c7850d3b0b3462159c20b20fdd1a80206112:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkN2MyZmNkMmU2MWY2NTI3NWI5ZTlmNTdhNmJhZGVhOWVjMjIwYzFjMmUwMzUzN2U2ZmZhZTZjMTI2N2M4MjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1MDQ5NzNkYTBlMjYwYWEzMDM5ZGE4OGIyZDM1ZGUyMzdjMjI5OTYxYTI3ZWQxNDBlYjA1MTk5YTc1MWFiOGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhZDA4ZGEyNjUzZTYwMDExNjA0MWE5NjRjNjg4MjljY2E5ODMzMTk0YTk0N2VmYjJkYzY2Y2I5NzI3MjA3NzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/SoundController.test.ts#L100-L128",
+                    "version": "repo-lines-v1:sha256:462e13f8d9f2b75a3835367a1dab0a2c6aacad2054e88c0063500ca500896261:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkZDA1Yzc1ODA4OGJhY2Q0YjJiNGQxMjhmMjljYzUzODJmMGVkYjkxNDY3YTk1ZTIwMWQ1MmY1NzZiMzBiZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyNTJmN2Q3MmRkMmU2ZGZmYmE0OGUyZGRkMzkyNDhmNjkyNjJmNzlhNjA5ZTg3MmIyYWU5N2UwMzRmNzVhNjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzZjVhYjg0ODMwNDFlOTRkNzNhNzEzNzlmODdhZjIwNzBkODg2MDRhNTZmYmVhNDY4MWNjMDFmNDZiZGY3MmMifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/SoundController.test.ts#L181-L303",
+                    "version": "repo-lines-v1:sha256:196688a91d291201d0fccf19597b91a2a13c57a2a6dc9718eaa14e238cec2532:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiMzcxYzQ4ZDNmYjRmOWY2ZmRjMTgxZjE3ZmM5NGUxZjcyNjEwNzlmNmQwYmQyZDlhOWI0NGRlODNjMmQ5MWQ5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5MTA1OWM4Y2ZiNWEwNzJjNmY2NGRkM2QxYmZkYmMzNTZmYmVjOTNhZWVjODg3OTFkYTdlZGJhODljMDg4NWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJjOThiNTBhMzVhYjM5NDg5NGUzMzA2ZmVjZmZhZDkxY2M2MTU0MDZiNjYzODM5OTA5ZjFkYmMyZTk5MzRiYTA5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmYzIzMmQwN2JkZjJmM2ZmNjg3NGE4MGM0YzEwZDYxNDYzNzQ1OGQ1MjdjNGY3NjhjMGM3OTU5NzEzYjRiOTJlIn0"
+                }
+            ]
+        },
+        {
+            "id": "claim_6f95a4369dd14a2a957328a7e71219c9",
+            "statement": "When `SoundController.play()` is blocked by pool admission, it emits a `CAUSE_CHAIN` telemetry event with a `BLOCKED` result before returning `null`.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/SoundController.ts#L130-L143",
+                    "version": "repo-lines-v1:sha256:e0943748ee76e74f188054d9c989895fe0527ae0b1bb9dfcceccad7b44d681dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5YmRhNjc2NjhhM2ViMjU5ZDQzMGYwNTZkMjlmZjkzYTliY2Q1ZGE4MjY0ZGQ4MzAxYjc0OTJjZjhlNTYwNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIyN2E1M2UyNWY5OGM2OTEwMGJjNTc4YmYzZjA2NzFmZDBiZjc1NGYzMzliNjc0MmRlZGY2ZDg1ZGViOGRhYzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY3NTNmNWVhY2ZkMTg5ZjA0MjJlMWQzOTI0MDBkOGY0OTZmMmZhZjRkNmQxNzU0ZjU3Y2Y3YzY2ZWJhYzI5MzcifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/SoundController.test.ts#L130-L147",
+                    "version": "repo-lines-v1:sha256:67ce4a1fef3ff3507217e2bcac0258751a284a8fd549306aab14010a52266a8c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZTNlN2ZiOWYwMWRlMDdlZGU4YmUzZjcwOGI4OTljMWZiNGY0MjEwYjNiZmQ3ZDUyOTJhZTI5NmQxZGZiMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjZmNhZGI4YjIxMGZmZDA1Mzc5MmNjMmUxMGRhZmY3MDYzOWY0MzliZDY2ZjFiOGY5OWNmNDAyMWU5NmI1ZWEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_c539d56ccf0d4365ae0601e6c5159179",
+            "statement": "The loader subsystem is the runtime bridge between bank loading and playback: bank loads populate the decoded buffer cache, and the sound controller reads that cache on demand rather than holding a permanent buffer reference.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts#L37-L100",
+                    "version": "repo-lines-v1:sha256:27dc1bfd98b0b2c0d22ad3632836871a4a5b6fcc888714f1acbe5b935ffed7c3:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjYTE2MjIyMTFjMDk2NGFlZWVhMzYxNDA1YzE2ZGI4ZWVmYWQwNWYwMWRmN2Y2N2RjYTkzNDcwYzRiZDViMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ODdjN2E0ZjRlM2Q0MWYxZmU5MGJmYjI5OTk1MWRhZGMwOThjOWM0YWZlNTdiZThkNjlkNTUxYzQ3NTE0YWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhZjJjNWZmMzZiMWQ2YzlkZjMzMTI1OTQyNTE4Zjk2NTE5YTJhZjA4M2YxM2EzNmM0NDIxOTA1YmUyNTVmMzEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/SoundController.ts#L112-L118",
+                    "version": "repo-lines-v1:sha256:e18f1ae0737a23cb8585e33c300f247028a926c95e2537a7ab9f4b83f71a863d:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzJlMGY3N2FiNzQzYWNlNWM1ZGUwNjhmOTRhNWM5NDdjNzczNjNkZGZjOWI2ODQyNjVjNjgyZDhhODA0MWU4ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODI1MWJmYWJjZmI2ZDg5ZmQ5ZjRlM2I3YmM0YTE3NGZkOTBjOTk4MTg2ZTRmZGUyYzhmYTM0ZTZkNWMyOTNhYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGJjODgyMzU1NGUzYjkyYzE0OWVkYjE1NWNmYjA0ZmQ0NzAwYzMzMzAyN2JjYzFjYmU0NTA1ZTcxNzFhM2FmYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODBhNDI5OTJlZDJkMzEzMDVmZmI3MzAzZWI2NDFlZmIyNGU5ZWU3N2MwNjYzYTk0NTkzMmYxZjIyNDdiZjYzNSJ9"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/__tests__/SoundController.test.ts#L136-L147",
+                    "version": "repo-lines-v1:sha256:b164f6f7ed32360d75e181f6760aeb83a5492a6496c4c48d84b55736d8bbd61d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjM2I4YTI1MGNlNzhlNDg3NjAwZWE1NTAwZjNiNDkyYWFlZjExNjA5NGE0NmQ2NzdkZTlkOTJkYjk4YmJmMTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0MmRkZTQ4ZmM4YWU2OGI0MTYwZTU2OThhZmE1ZDY1MjhkMzIwNGUzOTVhNjI4ZjAwYzQwZTAwMjVjOTBiNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjZmNhZGI4YjIxMGZmZDA1Mzc5MmNjMmUxMGRhZmY3MDYzOWY0MzliZDY2ZjFiOGY5OWNmNDAyMWU5NmI1ZWEifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.0",
+        "at": "2026-09-03T11:15:32.736Z"
+    }
+}

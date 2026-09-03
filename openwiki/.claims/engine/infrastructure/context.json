@@ -1,0 +1,132 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:3d3fdb2072fb3a3b0c2a309e66d974eb874a6aef2a0469134b9e895d966566ed",
+    "claims": [
+        {
+            "id": "claim_0f37dd4c26b3445894b7f08626af1413",
+            "statement": "AudioContextFactory creates realtime audio contexts with `latencyHint: 'interactive'` and optional sample rate, and can also create offline audio contexts.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/AudioContextFactory.ts#L9-L19",
+                    "version": "repo-lines-v1:sha256:590386846373072760afbd26e0e7239ccde94e5c3d9bbdda2082c8acd142e972:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4N2JhOGIyOTRhYTIzNGRlZTk1MGVmYzA3ZGZjNDE2ZTI5ODA0ZWE4Y2Q0NDNlZWMzYTA5MzU4YjMzNmYyYTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkZmNhNjAwYWI5OTgyMGVlMjU0MmI1MGM0ZjBkMjg5Mzk4OTExMGVkMmVhNmQ4NDZhMjQyZjg2OGJkNjA4NTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAxOWEyYmM1YTFjZjAyYTkyYTEyZmZjOGQ4NzJkZTk0MmM4ZTY1NTMxZjMzNWU1NDBjZDIyMzY4NDJmNTBhNTYifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_3058196482f34bbab7bcf00b44b2874b",
+            "statement": "AudioContextManager owns the realtime context created by AudioContextFactory, exposes context state and timing getters, and forwards native `statechange` events through an optional `onStateChange` callback.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/AudioContextManager.ts#L10-L26",
+                    "version": "repo-lines-v1:sha256:e5be7c08e98937f911fc4221796b74c09d92e64ca7c1300543ef4f83eb976c8a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzYWY1NWM1YjFhZDY2NTg1MzVmY2U2NWZiYzJmOTg2NTI5ZGYxNDc4NTQwNmY1NjA4NzA0ODdjNTU2MmVhMDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3N2QzN2EwMzRjMGY4ODgzZjIyY2ZlZGRlNGU3MjM0ZTcwZTQwNTBkMWM5ZDczZGFkODU3NTZiMmZhNjlmZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkZTRiODY2OTUyMzljYTM3MThiZDE4OTlmNzY4ZDQ3YzQ3MDQ0ZjVlNzcwMGJkZjcxMGJlMzMzNWJiODhlOTAifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/AudioContextManager.test.ts#L76-L108",
+                    "version": "repo-lines-v1:sha256:e60c64b5adcfc7853fb1d60da9da88c34026c604c9c94b8b7fd1459b91223b11:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwNzVhMDJlMWJkNzk4OWQ4ZWY0ZGU2NWE1YzM4MzljOWNkODU1MjY3OTFjNWIyYjdhNGU3MjhlMTk0NDI3MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjOTE5M2Y3NDY1OGQ4MjdlY2M4MmQwNTUxZWJiODUxNzMzMGU5M2RkZTRhMzUxZjVlZDU0NTk2NTYyMmQ1MzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwMWU1OTY2YjQ0YTkxOTc1Y2U0NGQyNWYxOWQ4OGRjYjM2ZDEzMDZlNDU3YWQ1YmQyMWJhMjA3Yzg0YzZlZDQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_8f63c59febf947ee815b1b34c7a78336",
+            "statement": "AudioContextManager routes `resume()` through UnlockManager, while `suspend()` and `close()` are guarded so they only call the native context in the appropriate current state.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/AudioContextManager.ts#L65-L79",
+                    "version": "repo-lines-v1:sha256:971c46e49ef5c1e69485c44492d23b63c292c0545be624bc26f36b5fe59b6fdb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5YjhlM2Q0MmFlM2IwNDRhOTYxYzFjNGMxYjgxZmFkYmY4M2VlYjI3YWRmYjI4NTliNDdhMWEwYjhmMGYzNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/AudioContextManager.test.ts#L111-L149",
+                    "version": "repo-lines-v1:sha256:9eb906809397b0a149a0aa153989b3d4970a388b3cf759e7e747698cd25624be:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0MDhhY2E4OWQyZGJjMjljM2NlMjZmMGQ2ZmZiMWMyOGE0ZjhlOTMwMTdmMzk1Mjg0NzU5YTk3YTQ0MzYxMTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM1MjM5ZmI3Zjk2YWM5M2Q4YmI0ZWU2NTI3YTgxODI0YTI4NmNmYzc4OTI2ZjkyMTA5MWU1NTk1ZDkyNDgxODQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_101913951ba543c8a02b9c76098f0745",
+            "statement": "AudioContextManager requires `initSpatial(automation)` before spatial updates; otherwise `setListenerPosition()` and `setListenerOrientation()` warn and do nothing instead of throwing.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/AudioContextManager.ts#L44-L63",
+                    "version": "repo-lines-v1:sha256:6e1019435a80157fd2694ff194c7a4d07b3b859c63742b4a34706752b47f689d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1OWM1OWUzYWZlNjdlMzM4MjI2MDdjYzFmMTJiNGEwOGQyZDY2ZWZkZDI3OWFhZTY2NjZjMWRkMjcxODdhNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2ZTQyMzc1OTYzZDYzN2ZjNjU0MzkwMjMzYjhkOWRkZGJiMjFiOTBhYTQwNzdlNDBjYWM3MTcwY2JlMjQ3MjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4NmUwNjQ0YTFiMGNlYzdiOTUzMzhmODg2YWE2OTUyMmMxZjNkYzZjYmM4YWNkZmQwMmQyMzQ3YTgxNzk0MjYifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/AudioContextManager.test.ts#L151-L211",
+                    "version": "repo-lines-v1:sha256:281daefb33a548de58e9383a817646eb939732e42f9e32e3753b8032ee17ebdd:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4MjAyMGRjZGQ3OWFhMDk2NTdjYTBjODRlZDcyYzYzMzBlMTQ0MTJhYWViZmRhNGI0ZTdlY2IwZjgxMDA4MDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3YmI4MTg3MjY5ODU5NjIzN2VhNzBkZmI5NTIwYTkzMWZjM2FlZTcwY2I0MWZkNjgzNGVlODQ0ZTI1ZjRmODAifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_daf5be9e472d43b688b1d453471beb85",
+            "statement": "ListenerManager applies listener position and orientation via `AutomationEngine.ramp()` with 50 ms smoothing when param-based listener fields are available, and falls back to legacy synchronous listener methods when they are not.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/ListenerManager.ts#L5-L41",
+                    "version": "repo-lines-v1:sha256:1540c13beae9dc9233980dbe014f4d68628f866ffd1514f1de790e3af6abeccc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjNzNjNmE0YzM4MTE3NzNiMzhjNjk0ZjE0NTEzMjQ2YWFmMjNlNTNmMTVmNDBhODYyOTRhN2JlMmM1MDVjOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2ZGNiMWRjZDNlODM0NjU4MzdhNjMyOTExOTE3MTk3YTAwNWMyYjIyOTAxMzY2NjViYzllZTRjZWU2NTM0MTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/ListenerManager.test.ts#L41-L87",
+                    "version": "repo-lines-v1:sha256:f7e37da9142a50accda7d644d743c94ce590a2c837ae817c425ee8efc08a16c7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViZWVhY2NjODUwN2ZkNTE5ZjM2MjNhMjM5OTg4ZTQ2NjRhMzgwNmYyZjYzMzA1MGQ4Mjk3NzcyMTUzMDRiYmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5MWQwZTE0M2Y1MjYwOWNjODkxNmZiNDQ0ZTMwNzE5YWQ0YWE5NDdiMDAyZTU4MDQwNzRhZTlhMmQ4ZGFlZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3YmI4MTg3MjY5ODU5NjIzN2VhNzBkZmI5NTIwYTkzMWZjM2FlZTcwY2I0MWZkNjgzNGVlODQ0ZTI1ZjRmODAifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_56d9926bd0e540a4a9ee07d8b708683f",
+            "statement": "UnlockManager makes a best-effort audio unlock attempt by playing a one-sample silent buffer before calling `context.resume()`, but skips the silent probe on later unlock calls once the context has already been unlocked or is already running.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/UnlockManager.ts#L3-L29",
+                    "version": "repo-lines-v1:sha256:8ba6e5416068ff001904292be7e2b2be9aba4f6ac165094270fcad9f5f526f57:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMTRmM2EwOTBlYjg0MDhkNzE5ZTU3MjNkMjMzNDNjZjYyOTA3M2M4YWVmMWE4OGFjNDA5Y2Q0ZmNlZTIwMDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhYzcwNjExZmFhYjQxODYxZTFiOGQ1OTBiOTgxZDVhZjNlZjY3MTI1NmFkNDRjMGYyM2YyOGFlNWY1MjYyYzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/UnlockManager.test.ts#L31-L87",
+                    "version": "repo-lines-v1:sha256:0dc36a2391e1082d9c1e1dab71a233741fb84d5cf644242b8a3bde131d9565c9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjYTBjZjVjMWQ2NDY3ZjIwNjM1MjVkYmUwZWFlMzhmNjUyNzcyYjVjODE4ZjI0NzljNjQ0ZmRkMTE4NDQ0NzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0MTg5N2M4NmI0MGRhNTIzMWM5MTVhNmMwZThkZTZiYzQyY2UxY2ExMzFmZDUxZTczNzMzMTgyMGYxNGZhNTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_a57cbff82cc74e0a8dc42c8830585c03",
+            "statement": "UnlockManager tolerates errors during the silent-buffer probe and still proceeds to `context.resume()`, which makes the unlock flow resilient to browser playback failures.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/UnlockManager.ts#L8-L28",
+                    "version": "repo-lines-v1:sha256:76127215d15d7656b71885e839c509aaea73e36ad4351d67245460da036bdedc:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MTY0OTc0MTQ3MjQ0NDQyMDBiNzZjM2Y5MTZmYjNlZDM5ODFlNWNkMjNlZmZlODYxMjI3ZjgzZjNlZjA3YjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyZDJlZDBjZDUyMDA0OGM4NGM0ZmM5MTUwZDdiNzAyOWMyYzQwMTNmZTg2MGVjNzlhMDgwMGQ3MDRhMWRmYTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/UnlockManager.test.ts#L76-L87",
+                    "version": "repo-lines-v1:sha256:f9c201e535965ac5ac955038f1e7cd379d9ab808de80a72e668112608268fde1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyNTRjOGY2MGUyYTJmODE3MGJiZWZhOTJiYTYzNzRjOTEzOGRmZGZhY2QwOGUyNzkwMDNmMjRkNTAyNjRjMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0NjFkZTgyNDcyMGYxOWFjYTkwYjVlMDE4NjE2OGMzMjU2YjQzNjA5YjM3NDM2NTJiOTUwMTdiZDcwMzBiNzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_653e4fd6cea04582807334f92bb57563",
+            "statement": "WorkletLoader requires `context.audioWorklet`, tries to load modules from a temporary `blob:` URL first, falls back to a base64 `data:` URI if the blob load fails, and revokes the blob URL in all cases.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/WorkletLoader.ts#L3-L39",
+                    "version": "repo-lines-v1:sha256:4bff277dbe67df0bc2662a3ff5c97f4ded8684a093d83f797d656732f8eb0650:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4MDVhM2EyYzc5MWQ3NzRmNDc5MzdhNDlmOGNkODlmZjBiMTYyZTk5NzE2NThkNTlkMzA5YjU2ZmZmNGZmY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQyMzI5Y2U5MDQ3MDJiM2JkNzRmN2VjOTcwMjRjYzBmYmYxYjZmYTlkNGRmYTc4ZjE2YTcwNGI4NTdiNGEwNzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/WorkletLoader.test.ts#L38-L100",
+                    "version": "repo-lines-v1:sha256:19c0b57f8a7c42e6485401bbe120e2ebb8b2a5cfd8df7307215932c68617d6ab:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjMjc3ZjZlYjcwNmRiNzkxYWNiYmZiZDZhNmExM2ZlMTdmN2FjMzYwZjVmZWYyM2U3NWY3NmJkZGVmNDlmNjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViMWYzMjEyNTQyNGZlN2E5ZTJhMzk3MDQzY2ZlODU5MTc4MDE1YmY2MjM5YjM0NjExNzNlYTMwMTAxOWZmZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_c2f16e868fac4ef1ab5b2a99e374726c",
+            "statement": "WorkletLoader throws a detailed error when both `blob:` and `data:` module loading fail, preserving the second failure as the error cause.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/WorkletLoader.ts#L21-L35",
+                    "version": "repo-lines-v1:sha256:2f9b4efe5bbc6910f56c0e89cedc9ec7125ebb2e668378a13faa8eab14d4ba6d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2OTA5YWMxOTZjNDhjYWQ4NDAzNzM2NzAyMzY5N2U4OTVkZDdjMTBmMjE2YTgwYmJmZDgxNWRlYzhhNWNlN2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5YTg1NzJiODg4YjA4Zjc5Nzk4YTE5YWNhZDFlZmRhZmVkMDI3MDQyNWEzZTFjMjJkODg4ZDEwNmQ2NTY4M2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllMTY3ZTU2OTVhOWNmMDI3ZjZjOGI4ZGU2YzE5YjI5YzI4MGU4MTU2MThhMzMxNjg3OGI2NGFkMGRjNDRhYzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4ZGVkNGU3M2ViY2NkNDgxMDBjMTg5NTBhMDhlZDRhZDZjYjg3ODNjMWUxZTRjMTY2Mjc3ZGU5ZjQ1ZmE2NWUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/WorkletLoader.test.ts#L71-L90",
+                    "version": "repo-lines-v1:sha256:fb932ed06dabcacbb19285efe2a33efc803e67f9ec4acbfcac669133df907793:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzMmJjYjNiNTAyODA0ZjU1MWUwOWFlNDFiNDU3NWU0OTAyNDcyZDBjOGVhNGZmOWFkYjY3Y2YyMTMwYWVhZmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiMWIxYzgyMDk4N2M2ZmFkNTBmZDZiYTFmMmYyNzE2ZWY1MGJhNDAyZjUzZTRkZTQ1ZjdmMzE4ODdkMGEwZWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiYjIwOWM2Njc5NTFiYTMwM2ZmMzYzMDdjMDk5MzExOTI5NDE0MTM1YmJlOTNkYTNhMTE0ODI0M2ViOWNiNjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiOTFlNjJlMWQwN2NjZmE0MWU1NGQ0MjJjZTQ3YWJjMmM5OTA1NTg1YmI5Y2NmNGMyYTRkYTczYmFkYjMzNmYifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.0",
+        "at": "2026-09-03T11:15:32.736Z"
+    }
+}

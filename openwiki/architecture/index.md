@@ -1,3 +1,3 @@
 # Files
 
-- [Repository architecture overview](overview.md) - Cross-package map of the engine, inspector, shared contracts, and example runtime, with the runtime and dependency flow between them.
+- [Architecture Overview](overview.md) - Repository-level map of the hexagonal audio runtime, inspector tooling, and shared contracts, with the control flow that connects them.

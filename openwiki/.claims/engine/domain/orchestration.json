@@ -1,0 +1,118 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:b7c0862272d36695f5edb1cdae0d10a8473da5c0185b47c01faa847964a41b6d",
+    "claims": [
+        {
+            "id": "claim_de9f5d980ed24013bcc009ad6d266981",
+            "statement": "`AudioEventOrchestrator` is the event-runtime entrypoint: it evaluates conditions and probability gates, schedules delayed actions, supports nested event triggering with a recursion guard, and fans out to router, sequencer, mixer, RTPC, and bank collaborators for the supported action types.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts#L175-L260",
+                    "version": "repo-lines-v1:sha256:7a6e7963cd8e4e21c264bd549b2ae370e5eb5d96a6f77f65c9a7f680847690c4:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkZDEzNjc1MDRhM2QzMjkxZTdhYTJlZWQ5NmQ5YWFjM2NlOTlhNGRmZDk4ODczYWFjOTk3ODc3MjVlMjA3NzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiYThkOThjZTM3NTc3MGQxZjI0NWVlMTIyNzdhYjhiODA1YjAyY2I3YjJlMjY3OWRmZTJkYWU0MzZmNDAwNWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxMDJjNjc2ZDQ3YTgzNDJmYzg2NWY3OTkyZWY5OWI1MTg3NDlkYjRjMDAzZTcxMDg3MmU4MWQ2Y2RlZjhkNmUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts#L49-L89",
+                    "version": "repo-lines-v1:sha256:7ef9d893cb5c7c0f88a0a91844222a71ae6a3d3c249fb9f8ae4d2218c95e4c0a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3OWQ1OWFlOTQ5MmMwYjVjNjQ2YzE5ZmZiMTljNDE3NjQ3NmRhNGFmMTRiYzQ2YTU5ZjViMjA1YmM1MzE3ZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhZTdjNTgzYmQ1MzFlZWE0OTg3YzNmMDBmNmUwM2QxODYzNzUwZjI3ZWY5ODIzOTUwZTIxNjhiNDUxZTkwMjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3NmYzYzUyMTEyOTMzNGM1MjY5YWQ4Njc5YTU1N2EyNzIzNThhYTZhNDFmZTkwNTQwZjcwMGIzMmM4Njg1MDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmZmQ3YzEwOTE2ZjI3OGZiN2IwNTg0YzNkZmM3OGY3MTQ2NTQ2N2M2YTgwODJhNTMyYjZmNTRhYWI3ZGM5MmMifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts#L91-L173",
+                    "version": "repo-lines-v1:sha256:d6f4b0c46d7d6e6fd70b28679f8916e98ffe64aaaf51abecd51d710376086ff1:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxYTZiNTAzYTgyOTIzNjQ1MDIzYmE3MzJmZGE4YWM3NDgyZWZmNzQ2YmExZTc0OWZiYTk5YWE0ZTA3YzgwMmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg1ZGIzNjIyOWUwNGU2NDRkZWEzZDBkMDVjZTZjMzIwOTVlOTIxNDFmMjYzZmExMzEyMmNkNzkzM2Q3NGYyYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzNWJlNDM1MWQ4ZTZlODQ4NWNlNmU0Y2MxZDNiZjg1NmNhYjcwN2Y2YzI2ZTNiMDlkNDU3ZjNmNjQzZDlmYWYifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_e92eb6ea478f4d5da0bad3cafe44215c",
+            "statement": "`Sequencer` is a stateful loop scheduler that resets track context on `playLoop`, cancels active regions on `stopLoop`, and rejects idle or non-interruptible transitions in progress before scheduling a new transition.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/Sequencer.ts#L119-L169",
+                    "version": "repo-lines-v1:sha256:9cf270634fc65d072eebdb536c9c5b914514e666a6a0579b97622c5d705425af:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5ZDdjYjA1MWJiMWJhZWIzMGJkM2E4YWFiNzkzM2Q1NGU5ODE5NmI5MmUxODI1ZTg0YTM0NDFhYWNhNTk3NmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ODdjN2E0ZjRlM2Q0MWYxZmU5MGJmYjI5OTk1MWRhZGMwOThjOWM0YWZlNTdiZThkNjlkNTUxYzQ3NTE0YWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyYzU4MjZmOWU5NjgzMGI2NTg1MGFlMGNkNmYxNTAwZjY0NTEyMDQ2Y2ZiYmU2ZDBhYTdkMTM2NWZlMmFkMDQifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/Sequencer.ts#L78-L112",
+                    "version": "repo-lines-v1:sha256:3816ffb08053af69f965467cbe26166b0f1ac5126d318abd29d3c10f5d5e6408:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkZDgwMGZlNDllN2YxZTJjYWQ2NDUxYmI4OTc0ODVhZDM3ZjI3YmU1ZjdhZjM0OTJhYzg1ZDNmMjA3YTU5MDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiMmRhMmQyOTczNzM4MTM0MjFjM2ZiNjVmZDg2YWQyZTZlOTQwMzYwYjIxZDUwYzE3ZGFlYjdmNTVjNThhMzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxYWYxM2IwMjY1YTEyMTMzNzQxNWZlZWJiM2YzNDY2NWNiYTU4NzczZTZlYjM0MmUyODA4MWIyMzM1M2Y5ZDMifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_1d4913a62ac944848eb732a4363f2957",
+            "statement": "`Sequencer.transitionTo()` quantizes transitions using `AudioGrid`-based musical time, supports next-beat, next-bar, exact-pulse, and grid-division targets, and uses crossfade, tail, and optional transition-region settings to build the outgoing region queue.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioGrid.ts#L35-L104",
+                    "version": "repo-lines-v1:sha256:efd2a807c7601881f212508af2c99f8fb08a6d93c0636a2965fd54d35a3ef145:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjMWMxZDYyNDgyZGJjZmNlNGZmMWQxZTFhODVkZTc0YzE5MzdmNTc4ODA0NTAxNTY3Y2Y3Y2VlNzUzNjlmZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4MTdiMDdjYmFjYmFlN2VkMTJmNjE2MjYyZmJlOTE0OTQyOGY1OTM5MGI3NmE3MjdiMDQ4MmMyYzI4ZTdjMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/Sequencer.ts#L135-L249",
+                    "version": "repo-lines-v1:sha256:caff628a1fb1b3ec19aefab1abe9875d86cda63b9d218a249b31b53339add590:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4OGY1MDUyZTVkOWJkNTk1MGMyOTNjZjZlZjkxZjQyMjFiMzJlM2ZmZjViNDg3MWQ1ZDQxYWYyZGFjZWRiZjU4IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MzlmNjAxMmM1MDFmYmI4YTllNDRjY2Y0ZDlhODE0NzNkZDNjYTA1Y2E3M2VkNzRlYjg0MDhlZWU4YTgwZDg0IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI3NTYxZTY2YWMyMjdkNTEyMzJlYTMxZTk0MTk2ZGM0MDc4OTNkN2ZmYmFmN2YyY2Y1ZjAzODFjYWVkNGYxNTY4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1YTFhOWM4YTM1ZTFlNDRkOWE2NzRmZTkzZmM4NzExZWQyMGFlZjhlMWYyMjczMWEwZmZmMjgzMmFiOTBjMGFmIn0"
+                }
+            ]
+        },
+        {
+            "id": "claim_dfc61e2ec5ee4dd2a6ed59760385054a",
+            "statement": "`SmartLoopTransitionPolicy` evaluates magnet conditions with RTPC values and hysteresis, updates magnet state tracking, and returns the first matching transition decision for the current region.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/SmartLoopTransitionPolicy.ts#L19-L78",
+                    "version": "repo-lines-v1:sha256:ed16f3845064bc08b7ad3162bc03926b81483702f052920f300fbca135198cd7:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYzc4MmYxMjVmYjNjYzcyZWY4ZGE5OWZkNzZhMjU1M2Y3MTM3MjhiYjA4MDJjMDc5ZDI0OWY1YThhNWEwMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwMmY5ZjIxNjBkNzg0YmJjOWRlMzRhOWJhYzRjNmYzNmYwNTc4MWNjMGE1YzFlOGUzNTZiNDc0ZDk1N2I4YjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_2d577d1c79c647fe80442f1a802e31f6",
+            "statement": "`MusicConductor` is an `ITickable` FSM runtime that starts the current loop and optional active snapshot, evaluates edges through `MusicFsmEvaluator`, schedules quantized loop transitions and stingers, and applies deferred mixer snapshot activation when its execution time arrives.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/MusicConductor.ts#L15-L78",
+                    "version": "repo-lines-v1:sha256:3db199c6ef304993ce1e7cb2e7cc45ef3760b318f557236bef0913e84cb98a3c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiMmU0OTQyMWE1ZDhiOGZhNTc3YzU3ZGU5OGY2YjE3NzZkMWM5ZDJmYWFjYzA0ZjRiOWQ2ZWMyMGM4ZDM3YWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY2NWU0YzA5YTIyOGI1NWJkMWIwNzFiZTVlMzhiMzk5MzA1MzQ0ZjMwMzhjY2E1YzJlYTRhYWFmOTFhNzhmYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmZTczYzFmOGRhZmE0YTIzNjk1ZDk3YjBkNTMxZmIxZDgxNzlmNmM2ZTk5NWIxYWIxODIyOWE5ZjY1NzdhMjkifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/MusicConductor.ts#L80-L163",
+                    "version": "repo-lines-v1:sha256:d98deb799976d69e07a3b02f413559d1d7332d463df3b9337a26af30c842fadb:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzYzgyMDBlNWQyOTI4YTY0NDkyZmZhMGIxMWU0MjcwZGRmMDIzZTAyOTlhMmE4YTNhMjk2NDYzOWM2MzhlMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMDA1MjczN2Y4ODYxYjJlMWUyYjllMzU5N2Q0OTViY2Q3NjE3MjgwZGEyNjdjNDUxOWI2ZmQ2Y2ZmYzRmM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/MusicFsmEvaluator.ts#L4-L42",
+                    "version": "repo-lines-v1:sha256:af79c2216ee7bb3fb826482f6d61206397d38bae03124bb23460ca5cb4cbcfe2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzYWExYjYxOGYxN2ZlY2IyZWNjOGUxY2E3NGU3ZGNlMGMwMjE1ZTdkM2IwZTA0MzVmNThkNjJkNzA1OTY0ODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1YjNiOWY4Yjk2M2JjNWYxNmMyMTliZTIwOTgzYWNlN2EwM2U5MjU4NjU3NzBkYmFkYTMxZmI0MjNmMDg5YmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_f8e56c5c19a54362ba225356691d981c",
+            "statement": "`MusicFsmEvaluator` checks global FSM edges before state-local edges and returns the first edge whose conditions all pass, so transition ordering is data-driven rather than embedded in the conductor.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/MusicFsmEvaluator.ts#L4-L42",
+                    "version": "repo-lines-v1:sha256:af79c2216ee7bb3fb826482f6d61206397d38bae03124bb23460ca5cb4cbcfe2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzYWExYjYxOGYxN2ZlY2IyZWNjOGUxY2E3NGU3ZGNlMGMwMjE1ZTdkM2IwZTA0MzVmNThkNjJkNzA1OTY0ODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1YjNiOWY4Yjk2M2JjNWYxNmMyMTliZTIwOTgzYWNlN2EwM2U5MjU4NjU3NzBkYmFkYTMxZmI0MjNmMDg5YmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_35cb68b66d3f43ccad95036a293f80f1",
+            "statement": "`ScattererOrchestrator` maintains per-session spawn state, suppresses spawning while paused, removes dead sessions, enforces the configured polyphony cap, selects sources through `ContainerPlaybackPolicy`, and can quantize spawn timing against a reference track via `Sequencer.getPlaybackInfo()`.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/ScattererOrchestrator.ts#L23-L73",
+                    "version": "repo-lines-v1:sha256:8cb472e2b7eeb184982bbc679896115cbe4e55a4a48e71ef54bad6d23ffe2808:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNTcyM2YzNTAxMmEzNDFkNjY1NzM2MTc0YmQzMzdkODhmOWM4ZTliNDQwNTc2OTQ5NTQ2ZTQ5NDY0NGFhYmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3NDBmM2YxZDc1ODcwYWQ0NDI5OGQ2NTcwZjVjZjM5NzYzZDIyZDcxZjgzZTFmY2E5MWI2OWJlMGE5NzYzZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE0OTQwMTAxM2EzOGMxZTA2MTIxYzA2NzY2MmQwNWM0MmNkMThlMjk3MDQ3MzZmMmUyYjNlOGEwYjMwYmIxOGQifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/ScattererOrchestrator.ts#L75-L145",
+                    "version": "repo-lines-v1:sha256:180d25bd9239a36770e3c1e463348bf6adfdf22bca61a42ab285221e5885502a:eyJzZWxlY3RlZExpbmVDb3VudCI6NzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmZmFlMTMwNWE4OGQ2NTNmMzI2YzViZDc0OGY0ZGY2YTI3YjNiN2MzNTVkNWM4YzY0N2YxYTMyYTFhMWQ4ZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_529bc14f0dbe493ebe4a19294e2220e0",
+            "statement": "`AudioGrid` provides the shared musical timing math for orchestration by converting BPM, beats-per-bar, PPQN, and start time into next-beat, next-bar, pulse, and grid-division lookups.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioGrid.ts#L6-L104",
+                    "version": "repo-lines-v1:sha256:fb8a5ad53dbc64228af422bfdbfccb9191227be2f4de054a09b9edd8e78fd86e:eyJzZWxlY3RlZExpbmVDb3VudCI6OTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiMmIyZWFkZTNlNmIzMjBmMzdlYTdkY2RiYjdlZGMzNjJmYmUwMDQwMWUyZTBkMDZmMDhhM2E3ZGZjN2U4OGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiYTkwZjE5MzhhNDY1YmE1MWU1NTNmMTVhY2MxNTUwZmQzODBlYmJlOGMxOThkNTJiNjg2OTM5MGIzMTk0ZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.0",
+        "at": "2026-09-03T11:15:32.736Z"
+    }
+}

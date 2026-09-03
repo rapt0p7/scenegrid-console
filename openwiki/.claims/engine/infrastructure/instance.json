@@ -1,0 +1,54 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:7551447a27db42226725d5664a441f59d0c43297e48bfe11a5a5b52c6508f78f",
+    "claims": [
+        {
+            "id": "claim_6a03f3d1cfd14b2e9fb13d0628b171ed",
+            "statement": "`SoundInstance` is the per-voice state holder for a live playback instance, and it can be reused after stop while releasing internal references on dispose so stale playback state does not leak forward.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts",
+                    "version": "repo-file-v1:sha256:159945a02b60c66de241ded0009da8192389ee10953f40ef85452e67abf3402b"
+                }
+            ]
+        },
+        {
+            "id": "claim_da43582634454a0eadbe55d85eeac52a",
+            "statement": "`SoundPoolManager` owns the pool of reusable voices, hands out instances for playback, and takes them back after playback ends so later requests can reuse existing allocations instead of creating new ones.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundPoolManager.test.ts",
+                    "version": "repo-file-v1:sha256:70ca833c4636a065fb3b645c1a053a8a2130b4736928769f817b145167d9dd40"
+                }
+            ]
+        },
+        {
+            "id": "claim_9cfaf353f7484dbabf76fae6887621e0",
+            "statement": "The pool manager must preserve a single-owner lifecycle for each active voice: one live playback owns an instance at a time, and cleanup is the boundary that returns the instance to pooled reuse or terminal disposal.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts",
+                    "version": "repo-file-v1:sha256:159945a02b60c66de241ded0009da8192389ee10953f40ef85452e67abf3402b"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundPoolManager.test.ts",
+                    "version": "repo-file-v1:sha256:70ca833c4636a065fb3b645c1a053a8a2130b4736928769f817b145167d9dd40"
+                }
+            ]
+        },
+        {
+            "id": "claim_5ecb66a7d91d499d8cb6fcda4da9e44e",
+            "statement": "Instance and pool cleanup are important for GC stability because stopped or disposed voices must release graph links and internal references before reuse, otherwise old voices remain reachable and reuse becomes unsafe.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts",
+                    "version": "repo-file-v1:sha256:159945a02b60c66de241ded0009da8192389ee10953f40ef85452e67abf3402b"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.0",
+        "at": "2026-09-03T11:15:32.736Z"
+    }
+}

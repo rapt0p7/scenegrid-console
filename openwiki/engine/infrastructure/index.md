@@ -1,9 +1,9 @@
 # Files
 
-- [Bus system](bus-system.md) - The bus graph, master limiter path, sidechain behavior, and send application logic that bind engine mixes to Web Audio nodes.
-- [Context and unlock management](context.md) - AudioContext creation, listener control, unlock flow, and worklet loading for the engine runtime.
-- [Sound instances and pooling](instance.md) - Runtime sound-instance objects and pool management used to avoid allocation churn and manage playback reuse.
-- [Loaders and bank management](loader.md) - Asset loading, bank lifecycle, and sound-controller adapters that bridge manifests to decoded runtime buffers.
+- [Bus system and analyzer taps](bus-system.md) - Bus graph construction, send routing, analyzer and ducker tap placement, and the Web Audio boundary that the engine exposes to mixers and inspector tooling.
+- [Audio Context and Unlock Lifecycle](context.md) - Browser audio-context creation, unlock handling, listener control, and worklet loading for the engine runtime.
+- [Sound Instances and Voice Pooling](instance.md) - Runtime sound-instance state and pool management for reusing voices safely without allocation churn.
+- [Loaders and Sound Control](loader.md) - Runtime asset loading, bank lifecycle management, and controller adapters that expose decoded buffers to playback code.
 - [Nodes and master output](nodes.md) - Audio node factories, node-chain composition, and the final master-output path used by the engine bus system.
 - [Engine infrastructure overview](overview.md) - Map of the Web Audio adapters, loaders, scheduling, telemetry, state, and worklet subsystems behind the engine package.
 - [Plugins, sidechain, and limiter](plugins.md) - Audio plugin implementations for filters, sidechain ducking, and the custom brickwall limiter used by the bus system.

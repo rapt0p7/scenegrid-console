@@ -1,0 +1,196 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:2709d3c60f4b9ea7b92743d4f97094dee00c36282b9eb0e7aca6aba902d85d19",
+    "claims": [
+        {
+            "id": "claim_554af01e97f64d1ba7cc1004f09bd3f9",
+            "statement": "`MixerCoordinator` stores the current base mixer state, recomputes a resolved state through the layer stack, and forwards that result to the transition engine whenever the base state changes.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerCoordinator.ts#L6-L26",
+                    "version": "repo-lines-v1:sha256:77004167ce91e3de926efe0023ff2f7f3ddac9d6977d434f9812f847067ca56f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4ZDVjMWJlNGVhNGQyMjAyMWQxYjVkZGVhNDQ3MGFiMThjOWNlNDQ2ZWQwZGE5ZTA2MzUwNGVmY2MyNGRhYzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhNzMzYWZkNjdiMGRmMmZlYzUxZTFkMGRkYTkzNTgxYzUwNDRhZmUxOTk2ODAyNmE2NmEzYjU2YmExYWRkYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_eff4f1f4b3054b44b4074969ed0ddee2",
+            "statement": "`MixerLayerStack` keeps active layers in a `Map` keyed by `LayerId`, sorts them from lowest to highest numeric priority during resolution, and exposes the shared `PRIORITY` bands `BASE`, `OVERLAY`, `MODAL`, and `TRANSIENT`.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerLayer.ts#L52-L67",
+                    "version": "repo-lines-v1:sha256:e14e48aceac4a5f070fa96d4c21d802e57e7ac962a412249acbe2f1bb38add9d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MGIwYTYzMjBkZjFlMmEzM2Y1ZjkwMGU3ZmRjNWQ2MDgwMWVlYWJmYjU0YjU1NDMxZjc5NDNkZTAyM2FmNGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMxYjRhYjYzZjY0MTRjNTgxYWQ4NDk3OTYzMjhhYjExYzE5NWU0OTlhYTc5ZTRiMWRmMjAxZDk3MDc1MjBlYzAifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerLayer.ts#L9-L18",
+                    "version": "repo-lines-v1:sha256:7d6c260e1b7f56fb530aaf750c0785587c91389f3b3b2cae2c83af68490932cb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NmNkNzgzNTQ3Njg5NjE2NmNmNjVjMjhkMzg4ODZhMjVhNTM2YzM2YmMyMTk0ODQ2YmEwZWNkYjk5ODRjMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4ZWY4OGIwNzg1NjI0ZjYxZDQ1ZTA4Y2NiNDkwNmRhNDJkNTMzNWRlYWJjOTRhYzdmNGU2OWQ5YTg2OTA4MGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjYjE5NzYyYmMwY2FmODBmYzBkMWY0N2E2NGExMjBlOThlNWI3MDIyZTI4ZmRmNTgwYmY0M2VlNGNjNjA4ODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBiY2VjNzNjZTU3N2MyNWMyYTkyYjQ2OWZlYWE1OTRlOTQwMjlmYWMzZDQ1YTJkZWU0M2EyZDE5MDM2Yzc3ZTkifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_e091ad3faa3541e7a575762b8c7dcd61",
+            "statement": "Layer mutations through `addLayer`, `removeLayer`, and successful `updateLayer` calls trigger the stack's `onChange` callback, while `updateLayer` on a missing layer is a no-op.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerLayer.ts#L26-L42",
+                    "version": "repo-lines-v1:sha256:6d63eaf9e71391c37dd143afce310e552c70eb44363d6d3ff403189564d93bf6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjYjMzNmQ5ZjFmMmMyYzczNmFlMWVhOWI4NGIzOTM5ZWU2YmU4MDdhMjkwYmJkZGNmOWVjZjMyMmFiYjJmOGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzZGI2ODRhMDcyNGFiMGUwNThlY2I3YzhkZGIxNTk0MjQ3YTAwNGI3M2E2NmRiNjM3M2I4OTExMDdiZjhlYjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkYTBhZGFmZjQ5NTFmOWM1Nzc2NTU1NDg2NTg3MzVlNWM4Nzc0YWRjNDE1ZjhhNTdmMGRiNDVlMDQ1ZjI4YTMifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_ad517f7af5fa4845b4b43768bec2fdc7",
+            "statement": "`clearByPrefix()` removes every layer whose id starts with the supplied prefix but does not invoke the stack change callback itself.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerLayer.ts#L44-L50",
+                    "version": "repo-lines-v1:sha256:6164655c705b20ddfc0451096673c4c765c0d07c177236d11029b51f3b1d0ea9:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzYyYThlNDNmODA2Mjc0MDJkMGZkOTY1YjM3YzI3Yjk5N2M1NTlkNmJkZjk2N2RiNGExZWM1NDA5OWRmMzU2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQxOWE2ZGNjMDRlMjEzYTNjN2E3N2E0NTZiMDFlNzZkMWVmNzhjZDAwYmJlYzFkOGY4MTQ1OGZlOTNlZGM1NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDNlNWY3NmMyMzYzNmFiYzMzNWIxMWNhYWFiNDYxZmMwNjM0ZTBhMzg0MTE5ODkwYmY5YTc3OTFkYzc3YzNkZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTc1MDM1MGVmZmRkM2RmNjQ0Nzc2MTNmMTk0YzU4NzExYjA0ZDQzZTNhNDNkNjU1MDI1N2Y0Y2NkZWViNzQzMCJ9"
+                }
+            ]
+        },
+        {
+            "id": "claim_07ec97e6d93746aeb624a13a43c09a6c",
+            "statement": "`MixerStateResolver` merges each base bus with its snapshot patch by multiplying gains, clamping them to the configured maximum, carrying forward or overriding filters, and merging sends and RTPC bindings with explicit `null` removals.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L27-L43",
+                    "version": "repo-lines-v1:sha256:c0965527aa916f5b202c4daa4560ed726abc5dd6b2fd1ff4ada705951aeb45f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxZGU2NDU0OGY5MGJkNGVkMGIwZjljNDNjNDg5OWVlMzZkN2U5YTBmYzU0MGUwMmUwNzQyNjgzMTBhZjk3NTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MDYwMjk0ZGFmNjExODdkMzZhYTU4ZjViMmQ4NDQ3ZTgxMDNjMTYzZGQzNzE2ODFkZmFlYmZkNGIwMzVhZDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmMmExYTgzNDBkODZiMzc2ZWQwMWYzNTVmZDIwN2RlMmZhYmIwYjViOTVmNzkzN2JjODc3NWIwNjNmNjA1N2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyYzNmZTViZjNjNTg2MDk0Y2ZjMjc0YzFjM2MyMWM4ODRhZWZlNTY4N2JkMGFlZDVkOTMwM2VhODIzODI5MmEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L46-L130",
+                    "version": "repo-lines-v1:sha256:806bdb89f61c815bb0749e22866db8f48f01a358cf4422de3852a756c63db9c7:eyJzZWxlY3RlZExpbmVDb3VudCI6ODUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmNDRkZDI0NzAzYTBkZDk2ODYxNmI1OTEyMTNlZWI2ZjVmYmZjZWRjZTM2OGNjN2NhOTBiMjcxYThlODcxMWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkODEzNzAzN2VjMDkwNDIzYzBkOTQxOTk1MGU1MGIxYzZkNmQ0MjlmMzI5N2ZjMTlkZGVjMzdjODY4YzY1MGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzNjcyNGJiMDRiN2MzNzQzNTM5OTYyNDYxYTgyZDE3NmE1MmRiMTg1ZDdhNmU2YWE3YzM1MTU5M2M4OTk0ZTQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_0ae134d3924b4c6193b5f0c8056b4644",
+            "statement": "When a snapshot patch omits a bus-level filter or sends map, the resolver preserves the base value; when the patch uses `null`, it explicitly clears the filter, send destination, or RTPC entry.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L63-L130",
+                    "version": "repo-lines-v1:sha256:3b3600040c1af5e98f713e4cef34a2b892dd9e8e51e683c1f4a43b2b4e1aa585:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjZDNkOTY2NzhlYjIzZDQ2MWY5MWFhNmI1ZGZkODhmZDNhNzZjMGQyN2RlNjJmNmQyYjE0MGNiNTM0MTE0OWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMzFiYTgyZTM4MGEwOTI1NGYxYzY0OGY1ODlkYmU0NGZkODliN2VhOTMyODg3NjIzYmNmMWFiMmZhYWNmZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzNjcyNGJiMDRiN2MzNzQzNTM5OTYyNDYxYTgyZDE3NmE1MmRiMTg1ZDdhNmU2YWE3YzM1MTU5M2M4OTk0ZTQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_a4700e64112f43358dda8e9415d1b961",
+            "statement": "Resolved mixer metadata is rebuilt on every merge by combining base and patch metadata and writing a fresh `performance.now()` timestamp.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L36-L43",
+                    "version": "repo-lines-v1:sha256:879150e485c28b8f3272b82aaa99e1dde3da580d4e77d801231bc0d7f129faa4:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGIxYjAxZWYxZjU2Yjg4NDQ0NGI1NWM0MTY2NzkzZmUxZGVkNGE1N2Q4ZTc3NGU3Y2ViOWRjMGY2OTg2YzZkNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjUwNjAyOTRkYWY2MTE4N2QzNmFhNThmNWIyZDg0NDdlODEwM2MxNjNkZDM3MTY4MWRmYWViZmQ0YjAzNWFkNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGQ1ZWZiMThjMzU2MTllYTU5MDgxMDNjNjE4YTY2NjY2YWU1ODEzNThiZDQ1NWRhYmJjMDIzMjdkZjg1ZjZiNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODJjM2ZlNWJmM2M1ODYwOTRjZmMyNzRjMWMzYzIxYzg4NGFlZmU1Njg3YmQwYWVkNWQ5MzAzZWE4MjM4MjkyYSJ9"
+                }
+            ]
+        },
+        {
+            "id": "claim_903a66a03c154258b44bf33963eacb4b",
+            "statement": "`MixerSnapshotManager.activateSnapshot()` resolves the named snapshot from the configured snapshot table, emits snapshot and transition events, dispatches telemetry, adds a layer with snapshot metadata, and then emits transition end.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerSnapshotManager.ts#L37-L64",
+                    "version": "repo-lines-v1:sha256:b0a46a1dbd12ebe894f98080b7e7f0f8e5cbff285e0cce493090ba877e002cab:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3OGJkZWMwNDBlZDIwZmQ2ZTE0YmRhNTBkNDkwNjRmMjE5MDlkMWY2MzNmYzViOGU2OWJmZWZjMTY2ZTU4ZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5NDI2N2Y2Yzg5MGZkYTBhY2ZhNzg5OTllYWY3MGMwODQ3NmM3MzE2ZDQzN2RlOWYxOGVmNjA0NDQ3M2MxMDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlZTYzZmVlZmY2ZjE1NDE0NzdiMWVhZjg1YmM3MTBiNWE0YmZmODU2YWJkOTM3MGY5ZDM5ZTZjN2M0YmU4ZTIifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_fd8925aa82ea4c64b0e1cba00f833555",
+            "statement": "`MixerSnapshotManager.clearLayer()` ignores missing layers, but for existing layers it emits exit and transition events, removes the layer, recomputes the mixer state with the supplied duration, dispatches `CLEAR` telemetry, and then ends the transition.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerSnapshotManager.ts#L66-L79",
+                    "version": "repo-lines-v1:sha256:1d46510d8c476f158deb3f351671be188015e3ba2041962393dd125e677140ac:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0MDUwNmNhOTQ5OGFkZGRkYTUwNmExYjNhMTg4MmViYzI1MWFkZmVjZTNhODExYmNlNWU0MDJhMjZjM2QxY2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkYTM1OWNkN2Y4Y2U4OTAwM2ZhNDM0NDUxMTc2YmRmODdlN2UyNjU5ZGJmNmMzNGUzMTNiN2I4MjM0YzUyNzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkOGI2N2FhMDA4NTJiNzFmYjg5N2U0YWNkMWY3ODMwMTdhMTFlZjYxNWYzNGI1NzJlZDkzYWU2NDliZGE3MjcifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_7baaa4a3dff84e8c86d8a388bed17064",
+            "statement": "`updateSnapshotsConfig()` hot-swaps the snapshot table and refreshes active layers whose stored snapshot id still exists in the new configuration while preserving their metadata.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerSnapshotManager.ts#L85-L104",
+                    "version": "repo-lines-v1:sha256:56c32cbcb39cc8f03c7b022562655268df3e04504475b4efe7c2a5c0b96e51e3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhMmQ4ZjQ5ZTBkNDZkMGIxOGE1MjliNTY4Zjk4M2ViMWQxNjA3YmY3YzY4ZmEwM2EwNDM3YTA3NGM4MTA5ZjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg4OGZjMjc5MTRiNGIzYjc2NTc1ZmQyODBiMDM1YjMzZWVjOTIzYjRjYmNlYTljODlhNDkyZmYzMTc5ZDU3NDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY1MjhjZGFkNDllN2MyNzRjN2U1ZmVmYTBjYmZkNWQzYTA1NzI0YzNiYWIzM2EyMTk5MmI2Y2Q1NWRkODk5MjYifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_23b656f0b2484e47a9fdf8328d59bfc9",
+            "statement": "Mixer snapshot telemetry is emitted from `MixerSnapshotManager` via a pooled cause-chain packet that records the API method, snapshot id or `CLEAR`, fade time, and the current sound-controller time in milliseconds.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerSnapshotManager.ts#L106-L124",
+                    "version": "repo-lines-v1:sha256:5b1490a8a959c22e7e9af9b422074aee08e55e0e78842422f07ac2371f352b9a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZDZmNDQ2NzE1MDA4MzM2ZWJiOGRjZDc4ZjNhOWIyMGJmM2FkZWE0ODdiZjlmZmMwZmY0MWI1YzdjM2UyODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerSnapshotManager.ts#L17-L27",
+                    "version": "repo-lines-v1:sha256:c33645c8aeffca568ac747c12762eb264ebb49bf845ebfea13c14c8949357582:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4YWQ4OGUzZjdhZDM3MGNjZDVlMTViNzcyMmQ3NGE3MDc2MmEzYThiOTM4MzkzNmNjOTljOTc5ZmUxNjRhMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwYTJkMGRhYWYyNDAwNTdmYjU5ZmM5YjVmYzliYTQ4ODEwOWY5NjRlMzRkNjk3OTVjZjQ0NzkwMWYxZmQ1YzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMzBmZTZkMGUyNzNkNzQ5NTk2YzczOTA1MTJlOTk3MGFkODg1OWZhZTg0ZDFmNDE0Yzk1MTM4M2I0NTc3ZjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4Mzk1N2Y4OTA2MTgyNDMzOTMxOGIyNTU2YjczMWFmYzg5ODlhYmRlN2NiYTYyNDAxYmE2YzBiMDNhNTJmYWIifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_0ad57194e53c4eec9f4fbcab2dce1e53",
+            "statement": "`MixerTransitionEngine.applyState()` blocks new work when the current transition is locked, performs an instant cold-start transition on the first application or on zero-duration updates, and otherwise enters a timed transition state.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerTransitionEngine.ts#L44-L78",
+                    "version": "repo-lines-v1:sha256:4441a77e59271ec8c2535ab5d25d37cee05e89dbc59bb33758f29f6da26554f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1NWY0ZTA2ZTVhYTYxNDRmZDUzNzI0ZDRkNzRlYTE2NjI0ZmQyMmZmN2JhYzk0ZThlZDkxMWFlYWZmMjM2NWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4MzU1MzU0NjAxYTdhNjI0ZmY5ZTE5OGNkMzRlMGE5ZmZiM2VmMjViYWE5M2Q2MmY5ZjRlMzIzMTYzZGY3OWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4NjZiY2JjNmYzZTMzYjMzM2IzNTgzN2RmYWQ4YTY1NGU1ODk2ZTJlNmM2YmMxY2FmN2FlNGIwNzU3N2U3MmQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_0063d9e479fc45769a44c93f1e42a68d",
+            "statement": "The transition engine uses a two-phase timed transition: the first 25% fades filters and binds RTPCs, and the remaining time applies gains and sends while clearing any send routes that disappear from the new target.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerTransitionEngine.ts#L133-L185",
+                    "version": "repo-lines-v1:sha256:8c6a5b5218cbeb675260d2acaf6228b845058f22c392b7f0ba18b30a95516bfa:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZDhmYzUxYTAzMjBlNzg3NGJiZmQxM2IzN2E5OWY2ZmY1ODNmMmQ3Y2VhYzUxMDg4NWE4NjY0YTMyZTUzNTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkZjg0MGYxMmViZjdiZWY2NzNkZDZjNzQ5ZWIxZWUyMTc1MzZlZmY3ZTlmNDYxYTIzOWYyMWMzZGM3NWYwNTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY2ODhhOTRlZmZlYzdlMWIyY2MxYzBiMDhjYzM3NzgwM2EzZDg1NDRkNGY4ODk3ZDU3ODBlMWJhZWM2YTNiNTEifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerTransitionEngine.ts#L66-L78",
+                    "version": "repo-lines-v1:sha256:c92469c38ee54548dd1477eaf4c239eb9fde102e407d66ac53083a88221414f6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhYzRkMjk3OTAyNTZiZGE3NDUwYWEwNGM5ZmY3MDNmNGM4NjAzYjJhMzI0MTI1ZDdhZjQ3ODM4ZTBjYzk1ZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgzMjFjYmIzZTliZGY4OTgxOGM5MjE1OTQ2NGY5M2QxZjRkMjcwN2Q1MGYwOTBkYTVmMjg2ZDE2Njg4YjNlZWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4NjZiY2JjNmYzZTMzYjMzM2IzNTgzN2RmYWQ4YTY1NGU1ODk2ZTJlNmM2YmMxY2FmN2FlNGIwNzU3N2U3MmQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_6ef0e01fe2bc430f9b1aaf069ca0aacc",
+            "statement": "`tick()` advances the transition state machine and completes the active transition when its total duration elapses, while `cancelActiveTransition()` drops the engine back to idle immediately.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerTransitionEngine.ts#L187-L191",
+                    "version": "repo-lines-v1:sha256:dfb7182905aafc1a4f2114e0bb62490a9439ab9d28c0093fc6734d03f21ad134:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2ZmZjJmMjYxYjg1NjBhOGY2YmZiODM4OGM2Nzg3ZTY4NWU0OTA3ZmZhYjVjYjcxNmM0MWVmNjYyY2IyN2NmMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQxOWE2ZGNjMDRlMjEzYTNjN2E3N2E0NTZiMDFlNzZkMWVmNzhjZDAwYmJlYzFkOGY4MTQ1OGZlOTNlZGM1NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzc1NGViYmZkOGVmZWE0ZDQ5ZWM1YzdhMzhiODcxNjA1Y2U0ZjMwYzk1Njc2ZDZlNTkxMGZjNDhmNTAzNDUxMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSJ9"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerTransitionEngine.ts#L80-L100",
+                    "version": "repo-lines-v1:sha256:ad2122604c1c2cc1131dbefa415d274b41226ca6bbd18e9fcb15df322edd03fb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiODE4MWY2MWViODcwMGM4ZWY1YmYxZjJmMGQ4NWQ5ZTBkYTQ2NzI0YTBkMGNhMTRhM2M0OTJkMDc5MWM3ODkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzZTljNWQxYmZlMjVhMTI2NWY0MzAxNjY0NDk1NDJlZTU5MGY5YmQ0MGNhNTc5MTM1NGY4MWFmOTFlNzY3MDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkMDQ3Mzg1OWI1Y2JmNmIwMDBkNjZkMmM1MWE5YTk4MGU1Y2FhN2I2ZTVmNzBkZDdmMjdkY2JhYTExYzY4NDcifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_c19259f1f4a34969996630ab25944ad9",
+            "statement": "Mixer responsibilities are covered by focused tests for the coordinator, layer stack, snapshot manager, state resolver, and transition engine.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerCoordinator.test.ts#L1-L73",
+                    "version": "repo-lines-v1:sha256:53b400ae3e4cc2468c3e31b73d1df9646f2052e10f2d1ea65a39c7698c791229:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzOTJjZjY5OTM0OTQ1ZGRlZmY3ZDIwZGUxODVkMTU5M2YzY2JjZjhhNzE0MDI1YzY4MGY0MWY0ODkzZjFhY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerLayer.test.ts#L1-L98",
+                    "version": "repo-lines-v1:sha256:5a9e3d8f004e2d4ede7e09b97b4867dc0b33e5120743ba81849d888cb3441004:eyJzZWxlY3RlZExpbmVDb3VudCI6OTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzOTJjZjY5OTM0OTQ1ZGRlZmY3ZDIwZGUxODVkMTU5M2YzY2JjZjhhNzE0MDI1YzY4MGY0MWY0ODkzZjFhY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerSnapshotManager.test.ts#L1-L260",
+                    "version": "repo-lines-v1:sha256:f1c599eebf2e6534edf73380391368973ecd5cccc1c5d64681a3a3e19c038d13:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiOTU2MTI4YTI3MDkzZjQyMGNjMWQ5MTkyMmQxYTAzNWFiN2Y4MWVlYTUxMTk2OGE3OTU5ZjRkNDA5YjlkMmQwIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMjhjYzdjZTU0NzM3OTQ0ODhkODkwNGYwNTkyNzJkNmIxZTNkNGFhYmQ4NmNhYWFlMGE1ZTFlMmM4OTAyMjA4IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlYjhmMDY5ZDBjMzgxMTMzNWZmMDZkNDAwNDZiMDRhYzliZDdjOTQ3ZGE0Yjg0MThjM2ZkOGFiMGEyZGIzMzhiIn0"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerStateResolver.test.ts#L1-L260",
+                    "version": "repo-lines-v1:sha256:3f8a40192295a5a1a9648e2b24d2d772822d0b4d0932180e9e7c6c81929df037:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIzZTY5ZmViN2FkNzAwYjI5OTJiYjZmZDZiNzcwNmE3YWI2NmFlYTQxZTUyM2E2NmNmOWEyZDJjZWQ5YTEyYTZiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJmYTZiODEyMzExYjEyYjgzYTc4YWVhYjBlMzRiNTVhYTU5MzZiMTQ4NTQzYTI3NTY2MmRiMDk3OWY0YmRlNGY2IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmYzNjZmExZjdhNmIwZDJmNzc3NTE5NmIwZDc2ZjdiZWZmZTFjNjZiY2Y0ZjZjMDBhNjVhZDg0ZWMyNjI3YTcyIn0"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerTransitionEngine.test.ts#L1-L320",
+                    "version": "repo-lines-v1:sha256:2f0b7a85b4f626b5084ccc04629e82b6164d9cc4c982052f6edcb643b644ef9c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwYTYzZWViYzI5NTk1YWJiMzFjNzQ0MTM1ZTI0Y2E0NzkzNmVmY2JkMGVkZWNjYjMwYmE3MjNhNGVjN2IxOTJhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5MTA1OWM4Y2ZiNWEwNzJjNmY2NGRkM2QxYmZkYmMzNTZmYmVjOTNhZWVjODg3OTFkYTdlZGJhODljMDg4NWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0ZjMzZmU5Yzc2NWMzNWYyMzMzZWQ2YzdkNGUzOGMzYmY2MTRjZTI3M2NhNmM0ZTc2MDFlNDFkMWQ3MzU5YTJkIn0"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.0",
+        "at": "2026-09-03T11:15:32.736Z"
+    }
+}

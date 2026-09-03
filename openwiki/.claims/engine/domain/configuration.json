@@ -1,0 +1,152 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:aeb70aa050384ef51311d35f7c9babf0e01feff936d7d6571847432fef1a4c64",
+    "claims": [
+        {
+            "id": "claim_3436b86eb5904368b84d0d48eac48235",
+            "statement": "The configuration layer defines domain input contracts for banks, events, music FSM, RTPC, sound maps, and sound variants, and these types model authored manifests rather than example catalogs.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IBankConfig.ts",
+                    "version": "repo-file-v1:sha256:91ed038b5193e67b855b91eb5bce1f2635073dd98b464f66ea7c81ed7375d4aa"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IEventConfig.ts",
+                    "version": "repo-file-v1:sha256:50d84bf8a06b65d794990ede47a6a4c30bdb263a66dea81d68578c957aacf684"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IMusicFSMConfig.ts",
+                    "version": "repo-file-v1:sha256:d0a597ff8ea846fbbd17641224f5a5381a70a43b092ceacb65467a977aca2a97"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IRTPCConfig.ts",
+                    "version": "repo-file-v1:sha256:b88cbb5529e4875717954579205f7b048f134646015c631f425f0311d5955b53"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts",
+                    "version": "repo-file-v1:sha256:2918302a9f14c70ca3b785ca5e2fcac7ff0fb317850fc728119d9a5e12811e3d"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundMap.ts",
+                    "version": "repo-file-v1:sha256:73ecbdbe8e1d56f90cce0ea5e18b8b23d0d5b869bd2e1898fe16bc835198b7cd"
+                }
+            ]
+        },
+        {
+            "id": "claim_68ecb71d12ec4daa81b3113201104250",
+            "statement": "`IBankConfig` models a bank as an id plus the readonly list of `SoundId` values it owns, and `IBankManifest` is a record keyed by string bank names to bank configs.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IBankConfig.ts",
+                    "version": "repo-file-v1:sha256:91ed038b5193e67b855b91eb5bce1f2635073dd98b464f66ea7c81ed7375d4aa"
+                }
+            ]
+        },
+        {
+            "id": "claim_acf8756067ea4404b3707f6ff7044ca2",
+            "statement": "`IEventConfig` wraps an ordered readonly action list, and the action union includes sound playback control, RTPC updates, music transitions, mixer state changes, bank load and unload operations, and pending-action cancellation.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IEventConfig.ts",
+                    "version": "repo-file-v1:sha256:50d84bf8a06b65d794990ede47a6a4c30bdb263a66dea81d68578c957aacf684"
+                }
+            ]
+        },
+        {
+            "id": "claim_95c6539584494e308dbe5a83811f2b87",
+            "statement": "`IMusicFSMConfig` requires an initial music state, a set of global transition edges, and a record of per-state nodes; each state node carries its own sound, sequencer region, optional snapshot, and edge list.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IMusicFSMConfig.ts",
+                    "version": "repo-file-v1:sha256:d0a597ff8ea846fbbd17641224f5a5381a70a43b092ceacb65467a977aca2a97"
+                }
+            ]
+        },
+        {
+            "id": "claim_4b8c3bee84e94a309a9266c012073b06",
+            "statement": "`IRTPCConfig` binds a game parameter to either a curve definition or preset, with optional send-target bus and smoothing time, and `RTPCTargetProperty` enumerates the supported target fields that sound configs may drive.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IRTPCConfig.ts",
+                    "version": "repo-file-v1:sha256:b88cbb5529e4875717954579205f7b048f134646015c631f425f0311d5955b53"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts",
+                    "version": "repo-file-v1:sha256:2918302a9f14c70ca3b785ca5e2fcac7ff0fb317850fc728119d9a5e12811e3d"
+                }
+            ]
+        },
+        {
+            "id": "claim_5a3dd81ce2d944efa22fcc3d861165ce",
+            "statement": "`ISoundMap` is an indexed sound manifest keyed by `SoundId`, with each entry resolved to an `AnySoundConfig` union member.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts",
+                    "version": "repo-file-v1:sha256:2918302a9f14c70ca3b785ca5e2fcac7ff0fb317850fc728119d9a5e12811e3d"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundMap.ts",
+                    "version": "repo-file-v1:sha256:73ecbdbe8e1d56f90cce0ea5e18b8b23d0d5b869bd2e1898fe16bc835198b7cd"
+                }
+            ]
+        },
+        {
+            "id": "claim_276927b28f0c4c458089195971689e2d",
+            "statement": "`SoundRegistry` stores loaded sound descriptors in a private `Map<SoundId, SoundDescriptor>`, exposes that map through `registry`, and throws a `Sound \"<id>\" not registered` error when `get()` cannot find an entry.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/SoundRegistry.ts",
+                    "version": "repo-file-v1:sha256:762b4c6c7adb712670014a5e1ac787b7cc616e7f884e426809bf1c9058634744"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/__tests__/SoundRegistry.test.ts",
+                    "version": "repo-file-v1:sha256:cea86ae290683d702f3ebb9e4d6d2811dd9bfa9ca9e9960edb715959e8322b96"
+                }
+            ]
+        },
+        {
+            "id": "claim_c16a601638ba44d0bf465666f13dfeac",
+            "statement": "The engine’s configuration lifecycle is assembly of authored manifests, validation for consistency, registration of loaded sound descriptors, and then runtime lookup from the registry rather than direct use of authored manifests.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IBankConfig.ts",
+                    "version": "repo-file-v1:sha256:91ed038b5193e67b855b91eb5bce1f2635073dd98b464f66ea7c81ed7375d4aa"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IEventConfig.ts",
+                    "version": "repo-file-v1:sha256:50d84bf8a06b65d794990ede47a6a4c30bdb263a66dea81d68578c957aacf684"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IMusicFSMConfig.ts",
+                    "version": "repo-file-v1:sha256:d0a597ff8ea846fbbd17641224f5a5381a70a43b092ceacb65467a977aca2a97"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IRTPCConfig.ts",
+                    "version": "repo-file-v1:sha256:b88cbb5529e4875717954579205f7b048f134646015c631f425f0311d5955b53"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts",
+                    "version": "repo-file-v1:sha256:2918302a9f14c70ca3b785ca5e2fcac7ff0fb317850fc728119d9a5e12811e3d"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/SoundRegistry.ts",
+                    "version": "repo-file-v1:sha256:762b4c6c7adb712670014a5e1ac787b7cc616e7f884e426809bf1c9058634744"
+                }
+            ]
+        },
+        {
+            "id": "claim_983c59fa52ac4d8898860210dd5e28c3",
+            "statement": "`SoundRegistry` behavior is covered by tests for register-and-retrieve, missing-entry failure, and exposure of the underlying map.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Configuration/__tests__/SoundRegistry.test.ts",
+                    "version": "repo-file-v1:sha256:cea86ae290683d702f3ebb9e4d6d2811dd9bfa9ca9e9960edb715959e8322b96"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.0",
+        "at": "2026-09-03T11:15:32.736Z"
+    }
+}
