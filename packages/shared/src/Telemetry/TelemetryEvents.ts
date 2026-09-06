@@ -87,7 +87,8 @@ export type CauseInitiator =
     | { readonly type: 'MAGNET'; readonly sourceRegion: RegionId; readonly targetRegion: RegionId }
     | { readonly type: 'CONTAINER_POLICY'; readonly containerId: SoundId }
     | { readonly type: 'CULLING_ARBITER'; readonly reason: ArbiterCullReason }
-    | { readonly type: 'RAM_QUOTA_MANAGER' };
+    | { readonly type: 'RAM_QUOTA_MANAGER' }
+    | { readonly type: 'STREAM_LOADER'; readonly reason: string };
 
 export type CauseResult =
     | { readonly type: 'PLAY'; readonly target: SoundId }
@@ -99,7 +100,8 @@ export type CauseResult =
     | { readonly type: 'VIRTUALIZE'; readonly target: PlaybackId }
     | { readonly type: 'KILL'; readonly target: PlaybackId }
     | { readonly type: 'SET_MIX_SNAPSHOT'; readonly snapshotId: string | number; readonly fadeTime: number }
-    | { readonly type: 'OOM_CRITICAL_EVICTION'; readonly targetUrl: string };
+    | { readonly type: 'OOM_CRITICAL_EVICTION'; readonly targetUrl: string }
+    | { readonly type: 'FATAL_UNDERRUN'; readonly target: string };
 
 export interface IConditionTrace {
     readonly param: GameParamId;

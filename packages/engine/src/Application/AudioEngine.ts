@@ -11,11 +11,11 @@ import type {
 } from '@application/Ports/SceneGridRegistry.js';
 import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { IStreamManifest } from '@domain/Configuration/Ports/IStreamManifest.js';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
 import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
-import type { IPluginFactory } from '@infrastructure';
 import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 import type {
     BankId,
@@ -80,7 +80,11 @@ import {
     TelemetryDispatcher,
     TelemetrySnapshotter,
     WorkerTelemetryTransport,
-    CommandReceiver
+    CommandReceiver,
+    ChunkedLoader,
+    IPluginFactory,
+    StreamInstance,
+    StreamNode
 } from '@infrastructure';
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
 import {
@@ -112,6 +116,7 @@ export class AudioEngine implements IAudioEngine {
     #conductor?: MusicConductor;
     #prng!: SeededPRNG;
     #bankManager!: BankManagerAdapter;
+    #streamManifests = new Map<string, IStreamManifest>();
     #telemetry!: TelemetryDispatcher;
     #reporters!: IConsistencyReporter[];
     #isInitialized = false;
@@ -236,6 +241,32 @@ export class AudioEngine implements IAudioEngine {
             getState: (bankId: AutocompleteBank): BankState => {
                 if (!this.#isInitialized) return 'UNLOADED';
                 return this.#bankManager.getBankState(bankId as BankId);
+            }
+        };
+    }
+
+    public get streams() {
+        return {
+            load: async (soundId: AutocompleteSound): Promise<void> => {
+                const urlConfig = this.config.manifest[soundId as SoundId]?.url;
+                if (!urlConfig) throw new Error(`SoundId "${soundId}" not found in manifest`);
+
+                const url: string = Array.isArray(urlConfig) ? urlConfig[0] : urlConfig;
+
+                if (this.#streamManifests.has(url)) return;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Failed to load stream manifest: ${url}`);
+
+                const manifest: IStreamManifest = await response.json();
+                this.#streamManifests.set(url, manifest);
+            },
+
+            unload: (soundId: AutocompleteSound): void => {
+                const urlConfig = this.config.manifest[soundId as SoundId]?.url;
+                if (!urlConfig) return;
+                const url: string = Array.isArray(urlConfig) ? urlConfig[0] : urlConfig;
+                this.#streamManifests.delete(url);
             }
         };
     }
@@ -396,6 +427,27 @@ export class AudioEngine implements IAudioEngine {
             );
             await this.#busSystem.initialize(this.#engineTicker);
 
+            const manifestResolver = (url: string | string[]) => {
+                const key = Array.isArray(url) ? url[0] : url;
+                return this.#streamManifests.get(key);
+            };
+
+            const streamFactory = (manifest: IStreamManifest) => {
+                const loader = new ChunkedLoader(this.#contextManager.context, this.#telemetry);
+                loader.loadManifest(manifest);
+
+                const streamNode = new StreamNode(this.#contextManager.context, loader, manifest);
+                const instance = new StreamInstance(streamNode, manifest);
+                const randomStr = this.#prng.next().toString(36).slice(7);
+                const tickerId = `stream-${randomStr}` as TickerTaskId;
+                this.#engineTicker.add(tickerId, 1, instance);
+                instance.on('ended', () => {
+                    this.#engineTicker.remove(tickerId);
+                    instance.dispose();
+                });
+                return instance;
+            };
+
             this.#soundController = new SoundController(
                 soundPool,
                 scheduler,
@@ -404,6 +456,8 @@ export class AudioEngine implements IAudioEngine {
                 soundRegistry.registry,
                 this.#busSystem,
                 (url: string | string[]) => bufferLoader.getBuffer(url),
+                manifestResolver,
+                streamFactory,
                 this.#telemetry
             );
 

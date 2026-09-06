@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-useless-undefined
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type { BusId, ContextTime, Milliseconds, PlaybackId, Seconds, SoundId } from '@scene-grid/shared';
 
@@ -19,6 +20,8 @@ describe('SoundController', () => {
     let fakeBuffer: AudioBuffer;
     let fakeInstance: any;
     let mockBufferResolver: ReturnType<typeof vi.fn>;
+    let mockManifestResolver: ReturnType<typeof vi.fn>;
+    let mockStreamFactory: ReturnType<typeof vi.fn>;
     let mockTelemetry: Mocked<ITelemetryDispatcher>;
 
     beforeEach(() => {
@@ -79,6 +82,8 @@ describe('SoundController', () => {
         };
 
         mockBufferResolver = vi.fn().mockReturnValue(fakeBuffer);
+        mockManifestResolver = vi.fn().mockReturnValue(undefined);
+        mockStreamFactory = vi.fn();
 
         mockTelemetry = {
             dispatch: vi.fn(),
@@ -93,6 +98,8 @@ describe('SoundController', () => {
             new Map() as any,
             mockBusSystem,
             mockBufferResolver as any,
+            mockManifestResolver as any,
+            mockStreamFactory as any,
             mockTelemetry
         );
     });
@@ -175,6 +182,35 @@ describe('SoundController', () => {
             expect(typeof id1).toBe('number');
             expect(id2).toBeNull();
             expect(mockScheduler.schedulePlay).toHaveBeenCalledTimes(1);
+        });
+
+        it('should resolve manifest dynamically, create StreamInstance via factory, and skip pool acquire', () => {
+            const mockManifest = { chunks: [], isLooping: false };
+            const fakeStreamInstance = { ...fakeInstance };
+
+            mockManifestResolver.mockReturnValueOnce(mockManifest);
+            mockStreamFactory.mockReturnValueOnce(fakeStreamInstance);
+
+            controller.register('ambient_stream' as SoundId, { url: 'stream.json' });
+
+            const playbackId = controller.play('ambient_stream' as SoundId, {
+                when: 1.0 as ContextTime,
+                offset: 0 as Seconds,
+                duration: 5 as Seconds,
+                loop: false,
+                rate: 1
+            });
+
+            expect(mockManifestResolver).toHaveBeenCalledWith('stream.json');
+            expect(mockStreamFactory).toHaveBeenCalledWith(mockManifest);
+            expect(mockBufferResolver).not.toHaveBeenCalled();
+            expect(mockPool.acquire).not.toHaveBeenCalled();
+            expect(fakeStreamInstance.setLoop).toHaveBeenCalledWith(false);
+            expect(fakeStreamInstance.setRate).toHaveBeenCalledWith(1);
+            expect(mockScheduler.schedulePlay).toHaveBeenCalledWith(fakeStreamInstance, 1.0, 0, 5);
+            expect(fakeStreamInstance._poolIndex).toBe(-1);
+
+            expect(typeof playbackId).toBe('number');
         });
     });
 
@@ -840,7 +876,9 @@ describe('SoundController', () => {
                 {} as any,
                 mockRegistry,
                 mockBusSystem,
-                mockBufferResolver as any
+                mockBufferResolver as any,
+                vi.fn().mockReturnValue(undefined) as any,
+                vi.fn() as any
             );
         });
 
@@ -1254,7 +1292,9 @@ describe('SoundController', () => {
                 mockAutomation,
                 new Map() as any,
                 mockBusSystem,
-                mockBufferResolver as any
+                mockBufferResolver as any,
+                mockManifestResolver as any,
+                mockStreamFactory as any
             );
             controllerWithoutTelemetry.register('sound' as SoundId, { url: '' });
 

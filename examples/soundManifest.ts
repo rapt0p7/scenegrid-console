@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 export default {
     'backgroundMain': {
-        url: 'assets/asami_main_loop_a.mp3'
+        url: 'assets/streams/asami_main_loop_a.json'
     },
     'backgroundMain2': {
         url: 'assets/asami_main_loop_b.mp3'

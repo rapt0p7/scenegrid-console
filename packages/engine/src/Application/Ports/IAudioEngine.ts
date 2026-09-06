@@ -1,10 +1,11 @@
 import type { IAudioEngineConfig } from '@application/Ports/IAudioEngineConfig.js';
+import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { PlaybackId, DeepReadonly, QuantizeType } from '@scene-grid/shared';
 import type { Handler } from 'mitt';
-import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
+
 import {
     AutocompleteBank,
     AutocompleteEvent,
@@ -43,6 +44,11 @@ export interface IAudioEngine {
     params: {
         set: (parameterName: AutocompleteGameParam, value: number) => void;
         get: (parameterName: AutocompleteGameParam) => number | undefined;
+    };
+
+    streams: {
+        load(soundId: AutocompleteSound): Promise<void>;
+        unload(soundId: AutocompleteSound): void;
     };
 
     /**

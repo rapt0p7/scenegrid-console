@@ -80,6 +80,7 @@ async function bootstrap() {
     await audio.banks.load('music');
     await audio.banks.load('sfx');
     await audio.banks.load('sfx2');
+    await audio.streams.load('backgroundMain');
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error

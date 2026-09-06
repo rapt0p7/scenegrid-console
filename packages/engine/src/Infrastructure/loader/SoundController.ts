@@ -1,6 +1,7 @@
 // oxlint-disable no-underscore-dangle
 // noinspection D
 
+import type { IStreamManifest } from '@domain/Configuration/Ports/IStreamManifest.js';
 import type { IControllerPlayOptions, ISoundController, VirtualReason } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
@@ -60,6 +61,8 @@ export class SoundController implements ISoundController {
         private readonly registry: Map<SoundId, SoundDescriptor>,
         private readonly busSystem: AudioBusSystem,
         private readonly bufferResolver: (url: string | string[]) => AudioBuffer | undefined,
+        private readonly manifestResolver: (url: string | string[]) => IStreamManifest | undefined,
+        private readonly streamFactory: (manifest: IStreamManifest) => any,
         private readonly telemetry?: ITelemetryDispatcher
     ) {
         this.#sidechainLinks = Array.from({ length: pool.globalVoiceLimit }, () => new Map<BusId, number>());
@@ -98,7 +101,7 @@ export class SoundController implements ISoundController {
     }
 
     // oxlint-disable-next-line max-lines-per-function
-    play(
+    public play(
         soundId: SoundId,
         {
             when = 0 as ContextTime,
@@ -112,11 +115,6 @@ export class SoundController implements ISoundController {
         const definition = this.registry.get(soundId);
         if (!definition) return null;
 
-        const buffer = this.bufferResolver(definition.options.url);
-        if (!buffer) {
-            return null;
-        }
-
         const now = (this.getCurrentTime() * 1000) as Milliseconds;
         const lastPlay = this.lastPlayTimes.get(soundId) ?? (-Number.MAX_SAFE_INTEGER as Milliseconds);
         const cooldownMs = (definition.options.cooldownMs ?? DEFAULT_COOLDOWN) as Milliseconds;
@@ -127,22 +125,30 @@ export class SoundController implements ISoundController {
 
         this.lastPlayTimes.set(soundId, now);
 
-        const acquireResult = this.pool.acquire(soundId, buffer);
+        let instance: any;
 
-        if (typeof acquireResult === 'string') {
-            this.telemetry?.dispatch({
-                type: 'CAUSE_CHAIN',
-                timestampMs: this.getCurrentTime() * 1000,
-                initiator: { type: 'API', method: 'controller.play' },
-                result: {
-                    type: 'BLOCKED',
-                    reason: `Pool rejected play for ${soundId}. Reason: ${acquireResult}`
-                }
-            });
-            return null;
+        const manifest = this.manifestResolver(definition.options.url);
+
+        if (manifest) {
+            instance = this.streamFactory(manifest);
+            instance._poolIndex = -1;
+        } else {
+            const buffer = this.bufferResolver(definition.options.url);
+            if (!buffer) return null;
+
+            const acquireResult = this.pool.acquire(soundId, buffer);
+
+            if (typeof acquireResult === 'string') {
+                this.telemetry?.dispatch({
+                    type: 'CAUSE_CHAIN',
+                    timestampMs: this.getCurrentTime() * 1000,
+                    initiator: { type: 'API', method: 'controller.play' },
+                    result: { type: 'BLOCKED', reason: `Pool rejected play for ${soundId}. Reason: ${acquireResult}` }
+                });
+                return null;
+            }
+            instance = acquireResult;
         }
-
-        const instance = acquireResult;
 
         const playbackId = this.nextPlaybackId++ as PlaybackId;
 
@@ -161,7 +167,7 @@ export class SoundController implements ISoundController {
                 : undefined
         };
 
-        (instance as any)._currentPlaybackId = playbackId;
+        instance._currentPlaybackId = playbackId;
 
         this.activeVoices.set(playbackId, logicalVoice);
 

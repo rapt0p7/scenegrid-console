@@ -1215,6 +1215,318 @@ describe('AudioEngine', () => {
             startSpy.mockRestore();
         });
     });
+
+    describe('Streams API', () => {
+        it('should expose load and unload methods on engine.streams', () => {
+            expect(engine.streams.load).toBeInstanceOf(Function);
+            expect(engine.streams.unload).toBeInstanceOf(Function);
+        });
+
+        it('should fetch and cache the manifest JSON on streams.load()', async () => {
+            const mockManifest = {
+                isLooping: true,
+                chunks: [{ url: '/streams/chunk_0.ogg', durationSamples: 220500, trimStartSamples: 0 }]
+            };
+
+            globalThis.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                json: vi.fn().mockResolvedValue(mockManifest)
+            });
+
+            const streamEngine = new AudioEngine({
+                manifest: { ['bgm' as SoundId]: { url: '/streams/bgm.json' } },
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            await streamEngine.init();
+
+            await streamEngine.streams.load('bgm');
+
+            expect(globalThis.fetch).toHaveBeenCalledWith('/streams/bgm.json');
+        });
+
+        it('should not fetch again if the manifest is already cached (idempotent)', async () => {
+            const mockManifest = {
+                isLooping: true,
+                chunks: [{ url: '/streams/chunk_0.ogg', durationSamples: 220500, trimStartSamples: 0 }]
+            };
+            const fetchMock = vi.fn().mockResolvedValue({
+                ok: true,
+                json: vi.fn().mockResolvedValue(mockManifest)
+            });
+            globalThis.fetch = fetchMock;
+
+            const streamEngine = new AudioEngine({
+                manifest: { ['bgm' as SoundId]: { url: '/streams/bgm.json' } },
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            await streamEngine.init();
+
+            await streamEngine.streams.load('bgm');
+            await streamEngine.streams.load('bgm');
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+        });
+
+        it('should throw if soundId is not in the manifest on streams.load()', async () => {
+            const streamEngine = new AudioEngine({
+                manifest: {},
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            await streamEngine.init();
+
+            await expect(streamEngine.streams.load('ghost')).rejects.toThrow('SoundId "ghost" not found in manifest');
+        });
+
+        it('should throw if the network response is not ok on streams.load()', async () => {
+            globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+            const streamEngine = new AudioEngine({
+                manifest: { ['bgm' as SoundId]: { url: '/streams/bgm.json' } },
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            await streamEngine.init();
+
+            await expect(streamEngine.streams.load('bgm')).rejects.toThrow(
+                'Failed to load stream manifest: /streams/bgm.json'
+            );
+        });
+
+        it('should remove the manifest from the cache on streams.unload()', async () => {
+            const mockManifest = {
+                isLooping: true,
+                chunks: [{ url: '/streams/chunk_0.ogg', durationSamples: 220500, trimStartSamples: 0 }]
+            };
+            const fetchMock = vi.fn().mockResolvedValue({
+                ok: true,
+                json: vi.fn().mockResolvedValue(mockManifest)
+            });
+            globalThis.fetch = fetchMock;
+
+            const streamEngine = new AudioEngine({
+                manifest: { ['bgm' as SoundId]: { url: '/streams/bgm.json' } },
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            await streamEngine.init();
+
+            await streamEngine.streams.load('bgm');
+            fetchMock.mockClear();
+
+            streamEngine.streams.unload('bgm');
+
+            await streamEngine.streams.load('bgm');
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+        });
+
+        it('should silently ignore streams.unload() for unknown soundIds', () => {
+            expect(() => {
+                engine.streams.unload('ghost');
+            }).not.toThrow();
+        });
+    });
+
+    describe('manifestResolver (SoundController wiring)', () => {
+        it('should return undefined for an unknown URL before any stream is loaded', async () => {
+            const infra = await import('@infrastructure');
+            const RealSoundController = (infra as any).SoundController as typeof SoundController;
+            const scSpy = vi.spyOn(infra, 'SoundController' as any).mockImplementation(function (...args: any[]) {
+                (globalThis as any).__capturedManifestResolver = args[7];
+                return Reflect.construct(RealSoundController, args);
+            });
+
+            const resolverEngine = new AudioEngine({
+                manifest: { ['bgm' as SoundId]: { url: '/streams/bgm.json' } },
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            await resolverEngine.init();
+
+            const resolver = (globalThis as any).__capturedManifestResolver as (url: string | string[]) => any;
+
+            expect(resolver('/streams/bgm.json')).toBeUndefined();
+
+            scSpy.mockRestore();
+            delete (globalThis as any).__capturedManifestResolver;
+        });
+
+        it('should resolve a manifest by URL after streams.load() caches it', async () => {
+            const mockManifest = {
+                isLooping: true,
+                chunks: [{ url: '/streams/chunk_0.ogg', durationSamples: 220500, trimStartSamples: 0 }]
+            };
+
+            globalThis.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                json: vi.fn().mockResolvedValue(mockManifest)
+            });
+
+            const infra = await import('@infrastructure');
+            const RealSoundController = (infra as any).SoundController as typeof SoundController;
+            const scSpy = vi.spyOn(infra, 'SoundController' as any).mockImplementation(function (...args: any[]) {
+                (globalThis as any).__capturedManifestResolver = args[7];
+                return Reflect.construct(RealSoundController, args);
+            });
+
+            const resolverEngine = new AudioEngine({
+                manifest: { ['bgm' as SoundId]: { url: '/streams/bgm.json' } },
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            await resolverEngine.init();
+
+            await resolverEngine.streams.load('bgm');
+
+            const resolver = (globalThis as any).__capturedManifestResolver as (url: string | string[]) => any;
+
+            expect(resolver('/streams/bgm.json')).toEqual(mockManifest);
+            expect(resolver(['/streams/bgm.json'])).toEqual(mockManifest);
+
+            scSpy.mockRestore();
+            delete (globalThis as any).__capturedManifestResolver;
+        });
+    });
+
+    describe('streamFactory (ticker wiring & lifecycle)', () => {
+        it('should register the stream instance on the EngineTicker and dispose it on ended', async () => {
+            const infra = await import('@infrastructure');
+            const addSpy = vi.spyOn(infra.EngineTicker.prototype, 'add');
+            const removeSpy = vi.spyOn(infra.EngineTicker.prototype, 'remove');
+
+            const RealSoundController = (infra as any).SoundController as typeof SoundController;
+            const scSpy = vi.spyOn(infra, 'SoundController' as any).mockImplementation(function (...args: any[]) {
+                (globalThis as any).__capturedStreamFactory = args[8];
+                return Reflect.construct(RealSoundController, args);
+            });
+
+            const mockManifest = {
+                isLooping: false,
+                chunks: [{ url: '/streams/chunk_0.ogg', durationSamples: 220500, trimStartSamples: 0 }]
+            };
+
+            const factoryEngine = new AudioEngine({
+                manifest: {},
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            await factoryEngine.init();
+
+            addSpy.mockClear();
+
+            const factory = (globalThis as any).__capturedStreamFactory as (m: any) => any;
+            const streamInstance = factory(mockManifest);
+
+            expect(addSpy).toHaveBeenCalledTimes(1);
+            const [tickerId, priority, tickable] = addSpy.mock.calls[0];
+            expect(typeof tickerId).toBe('string');
+            expect(tickerId).toMatch(/^stream-/);
+            expect(priority).toBe(1);
+            expect(tickable).toBe(streamInstance);
+
+            const disposeSpy = vi.spyOn(streamInstance, 'dispose').mockImplementation(() => {});
+            streamInstance.emit('ended', streamInstance);
+
+            expect(removeSpy).toHaveBeenCalledWith(tickerId);
+            expect(disposeSpy).toHaveBeenCalledTimes(1);
+
+            scSpy.mockRestore();
+            addSpy.mockRestore();
+            removeSpy.mockRestore();
+            delete (globalThis as any).__capturedStreamFactory;
+        });
+
+        it('should create a ChunkedLoader, StreamNode, and StreamInstance per factory call', async () => {
+            const infra = await import('@infrastructure');
+
+            const RealChunkedLoader = (infra as any).ChunkedLoader;
+            const RealStreamNode = (infra as any).StreamNode;
+            const RealStreamInstance = (infra as any).StreamInstance;
+
+            const chunkLoaderSpy = vi
+                .spyOn(infra, 'ChunkedLoader' as any)
+                // oxlint-disable-next-line prefer-arrow-callback
+                .mockImplementation(function (...args: any[]) {
+                    return Reflect.construct(RealChunkedLoader, args);
+                });
+            const streamNodeSpy = vi
+                .spyOn(infra, 'StreamNode' as any)
+                // oxlint-disable-next-line prefer-arrow-callback
+                .mockImplementation(function (...args: any[]) {
+                    return Reflect.construct(RealStreamNode, args);
+                });
+            const streamInstanceSpy = vi
+                .spyOn(infra, 'StreamInstance' as any)
+                // oxlint-disable-next-line prefer-arrow-callback
+                .mockImplementation(function (...args: any[]) {
+                    return Reflect.construct(RealStreamInstance, args);
+                });
+
+            const RealSoundController2 = (infra as any).SoundController as typeof SoundController;
+            const scSpy = vi.spyOn(infra, 'SoundController' as any).mockImplementation(function (...args: any[]) {
+                (globalThis as any).__capturedStreamFactory2 = args[8];
+                return Reflect.construct(RealSoundController2, args);
+            });
+
+            const mockManifest = {
+                isLooping: true,
+                chunks: [{ url: '/streams/chunk_0.ogg', durationSamples: 220500, trimStartSamples: 0 }]
+            };
+
+            const factoryEngine = new AudioEngine({
+                manifest: {},
+                buses: { master: { gain: 1 } },
+                soundMap: {},
+                snapshots: {},
+                events: {},
+                banks: {}
+            });
+            await factoryEngine.init();
+
+            chunkLoaderSpy.mockClear();
+            streamNodeSpy.mockClear();
+            streamInstanceSpy.mockClear();
+
+            const factory = (globalThis as any).__capturedStreamFactory2 as (m: any) => any;
+            factory(mockManifest);
+
+            expect(chunkLoaderSpy).toHaveBeenCalledTimes(1);
+            expect(streamNodeSpy).toHaveBeenCalledTimes(1);
+            expect(streamInstanceSpy).toHaveBeenCalledTimes(1);
+
+            scSpy.mockRestore();
+            chunkLoaderSpy.mockRestore();
+            streamNodeSpy.mockRestore();
+            streamInstanceSpy.mockRestore();
+            delete (globalThis as any).__capturedStreamFactory2;
+        });
+    });
 });
 
 describe('AudioEngine - HMR (_hotReloadConfig)', () => {

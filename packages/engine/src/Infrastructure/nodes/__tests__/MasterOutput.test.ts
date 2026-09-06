@@ -1,11 +1,9 @@
+import type { Milliseconds } from '@scene-grid/shared';
+
 /* eslint-disable @typescript-eslint/naming-convention */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import MasterOutput from '../MasterOutput.js';
-
-import type AutomationEngine from '../../automation/AutomationEngine.js';
-import type AudioContextManager from '../../context/AudioContextManager.js';
-import type { Milliseconds } from '@scene-grid/shared';
 
 describe('MasterOutput', () => {
     let mockContextManager: any;
@@ -32,11 +30,11 @@ describe('MasterOutput', () => {
                     return node;
                 })
             }
-        } as unknown as AudioContextManager;
+        };
 
         mockAutomationEngine = {
             ramp: vi.fn()
-        } as unknown as AutomationEngine;
+        };
     });
 
     it('should initialize correctly and connect nodes to destination', () => {
