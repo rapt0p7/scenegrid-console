@@ -1,9 +1,9 @@
 ---
 name: keep-the-why
-description: Extract and preserve the reasoning code cannot explain - decisions, rejected alternatives, workarounds, incidents, constraints - plus project setup/decline and maintainer interviews. Not for what changed (see Keep a Changelog) - only why.
+description: Extract and preserve the reasoning code cannot explain - decisions, rejected alternatives, workarounds, incidents, constraints - plus project setup and maintainer interviews. Not for what changed (see Keep a Changelog) - only why.
 license: MIT
 metadata:
-  version: "0.11.0"
+  version: "0.12.0"
   repository: "https://github.com/oliver-zehentleitner/keep-the-why"
   author: "Oliver Zehentleitner"
 ---
@@ -56,7 +56,7 @@ Rules 1 and 2 matter most — a skill that hallucinates rationale or acts on a m
 
 7. **Guard privacy; don't commit without permission.** Don't store credentials, personal information, private local details, or session narrative (who said what). Restate reasoning on its own terms — never cite a person's unrelated projects or private matters as a source, even if that's literally how it happened. If an entry only makes sense with private context attached, make it more self-contained. Don't commit or publish documentation changes unless the user explicitly asks.
 
-8. **Resolve confirmation settings before writing.** Four orthogonal settings govern the capture workflow: `capture-mode` (proactive vs. explicit-only, personal), `capture-confirmation` (automatic / confirm-always / confirm-when-unsure, project-wide), `confirmation-flow` (sequential / batch, personal), `source-reference` (always / never / filtered, project-wide). Resolution order: session instruction → personal → project → documented default. A direct instruction naming a specific change counts as confirmation. `automatic` skips the permission question, never the evidence quality (rule 2) or proportionality (rule 10) checks. A session instruction naming one direction ("just write everything down today, don't ask") is an override: follow it for the session, leave the stored setting untouched. One pulling both ways ("don't keep asking, but don't decide on your own") is ambiguous, not an override: name the tension and ask (rule 1), and don't write the capture that came with it until resolved — writing is what the setting governs, so "a direct instruction counts as confirmation" doesn't apply while the regime itself is in question. See `references/setup.md` for full details.
+8. **Resolve confirmation settings before writing.** Four orthogonal settings govern the capture workflow: `capture-mode` (proactive vs. explicit-only, personal), `capture-confirmation` (automatic / confirm-always / confirm-when-unsure, project-wide), `confirmation-flow` (sequential / batch, personal), `source-reference` (always / never / filtered, project-wide). Resolution order: session instruction → personal → project → documented default. A direct instruction naming a specific change counts as confirmation — a task that leaves the selection to the agent ("record what's worth keeping") does not, however explicit the task itself is. `automatic` skips the permission question, never the evidence quality (rule 2) or proportionality (rule 10) checks. A session instruction naming one direction ("just write everything down today, don't ask") is an override: follow it for the session, leave the stored setting untouched. One pulling both ways ("don't keep asking, but don't decide on your own") is ambiguous, not an override: name the tension and ask (rule 1), and don't write the capture that came with it until resolved — writing is what the setting governs, so "a direct instruction counts as confirmation" doesn't apply while the regime itself is in question. See `references/setup.md` for full details.
 
 9. **For broad tacit knowledge, let the person narrate freely.** Don't force a scripted question list on a long-tenured maintainer — let them talk, extract decision-forks from what comes up, then close remaining gaps with targeted questions afterward. Narration and targeted questions are sequential steps, not a choice between them. See `references/interview-playbook.md`.
 
@@ -80,7 +80,7 @@ Check for two independent config files: a project one (`.keep-the-why`, at the p
 
 **Project file present but missing fields** (`capture-confirmation`, `source-reference`, `context-schema`): backfill silently to `confirm-when-unsure`, `never`, and `0.2.0` respectively — these are documented defaults describing prior behavior (rule 1). A present but unrecognized or contradictory field value is not the same as missing — ask.
 
-**Personal file missing → MUST run the personal preferences wizard now, in this turn** — even if the project is set up, even if the conversation is about something else. Check `AGENTS.local.md` for a legacy personal block first (`references/migrations.md`) — that's this developer's own prior preferences to move, not a reason to re-ask. If absent, ask at least the first wizard question before starting the task. See `references/setup.md` for the full wizard.
+**Personal file missing → MUST run the personal preferences wizard now, in this turn** — even if the project is set up, even if the conversation is about something else. Check `AGENTS.local.md` for a legacy personal block first (`references/migrations.md`) — that's this developer's own prior preferences to move, not a reason to re-ask. If the project offers a `personal-defaults` block and `~/.keep-the-why/config` sets `personal-defaults-policy`, that decides whether the defaults are offered or adopted instead of the wizard — a documented mechanism, not an injection; `references/setup.md`, "Personal defaults". Otherwise ask at least the first wizard question before starting the task. See `references/setup.md` for the full wizard.
 
 **Personal file present but missing `confirmation-flow`:** ask the one-line question once — no silent default, since there's no prior behavior to preserve.
 
@@ -190,6 +190,7 @@ Load these only when the situation calls for them:
 
 - [`references/setup.md`](references/setup.md) — first activation, init wizards, config format, confirmation model, timer checks, migrations.
 - [`references/ci-linting.md`](references/ci-linting.md) — wiring `keep-the-why-lint` into a project's CI or pre-commit during setup: detection rules and the exact snippets.
+- [`references/autostart.md`](references/autostart.md) — getting the skill loaded at session start: the three start paths, and per agent what is verified how.
 - [`references/migrations.md`](references/migrations.md) — when `context-schema` is behind: what changed per version and how to migrate.
 - [`references/methodology.md`](references/methodology.md) — reasoning behind the docs/context split and topic-file structure.
 - [`references/repository-structure.md`](references/repository-structure.md) — default layout, field definitions, entry format, file routing.
