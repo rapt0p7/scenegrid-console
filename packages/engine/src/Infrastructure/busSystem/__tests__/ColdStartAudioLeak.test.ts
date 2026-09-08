@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Milliseconds } from '@scene-grid/shared';
 
 import MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
 import AudioBusSystem from '@infrastructure/busSystem/AudioBusSystem.js';
-import type { Milliseconds } from '@scene-grid/shared';
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const BUS_CONFIG = {
     musicMain: { gain: 1 },
@@ -77,13 +77,12 @@ describe('Integration: Cold Start Audio Leak', () => {
             context: mockContext,
             automation: mockAutomation as any,
             masterOutput: { input: createMockNode('master') } as any,
-            busConfig: BUS_CONFIG as any,
+            busConfig: BUS_CONFIG,
             pluginFactory: {
                 getFiltersPlugin: () => ({ createNode: () => createMockNode('filter') })
             } as any
         });
 
-        // @ts-expect-error
         vi.spyOn(busSystem, 'initLimiter').mockImplementation(() => Promise.resolve());
 
         await busSystem.initialize({ add: vi.fn() } as any);
@@ -92,7 +91,7 @@ describe('Integration: Cold Start Audio Leak', () => {
     });
 
     it('should NOT allow leaked audio when playing sounds immediately after setState', async () => {
-        mixer.applyState(IDLE_SNAPSHOT as any, { duration: 0 as Milliseconds });
+        mixer.applyState(IDLE_SNAPSHOT, { duration: 0 as Milliseconds });
 
         const exploreBus = busSystem.getBus('musicExplore' as any);
         const combatBus = busSystem.getBus('musicCombat' as any);

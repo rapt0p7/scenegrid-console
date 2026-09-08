@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import path from 'node:path';
-
 import { defineConfig } from 'vitest/config';
 
 // oxlint-disable-next-line no-underscore-dangle
@@ -21,6 +20,7 @@ export default defineConfig({
             reporter: ['text', 'html', 'lcov'],
             exclude: [
                 'node_modules/',
+                '**/dist/**',
                 'packages/*/src/config/',
                 '**/*.d.ts',
                 'packages/*/src/**/__tests__/**',
@@ -36,6 +36,10 @@ export default defineConfig({
             '@domain': path.resolve(__dirname, './packages/engine/src/Domain'),
             '@kernel': path.resolve(__dirname, './packages/engine/src/Kernel'),
             '@application': path.resolve(__dirname, './packages/engine/src/Application')
+        },
+        benchmark: {
+            include: ['packages/*/src/**/*.bench.ts'],
+            exclude: ['node_modules/**', '**/dist/**', '**/.{idea,git,cache,output,temp}**']
         }
     }
 });

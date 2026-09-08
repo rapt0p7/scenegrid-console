@@ -1,8 +1,10 @@
-import { bench, describe } from 'vitest';
+import { test, describe } from 'vitest';
 
 import type { MathCurveDefinition } from '../MathCurve.js';
 
 import { evaluateRTPCCurve } from '../rtpcMath.js';
+
+const fastEvaluateRTPCCurve = evaluateRTPCCurve;
 
 describe('evaluateRTPCCurve: Piecewise Sort vs Parametric Presets', () => {
     const inputVal = 50;
@@ -21,11 +23,15 @@ describe('evaluateRTPCCurve: Piecewise Sort vs Parametric Presets', () => {
         { x: 50, y: 0.5 }
     ];
 
-    bench('Parametric S-Curve Preset (O(1) Pure Math)', () => {
-        evaluateRTPCCurve(inputVal, presetCurve);
+    test('Parametric S-Curve Preset (O(1) Pure Math)', async ({ bench }) => {
+        await bench('Parametric S-Curve Preset (O(1) Pure Math)', () => {
+            fastEvaluateRTPCCurve(inputVal, presetCurve);
+        }).run();
     });
 
-    bench('Piecewise Array with Runtime Sort (O(N log N) + Garbage Collector load)', () => {
-        evaluateRTPCCurve(inputVal, piecewiseCurve);
+    test('Piecewise Array with Runtime Sort (O(N log N) + Garbage Collector load)', async ({ bench }) => {
+        await bench('Piecewise Array with Runtime Sort (O(N log N) + Garbage Collector load)', () => {
+            fastEvaluateRTPCCurve(inputVal, piecewiseCurve);
+        }).run();
     });
 });

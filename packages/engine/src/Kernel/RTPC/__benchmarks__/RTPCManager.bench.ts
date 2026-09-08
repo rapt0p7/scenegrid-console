@@ -1,7 +1,7 @@
 import type { GameParamId, Milliseconds } from '@scene-grid/shared';
 
 /* eslint-disable @typescript-eslint/naming-convention */
-import { bench, describe } from 'vitest';
+import { test, describe } from 'vitest';
 
 import RTPCManager from '../RTPCManager.js';
 
@@ -42,14 +42,18 @@ describe('RTPCManager: Flat SoA vs OOP AoS Loop', () => {
 
     const oopParameters: OopParameter[] = Array.from({ length: PARAM_COUNT }, () => new OopParameter(0, 1.0, 100, 200));
 
-    bench('Kernel RTPCManager (Structure of Arrays - Float32Array)', () => {
-        kernelManager.tick(0, deltaTime);
+    test('Kernel RTPCManager (Structure of Arrays - Float32Array)', async ({ bench }) => {
+        await bench('Kernel RTPCManager (Structure of Arrays - Float32Array)', () => {
+            kernelManager.tick(0, deltaTime);
+        }).run();
     });
 
-    bench('OOP Array-of-Objects Iteration (Standard Pointer Chasing)', () => {
-        const dtSec = 16 / 1000;
-        for (let i = 0; i < PARAM_COUNT; i++) {
-            oopParameters[i].tick(dtSec);
-        }
+    test('OOP Array-of-Objects Iteration (Standard Pointer Chasing)', async ({ bench }) => {
+        await bench('OOP Array-of-Objects Iteration (Standard Pointer Chasing)', () => {
+            const dtSec = 16 / 1000;
+            for (let i = 0; i < PARAM_COUNT; i++) {
+                oopParameters[i].tick(dtSec);
+            }
+        }).run();
     });
 });

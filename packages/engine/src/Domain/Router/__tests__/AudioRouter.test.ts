@@ -726,7 +726,6 @@ describe('AudioRouter (Command Dispatcher)', () => {
     describe('AudioRouter.play recursion depth', () => {
         it('should block playback when recursion depth exceeds 10', () => {
             vi.spyOn(router, 'getSoundConfig').mockReturnValue({ isContainer: true } as any);
-            // @ts-expect-error: Mocking for test
             vi.spyOn(router, 'handleContainer').mockImplementation((name, config, options, depth) => {
                 return router.play(name, options, depth + 1);
             });

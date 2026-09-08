@@ -170,10 +170,8 @@ describe('StreamNode (Infrastructure Layer)', () => {
         it('should handle connect and disconnect', () => {
             const dest = {} as AudioNode;
             streamNode.connect(dest);
-            // @ts-expect-error
             expect(mockContext.createGain().connect).toHaveBeenCalledWith(dest);
             streamNode.disconnect();
-            // @ts-expect-error
             expect(mockContext.createGain().disconnect).toHaveBeenCalled();
         });
 

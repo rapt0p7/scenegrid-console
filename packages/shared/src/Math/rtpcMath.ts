@@ -5,13 +5,15 @@ import type { MathCurveDefinition, Point2D } from './MathCurve.js';
 import { DeepReadonly } from '../DeepReadonly.js';
 import { isDefined } from '../guards.js';
 
+const fastIsDefined = isDefined;
+
 function isPiecewiseCurve(curve: DeepReadonly<MathCurveDefinition>): curve is DeepReadonly<Point2D[]> {
     return Array.isArray(curve);
 }
 
 // oxlint-disable-next-line max-lines-per-function
 export function evaluateRTPCCurve(inputValue: number, curve: DeepReadonly<MathCurveDefinition>): number {
-    if (!isDefined(curve)) return 0;
+    if (!fastIsDefined(curve)) return 0;
 
     if (isPiecewiseCurve(curve)) {
         if (curve.length === 0) return 0;
