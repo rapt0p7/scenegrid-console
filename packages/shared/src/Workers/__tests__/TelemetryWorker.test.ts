@@ -1,3 +1,5 @@
+// noinspection D
+
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 class MockMessagePort {
@@ -7,11 +9,30 @@ class MockMessagePort {
     start = vi.fn();
 }
 
+// oxlint-disable-next-line max-classes-per-file
+class MockWebSocket {
+    static instances: MockWebSocket[] = [];
+    public url: string;
+    public onopen: (() => void) | null = null;
+    public onclose: ((ev: any) => void) | null = null;
+    public onmessage: ((ev: any) => void) | null = null;
+    public onerror: ((ev: any) => void) | null = null;
+    public send = vi.fn();
+    public close = vi.fn();
+
+    constructor(url: string) {
+        this.url = url;
+        MockWebSocket.instances.push(this);
+    }
+}
+
 describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
     let mockSelf: { onconnect: ((event: any) => void) | null };
 
     beforeEach(async () => {
         vi.resetModules();
+        MockWebSocket.instances = [];
+        (globalThis as any).WebSocket = MockWebSocket;
 
         mockSelf = { onconnect: null };
 
@@ -22,6 +43,7 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
 
     afterEach(() => {
         vi.clearAllMocks();
+        delete (globalThis as any).WebSocket;
     });
 
     const connectPort = (): MockMessagePort => {
@@ -139,6 +161,130 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
             const messages = inspectorPort2.postMessage.mock.calls.map(call => call[0]);
             const replayBatches = messages.filter(msg => msg.batchId === -1);
             expect(replayBatches.length).toBe(0);
+        });
+    });
+
+    describe('Requirement: Engine establishes remote synchronization connection', () => {
+        it('Scenario: Successful connection and full sync - establishes connection via config payload', () => {
+            const enginePort = connectPort();
+
+            sendMessage(enginePort, {
+                type: 'INIT_CONFIG',
+                remoteSyncUri: 'ws://localhost:8080'
+            });
+
+            expect(MockWebSocket.instances.length).toBe(1);
+            expect(MockWebSocket.instances[0].url).toBe('ws://localhost:8080');
+        });
+
+        it('Should implement an exponential backoff reconnection loop if the connection closes', () => {
+            vi.useFakeTimers();
+            const enginePort = connectPort();
+
+            sendMessage(enginePort, {
+                type: 'INIT_CONFIG',
+                remoteSyncUri: 'ws://localhost:8080'
+            });
+
+            const wsInstance1 = MockWebSocket.instances[0];
+
+            if (wsInstance1.onclose) {
+                wsInstance1.onclose({ code: 1006 } as any);
+            }
+
+            vi.advanceTimersByTime(1500);
+
+            expect(MockWebSocket.instances.length).toBe(2);
+            expect(MockWebSocket.instances[1].url).toBe('ws://localhost:8080');
+
+            vi.useRealTimers();
+        });
+    });
+
+    describe('Requirement: State Synchronization (FULL_SYNC)', () => {
+        it('Scenario: Emits FULL_SYNC payload containing current state on ws.onopen', () => {
+            const enginePort = connectPort();
+
+            sendMessage(enginePort, { type: 'MANIFEST', payload: 'sync-test' });
+            sendMessage(enginePort, {
+                size: 1,
+                packets: [{ type: 'SNAPSHOT', data: 'snap-data' }]
+            });
+
+            sendMessage(enginePort, {
+                type: 'INIT_CONFIG',
+                remoteSyncUri: 'ws://localhost:8080'
+            });
+
+            const wsInstance = MockWebSocket.instances[0];
+
+            if (wsInstance.onopen) {
+                wsInstance.onopen();
+            }
+
+            expect(wsInstance.send).toHaveBeenCalledTimes(1);
+
+            const sentMessage = JSON.parse(wsInstance.send.mock.calls[0][0]);
+            expect(sentMessage.type).toBe('FULL_SYNC');
+            expect(sentMessage.payload.batchId).toBe(-1);
+            expect(sentMessage.payload.packets).toContainEqual({ type: 'MANIFEST', payload: 'sync-test' });
+            expect(sentMessage.payload.packets).toContainEqual({ type: 'SNAPSHOT', data: 'snap-data' });
+        });
+    });
+
+    describe('Requirement: Telemetry Streaming', () => {
+        it('Scenario: Telemetry tick stream - forwards updates to the WebSocket', () => {
+            const enginePort = connectPort();
+
+            sendMessage(enginePort, {
+                type: 'INIT_CONFIG',
+                remoteSyncUri: 'ws://localhost:8080'
+            });
+
+            const wsInstance = MockWebSocket.instances[0];
+            if (wsInstance.onopen) {
+                wsInstance.onopen();
+            }
+
+            wsInstance.send.mockClear();
+
+            const telemetryBatch = {
+                batchId: 42,
+                size: 1,
+                packets: [{ type: 'SNAPSHOT', data: 'live-data' }]
+            };
+
+            sendMessage(enginePort, telemetryBatch);
+
+            expect(wsInstance.send).toHaveBeenCalledTimes(1);
+
+            const sentMessage = JSON.parse(wsInstance.send.mock.calls[0][0]);
+            expect(sentMessage.batchId).toBe(42);
+            expect(sentMessage.packets[0].data).toBe('live-data');
+        });
+    });
+
+    describe('Requirement: Command Proxying', () => {
+        it('Scenario: Remote command execution - proxies WebSocket commands to MessagePort', () => {
+            const enginePort = connectPort();
+
+            sendMessage(enginePort, {
+                type: 'INIT_CONFIG',
+                remoteSyncUri: 'ws://localhost:8080'
+            });
+
+            const wsInstance = MockWebSocket.instances[0];
+
+            enginePort.postMessage.mockClear();
+
+            const remoteCommand = { type: 'APPLY_SNAPSHOT', id: 'remote-1' };
+
+            if (wsInstance.onmessage) {
+                wsInstance.onmessage({ data: JSON.stringify(remoteCommand) });
+            }
+
+            expect(enginePort.postMessage).toHaveBeenCalledTimes(1);
+            expect(enginePort.postMessage).toHaveBeenCalledWith(remoteCommand);
         });
     });
 });

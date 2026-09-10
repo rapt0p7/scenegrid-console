@@ -1,3 +1,5 @@
+import type { ITelemetryWorkerConfig } from './Telemetry/ITelemetryWorkerConfig.js';
+
 export type * from './Types/Branded.js';
 export type * from './Types/Musical.js';
 export type * from './Types/Condition.js';
@@ -27,9 +29,19 @@ export type * from './Telemetry/TelemetryEvents.js';
 export type * from './Telemetry/TelemetryBatch.js';
 export type * from './Telemetry/IMusicTrackSnapshot.js';
 
-export function createTelemetryWorker(options?: WorkerOptions): SharedWorker {
-    return new SharedWorker(new URL('./Workers/TelemetryWorker.ts', import.meta.url), {
+export function createTelemetryWorker(options?: WorkerOptions, config?: ITelemetryWorkerConfig): SharedWorker {
+    const worker = new SharedWorker(new URL('./Workers/TelemetryWorker.ts', import.meta.url), {
         ...options,
         type: 'module'
     });
+
+    if (config?.remoteSyncUri) {
+        worker.port.postMessage({
+            type: 'INIT_CONFIG',
+            remoteSyncUri: config.remoteSyncUri
+            // oxlint-disable-next-line unicorn/require-post-message-target-origin
+        });
+    }
+
+    return worker;
 }

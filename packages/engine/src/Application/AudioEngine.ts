@@ -281,7 +281,10 @@ export class AudioEngine implements IAudioEngine {
     public async init(parameters?: InitParameters): Promise<void> {
         if (this.#isInitialized) return;
 
-        const telemetryWorker = createTelemetryWorker({ name: 'SceneGridTelemetry' });
+        const telemetryWorker = createTelemetryWorker(
+            { name: 'SceneGridTelemetry' },
+            { remoteSyncUri: this.config.remoteSyncUri }
+        );
         const workerPort = telemetryWorker.port;
 
         const transport = new WorkerTelemetryTransport(workerPort);

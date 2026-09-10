@@ -3,7 +3,7 @@ import type { IBankManifest, BankId, SoundId } from '@scene-grid/engine';
 export default {
     music: {
         id: 'music' as BankId,
-        sounds: ['backgroundMain', 'backgroundMain2', 'backgroundMain3', 'smartLoop'] as SoundId[]
+        sounds: ['backgroundMain2', 'backgroundMain3', 'smartLoop'] as SoundId[]
     },
     sfx: {
         id: 'sfx' as BankId,

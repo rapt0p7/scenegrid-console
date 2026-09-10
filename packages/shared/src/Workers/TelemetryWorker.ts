@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/prefer-add-event-listener
 /* eslint-disable @typescript-eslint/naming-convention */
 // oxlint-disable max-lines-per-function
 /// <reference lib="webworker" />
@@ -17,6 +18,72 @@ let bufferedValidationReport: any = null;
 let bufferedRamReport: any = null;
 let latestSnapshot: ITelemetrySnapshot | null = null;
 let bufferedLogs: any[] = [];
+
+let ws: WebSocket | null = null;
+let remoteUri: string | null = null;
+let reconnectAttempts = 0;
+let reconnectTimeout: number | undefined;
+
+function connectWebSocket(): void {
+    if (!remoteUri) return;
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+    ws = new WebSocket(remoteUri);
+
+    ws.onopen = () => {
+        reconnectAttempts = 0;
+
+        const replayPackets: any[] = [];
+
+        if (bufferedManifest) replayPackets.push(bufferedManifest);
+        if (bufferedValidationReport) replayPackets.push(bufferedValidationReport);
+        if (bufferedRamReport) replayPackets.push(bufferedRamReport);
+        if (latestSnapshot) replayPackets.push(latestSnapshot);
+        if (bufferedLogs.length > 0) replayPackets.push(...bufferedLogs);
+
+        if (replayPackets.length > 0) {
+            const syncPayload = {
+                type: 'FULL_SYNC',
+                payload: {
+                    batchId: -1,
+                    size: replayPackets.length,
+                    packets: replayPackets
+                }
+            };
+            ws?.send(JSON.stringify(syncPayload));
+        }
+    };
+
+    ws.onmessage = (event: MessageEvent) => {
+        try {
+            const command = JSON.parse(event.data);
+            for (const port of connectedPorts) {
+                // oxlint-disable-next-line unicorn/require-post-message-target-origin
+                port.postMessage(command);
+            }
+        } catch {
+            // Ignore malformed JSON frames
+        }
+    };
+
+    ws.onclose = () => {
+        ws = null;
+        scheduleReconnect();
+    };
+
+    ws.onerror = () => {
+        if (ws) {
+            ws.close();
+        }
+    };
+}
+
+function scheduleReconnect(): void {
+    if (reconnectTimeout !== undefined) clearTimeout(reconnectTimeout);
+    const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
+    reconnectAttempts++;
+    reconnectTimeout = setTimeout(connectWebSocket, delay) as unknown as number;
+}
 
 // oxlint-disable-next-line unicorn/prefer-add-event-listener
 self.onconnect = (event: MessageEvent) => {
@@ -48,6 +115,12 @@ self.onconnect = (event: MessageEvent) => {
         const data = msgEvent.data;
 
         if (data && typeof data === 'object') {
+            if (data.type === 'INIT_CONFIG') {
+                remoteUri = data.remoteSyncUri;
+                connectWebSocket();
+                return;
+            }
+
             if (data.type === 'MANIFEST') {
                 bufferedManifest = data;
                 bufferedValidationReport = null;
@@ -80,6 +153,10 @@ self.onconnect = (event: MessageEvent) => {
                 // oxlint-disable-next-line unicorn/require-post-message-target-origin
                 clientPort.postMessage(data);
             }
+        }
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(data));
         }
     };
 
