@@ -178,3 +178,5 @@ reports
 openwiki/.run.json
 openwiki/.page-manifest.json
 .vitest/
+
+examples/assets
