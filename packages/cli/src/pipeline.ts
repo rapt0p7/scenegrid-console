@@ -107,7 +107,7 @@ export async function processAssets(options: ProcessOptions) {
             );
 
             const streamManifestPath = path.join(outputDir, `${basename}${hashSuffix}.json`);
-            fs.writeFileSync(streamManifestPath, JSON.stringify(streamOut, null, 2));
+            fs.writeFileSync(streamManifestPath, JSON.stringify(streamOut, null, 4));
 
             for (const alias of aliases) {
                 soundMap[alias] = {
@@ -133,8 +133,8 @@ export async function processAssets(options: ProcessOptions) {
     const audioSizesPath = path.join(manifestsDir, 'audio-sizes.json');
     const soundMapPath = path.join(manifestsDir, 'sound-manifest.json');
 
-    fs.writeFileSync(audioSizesPath, JSON.stringify(precalculatedSizes, null, 2));
-    fs.writeFileSync(soundMapPath, JSON.stringify(soundMap, null, 2));
+    fs.writeFileSync(audioSizesPath, JSON.stringify(precalculatedSizes, null, 4));
+    fs.writeFileSync(soundMapPath, JSON.stringify(soundMap, null, 4));
 
     const payload: any = {
         precalculatedSizes: {},
