@@ -430,7 +430,7 @@ export class AudioEngine implements IAudioEngine {
             );
             await this.#busSystem.initialize(this.#engineTicker);
 
-            const manifestResolver = (url: string | string[]) => {
+            const manifestResolver = (url: string | readonly string[]) => {
                 const key = Array.isArray(url) ? url[0] : url;
                 return this.#streamManifests.get(key);
             };
@@ -458,7 +458,7 @@ export class AudioEngine implements IAudioEngine {
                 automation,
                 soundRegistry.registry,
                 this.#busSystem,
-                (url: string | string[]) => bufferLoader.getBuffer(url),
+                (url: string | readonly string[]) => bufferLoader.getBuffer(url),
                 manifestResolver,
                 streamFactory,
                 this.#telemetry

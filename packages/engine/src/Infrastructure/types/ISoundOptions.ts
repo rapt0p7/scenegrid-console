@@ -1,7 +1,7 @@
 import type { PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
 
 export interface ISoundOptions {
-    url: string | string[];
+    url: string | readonly string[];
     volume?: number;
     rate?: number;
     detune?: number;

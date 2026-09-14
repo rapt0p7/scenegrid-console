@@ -1,12 +1,15 @@
-import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
-import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
-import type { BankId } from '@scene-grid/shared';
+// noinspection D
+
 import type { IBankManifest, BankState } from '@domain/Configuration/Ports/IBankConfig.js';
-import type { AudioBufferLoader } from '@infrastructure/loader/AudioBufferLoader.js';
-import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
-import { isDefined } from '@scene-grid/shared';
+import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
+import type { IBankManager } from '@domain/Shared/Ports/IBankManager.js';
+import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js';
+import type { AudioBufferLoader } from '@infrastructure/loader/AudioBufferLoader.js';
 import type { IAudioBufferRequest } from '@infrastructure/types/IAudioBufferLoader.js';
+import type { BankId } from '@scene-grid/shared';
+
+import { isDefined } from '@scene-grid/shared';
 
 export interface IBankLoadEvents {
     readonly onStart: (totalItems: number) => void;
@@ -50,12 +53,14 @@ export class BankManagerAdapter implements IBankManager {
         for (const soundId of config.sounds) {
             const soundMeta = this.soundManifest[soundId];
             if (isDefined(soundMeta)) {
+                const url: string = Array.isArray(soundMeta.url) ? soundMeta.url[0] : soundMeta.url;
+                const fileName = url?.split?.('/')?.pop?.()?.split('.')[0];
                 entries.push([
-                    soundId as string,
+                    soundId,
                     {
                         url: soundMeta.url,
                         priority: soundMeta.priority ?? 'low',
-                        expectedSizeMb: this.precalculatedSizes[soundMeta.url] ?? 5.0
+                        expectedSizeMb: fileName ? (this.precalculatedSizes[fileName] ?? 5.0) : 5.0
                     }
                 ]);
             }
@@ -111,7 +116,7 @@ export class BankManagerAdapter implements IBankManager {
             this.pool.purgeSound(soundId);
         }
 
-        const urlsToPurge: (string | string[])[] = [];
+        const urlsToPurge: (string | readonly string[])[] = [];
         for (const soundId of config.sounds) {
             const soundMeta = this.soundManifest[soundId];
             if (isDefined(soundMeta)) urlsToPurge.push(soundMeta.url);

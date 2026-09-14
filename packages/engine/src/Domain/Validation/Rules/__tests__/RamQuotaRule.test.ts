@@ -52,8 +52,8 @@ describe('RamQuotaRule', () => {
             context.config.ramQuotaMb = 10;
             // @ts-expect-error Rewriting for test
             context.config.precalculatedSizes = {
-                'sound1.ogg': 6.0,
-                'sound2.ogg': 5.5
+                sound1: 6.0,
+                sound2: 5.5
             };
             // @ts-expect-error Rewriting for test
             context.config.manifest = {
@@ -145,7 +145,7 @@ describe('RamQuotaRule', () => {
             const rule = new RamQuotaRule();
             const context = createStubContext({
                 precalculatedSizes: {
-                    'audio/long_music.ogg': 18.5
+                    long_music: 18.5
                 },
                 manifest: {
                     bgm_main: {

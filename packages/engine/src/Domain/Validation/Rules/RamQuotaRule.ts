@@ -17,7 +17,8 @@ export default class RamQuotaRule implements IValidationRule {
 
         for (const [soundId, soundConfig] of Object.entries(manifest)) {
             const primaryUrl = Array.isArray(soundConfig.url) ? soundConfig.url[0] : soundConfig.url;
-            const sizeMb = precalculatedSizes[primaryUrl] ?? RamQuotaRule.FALLBACK_SIZE_MB;
+            const fileName = primaryUrl?.split?.('/')?.pop?.()?.split('.')[0];
+            const sizeMb = precalculatedSizes[fileName] ?? RamQuotaRule.FALLBACK_SIZE_MB;
 
             if (soundConfig.priority === 'high') {
                 totalHighPriorityMb += sizeMb;

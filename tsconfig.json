@@ -1,4 +1,9 @@
 {
     "files": [],
-    "references": [{ "path": "./packages/shared" }, { "path": "./packages/engine" }, { "path": "./packages/inspector" }]
+    "references": [
+        { "path": "./packages/shared" },
+        { "path": "./packages/engine" },
+        { "path": "./packages/inspector" },
+        { "path": "./packages/cli" }
+    ]
 }

@@ -6,3 +6,4 @@ export { default as Events } from './Events.js';
 export { default as BankManifest } from './BankManifest.js';
 export { default as MusicFSM } from './MusicFSM.js';
 export { default as AudioSizes } from './audio-sizes.json' with { type: 'json' };
+export { default as SoundManifest } from './sound-manifest.json' with { type: 'json' };

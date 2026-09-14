@@ -10,9 +10,9 @@ import {
     Events,
     BankManifest,
     MusicFSM,
-    AudioSizes
+    AudioSizes,
+    SoundManifest
 } from './audio-config/index.js';
-import soundManifest from './soundManifest.js';
 
 type MySounds = keyof typeof SoundMap;
 type MyEvents = keyof typeof Events;
@@ -33,7 +33,7 @@ declare module '@scene-grid/engine' {
 // oxlint-disable-next-line max-lines-per-function
 async function bootstrap() {
     const audio = new AudioEngine({
-        manifest: soundManifest,
+        manifest: SoundManifest,
         buses: Buses,
         snapshots: Snapshots,
         soundMap: SoundMap,

@@ -2,7 +2,7 @@ import type { SoundId } from '@scene-grid/shared';
 
 interface SoundDescriptor {
     readonly options: {
-        readonly url: string | string[];
+        readonly url: string | readonly string[];
     };
 }
 

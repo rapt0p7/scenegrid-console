@@ -60,8 +60,8 @@ export class SoundController implements ISoundController {
         private readonly automation: AutomationEngine,
         private readonly registry: Map<SoundId, SoundDescriptor>,
         private readonly busSystem: AudioBusSystem,
-        private readonly bufferResolver: (url: string | string[]) => AudioBuffer | undefined,
-        private readonly manifestResolver: (url: string | string[]) => IStreamManifest | undefined,
+        private readonly bufferResolver: (url: string | readonly string[]) => AudioBuffer | undefined,
+        private readonly manifestResolver: (url: string | readonly string[]) => IStreamManifest | undefined,
         private readonly streamFactory: (manifest: IStreamManifest) => any,
         private readonly telemetry?: ITelemetryDispatcher
     ) {

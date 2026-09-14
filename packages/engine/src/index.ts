@@ -37,3 +37,4 @@ export type {
     AudioBusSystem
 } from './Infrastructure/index.js';
 export { WorkletLoader } from './Infrastructure/index.js';
+export { default as ConsistencyChecker } from './Domain/Validation/ConsistencyChecker.js';
