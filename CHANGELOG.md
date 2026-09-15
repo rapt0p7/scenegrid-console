@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Introduce cli asset pipeline for aot audio processing
+
+- Introduce `apply` skill and enhance agent workflows
+
+- Implement live bridge for remote telemetry synchronization
+
+- Add chunked audio streaming pipeline
+
+- Add 'keep the why' architectural context docs
+
 - Add `OpenWiki` documentation system
 
 - Introduce tick divider for deterministic scheduling
@@ -244,6 +254,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Updated 'openwiki'
+
+- Sort generated manifests and add newlines
+
+- Increase json output indentation and ignore example assets
+
+- Move assets to raw-assets, update `.gitignore`
+
+- Update `repowise`
+
+- Upgrade vitest to v5, add benchmark runner
+
+- Update `keepthewhy` skill
+
+- Integrate `keep-the-why` skill for project context
+
+- Updated 'openwiki'
+
+- Updated changelog, dev journal, diagram
+
 - Decouple `inspector` from `engine` using proxy
 
 - Update `openwiki`

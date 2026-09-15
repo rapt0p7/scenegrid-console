@@ -386,6 +386,19 @@
 
 ---
 
+## [Phase 26] Focus: Audio Streaming, AOT Asset Pipeline, and Remote Telemetry
+
+* **Context/Problem:** Loading large audio files entirely into memory could exhaust RAM quotas, highlighting the need for efficient streaming. Audio assets also lacked an automated preparation step, and telemetry synchronization for the DevTools required a more robust mechanism for remote connections.
+* **Solution:** Added a chunked audio streaming pipeline in the infrastructure layer to handle large assets efficiently without memory bloat. Introduced a CLI asset pipeline for Ahead-of-Time (AOT) audio processing and manifest generation. Implemented a Live Bridge for remote telemetry synchronization, and integrated the `keep-the-why` architecture skill for better context preservation.
+
+*Manual notes (to be filled):*
+
+* **❌ What didn't work:**
+* **⚖️ Trade-off:**
+* **🎯 Next step:**
+
+---
+
 ## [Architectural Invariants] Documented Rules (from docs/architecture commits)
 
 The following explicit rules have been locked in the documentation:

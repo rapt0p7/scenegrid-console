@@ -8,7 +8,7 @@ subgraph 3["Application"]
 subgraph 5["Ports"]
 6["IAudioEngine.ts"]
 7["IAudioEngineConfig.ts"]
-1Q["SceneGridRegistry.ts"]
+1R["SceneGridRegistry.ts"]
 end
 end
 subgraph 8["Domain"]
@@ -16,228 +16,232 @@ subgraph 9["BusSystem"]
 subgraph A["Ports"]
 B["IBuses.ts"]
 C["IFilter.ts"]
-25["IAudioBusSystem.ts"]
-26["IAudioBus.ts"]
+27["IAudioBusSystem.ts"]
+28["IAudioBus.ts"]
 end
-subgraph 2L["ValueObjects"]
-2M["filterEquals.ts"]
+subgraph 2N["ValueObjects"]
+2O["filterEquals.ts"]
 end
 end
 subgraph D["Configuration"]
 subgraph E["Ports"]
 F["IRTPCConfig.ts"]
-18["IBankConfig.ts"]
-19["IEventConfig.ts"]
-1E["IMusicFSMConfig.ts"]
-1F["ISoundMap.ts"]
-1G["ISoundConfig.ts"]
-1H["ISpriteSoundManifest.ts"]
+19["IBankConfig.ts"]
+1A["IEventConfig.ts"]
+1F["IMusicFSMConfig.ts"]
+1G["ISoundMap.ts"]
+1H["ISoundConfig.ts"]
+1I["ISpriteSoundManifest.ts"]
+1V["IStreamManifest.ts"]
 end
-1U["SoundRegistry.ts"]
+1W["SoundRegistry.ts"]
 end
-subgraph 1A["Orchestration"]
-subgraph 1B["Ports"]
-1C["ISequencer.ts"]
-1D["IAudioGrid.ts"]
-2Z["IConductorState.ts"]
+subgraph 1B["Orchestration"]
+subgraph 1C["Ports"]
+1D["ISequencer.ts"]
+1E["IAudioGrid.ts"]
+31["IConductorState.ts"]
 end
-2P["AudioEventOrchestrator.ts"]
-2X["MusicConductor.ts"]
-2Y["MusicFsmEvaluator.ts"]
-30["ScattererOrchestrator.ts"]
-31["Sequencer.ts"]
-32["AudioGrid.ts"]
-33["SmartLoopTransitionPolicy.ts"]
+2R["AudioEventOrchestrator.ts"]
+2Z["MusicConductor.ts"]
+30["MusicFsmEvaluator.ts"]
+32["ScattererOrchestrator.ts"]
+33["Sequencer.ts"]
+34["AudioGrid.ts"]
+35["SmartLoopTransitionPolicy.ts"]
 end
-subgraph 1I["Mixer"]
-subgraph 1J["Ports"]
-1K["ISnapshots.ts"]
-1L["IMixerTransitionEngine.ts"]
-2J["IMixerLayer.ts"]
+subgraph 1J["Mixer"]
+subgraph 1K["Ports"]
+1L["ISnapshots.ts"]
+1M["IMixerTransitionEngine.ts"]
+2L["IMixerLayer.ts"]
 end
-2F["index.ts"]
-2G["MixerCoordinator.ts"]
-2H["MixerLayer.ts"]
-2I["MixerStateResolver.ts"]
-2K["MixerTransitionEngine.ts"]
-2N["MixerSnapshotManager.ts"]
+2H["index.ts"]
+2I["MixerCoordinator.ts"]
+2J["MixerLayer.ts"]
+2K["MixerStateResolver.ts"]
+2M["MixerTransitionEngine.ts"]
+2P["MixerSnapshotManager.ts"]
 end
-subgraph 1R["Events"]
-subgraph 1S["Ports"]
-1T["IEngineEvents.ts"]
+subgraph 1S["Events"]
+subgraph 1T["Ports"]
+1U["IEngineEvents.ts"]
 end
-1Z["EngineEventDispatcher.ts"]
+21["EngineEventDispatcher.ts"]
 end
-subgraph 1V["Culling"]
-1W["VoiceCullingArbiter.ts"]
-subgraph 1X["Ports"]
-1Y["ICullingArbiter.ts"]
-end
-end
-subgraph 20["Managers"]
-21["ContainerPlaybackPolicy.ts"]
-subgraph 22["Ports"]
-23["IContainerPlaybackState.ts"]
-27["IRTPCAdapter.ts"]
-28["IDuckingManager.ts"]
-2E["ISwitchPlaybackState.ts"]
-36["IContainerHistoryRegistry.ts"]
-37["ISwitchHistoryRegistry.ts"]
-end
-24["DuckingManager.ts"]
-2C["InstanceRTPCBinder.ts"]
-2D["SwitchPlaybackPolicy.ts"]
-end
-subgraph 29["Shared"]
-subgraph 2A["Ports"]
-2B["ISoundController.ts"]
-2O["ITelemetryDispatcher.ts"]
-2V["IBankManager.ts"]
-2W["ITickable.ts"]
-34["IEngineTicker.ts"]
-39["IInspectorDebugPort.ts"]
-end
-subgraph 2T["Evaluators"]
-2U["ConditionEvaluator.ts"]
+subgraph 1X["Culling"]
+1Y["VoiceCullingArbiter.ts"]
+subgraph 1Z["Ports"]
+20["ICullingArbiter.ts"]
 end
 end
-subgraph 2Q["Router"]
-subgraph 2R["Ports"]
-2S["IAudioRouter.ts"]
+subgraph 22["Managers"]
+23["ContainerPlaybackPolicy.ts"]
+subgraph 24["Ports"]
+25["IContainerPlaybackState.ts"]
+29["IRTPCAdapter.ts"]
+2A["IDuckingManager.ts"]
+2G["ISwitchPlaybackState.ts"]
+38["IContainerHistoryRegistry.ts"]
+39["ISwitchHistoryRegistry.ts"]
 end
-35["AudioRouter.ts"]
-38["VariationResolver.ts"]
+26["DuckingManager.ts"]
+2E["InstanceRTPCBinder.ts"]
+2F["SwitchPlaybackPolicy.ts"]
 end
-subgraph 3A["Validation"]
-3B["ConsistencyChecker.ts"]
-subgraph 3C["Core"]
-3D["ValidationContext.ts"]
+subgraph 2B["Shared"]
+subgraph 2C["Ports"]
+2D["ISoundController.ts"]
+2Q["ITelemetryDispatcher.ts"]
+2X["IBankManager.ts"]
+2Y["ITickable.ts"]
+36["IEngineTicker.ts"]
+3B["IInspectorDebugPort.ts"]
 end
-subgraph 3E["Ports"]
-3F["IConsistencyCheckerOptions.ts"]
-3G["IConsistencyReporter.ts"]
-3H["IConsistencyCheckerPayload.ts"]
-3I["IValidationContext.ts"]
-3L["IValidationRule.ts"]
-3Q["IComponentValidationRule.ts"]
-42["ISoundValidationRule.ts"]
-end
-subgraph 3J["Reporters"]
-3K["ConsoleReporter.ts"]
-4A["TelemetryConsistencyReporter.ts"]
-end
-subgraph 3M["Rules"]
-3N["BankSystemRule.ts"]
-3O["BusesRule.ts"]
-3P["RTPCRule.ts"]
-3R["EventsRule.ts"]
-3S["GhostDuckingRule.ts"]
-3T["MultiplicativeVetoesRule.ts"]
-3U["MusicFSMRule.ts"]
-3V["OrphanManifestRule.ts"]
-3W["RamQuotaRule.ts"]
-3X["RoutingCyclesRule.ts"]
-3Y["RTPCManifestRule.ts"]
-3Z["SnapshotsRule.ts"]
-40["SoundMapRule.ts"]
-41["ContainerSoundRule.ts"]
-43["ContainerSourcesRule.ts"]
-44["DuckingTargetRule.ts"]
-45["LayeredSoundRule.ts"]
-46["ScattererSoundRule.ts"]
-47["SmartLoopRule.ts"]
-48["SpatialSettingsRule.ts"]
-49["SwitchSoundRule.ts"]
+subgraph 2V["Evaluators"]
+2W["ConditionEvaluator.ts"]
 end
 end
+subgraph 2S["Router"]
+subgraph 2T["Ports"]
+2U["IAudioRouter.ts"]
 end
-subgraph 1M["Kernel"]
-subgraph 1N["RTPC"]
-subgraph 1O["Ports"]
-1P["IRTPCManifest.ts"]
-60["IRTPCManager.ts"]
+37["AudioRouter.ts"]
+3A["VariationResolver.ts"]
 end
-5Z["RTPCManager.ts"]
+subgraph 3C["Validation"]
+3D["ConsistencyChecker.ts"]
+subgraph 3E["Core"]
+3F["ValidationContext.ts"]
 end
+subgraph 3G["Ports"]
+3H["IConsistencyCheckerOptions.ts"]
+3I["IConsistencyReporter.ts"]
+3J["IConsistencyCheckerPayload.ts"]
+3K["IValidationContext.ts"]
+3N["IValidationRule.ts"]
+3S["IComponentValidationRule.ts"]
+44["ISoundValidationRule.ts"]
 end
-subgraph 4B["Infrastructure"]
-4C["index.ts"]
-subgraph 4D["automation"]
-4E["AutomationEngine.ts"]
+subgraph 3L["Reporters"]
+3M["ConsoleReporter.ts"]
+4C["TelemetryConsistencyReporter.ts"]
 end
-subgraph 4F["types"]
-4G["IAudioContext.ts"]
-4K["IAudioPlugins.ts"]
-4L["IFiltersPlugin.ts"]
-4M["IFilter.ts"]
-4R["IMasterOutput.ts"]
-4X["IAudioContextManager.ts"]
-54["INodeChain.ts"]
-55["IPlaybackController.ts"]
-56["ISoundInstance.ts"]
-58["IVoiceConfig.ts"]
-5B["IAudioBufferLoader.ts"]
-5F["ILogicalVoice.ts"]
-5G["ISoundOptions.ts"]
-end
-subgraph 4H["busSystem"]
-4I["AudioBusSystem.ts"]
-4J["AudioBus.ts"]
-end
-subgraph 4N["utils"]
-4O["safeDisconnect.ts"]
-end
-subgraph 4P["scheduling"]
-4Q["EngineTicker.ts"]
-5E["PlaybackScheduler.ts"]
-5M["CullingContextProvider.ts"]
-5N["CullingRunner.ts"]
-end
-subgraph 4S["context"]
-4T["AudioContextManager.ts"]
-4U["AudioContextFactory.ts"]
-4V["ListenerManager.ts"]
-4W["UnlockManager.ts"]
-4Y["WorkletLoader.ts"]
-end
-subgraph 4Z["instance"]
-50["SoundInstance.ts"]
-57["SoundPoolManager.ts"]
-end
-subgraph 51["nodes"]
-52["AudioNodeFactory.ts"]
-53["NodeChain.ts"]
-5H["MasterOutput.ts"]
-end
-subgraph 59["loader"]
-5A["AudioBufferLoader.ts"]
-5C["BankManagerAdapter.ts"]
-5D["SoundController.ts"]
-end
-subgraph 5I["plugins"]
-5J["FiltersPlugin.ts"]
-5K["SidechainDucker.ts"]
-5L["TinyLimiterNode.ts"]
-end
-subgraph 5O["state"]
-5P["ContainerHistoryRegistry.ts"]
-5Q["SwitchHistoryRegistry.ts"]
-end
-subgraph 5R["telemetry"]
-5S["BroadcastTelemetryTransport.ts"]
-5T["BroadcastIpcAdapter.ts"]
-5U["BrowserTelemetryTransport.ts"]
-5V["CommandReceiver.ts"]
-5W["TelemetryDispatcher.ts"]
-5X["TelemetrySnapshotter.ts"]
-5Y["WorkerTelemetryTransport.ts"]
-end
-subgraph 61["worklets"]
-62["ducker.processor.ts"]
-63["lookahead-brickwall-limiter.processor.ts"]
+subgraph 3O["Rules"]
+3P["BankSystemRule.ts"]
+3Q["BusesRule.ts"]
+3R["RTPCRule.ts"]
+3T["EventsRule.ts"]
+3U["GhostDuckingRule.ts"]
+3V["MultiplicativeVetoesRule.ts"]
+3W["MusicFSMRule.ts"]
+3X["OrphanManifestRule.ts"]
+3Y["RamQuotaRule.ts"]
+3Z["RoutingCyclesRule.ts"]
+40["RTPCManifestRule.ts"]
+41["SnapshotsRule.ts"]
+42["SoundMapRule.ts"]
+43["ContainerSoundRule.ts"]
+45["ContainerSourcesRule.ts"]
+46["DuckingTargetRule.ts"]
+47["LayeredSoundRule.ts"]
+48["ScattererSoundRule.ts"]
+49["SmartLoopRule.ts"]
+4A["SpatialSettingsRule.ts"]
+4B["SwitchSoundRule.ts"]
 end
 end
-64["index.ts"]
+end
+subgraph 1N["Kernel"]
+subgraph 1O["RTPC"]
+subgraph 1P["Ports"]
+1Q["IRTPCManifest.ts"]
+65["IRTPCManager.ts"]
+end
+64["RTPCManager.ts"]
+end
+end
+subgraph 4D["Infrastructure"]
+4E["index.ts"]
+subgraph 4F["automation"]
+4G["AutomationEngine.ts"]
+end
+subgraph 4H["types"]
+4I["IAudioContext.ts"]
+4M["IAudioPlugins.ts"]
+4N["IFiltersPlugin.ts"]
+4O["IFilter.ts"]
+4T["IMasterOutput.ts"]
+4Z["IAudioContextManager.ts"]
+56["INodeChain.ts"]
+57["IPlaybackController.ts"]
+58["ISoundInstance.ts"]
+5A["IVoiceConfig.ts"]
+5G["IAudioBufferLoader.ts"]
+5K["ILogicalVoice.ts"]
+5L["ISoundOptions.ts"]
+end
+subgraph 4J["busSystem"]
+4K["AudioBusSystem.ts"]
+4L["AudioBus.ts"]
+end
+subgraph 4P["utils"]
+4Q["safeDisconnect.ts"]
+end
+subgraph 4R["scheduling"]
+4S["EngineTicker.ts"]
+5J["PlaybackScheduler.ts"]
+5R["CullingContextProvider.ts"]
+5S["CullingRunner.ts"]
+end
+subgraph 4U["context"]
+4V["AudioContextManager.ts"]
+4W["AudioContextFactory.ts"]
+4X["ListenerManager.ts"]
+4Y["UnlockManager.ts"]
+50["WorkletLoader.ts"]
+end
+subgraph 51["instance"]
+52["SoundInstance.ts"]
+59["SoundPoolManager.ts"]
+5B["StreamInstance.ts"]
+end
+subgraph 53["nodes"]
+54["AudioNodeFactory.ts"]
+55["NodeChain.ts"]
+5C["StreamNode.ts"]
+5M["MasterOutput.ts"]
+end
+subgraph 5D["loader"]
+5E["ChunkedLoader.ts"]
+5F["AudioBufferLoader.ts"]
+5H["BankManagerAdapter.ts"]
+5I["SoundController.ts"]
+end
+subgraph 5N["plugins"]
+5O["FiltersPlugin.ts"]
+5P["SidechainDucker.ts"]
+5Q["TinyLimiterNode.ts"]
+end
+subgraph 5T["state"]
+5U["ContainerHistoryRegistry.ts"]
+5V["SwitchHistoryRegistry.ts"]
+end
+subgraph 5W["telemetry"]
+5X["BroadcastTelemetryTransport.ts"]
+5Y["BroadcastIpcAdapter.ts"]
+5Z["BrowserTelemetryTransport.ts"]
+60["CommandReceiver.ts"]
+61["TelemetryDispatcher.ts"]
+62["TelemetrySnapshotter.ts"]
+63["WorkerTelemetryTransport.ts"]
+end
+subgraph 66["worklets"]
+67["ducker.processor.ts"]
+68["lookahead-brickwall-limiter.processor.ts"]
+end
+end
+69["index.ts"]
 end
 end
 subgraph G["shared"]
@@ -271,61 +275,63 @@ subgraph 10["Telemetry"]
 12["ITelemetryTransport.ts"]
 13["TelemetryBatch.ts"]
 14["TelemetryEvents.ts"]
+17["ITelemetryWorkerConfig.ts"]
+6A["TelemetryInitPayload.ts"]
 end
-17["typedObjects.ts"]
-subgraph 65["Workers"]
-66["TelemetryWorker.ts"]
+18["typedObjects.ts"]
+subgraph 6B["Workers"]
+6C["TelemetryWorker.ts"]
 end
 end
 end
 end
 4-->6
 4-->7
-4-->1Q
-4-->18
-4-->1G
-4-->1U
+4-->1R
+4-->19
+4-->1H
+4-->1V
 4-->1W
-4-->1Z
-4-->1T
+4-->1Y
 4-->21
-4-->24
-4-->2C
-4-->2D
+4-->1U
+4-->23
+4-->26
+4-->2E
 4-->2F
-4-->2P
-4-->2X
-4-->1C
-4-->30
-4-->31
+4-->2H
+4-->2R
+4-->2Z
+4-->1D
+4-->32
 4-->33
 4-->35
-4-->39
+4-->37
 4-->3B
-4-->3G
-4-->3K
-4-->4A
+4-->3D
+4-->3I
+4-->3M
 4-->4C
-4-->4C
-4-->1P
-4-->5Z
+4-->4E
+4-->1Q
+4-->64
 4-->I
 4-->I
 6-->7
-6-->1Q
-6-->18
-6-->1G
-6-->1T
-6-->1C
+6-->1R
+6-->19
+6-->1H
+6-->1U
+6-->1D
 6-->I
 7-->B
-7-->18
 7-->19
-7-->1E
+7-->1A
 7-->1F
-7-->1H
-7-->1K
-7-->1P
+7-->1G
+7-->1I
+7-->1L
+7-->1Q
 B-->C
 B-->F
 B-->I
@@ -344,9 +350,10 @@ I-->Y
 I-->Z
 I-->11
 I-->12
+I-->17
 I-->13
 I-->14
-I-->17
+I-->18
 I-->N
 I-->15
 I-->16
@@ -366,521 +373,538 @@ W-->N
 14-->16
 14-->11
 15-->N
-18-->I
-19-->1C
 19-->I
-1C-->1D
-1C-->I
+1A-->1D
+1A-->I
+1D-->1E
 1D-->I
 1E-->I
-1F-->1G
 1F-->I
-1G-->F
+1G-->1H
 1G-->I
+1H-->F
 1H-->I
-1K-->1L
-1K-->I
-1L-->C
-1L-->F
+1I-->I
+1L-->1M
 1L-->I
-1P-->I
-1U-->I
-1W-->1Y
+1M-->C
+1M-->F
+1M-->I
+1Q-->I
 1W-->I
+1Y-->20
 1Y-->I
-1Z-->1T
-21-->1G
-21-->23
-21-->I
-21-->I
+20-->I
+21-->1U
+23-->1H
+23-->25
 23-->I
-24-->25
-24-->28
-24-->2B
-24-->I
-25-->26
-25-->B
-25-->27
+23-->I
 25-->I
-26-->B
-26-->C
-26-->F
 26-->27
+26-->2A
+26-->2D
 26-->I
+27-->28
+27-->B
+27-->29
 27-->I
+28-->B
+28-->C
+28-->F
+28-->29
 28-->I
-2B-->I
-2C-->F
-2C-->27
-2C-->2B
-2C-->I
-2C-->I
-2D-->1G
-2D-->2E
+29-->I
+2A-->I
 2D-->I
-2D-->I
+2E-->F
+2E-->29
+2E-->2D
+2E-->I
+2E-->I
+2F-->1H
 2F-->2G
-2F-->2H
-2F-->2N
-2F-->2I
-2F-->2K
-2G-->2H
-2G-->2K
-2G-->1L
-2G-->I
+2F-->I
+2F-->I
 2H-->2I
 2H-->2J
-2H-->1L
-2H-->I
-2H-->I
-2I-->C
-2I-->F
-2I-->1L
+2H-->2P
+2H-->2K
+2H-->2M
+2I-->2J
+2I-->2M
+2I-->1M
 2I-->I
-2I-->I
-2J-->1L
+2J-->2K
+2J-->2L
+2J-->1M
 2J-->I
-2K-->25
-2K-->B
-2K-->2M
-2K-->27
-2K-->1L
+2J-->I
+2K-->C
+2K-->F
+2K-->1M
 2K-->I
 2K-->I
-2M-->C
-2N-->2G
-2N-->2H
-2N-->1L
-2N-->1K
-2N-->2B
-2N-->2O
-2N-->I
-2N-->I
-2O-->I
-2P-->19
-2P-->27
-2P-->2F
-2P-->1C
-2P-->2S
-2P-->2U
-2P-->2V
-2P-->2B
-2P-->2O
-2P-->2W
+2L-->1M
+2L-->I
+2M-->27
+2M-->B
+2M-->2O
+2M-->29
+2M-->1M
+2M-->I
+2M-->I
+2O-->C
+2P-->2I
+2P-->2J
+2P-->1M
+2P-->1L
+2P-->2D
+2P-->2Q
 2P-->I
 2P-->I
-2S-->19
-2S-->1G
-2S-->I
+2Q-->I
+2R-->1A
+2R-->29
+2R-->2H
+2R-->1D
+2R-->2U
+2R-->2W
+2R-->2X
+2R-->2D
+2R-->2Q
+2R-->2Y
+2R-->I
+2R-->I
+2U-->1A
+2U-->1H
 2U-->I
-2V-->18
-2V-->I
 2W-->I
-2X-->1E
-2X-->27
-2X-->2N
-2X-->2Y
-2X-->2Z
-2X-->1C
-2X-->2U
-2X-->2W
+2X-->19
 2X-->I
-2Y-->1E
 2Y-->I
+2Z-->1F
+2Z-->29
+2Z-->2P
+2Z-->30
+2Z-->31
+2Z-->1D
+2Z-->2W
+2Z-->2Y
 2Z-->I
-30-->1G
-30-->21
-30-->1C
-30-->2S
-30-->2B
-30-->2W
+30-->1F
 30-->I
-30-->I
-31-->32
-31-->1C
-31-->1C
-31-->33
-31-->2S
-31-->34
-31-->2B
-31-->2O
 31-->I
+32-->1H
+32-->23
 32-->1D
+32-->2U
+32-->2D
+32-->2Y
 32-->I
 32-->I
-33-->1G
-33-->27
+33-->34
+33-->1D
+33-->1D
+33-->35
 33-->2U
+33-->36
+33-->2D
+33-->2Q
 33-->I
-33-->I
-34-->2W
+34-->1E
 34-->I
-35-->19
-35-->1G
-35-->1F
-35-->21
-35-->2C
-35-->36
-35-->28
-35-->27
-35-->37
-35-->2D
-35-->30
-35-->2S
-35-->38
-35-->2B
-35-->2O
+34-->I
+35-->1H
+35-->29
+35-->2W
 35-->I
-36-->23
+35-->I
+36-->2Y
 36-->I
+37-->1A
+37-->1H
+37-->1G
+37-->23
 37-->2E
+37-->38
+37-->2A
+37-->29
+37-->39
+37-->2F
+37-->32
+37-->2U
+37-->3A
+37-->2D
+37-->2Q
 37-->I
-38-->1G
+38-->25
 38-->I
-38-->I
+39-->2G
 39-->I
-3B-->3D
-3B-->3F
-3B-->3H
-3B-->3L
-3B-->3K
-3B-->3N
-3B-->3O
-3B-->3R
-3B-->3S
-3B-->3T
-3B-->3U
-3B-->3V
-3B-->3W
-3B-->3X
-3B-->3Y
-3B-->3Z
-3B-->40
+3A-->1H
+3A-->I
+3A-->I
 3B-->I
-3D-->1E
-3D-->1G
 3D-->3F
 3D-->3H
-3D-->3G
-3D-->3I
-3D-->3K
+3D-->3J
+3D-->3N
+3D-->3M
+3D-->3P
+3D-->3Q
+3D-->3T
+3D-->3U
+3D-->3V
+3D-->3W
+3D-->3X
+3D-->3Y
+3D-->3Z
+3D-->40
+3D-->41
+3D-->42
 3D-->I
-3F-->3G
-3G-->I
-3H-->B
-3H-->18
-3H-->19
-3H-->1E
-3H-->1F
-3H-->1H
-3H-->1K
-3H-->1P
-3H-->I
-3I-->1G
-3I-->3H
-3K-->3G
-3K-->I
-3L-->1G
-3L-->3I
-3N-->3I
-3N-->3L
-3N-->I
-3O-->3I
-3O-->3L
-3O-->3P
-3O-->I
-3P-->F
-3P-->3Q
-3P-->3I
+3F-->1F
+3F-->1H
+3F-->3H
+3F-->3J
+3F-->3I
+3F-->3K
+3F-->3M
+3F-->I
+3H-->3I
+3I-->I
+3J-->B
+3J-->19
+3J-->1A
+3J-->1F
+3J-->1G
+3J-->1I
+3J-->1L
+3J-->1Q
+3J-->I
+3K-->1H
+3K-->3J
+3M-->3I
+3M-->I
+3N-->1H
+3N-->3K
+3P-->3K
+3P-->3N
 3P-->I
-3Q-->3I
-3R-->3I
-3R-->3L
+3Q-->3K
+3Q-->3N
+3Q-->3R
+3Q-->I
+3R-->F
+3R-->3S
+3R-->3K
 3R-->I
-3S-->1G
-3S-->3I
-3S-->3L
-3S-->I
-3T-->3I
-3T-->3L
+3S-->3K
+3T-->3K
+3T-->3N
 3T-->I
-3U-->1E
-3U-->3I
-3U-->3L
+3U-->1H
+3U-->3K
+3U-->3N
 3U-->I
-3V-->3I
-3V-->3L
+3V-->3K
+3V-->3N
 3V-->I
-3W-->3I
-3W-->3L
-3X-->3I
-3X-->3L
+3W-->1F
+3W-->3K
+3W-->3N
+3W-->I
+3X-->3K
+3X-->3N
 3X-->I
-3Y-->3I
-3Y-->3L
-3Y-->I
-3Z-->3I
-3Z-->3L
-3Z-->3P
+3Y-->3K
+3Y-->3N
+3Z-->3K
+3Z-->3N
 3Z-->I
-40-->1G
-40-->3I
-40-->3L
-40-->41
-40-->44
-40-->45
-40-->3P
-40-->46
-40-->47
-40-->48
-40-->49
+40-->3K
+40-->3N
 40-->I
-41-->1G
-41-->42
-41-->3I
-41-->43
+41-->3K
+41-->3N
+41-->3R
 41-->I
-42-->1G
-42-->3I
-43-->3Q
-43-->3I
+42-->1H
+42-->3K
+42-->3N
+42-->43
+42-->46
+42-->47
+42-->3R
+42-->48
+42-->49
+42-->4A
+42-->4B
+42-->I
+43-->1H
+43-->44
+43-->3K
+43-->45
 43-->I
-44-->1G
-44-->42
-44-->3I
-44-->I
-45-->1G
-45-->42
-45-->3I
+44-->1H
+44-->3K
+45-->3S
+45-->3K
 45-->I
-46-->1G
-46-->42
-46-->3I
-46-->43
+46-->1H
+46-->44
+46-->3K
 46-->I
-47-->1G
-47-->42
-47-->3I
+47-->1H
+47-->44
+47-->3K
 47-->I
-48-->1G
-48-->42
-48-->3I
+48-->1H
+48-->44
+48-->3K
+48-->45
 48-->I
-49-->1G
-49-->42
-49-->3I
+49-->1H
+49-->44
+49-->3K
 49-->I
-4A-->2O
-4A-->3G
+4A-->1H
+4A-->44
+4A-->3K
 4A-->I
-4C-->4E
-4C-->4I
-4C-->4T
-4C-->4Y
-4C-->50
-4C-->57
-4C-->5A
-4C-->5C
-4C-->5D
-4C-->52
-4C-->5H
-4C-->5J
-4C-->5K
-4C-->5L
-4C-->5M
-4C-->5N
-4C-->4Q
-4C-->5E
-4C-->5P
-4C-->5Q
-4C-->5S
-4C-->5U
-4C-->5V
-4C-->5W
-4C-->5X
-4C-->5Y
-4C-->4G
-4C-->4K
-4C-->56
-4C-->5G
-4C-->58
-4C-->4O
-4E-->34
+4B-->1H
+4B-->44
+4B-->3K
+4B-->I
+4C-->2Q
+4C-->3I
+4C-->I
 4E-->4G
-4E-->I
-4I-->25
-4I-->B
-4I-->1G
-4I-->27
-4I-->4E
-4I-->4J
-4I-->4Q
-4I-->4G
-4I-->4K
-4I-->4R
-4I-->I
-4J-->26
-4J-->B
-4J-->C
-4J-->F
-4J-->27
-4J-->4E
-4J-->4G
-4J-->4K
-4J-->4O
-4J-->I
-4J-->I
+4E-->4K
+4E-->4V
+4E-->50
+4E-->52
+4E-->59
+4E-->5B
+4E-->5F
+4E-->5H
+4E-->5E
+4E-->5I
+4E-->54
+4E-->5M
+4E-->5C
+4E-->5O
+4E-->5P
+4E-->5Q
+4E-->5R
+4E-->5S
+4E-->4S
+4E-->5J
+4E-->5U
+4E-->5V
+4E-->5X
+4E-->5Z
+4E-->60
+4E-->61
+4E-->62
+4E-->63
+4E-->4I
+4E-->4M
+4E-->58
+4E-->5L
+4E-->5A
+4E-->4Q
+4G-->36
+4G-->4I
+4G-->I
+4K-->27
+4K-->B
+4K-->1H
+4K-->29
 4K-->4G
 4K-->4L
-4L-->4E
+4K-->4S
+4K-->4I
+4K-->4M
+4K-->4T
+4K-->I
+4L-->28
+4L-->B
+4L-->C
+4L-->F
+4L-->29
 4L-->4G
+4L-->4I
 4L-->4M
-4O-->4G
-4Q-->34
-4Q-->2W
-4Q-->I
-4R-->4G
-4T-->4E
-4T-->4U
-4T-->4V
-4T-->4W
-4T-->4G
-4T-->4X
-4T-->I
-4U-->4G
-4V-->4E
+4L-->4Q
+4L-->I
+4L-->I
+4M-->4I
+4M-->4N
+4N-->4G
+4N-->4I
+4N-->4O
+4Q-->4I
+4S-->36
+4S-->2Y
+4S-->I
+4T-->4I
 4V-->4G
+4V-->4W
+4V-->4X
+4V-->4Y
+4V-->4I
+4V-->4Z
 4V-->I
-4W-->4G
+4W-->4I
 4X-->4G
-50-->4E
-50-->4T
-50-->52
-50-->53
-50-->53
-50-->4G
-50-->55
-50-->56
-50-->I
-52-->4T
+4X-->4I
+4X-->I
+4Y-->4I
+4Z-->4I
 52-->4G
-52-->4M
+52-->4V
+52-->54
+52-->55
+52-->55
+52-->4I
+52-->57
+52-->58
 52-->I
-53-->52
-53-->4G
-53-->4M
-53-->54
-54-->4G
-54-->4M
-55-->I
-56-->52
-56-->4G
-56-->55
-56-->I
-57-->56
-57-->58
+54-->4V
+54-->4I
+54-->4O
+54-->I
+55-->54
+55-->4I
+55-->4O
+55-->56
+56-->4I
+56-->4O
 57-->I
-5A-->4T
-5A-->5B
-5A-->I
-5C-->18
-5C-->1H
-5C-->2S
-5C-->2V
-5C-->57
-5C-->5A
-5C-->5B
-5C-->I
-5C-->I
-5D-->2B
-5D-->2O
-5D-->4E
-5D-->4I
-5D-->57
-5D-->5E
-5D-->4G
-5D-->5F
-5D-->5G
-5D-->I
-5D-->I
-5E-->4T
-5E-->56
-5E-->I
-5F-->56
+58-->54
+58-->4I
+58-->57
+58-->I
+59-->58
+59-->5A
+59-->I
+5B-->5C
+5B-->57
+5B-->58
+5B-->1V
+5B-->2Y
+5B-->I
+5C-->5E
+5C-->1V
+5C-->2Y
+5E-->1V
+5E-->2Q
+5E-->2Y
+5F-->4V
+5F-->5G
 5F-->I
-5G-->52
-5H-->4E
-5H-->4T
-5H-->4G
+5H-->19
+5H-->1I
+5H-->2U
+5H-->2X
+5H-->59
+5H-->5F
+5H-->5G
 5H-->I
-5J-->4E
-5J-->4G
-5J-->4M
+5H-->I
+5I-->1V
+5I-->2D
+5I-->2Q
+5I-->4G
+5I-->4K
+5I-->59
+5I-->5J
+5I-->4I
+5I-->5K
+5I-->5L
+5I-->I
+5I-->I
+5J-->4V
+5J-->58
 5J-->I
-5K-->4Y
-5K-->4G
-5K-->4K
-5K-->4O
+5K-->58
 5K-->I
-5L-->4Y
-5L-->4G
-5L-->4K
-5M-->25
-5M-->1F
-5M-->1Y
-5M-->2B
+5L-->54
+5M-->4G
+5M-->4V
+5M-->4I
 5M-->I
-5N-->1Y
-5N-->2B
-5N-->2O
-5N-->I
-5P-->36
-5P-->23
+5O-->4G
+5O-->4I
+5O-->4O
+5O-->I
+5P-->50
+5P-->4I
+5P-->4M
+5P-->4Q
 5P-->I
-5Q-->37
-5Q-->2E
-5Q-->I
-5S-->5T
+5Q-->50
+5Q-->4I
+5Q-->4M
+5R-->27
+5R-->1G
+5R-->20
+5R-->2D
+5R-->I
+5S-->20
+5S-->2D
+5S-->2Q
 5S-->I
+5U-->38
+5U-->25
 5U-->I
 5V-->39
-5V-->2W
+5V-->2G
 5V-->I
-5W-->2O
-5W-->I
-5X-->25
-5X-->27
-5X-->37
-5X-->1C
-5X-->2B
-5X-->2O
-5X-->2W
+5X-->5Y
 5X-->I
-5X-->I
-5Y-->I
-5Z-->60
 5Z-->I
+60-->3B
+60-->2Y
 60-->I
-64-->4
-64-->7
-64-->1Q
-64-->B
-64-->18
-64-->19
-64-->1E
-64-->1G
-64-->1F
-64-->2H
-64-->1L
-64-->1K
-64-->4C
-64-->4C
-64-->60
-64-->1P
-64-->1C
+61-->2Q
+61-->I
+62-->27
+62-->29
+62-->39
+62-->1D
+62-->2D
+62-->2Q
+62-->2Y
+62-->I
+62-->I
+63-->I
+64-->65
 64-->I
-66-->13
-66-->14
+65-->I
+69-->4
+69-->7
+69-->1R
+69-->B
+69-->19
+69-->1A
+69-->1F
+69-->1H
+69-->1G
+69-->2J
+69-->1M
+69-->1L
+69-->3D
+69-->4E
+69-->4E
+69-->65
+69-->1Q
+69-->1D
+69-->I
+6C-->13
+6C-->14
 
 
 
@@ -897,79 +921,78 @@ classDef defaultNode fill:#ffffff,stroke:#94a3b8,stroke-width:2px,color:#0f172a;
 class 4 defaultNode;
 class 6 ports;
 class 7 ports;
-class 1Q ports;
+class 1R ports;
 class B ports;
 class C ports;
-class 25 ports;
-class 26 ports;
-class 2M domain;
+class 27 ports;
+class 28 ports;
+class 2O domain;
 class F ports;
-class 18 ports;
 class 19 ports;
-class 1E ports;
+class 1A ports;
 class 1F ports;
 class 1G ports;
 class 1H ports;
-class 1U domain;
-class 1C ports;
+class 1I ports;
+class 1V ports;
+class 1W domain;
 class 1D ports;
-class 2Z ports;
-class 2P domain;
-class 2X domain;
-class 2Y domain;
+class 1E ports;
+class 31 ports;
+class 2R domain;
+class 2Z domain;
 class 30 domain;
-class 31 domain;
 class 32 domain;
 class 33 domain;
-class 1K ports;
+class 34 domain;
+class 35 domain;
 class 1L ports;
-class 2J ports;
-class 2F domain;
-class 2G domain;
+class 1M ports;
+class 2L ports;
 class 2H domain;
 class 2I domain;
+class 2J domain;
 class 2K domain;
-class 2N domain;
-class 1T ports;
-class 1Z events;
-class 1W domain;
-class 1Y ports;
-class 21 domain;
-class 23 ports;
-class 27 ports;
-class 28 ports;
-class 2E ports;
-class 36 ports;
-class 37 ports;
-class 24 domain;
-class 2C domain;
-class 2D domain;
-class 2B ports;
-class 2O ports;
-class 2V ports;
-class 2W ports;
-class 34 ports;
+class 2M domain;
+class 2P domain;
+class 1U ports;
+class 21 events;
+class 1Y domain;
+class 20 ports;
+class 23 domain;
+class 25 ports;
+class 29 ports;
+class 2A ports;
+class 2G ports;
+class 38 ports;
 class 39 ports;
-class 2U shared;
-class 2S ports;
-class 35 domain;
-class 38 domain;
-class 3B domain;
+class 26 domain;
+class 2E domain;
+class 2F domain;
+class 2D ports;
+class 2Q ports;
+class 2X ports;
+class 2Y ports;
+class 36 ports;
+class 3B ports;
+class 2W shared;
+class 2U ports;
+class 37 domain;
+class 3A domain;
 class 3D domain;
-class 3F ports;
-class 3G ports;
+class 3F domain;
 class 3H ports;
 class 3I ports;
-class 3L ports;
-class 3Q ports;
-class 42 ports;
-class 3K domain;
-class 4A domain;
-class 3N domain;
-class 3O domain;
+class 3J ports;
+class 3K ports;
+class 3N ports;
+class 3S ports;
+class 44 ports;
+class 3M domain;
+class 4C domain;
 class 3P domain;
+class 3Q domain;
 class 3R domain;
-class 3S domain;
 class 3T domain;
 class 3U domain;
 class 3V domain;
@@ -979,66 +1002,71 @@ class 3Y domain;
 class 3Z domain;
 class 40 domain;
 class 41 domain;
+class 42 domain;
 class 43 domain;
-class 44 domain;
 class 45 domain;
 class 46 domain;
 class 47 domain;
 class 48 domain;
 class 49 domain;
-class 1P ports;
-class 60 ports;
-class 5Z kernel;
-class 4C infrastructure;
+class 4A domain;
+class 4B domain;
+class 1Q ports;
+class 65 ports;
+class 64 kernel;
 class 4E infrastructure;
-class 4G ports;
-class 4K ports;
-class 4L ports;
+class 4G infrastructure;
+class 4I ports;
 class 4M ports;
-class 4R ports;
-class 4X ports;
-class 54 ports;
-class 55 ports;
+class 4N ports;
+class 4O ports;
+class 4T ports;
+class 4Z ports;
 class 56 ports;
+class 57 ports;
 class 58 ports;
-class 5B ports;
-class 5F ports;
+class 5A ports;
 class 5G ports;
-class 4I infrastructure;
-class 4J infrastructure;
-class 4O infrastructure;
+class 5K ports;
+class 5L ports;
+class 4K infrastructure;
+class 4L infrastructure;
 class 4Q infrastructure;
-class 5E infrastructure;
-class 5M infrastructure;
-class 5N infrastructure;
-class 4T infrastructure;
-class 4U infrastructure;
+class 4S infrastructure;
+class 5J infrastructure;
+class 5R infrastructure;
+class 5S infrastructure;
 class 4V infrastructure;
 class 4W infrastructure;
+class 4X infrastructure;
 class 4Y infrastructure;
 class 50 infrastructure;
-class 57 infrastructure;
 class 52 infrastructure;
-class 53 infrastructure;
-class 5H infrastructure;
-class 5A infrastructure;
+class 59 infrastructure;
+class 5B infrastructure;
+class 54 infrastructure;
+class 55 infrastructure;
 class 5C infrastructure;
-class 5D infrastructure;
-class 5J infrastructure;
-class 5K infrastructure;
-class 5L infrastructure;
+class 5M infrastructure;
+class 5E infrastructure;
+class 5F infrastructure;
+class 5H infrastructure;
+class 5I infrastructure;
+class 5O infrastructure;
 class 5P infrastructure;
 class 5Q infrastructure;
-class 5S infrastructure;
-class 5T infrastructure;
 class 5U infrastructure;
 class 5V infrastructure;
-class 5W infrastructure;
 class 5X infrastructure;
 class 5Y infrastructure;
+class 5Z infrastructure;
+class 60 infrastructure;
+class 61 infrastructure;
 class 62 infrastructure;
 class 63 infrastructure;
-class 64 defaultNode;
+class 67 infrastructure;
+class 68 infrastructure;
+class 69 defaultNode;
 class I shared;
 class J shared;
 class L shared;
@@ -1059,5 +1087,7 @@ class 11 ports;
 class 12 ports;
 class 13 shared;
 class 14 shared;
-class 17 shared;
-class 66 shared;
+class 17 ports;
+class 6A shared;
+class 18 shared;
+class 6C shared;
