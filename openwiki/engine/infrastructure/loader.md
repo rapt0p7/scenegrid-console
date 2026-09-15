@@ -3,9 +3,6 @@ type: infrastructure subsystem
 title: Loaders and Sound Control
 description: Runtime asset loading, bank lifecycle management, and controller adapters that expose decoded buffers to playback code.
 tags: [engine, loading, banks, sound-control]
-verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-03T11:15:32.736Z
 sources:
   - id: openwiki-source-1dffb108d2654065cd687f33
     resource: repo://packages/engine/src/Infrastructure/loader/__tests__/AudioBufferLoader.test.ts

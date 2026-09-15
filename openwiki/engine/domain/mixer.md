@@ -3,9 +3,6 @@ type: domain subsystem
 title: Domain Mixer and Snapshot Resolution
 description: Mixer snapshot layering, priority order, and the transition engine that resolves layered state into live bus updates and telemetry.
 tags: [engine, mixer, snapshots, transitions]
-verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-03T11:15:32.736Z
 sources:
   - id: openwiki-source-82f4da58c62c76edd9b24022
     resource: repo://packages/engine/src/Domain/Mixer/__tests__/MixerCoordinator.test.ts

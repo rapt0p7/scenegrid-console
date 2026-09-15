@@ -3,9 +3,6 @@ type: domain subsystem
 title: Domain Validation and Consistency Checking
 description: The engine startup validation gate that checks configuration structure, cross-reference consistency, and routing safety before initialization completes.
 tags: [engine, validation, rules, startup]
-verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-03T11:15:32.736Z
 sources:
   - id: openwiki-source-f35df08652e1a591bdc013de
     resource: repo://packages/engine/src/Domain/Validation/__tests__/ConsistencyChecker.test.ts

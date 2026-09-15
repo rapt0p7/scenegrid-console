@@ -3,9 +3,6 @@ type: domain subsystem
 title: Router and Playback Managers
 description: Runtime routing and playback decision logic that selects concrete sounds, applies culling and playback policies, and wires ducking and RTPC state onto active voices.
 tags: [engine, routing, playback, rtpc, culling]
-verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-03T11:15:32.736Z
 sources:
   - id: openwiki-source-083b4fd36ef6321d38f433cb
     resource: repo://packages/engine/src/Domain/Culling/VoiceCullingArbiter.ts

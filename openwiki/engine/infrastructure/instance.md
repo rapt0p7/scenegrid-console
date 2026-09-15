@@ -3,9 +3,6 @@ type: infrastructure subsystem
 title: Sound Instances and Voice Pooling
 description: Runtime sound-instance state and pool management for reusing voices safely without allocation churn.
 tags: [engine, pooling, sound-instance, voice-management]
-verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-03T11:15:32.736Z
 sources:
   - id: openwiki-source-493a690cc189fa94581a6e78
     resource: repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts

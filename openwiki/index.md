@@ -9,6 +9,7 @@ okf_version: "0.2"
 # Directories
 
 - [architecture](architecture/)
+- [cli](cli/)
 - [engine](engine/)
 - [examples](examples/)
 - [inspector](inspector/)

@@ -3,9 +3,6 @@ type: infrastructure subsystem
 title: Bus system and analyzer taps
 description: Bus graph construction, send routing, analyzer and ducker tap placement, and the Web Audio boundary that the engine exposes to mixers and inspector tooling.
 tags: [engine, bus-system, routing, audio, analyzer]
-verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-03T11:15:32.736Z
 sources:
   - id: openwiki-source-ac57f419f37831fb596711e8
     resource: repo://packages/engine/src/Infrastructure/busSystem/__tests__/AudioBusSystem.test.ts

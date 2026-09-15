@@ -3,9 +3,6 @@ type: infrastructure subsystem
 title: Audio Context and Unlock Lifecycle
 description: Browser audio-context creation, unlock handling, listener control, and worklet loading for the engine runtime.
 tags: [engine, audio-context, unlock, worklets, web-audio]
-verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-03T11:15:32.736Z
 sources:
   - id: openwiki-source-e338730ef75689ace9d1dae7
     resource: repo://packages/engine/src/Infrastructure/context/__tests__/AudioContextManager.test.ts

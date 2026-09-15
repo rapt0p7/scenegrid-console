@@ -3,9 +3,6 @@ type: domain subsystem
 title: Domain orchestration
 description: Event dispatch, sequenced music control, music FSM evaluation, scatterer spawning, and quantized loop-transition coordination in the engine domain.
 tags: [engine, orchestration, music, sequencing]
-verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-03T11:15:32.736Z
 sources:
   - id: openwiki-source-010bb125cb2f2d92b8e4e308
     resource: repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts
