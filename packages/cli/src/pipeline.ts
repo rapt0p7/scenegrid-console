@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-array-sort
 // noinspection D
 
 import crypto from 'node:crypto';
@@ -107,7 +108,7 @@ export async function processAssets(options: ProcessOptions) {
             );
 
             const streamManifestPath = path.join(outputDir, `${basename}${hashSuffix}.json`);
-            fs.writeFileSync(streamManifestPath, JSON.stringify(streamOut, null, 4));
+            fs.writeFileSync(streamManifestPath, JSON.stringify(streamOut, null, 4) + '\n');
 
             for (const alias of aliases) {
                 soundMap[alias] = {
@@ -130,11 +131,26 @@ export async function processAssets(options: ProcessOptions) {
 
     await Promise.all(processPromises);
 
+    // oxlint-disable-next-line unicorn/consistent-function-scoping
+    const sortObject = (obj: Record<string, any>) =>
+        Object.keys(obj)
+            .sort()
+            .reduce(
+                (acc, key) => {
+                    acc[key] = obj[key];
+                    return acc;
+                },
+                {} as Record<string, any>
+            );
+
+    const sortedSizes = sortObject(precalculatedSizes);
+    const sortedSoundMap = sortObject(soundMap);
+
     const audioSizesPath = path.join(manifestsDir, 'audio-sizes.json');
     const soundMapPath = path.join(manifestsDir, 'sound-manifest.json');
 
-    fs.writeFileSync(audioSizesPath, JSON.stringify(precalculatedSizes, null, 4));
-    fs.writeFileSync(soundMapPath, JSON.stringify(soundMap, null, 4));
+    fs.writeFileSync(audioSizesPath, JSON.stringify(sortedSizes, null, 4) + '\n');
+    fs.writeFileSync(soundMapPath, JSON.stringify(sortedSoundMap, null, 4) + '\n');
 
     const payload: any = {
         precalculatedSizes: {},
@@ -145,7 +161,7 @@ export async function processAssets(options: ProcessOptions) {
         soundMap: {}
     };
 
-    for (const [key, value] of Object.entries(soundMap)) {
+    for (const [key, value] of Object.entries(sortedSoundMap)) {
         payload.manifest[key] = {
             url: value.url,
             priority: value.priority || 'high'
@@ -184,7 +200,10 @@ export async function prepareAliases(inputDir: string, outputPath: string) {
     }
 
     const audioExtensions = new Set(['.wav', '.mp3', '.ogg', '.flac', '.aiff', '.m4a']);
-    const files = fs.readdirSync(inputDir).filter(f => audioExtensions.has(path.extname(f).toLowerCase()));
+    const files = fs
+        .readdirSync(inputDir)
+        .filter(f => audioExtensions.has(path.extname(f).toLowerCase()))
+        .sort();
 
     const aliases: Record<string, string> = {};
     for (let i = 0; i < files.length; i++) {
@@ -197,7 +216,7 @@ export async function prepareAliases(inputDir: string, outputPath: string) {
         fs.mkdirSync(outDir, { recursive: true });
     }
 
-    fs.writeFileSync(outputPath, JSON.stringify(aliases, null, 2));
+    fs.writeFileSync(outputPath, JSON.stringify(aliases, null, 4) + '\n');
     console.log(`Prepared aliases template at: ${outputPath}`);
     console.log(`Generated ${files.length} placeholders.`);
 }

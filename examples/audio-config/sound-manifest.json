@@ -1,32 +1,4 @@
 {
-    "kbKickMetallic": {
-        "url": [
-            "/assets/freesound_community-kb_kick_metallic-36107.7e068b.webm",
-            "/assets/freesound_community-kb_kick_metallic-36107.7e068b.mp3",
-            "/assets/freesound_community-kb_kick_metallic-36107.7e068b.m4a"
-        ]
-    },
-    "heavyKick": {
-        "url": [
-            "/assets/freesound_community-heavy-kick-39406.2fe5d7.webm",
-            "/assets/freesound_community-heavy-kick-39406.2fe5d7.mp3",
-            "/assets/freesound_community-heavy-kick-39406.2fe5d7.m4a"
-        ]
-    },
-    "placeholder13": {
-        "url": [
-            "/assets/freesound_community-1khz-stereo-101128.bffb9c.webm",
-            "/assets/freesound_community-1khz-stereo-101128.bffb9c.mp3",
-            "/assets/freesound_community-1khz-stereo-101128.bffb9c.m4a"
-        ]
-    },
-    "explosion": {
-        "url": [
-            "/assets/freesound_community-explosion-42132.ada5ad.webm",
-            "/assets/freesound_community-explosion-42132.ada5ad.mp3",
-            "/assets/freesound_community-explosion-42132.ada5ad.m4a"
-        ]
-    },
     "120bpmDrumLoop": {
         "url": [
             "/assets/freesound_community-120bpm-drum-loop-88450.b7f717.webm",
@@ -34,18 +6,29 @@
             "/assets/freesound_community-120bpm-drum-loop-88450.b7f717.m4a"
         ]
     },
-    "epicSynth": {
+    "188BpmSynthLayeredPadLoop": {
         "url": [
-            "/assets/dragon-studio-epic-synth-sound-478369.5ecb18.webm",
-            "/assets/dragon-studio-epic-synth-sound-478369.5ecb18.mp3",
-            "/assets/dragon-studio-epic-synth-sound-478369.5ecb18.m4a"
+            "/assets/freesound_community-188-bpm_synth-layered-pad-loop-29073.13cb5a.webm",
+            "/assets/freesound_community-188-bpm_synth-layered-pad-loop-29073.13cb5a.mp3",
+            "/assets/freesound_community-188-bpm_synth-layered-pad-loop-29073.13cb5a.m4a"
         ]
     },
-    "kickDrum2": {
+    "backgroundMain": {
+        "url": "/assets/asami_main_loop_a.957dc0.json",
+        "priority": "high"
+    },
+    "backgroundMain2": {
         "url": [
-            "/assets/soundreality-kick-drum-acoustic-sample-455285.40ec5d.webm",
-            "/assets/soundreality-kick-drum-acoustic-sample-455285.40ec5d.mp3",
-            "/assets/soundreality-kick-drum-acoustic-sample-455285.40ec5d.m4a"
+            "/assets/asami_main_loop_b.de3b42.webm",
+            "/assets/asami_main_loop_b.de3b42.mp3",
+            "/assets/asami_main_loop_b.de3b42.m4a"
+        ]
+    },
+    "backgroundMain3": {
+        "url": [
+            "/assets/asami_main_loop_c.450283.webm",
+            "/assets/asami_main_loop_c.450283.mp3",
+            "/assets/asami_main_loop_c.450283.m4a"
         ]
     },
     "collectPoints": {
@@ -53,62 +36,6 @@
             "/assets/liecio-collect-points-190037.3a02f6.webm",
             "/assets/liecio-collect-points-190037.3a02f6.mp3",
             "/assets/liecio-collect-points-190037.3a02f6.m4a"
-        ]
-    },
-    "hardstyleKick": {
-        "url": [
-            "/assets/guardianofdarkness-hardstyle-kick-g-minor-258788.bfa4e5.webm",
-            "/assets/guardianofdarkness-hardstyle-kick-g-minor-258788.bfa4e5.mp3",
-            "/assets/guardianofdarkness-hardstyle-kick-g-minor-258788.bfa4e5.m4a"
-        ]
-    },
-    "kickDrum": {
-        "url": [
-            "/assets/11325622-tr909-kick-drum-241402.d8a278.webm",
-            "/assets/11325622-tr909-kick-drum-241402.d8a278.mp3",
-            "/assets/11325622-tr909-kick-drum-241402.d8a278.m4a"
-        ]
-    },
-    "tick": {
-        "url": [
-            "/assets/u_a4gfvwagf1-tick-sound-effect-1-336779.fc365c.webm",
-            "/assets/u_a4gfvwagf1-tick-sound-effect-1-336779.fc365c.mp3",
-            "/assets/u_a4gfvwagf1-tick-sound-effect-1-336779.fc365c.m4a"
-        ]
-    },
-    "synthPadLoop": {
-        "url": [
-            "/assets/mleckert82-synth-pad-loop-88710.cc46c4.webm",
-            "/assets/mleckert82-synth-pad-loop-88710.cc46c4.mp3",
-            "/assets/mleckert82-synth-pad-loop-88710.cc46c4.m4a"
-        ]
-    },
-    "drumsLoop80bpm": {
-        "url": [
-            "/assets/soundreality-drums-loop-80bpm-2-455454.664543.webm",
-            "/assets/soundreality-drums-loop-80bpm-2-455454.664543.mp3",
-            "/assets/soundreality-drums-loop-80bpm-2-455454.664543.m4a"
-        ]
-    },
-    "punchyKick": {
-        "url": [
-            "/assets/black_kumuzhi-punchy-kick-with-808-479139.c4a8b9.webm",
-            "/assets/black_kumuzhi-punchy-kick-with-808-479139.c4a8b9.mp3",
-            "/assets/black_kumuzhi-punchy-kick-with-808-479139.c4a8b9.m4a"
-        ]
-    },
-    "pad": {
-        "url": [
-            "/assets/freesound_community-pad-108248.6ef7d9.webm",
-            "/assets/freesound_community-pad-108248.6ef7d9.mp3",
-            "/assets/freesound_community-pad-108248.6ef7d9.m4a"
-        ]
-    },
-    "explosion2": {
-        "url": [
-            "/assets/soundreality-explosion-fx-343683.dcd290.webm",
-            "/assets/soundreality-explosion-fx-343683.dcd290.mp3",
-            "/assets/soundreality-explosion-fx-343683.dcd290.m4a"
         ]
     },
     "collectRing": {
@@ -125,29 +52,119 @@
             "/assets/dragon-studio-drum-beat-loopable-443143.19c9a0.m4a"
         ]
     },
-    "synthPadLoopDMinor": {
+    "drumsLoop80bpm": {
         "url": [
-            "/assets/freesound_community-synth-pad-loop-d-minor-71033.a424ce.webm",
-            "/assets/freesound_community-synth-pad-loop-d-minor-71033.a424ce.mp3",
-            "/assets/freesound_community-synth-pad-loop-d-minor-71033.a424ce.m4a"
+            "/assets/soundreality-drums-loop-80bpm-2-455454.664543.webm",
+            "/assets/soundreality-drums-loop-80bpm-2-455454.664543.mp3",
+            "/assets/soundreality-drums-loop-80bpm-2-455454.664543.m4a"
         ]
     },
-    "188BpmSynthLayeredPadLoop": {
+    "epicSynth": {
         "url": [
-            "/assets/freesound_community-188-bpm_synth-layered-pad-loop-29073.13cb5a.webm",
-            "/assets/freesound_community-188-bpm_synth-layered-pad-loop-29073.13cb5a.mp3",
-            "/assets/freesound_community-188-bpm_synth-layered-pad-loop-29073.13cb5a.m4a"
+            "/assets/dragon-studio-epic-synth-sound-478369.5ecb18.webm",
+            "/assets/dragon-studio-epic-synth-sound-478369.5ecb18.mp3",
+            "/assets/dragon-studio-epic-synth-sound-478369.5ecb18.m4a"
         ]
     },
-    "backgroundMain": {
-        "url": "/assets/asami_main_loop_a.957dc0.json",
-        "priority": "high"
+    "explosion": {
+        "url": [
+            "/assets/freesound_community-explosion-42132.ada5ad.webm",
+            "/assets/freesound_community-explosion-42132.ada5ad.mp3",
+            "/assets/freesound_community-explosion-42132.ada5ad.m4a"
+        ]
+    },
+    "explosion2": {
+        "url": [
+            "/assets/soundreality-explosion-fx-343683.dcd290.webm",
+            "/assets/soundreality-explosion-fx-343683.dcd290.mp3",
+            "/assets/soundreality-explosion-fx-343683.dcd290.m4a"
+        ]
+    },
+    "hardstyleKick": {
+        "url": [
+            "/assets/guardianofdarkness-hardstyle-kick-g-minor-258788.bfa4e5.webm",
+            "/assets/guardianofdarkness-hardstyle-kick-g-minor-258788.bfa4e5.mp3",
+            "/assets/guardianofdarkness-hardstyle-kick-g-minor-258788.bfa4e5.m4a"
+        ]
+    },
+    "heavyKick": {
+        "url": [
+            "/assets/freesound_community-heavy-kick-39406.2fe5d7.webm",
+            "/assets/freesound_community-heavy-kick-39406.2fe5d7.mp3",
+            "/assets/freesound_community-heavy-kick-39406.2fe5d7.m4a"
+        ]
+    },
+    "kbKickMetallic": {
+        "url": [
+            "/assets/freesound_community-kb_kick_metallic-36107.7e068b.webm",
+            "/assets/freesound_community-kb_kick_metallic-36107.7e068b.mp3",
+            "/assets/freesound_community-kb_kick_metallic-36107.7e068b.m4a"
+        ]
+    },
+    "kickDrum": {
+        "url": [
+            "/assets/11325622-tr909-kick-drum-241402.d8a278.webm",
+            "/assets/11325622-tr909-kick-drum-241402.d8a278.mp3",
+            "/assets/11325622-tr909-kick-drum-241402.d8a278.m4a"
+        ]
+    },
+    "kickDrum2": {
+        "url": [
+            "/assets/soundreality-kick-drum-acoustic-sample-455285.40ec5d.webm",
+            "/assets/soundreality-kick-drum-acoustic-sample-455285.40ec5d.mp3",
+            "/assets/soundreality-kick-drum-acoustic-sample-455285.40ec5d.m4a"
+        ]
+    },
+    "pad": {
+        "url": [
+            "/assets/freesound_community-pad-108248.6ef7d9.webm",
+            "/assets/freesound_community-pad-108248.6ef7d9.mp3",
+            "/assets/freesound_community-pad-108248.6ef7d9.m4a"
+        ]
+    },
+    "placeholder13": {
+        "url": [
+            "/assets/freesound_community-1khz-stereo-101128.bffb9c.webm",
+            "/assets/freesound_community-1khz-stereo-101128.bffb9c.mp3",
+            "/assets/freesound_community-1khz-stereo-101128.bffb9c.m4a"
+        ]
+    },
+    "placeholder5": {
+        "url": [
+            "/assets/asami_main_loop_climax_stinger.df81aa.webm",
+            "/assets/asami_main_loop_climax_stinger.df81aa.mp3",
+            "/assets/asami_main_loop_climax_stinger.df81aa.m4a"
+        ]
     },
     "placeholder6": {
         "url": [
             "/assets/asami_main_loop_intro.b66bec.webm",
             "/assets/asami_main_loop_intro.b66bec.mp3",
             "/assets/asami_main_loop_intro.b66bec.m4a"
+        ]
+    },
+    "punchyKick": {
+        "url": [
+            "/assets/black_kumuzhi-punchy-kick-with-808-479139.c4a8b9.webm",
+            "/assets/black_kumuzhi-punchy-kick-with-808-479139.c4a8b9.mp3",
+            "/assets/black_kumuzhi-punchy-kick-with-808-479139.c4a8b9.m4a"
+        ]
+    },
+    "smartLoop": {
+        "url": ["/assets/fmod-kurs.526921.webm", "/assets/fmod-kurs.526921.mp3", "/assets/fmod-kurs.526921.m4a"]
+    },
+    "synthPadLoop": {
+        "url": [
+            "/assets/mleckert82-synth-pad-loop-88710.cc46c4.webm",
+            "/assets/mleckert82-synth-pad-loop-88710.cc46c4.mp3",
+            "/assets/mleckert82-synth-pad-loop-88710.cc46c4.m4a"
+        ]
+    },
+    "synthPadLoopDMinor": {
+        "url": [
+            "/assets/freesound_community-synth-pad-loop-d-minor-71033.a424ce.webm",
+            "/assets/freesound_community-synth-pad-loop-d-minor-71033.a424ce.mp3",
+            "/assets/freesound_community-synth-pad-loop-d-minor-71033.a424ce.m4a"
         ]
     },
     "technoLiveLoop": {
@@ -157,28 +174,11 @@
             "/assets/freesound_community-techno-live-loop-22393.22e2bc.m4a"
         ]
     },
-    "smartLoop": {
-        "url": ["/assets/fmod-kurs.526921.webm", "/assets/fmod-kurs.526921.mp3", "/assets/fmod-kurs.526921.m4a"]
-    },
-    "placeholder5": {
+    "tick": {
         "url": [
-            "/assets/asami_main_loop_climax_stinger.df81aa.webm",
-            "/assets/asami_main_loop_climax_stinger.df81aa.mp3",
-            "/assets/asami_main_loop_climax_stinger.df81aa.m4a"
-        ]
-    },
-    "backgroundMain3": {
-        "url": [
-            "/assets/asami_main_loop_c.450283.webm",
-            "/assets/asami_main_loop_c.450283.mp3",
-            "/assets/asami_main_loop_c.450283.m4a"
-        ]
-    },
-    "backgroundMain2": {
-        "url": [
-            "/assets/asami_main_loop_b.de3b42.webm",
-            "/assets/asami_main_loop_b.de3b42.mp3",
-            "/assets/asami_main_loop_b.de3b42.m4a"
+            "/assets/u_a4gfvwagf1-tick-sound-effect-1-336779.fc365c.webm",
+            "/assets/u_a4gfvwagf1-tick-sound-effect-1-336779.fc365c.mp3",
+            "/assets/u_a4gfvwagf1-tick-sound-effect-1-336779.fc365c.m4a"
         ]
     }
 }
