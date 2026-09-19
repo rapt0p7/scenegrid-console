@@ -134,7 +134,15 @@ export class SoundController implements ISoundController {
             instance._poolIndex = -1;
         } else {
             const buffer = this.bufferResolver(definition.options.url);
-            if (!buffer) return null;
+            if (!buffer) {
+                this.telemetry?.dispatch({
+                    type: 'CAUSE_CHAIN',
+                    timestampMs: this.getCurrentTime() * 1000,
+                    initiator: { type: 'API', method: 'controller.play' },
+                    result: { type: 'BLOCKED', reason: `VOICE_DROPPED_DECODE_FAILED: ${soundId}` }
+                });
+                return null;
+            }
 
             const acquireResult = this.pool.acquire(soundId, buffer);
 

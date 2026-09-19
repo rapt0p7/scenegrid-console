@@ -3,7 +3,7 @@ import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { IPlayOptions } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { AudioEngineEvents } from '@domain/Events/Ports/IEngineEvents.js';
 import type { ITransitionToParameters } from '@domain/Orchestration/Ports/ISequencer.js';
-import type { PlaybackId, DeepReadonly, QuantizeType } from '@scene-grid/shared';
+import type { PlaybackId, DeepReadonly, QuantizeType, Result } from '@scene-grid/shared';
 import type { Handler } from 'mitt';
 
 import {
@@ -171,7 +171,7 @@ export interface IAudioEngine {
          *
          * @param bankId Bank identifier.
          */
-        load: (bankId: AutocompleteBank) => Promise<void>;
+        load: (bankId: AutocompleteBank) => Promise<Result<void, Error>>;
 
         /**
          * Unloads an audio bank and releases associated resources.
@@ -200,12 +200,12 @@ export interface IAudioEngine {
      *
      * @param parameters Optional initialization parameters.
      */
-    init(parameters?: InitParameters): Promise<void>;
+    init(parameters?: InitParameters): Promise<Result<void, string[]>>;
 
     /**
      * Resumes audio context (user gesture unlock flow).
      */
-    unlock(): Promise<void>;
+    unlock(): Promise<Result<void, Error>>;
 
     /**
      * Suspends audio context.

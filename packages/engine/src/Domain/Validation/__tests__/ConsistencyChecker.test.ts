@@ -93,13 +93,16 @@ describe('ConsistencyChecker', () => {
                     snapshots: {}
                 };
 
-                expect(ConsistencyChecker.validate(config)).toBe(false);
+                const [isConsistent, report] = ConsistencyChecker.validate(config, { isReturnWithReport: true });
+                expect(isConsistent).toBe(false);
 
-                expect(console.error).toHaveBeenCalledWith(
-                    expect.stringContaining(
-                        'Fatal Error: Audio routing loop detected in configuration: bus_A -> bus_B -> bus_C -> bus_A'
+                expect(
+                    report.errors.some(e =>
+                        e.includes(
+                            'Fatal Error: Audio routing loop detected in configuration: bus_A -> bus_B -> bus_C -> bus_A'
+                        )
                     )
-                );
+                ).toBe(true);
             });
 
             it('should pass successfully for complex but acyclic routing (Diamond Pattern)', () => {

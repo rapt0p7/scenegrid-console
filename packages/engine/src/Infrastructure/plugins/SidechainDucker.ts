@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-useless-undefined
 // noinspection D
 
 import type {
@@ -12,7 +13,7 @@ import type { ISidechain } from '@infrastructure/types/IAudioPlugins.js';
 
 import WorkletLoader from '@infrastructure/context/WorkletLoader';
 import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
-import { isDefined, isAbsent } from '@scene-grid/shared';
+import { isDefined, isAbsent, Result, Ok, Err } from '@scene-grid/shared';
 import { AudioWorkletNode } from 'standardized-audio-context';
 
 // oxlint-disable-next-line import/default
@@ -84,15 +85,11 @@ export default class SidechainDucker implements ISidechain {
     }
 
     public insertLookahead(nextNode: AudioNodeLike): void {
-        try {
-            this.nextNode = nextNode;
-            safeDisconnect(this.target, nextNode);
-            this.target.connect(this.delay);
-            this.delay.connect(this.duckingGain);
-            this.duckingGain.connect(nextNode);
-        } catch (error) {
-            console.warn('[SidechainDucker] Failed to insert lookahead delay', error);
-        }
+        this.nextNode = nextNode;
+        safeDisconnect(this.target, nextNode);
+        this.target.connect(this.delay);
+        this.delay.connect(this.duckingGain);
+        this.duckingGain.connect(nextNode);
     }
 
     public addSource(sourceNode: AudioNodeLike, intensity: number = 1): void {
@@ -107,14 +104,8 @@ export default class SidechainDucker implements ISidechain {
 
         const g = this.ctx.createGain();
         g.gain.value = intensity;
-        try {
-            sourceNode.connect(g);
-            g.connect(this.mergeGain);
-        } catch (error) {
-            console.warn('[SidechainDucker] Failed to connect source', error);
-            safeDisconnect(g);
-            return;
-        }
+        sourceNode.connect(g);
+        g.connect(this.mergeGain);
 
         this.sources.add(sourceNode);
         this.sourceGainMap.set(sourceNode, g);
@@ -127,11 +118,7 @@ export default class SidechainDucker implements ISidechain {
         const g = this.sourceGainMap.get(sourceNode);
 
         if (isDefined(g)) {
-            try {
-                sourceNode.disconnect(g);
-            } catch {
-                /* empty */
-            }
+            safeDisconnect(sourceNode, g);
             safeDisconnect(g, this.mergeGain);
         }
 
@@ -163,14 +150,14 @@ export default class SidechainDucker implements ISidechain {
         safeDisconnect(this.clipper);
     }
 
-    public async start(): Promise<void> {
-        if (this.running || this.isDisposed) return;
+    public async start(): Promise<Result<void, Error>> {
+        if (this.running || this.isDisposed) return Ok(undefined);
         this.running = true;
         try {
             if (isAbsent(this.processor)) {
                 await WorkletLoader.loadModule(this.ctx, processorUrl);
 
-                if (this.isDisposed) return;
+                if (this.isDisposed) return Ok(undefined);
 
                 this.processor = new AudioWorkletNode!(this.ctx as any, 'ducker-processor', {
                     processorOptions: { attack: this.attack, release: this.release }
@@ -189,9 +176,10 @@ export default class SidechainDucker implements ISidechain {
                     }
                 };
             }
+            return Ok(undefined);
         } catch (error) {
-            console.error('AudioWorklet initialization failed', error);
             this.running = false;
+            return Err(error instanceof Error ? error : new Error(String(error)));
         }
     }
 

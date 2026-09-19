@@ -440,23 +440,14 @@ export default class AudioBus implements IAudioBus {
     }
 
     private createFilter(filterConfig: IFilter): BiquadFilterNodeLike | ConvolverNodeNodeLike | null {
-        try {
-            return this.pluginFactory.getFiltersPlugin().createNode(this.context, this.automation, filterConfig);
-        } catch (error) {
-            console.warn(`[AudioBus] Failed to create filter for bus "${this.id}"`, error);
-            return null;
-        }
+        return this.pluginFactory.getFiltersPlugin().createNode(this.context, this.automation, filterConfig);
     }
 
     private connectFilter(): void {
         if (isAbsent(this.filterNode)) return;
         safeDisconnect(this.#preFilterGain);
-        try {
-            this.#preFilterGain.connect(this.filterNode);
-            this.filterNode.connect(this.#postFilterGain);
-        } catch (error) {
-            console.warn('[AudioBus] Failed to connect filterNode', error);
-        }
+        this.#preFilterGain.connect(this.filterNode);
+        this.filterNode.connect(this.#postFilterGain);
     }
 
     private disconnectFilter(): void {

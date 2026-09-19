@@ -1,7 +1,8 @@
 // noinspection D
 
-import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
 import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
+import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
+
 import { isAbsent, isDefined, typedKeys } from '@scene-grid/shared';
 
 export default class RoutingCyclesRule implements IValidationRule {
@@ -18,7 +19,8 @@ export default class RoutingCyclesRule implements IValidationRule {
                 const cycle = path.slice(cycleStartIndex);
                 cycle.push(busId);
 
-                throw new Error(`Fatal Error: Audio routing loop detected in configuration: ${cycle.join(' -> ')}`);
+                context.addError(`Fatal Error: Audio routing loop detected in configuration: ${cycle.join(' -> ')}`);
+                return;
             }
 
             if (visited.has(busId)) return;

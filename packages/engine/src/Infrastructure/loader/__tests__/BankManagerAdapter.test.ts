@@ -92,7 +92,8 @@ describe('BankManagerAdapter', () => {
             });
 
             const adapter = createAdapter();
-            await expect(adapter.loadBank('bank_1' as any)).rejects.toThrow();
+            const result = await adapter.loadBank('bank_1' as any);
+            expect(result.ok).toBe(false);
 
             expect(adapter.getBankState('bank_1' as any)).toBe('ERROR');
             expect(mockEvents.onError).toHaveBeenCalledWith('s1', expect.any(Error));

@@ -1,9 +1,9 @@
+import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
+
 // oxlint-disable unicorn/no-useless-undefined
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import UnlockManager from '../UnlockManager.js';
-
-import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 
 describe('UnlockManager', () => {
     let mockContext: any;
@@ -80,9 +80,22 @@ describe('UnlockManager', () => {
 
         const manager = new UnlockManager(mockContext as AudioCtx);
 
-        await expect(manager.unlock()).resolves.not.toThrow();
+        const result = await manager.unlock();
+        expect(result.ok).toBe(true);
 
         expect(mockContext.resume).toHaveBeenCalledTimes(1);
         expect((manager as any).unlocked).toBe(true);
+    });
+
+    it('should return Err result if resume throws an error', async () => {
+        mockContext.resume.mockRejectedValueOnce(new Error('Resume failed'));
+        const manager = new UnlockManager(mockContext as AudioCtx);
+
+        const result = await manager.unlock();
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+            expect(result.error.message).toBe('Resume failed');
+        }
     });
 });

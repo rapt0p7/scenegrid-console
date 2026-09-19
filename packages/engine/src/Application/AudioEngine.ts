@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-useless-undefined
 // noinspection D
 
 import type { IAudioEngine, InitParameters } from '@application/Ports/IAudioEngine.js';
@@ -95,7 +96,10 @@ import {
     typedKeys,
     Milliseconds,
     Pulses,
-    createTelemetryWorker
+    createTelemetryWorker,
+    Result,
+    Ok,
+    Err
 } from '@scene-grid/shared';
 
 export class AudioEngine implements IAudioEngine {
@@ -230,9 +234,9 @@ export class AudioEngine implements IAudioEngine {
 
     public get banks() {
         return {
-            load: async (bankId: AutocompleteBank): Promise<void> => {
-                if (!this.#isInitialized) return;
-                await this.#bankManager.loadBank(bankId as BankId);
+            load: async (bankId: AutocompleteBank): Promise<Result<void, Error>> => {
+                if (!this.#isInitialized) return Ok(undefined);
+                return this.#bankManager.loadBank(bankId as BankId);
             },
             unload: (bankId: AutocompleteBank): void => {
                 if (!this.#isInitialized) return;
@@ -278,8 +282,8 @@ export class AudioEngine implements IAudioEngine {
     }
 
     // oxlint-disable-next-line max-lines-per-function
-    public async init(parameters?: InitParameters): Promise<void> {
-        if (this.#isInitialized) return;
+    public async init(parameters?: InitParameters): Promise<Result<void, string[]>> {
+        if (this.#isInitialized) return Ok(undefined);
 
         const telemetryWorker = createTelemetryWorker(
             { name: 'SceneGridTelemetry' },
@@ -291,16 +295,18 @@ export class AudioEngine implements IAudioEngine {
         this.#telemetry = new TelemetryDispatcher(transport);
         this.#reporters = [new ConsoleReporter(), new TelemetryConsistencyReporter(this.#telemetry)];
 
-        const isConfigValid = ConsistencyChecker.validate(this.config, {
-            reporters: this.#reporters
+        const [isConfigValid, report] = ConsistencyChecker.validate(this.config, {
+            reporters: this.#reporters,
+            isReturnWithReport: true
         });
+
         if (!isConfigValid) {
             if (parameters?.isStrictValidation) {
                 this.#dispatcher.emit('engine:error', { code: 'INIT_FAILED', message: 'Strict validation failed' });
                 console.error(
                     '[AudioEngine] Engine initialized with errors. Some features may not work correctly. Exiting.'
                 );
-                return;
+                return Err(report.errors);
             }
             console.warn('[AudioEngine] Engine initialized with errors. Some features may not work correctly.');
         }
@@ -722,6 +728,7 @@ export class AudioEngine implements IAudioEngine {
                 sampleRate: this.#contextManager.context.sampleRate
             });
             console.log('[AudioEngine] Successfully Initialized');
+            return Ok(undefined);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             this.#dispatcher.emit('engine:error', { code: 'INIT_FAILED', message, details: error });
@@ -729,8 +736,8 @@ export class AudioEngine implements IAudioEngine {
         }
     }
 
-    public async unlock(): Promise<void> {
-        await this.#contextManager.resume();
+    public async unlock(): Promise<Result<void, Error>> {
+        return this.#contextManager.resume();
     }
 
     public async suspend(): Promise<void> {
@@ -738,18 +745,34 @@ export class AudioEngine implements IAudioEngine {
     }
 
     public play(soundId: AutocompleteSound, options?: DeepReadonly<IPlayOptions>): PlaybackId | PlaybackId[] | null {
+        if (!this.#isInitialized) {
+            console.warn(`[AudioEngine] Cannot call "play" before engine is initialized.`);
+            return null;
+        }
         return this.#router.play(soundId as SoundId, options);
     }
 
     public stop(playbackIdOrSoundId: PlaybackId | PlaybackId[] | AutocompleteSound): void {
+        if (!this.#isInitialized) {
+            console.warn(`[AudioEngine] Cannot call "stop" before engine is initialized.`);
+            return;
+        }
         this.#router.stop(playbackIdOrSoundId as PlaybackId | PlaybackId[] | SoundId);
     }
 
     public pause(playbackIdOrSoundId: PlaybackId | PlaybackId[] | AutocompleteSound): void {
+        if (!this.#isInitialized) {
+            console.warn(`[AudioEngine] Cannot call "pause" before engine is initialized.`);
+            return;
+        }
         this.#router.pause(playbackIdOrSoundId as PlaybackId | PlaybackId[] | SoundId);
     }
 
     public resume(playbackIdOrSoundId: PlaybackId | PlaybackId[] | AutocompleteSound): void {
+        if (!this.#isInitialized) {
+            console.warn(`[AudioEngine] Cannot call "resume" before engine is initialized.`);
+            return;
+        }
         this.#router.resume(playbackIdOrSoundId as PlaybackId | PlaybackId[] | SoundId);
     }
 
@@ -771,8 +794,8 @@ export class AudioEngine implements IAudioEngine {
             router: this.#router,
             contextManager: this.#contextManager,
             snapshotManager: this.#snapshotManager,
-            poolManager: this.#soundController.debugPool,
-            layerStack: this.#snapshotManager.debugLayerStack,
+            poolManager: this.#soundController?.debugPool,
+            layerStack: this.#snapshotManager?.debugLayerStack,
             eventOrchestrator: this.#eventOrchestrator
         };
     }

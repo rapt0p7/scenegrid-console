@@ -1,14 +1,17 @@
+// oxlint-disable unicorn/no-useless-undefined
 import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
+
+import { Result, Ok, Err } from '@scene-grid/shared';
 
 export default class UnlockManager {
     private unlocked = false;
 
     constructor(private context: AudioCtx) {}
 
-    async unlock(): Promise<void> {
+    async unlock(): Promise<Result<void, Error>> {
         if (this.context.state === 'running') {
             this.unlocked = true;
-            return;
+            return Ok(undefined);
         }
 
         if (!this.unlocked) {
@@ -23,7 +26,12 @@ export default class UnlockManager {
             }
         }
 
-        await this.context.resume();
-        this.unlocked = true;
+        try {
+            await this.context.resume();
+            this.unlocked = true;
+            return Ok(undefined);
+        } catch (error) {
+            return Err(error instanceof Error ? error : new Error(String(error)));
+        }
     }
 }

@@ -9,21 +9,21 @@ describe('AudioBufferLoader', () => {
     let mockFetch: any;
     let mockAudioElement: any;
     let fakeAudioBuffer: any;
-    let dummyAudioBuffer: any;
+    let errorAudioBuffer: any;
     let onEmergencyEviction: (url: string) => void;
 
     beforeEach(() => {
         vi.clearAllMocks();
 
         fakeAudioBuffer = { duration: 2.5, isDummy: false };
-        dummyAudioBuffer = { duration: 0.0001, isDummy: true };
+        errorAudioBuffer = { duration: 0.0001, isDummy: true };
         onEmergencyEviction = vi.fn();
 
         mockContextManager = {
             context: {
                 sampleRate: 44_100,
                 decodeAudioData: vi.fn().mockResolvedValue(fakeAudioBuffer),
-                createBuffer: vi.fn().mockReturnValue(dummyAudioBuffer)
+                createBuffer: vi.fn().mockReturnValue(errorAudioBuffer)
             }
         };
 
@@ -82,8 +82,8 @@ describe('AudioBufferLoader', () => {
 
         it('should strictly track loadedItems and fire callbacks even on failures without throwing (Lines 135-140)', async () => {
             vi.spyOn(loader, 'load').mockImplementation(async req => {
-                if (req.url === 'bad.mp3') throw new Error('Simulated crash');
-                return fakeAudioBuffer;
+                if (req.url === 'bad.mp3') return { ok: false, error: new Error('Simulated crash') } as any;
+                return { ok: true, value: fakeAudioBuffer } as any;
             });
 
             const resources = {
@@ -250,15 +250,15 @@ describe('AudioBufferLoader', () => {
     });
 
     describe('Error Handling (Silent Fallbacks)', () => {
-        it('should gracefully recover and return dummy buffer if decodeAudioData throws synchronously (Line 306)', async () => {
+        it('should gracefully recover and return error result if decodeAudioData throws synchronously (Line 306)', async () => {
             const syncError = new Error('Sync Crash');
             mockContextManager.context.decodeAudioData.mockImplementation(() => {
                 throw syncError;
             });
 
-            const buffer = await loader.load({ url: 'sync-crash.mp3', priority: 'low', expectedSizeMb: 1 });
+            const result = await loader.load({ url: 'sync-crash.mp3', priority: 'low', expectedSizeMb: 1 });
 
-            expect(buffer).toBe(dummyAudioBuffer);
+            expect(result.ok).toBe(false);
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('sync-crash.mp3'), syncError);
         });
 
@@ -266,10 +266,11 @@ describe('AudioBufferLoader', () => {
             const fakeError = new Error('Decode error');
             mockContextManager.context.decodeAudioData.mockRejectedValue(fakeError);
 
-            await loader.load({ url: 'corrupt.mp3', priority: 'low', expectedSizeMb: 1 });
+            const result = await loader.load({ url: 'corrupt.mp3', priority: 'low', expectedSizeMb: 1 });
+            expect(result.ok).toBe(false);
 
             expect(console.error).toHaveBeenCalledWith(
-                '[AudioBufferLoader] Failed to load or decode corrupt.mp3. Using dummy buffer.',
+                '[AudioBufferLoader] Failed to load or decode corrupt.mp3.',
                 fakeError
             );
         });
@@ -282,7 +283,7 @@ describe('AudioBufferLoader', () => {
                 const firstBuffer = await loader.load(request);
                 const secondBuffer = await loader.load(request);
 
-                expect(secondBuffer).toBe(firstBuffer);
+                expect((secondBuffer as any).value).toBe((firstBuffer as any).value);
                 expect(mockFetch).toHaveBeenCalledTimes(1);
             });
 
@@ -294,8 +295,8 @@ describe('AudioBufferLoader', () => {
 
                 expect(promise1).toStrictEqual(promise2);
                 const [buffer1, buffer2] = await Promise.all([promise1, promise2]);
-                expect(buffer1).toBe(fakeAudioBuffer);
-                expect(buffer2).toBe(fakeAudioBuffer);
+                expect((buffer1 as any).value).toBe(fakeAudioBuffer);
+                expect((buffer2 as any).value).toBe(fakeAudioBuffer);
                 expect(mockFetch).toHaveBeenCalledTimes(1);
             });
 
@@ -311,16 +312,16 @@ describe('AudioBufferLoader', () => {
         });
 
         describe('HTTP Network Failure Handling', () => {
-            it('should log warning and return dummy buffer when HTTP response is not OK (Lines 299, 300)', async () => {
+            it('should log warning and return error result when HTTP response is not OK (Lines 299, 300)', async () => {
                 mockFetch.mockResolvedValueOnce({
                     ok: false,
                     status: 404,
                     arrayBuffer: vi.fn()
                 });
 
-                const buffer = await loader.load({ url: 'missing.mp3', priority: 'low', expectedSizeMb: 1 });
+                const result = await loader.load({ url: 'missing.mp3', priority: 'low', expectedSizeMb: 1 });
 
-                expect(buffer).toBe(dummyAudioBuffer);
+                expect(result.ok).toBe(false);
                 expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Network error 404 for missing.mp3'));
             });
         });
@@ -444,8 +445,8 @@ describe('AudioBufferLoader', () => {
         describe('Batch Loading Callback Guarding', () => {
             it('should execute loadBatch safely when optional progress/error callbacks are omitted on failure (Lines 136, 139, 140)', async () => {
                 vi.spyOn(loader, 'load').mockImplementation(async req => {
-                    if (req.url === 'fail.mp3') throw new Error('Failed');
-                    return fakeAudioBuffer;
+                    if (req.url === 'fail.mp3') return { ok: false, error: new Error('Failed') } as any;
+                    return { ok: true, value: fakeAudioBuffer } as any;
                 });
 
                 const resources = {
@@ -618,8 +619,8 @@ describe('AudioBufferLoader', () => {
         describe('Undefined Callback & Non-Existent Input Safety', () => {
             it('should safely execute loadBatch without throwing when callbacks are omitted and errors occur (Lines 136, 139, 140)', async () => {
                 vi.spyOn(loader, 'load').mockImplementation(async req => {
-                    if (req.url === 'bad.mp3') throw new Error('Crash');
-                    return fakeAudioBuffer;
+                    if (req.url === 'bad.mp3') return { ok: false, error: new Error('Crash') } as any;
+                    return { ok: true, value: fakeAudioBuffer } as any;
                 });
 
                 const resources = {
@@ -780,8 +781,8 @@ describe('AudioBufferLoader', () => {
         describe('loadBatch & Uncached URL Guards', () => {
             it('should execute loadBatch safely without callbacks when loads throw errors (Lines 136, 139, 140)', async () => {
                 vi.spyOn(loader, 'load').mockImplementation(async req => {
-                    if (req.url === 'fail.mp3') throw new Error('Load failed');
-                    return fakeAudioBuffer;
+                    if (req.url === 'fail.mp3') return { ok: false, error: new Error('Load failed') } as any;
+                    return { ok: true, value: fakeAudioBuffer } as any;
                 });
 
                 const resources = {
@@ -828,8 +829,8 @@ describe('AudioBufferLoader', () => {
         describe('loadBatch Promise Settlement (Lines 136, 139, 140)', () => {
             it('should not reject any internal promises in loadBatch when optional callbacks are undefined (Lines 136, 139, 140)', async () => {
                 vi.spyOn(loader, 'load').mockImplementation(async req => {
-                    if (req.url === 'fail.mp3') throw new Error('Simulated failure');
-                    return fakeAudioBuffer;
+                    if (req.url === 'fail.mp3') return { ok: false, error: new Error('Simulated failure') } as any;
+                    return { ok: true, value: fakeAudioBuffer } as any;
                 });
 
                 const allSettledSpy = vi.spyOn(Promise, 'allSettled');

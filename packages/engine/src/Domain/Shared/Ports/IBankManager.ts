@@ -1,8 +1,8 @@
-import type { BankId } from '@scene-grid/shared';
 import type { BankState } from '@domain/Configuration/Ports/IBankConfig.js';
+import type { BankId, Result } from '@scene-grid/shared';
 
 export interface IBankManager {
     getBankState(bankId: BankId): BankState;
-    loadBank(bankId: BankId): Promise<void>;
+    loadBank(bankId: BankId): Promise<Result<void, Error>>;
     unloadBank(bankId: BankId): void;
 }

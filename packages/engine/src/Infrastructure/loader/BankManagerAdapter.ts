@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-useless-undefined
 // noinspection D
 
 import type { IBankManifest, BankState } from '@domain/Configuration/Ports/IBankConfig.js';
@@ -9,7 +10,7 @@ import type { AudioBufferLoader } from '@infrastructure/loader/AudioBufferLoader
 import type { IAudioBufferRequest } from '@infrastructure/types/IAudioBufferLoader.js';
 import type { BankId } from '@scene-grid/shared';
 
-import { isDefined } from '@scene-grid/shared';
+import { isDefined, Result, Ok, Err } from '@scene-grid/shared';
 
 export interface IBankLoadEvents {
     readonly onStart: (totalItems: number) => void;
@@ -37,14 +38,14 @@ export class BankManagerAdapter implements IBankManager {
     }
 
     // oxlint-disable-next-line max-lines-per-function
-    public async loadBank(bankId: BankId): Promise<void> {
+    public async loadBank(bankId: BankId): Promise<Result<void, Error>> {
         const currentState = this.getBankState(bankId);
-        if (currentState === 'LOADED' || currentState === 'LOADING') return;
+        if (currentState === 'LOADED' || currentState === 'LOADING') return Ok(undefined);
 
         const config = this.bankManifest[bankId as string];
         if (!isDefined(config)) {
             console.warn(`[BankManager] Bank "${bankId}" not found in manifest.`);
-            return;
+            return Err(new Error(`Bank "${bankId}" not found in manifest.`));
         }
 
         this.states.set(bankId, 'LOADING');
@@ -71,7 +72,7 @@ export class BankManagerAdapter implements IBankManager {
         if (totalItems === 0) {
             this.states.set(bankId, 'LOADED');
             this.events?.onComplete([], 0);
-            return;
+            return Ok(undefined);
         }
 
         this.events?.onStart(totalItems);
@@ -95,10 +96,16 @@ export class BankManagerAdapter implements IBankManager {
                 }
             );
 
+            if (failedItems.length > 0) {
+                this.states.set(bankId, 'ERROR');
+                return Err(new Error(`Failed to load bank ${bankId}: ${failedItems.join(', ')}`));
+            }
+
             this.states.set(bankId, 'LOADED');
+            return Ok(undefined);
         } catch (error) {
             this.states.set(bankId, 'ERROR');
-            throw error;
+            return Err(error instanceof Error ? error : new Error(String(error)));
         } finally {
             this.events?.onComplete(failedItems, performance.now() - startTime);
         }

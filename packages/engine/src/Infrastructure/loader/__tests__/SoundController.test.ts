@@ -151,6 +151,12 @@ describe('SoundController', () => {
             expect(mockBufferResolver).toHaveBeenCalledWith('unloaded.wav');
             expect(result).toBeNull();
             expect(mockPool.acquire).not.toHaveBeenCalled();
+            expect(mockTelemetry.dispatch).toHaveBeenCalledWith({
+                type: 'CAUSE_CHAIN',
+                timestampMs: expect.any(Number),
+                initiator: { type: 'API', method: 'controller.play' },
+                result: { type: 'BLOCKED', reason: `VOICE_DROPPED_DECODE_FAILED: unloaded_sound` }
+            });
         });
 
         it('should resolve buffer dynamically, acquire instance, schedule play, and return PlaybackId', () => {

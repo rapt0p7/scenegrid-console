@@ -14,9 +14,8 @@ describe('RoutingCyclesRule', () => {
             // @ts-expect-error Rewriting for test
             context.config.buses = undefined as any;
 
-            expect(() => {
-                rule.validate(context);
-            }).not.toThrow();
+            rule.validate(context);
+            expect(context.getErrors()).toHaveLength(0);
         });
 
         it('should isolate only the cyclic loop and exclude acyclic root prefix nodes (Line 18)', () => {
@@ -29,9 +28,10 @@ describe('RoutingCyclesRule', () => {
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
 
-            expect(() => {
-                rule.validate(context);
-            }).toThrow('Fatal Error: Audio routing loop detected in configuration: busA -> busB -> busA');
+            rule.validate(context);
+            expect(context.getErrors()).toContain(
+                'Fatal Error: Audio routing loop detected in configuration: busA -> busB -> busA'
+            );
         });
 
         it('should format multi-hop cycles starting from a non-zero index accurately (Lines 13 & 18)', () => {
@@ -45,9 +45,8 @@ describe('RoutingCyclesRule', () => {
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
 
-            expect(() => {
-                rule.validate(context);
-            }).toThrow(
+            rule.validate(context);
+            expect(context.getErrors()).toContain(
                 'Fatal Error: Audio routing loop detected in configuration: reverb_bus -> delay_bus -> reverb_bus'
             );
         });
@@ -85,9 +84,8 @@ describe('RoutingCyclesRule', () => {
                 }
             });
 
-            expect(() => {
-                rule.validate(context);
-            }).not.toThrow();
+            rule.validate(context);
+            expect(context.getErrors()).toHaveLength(0);
         });
 
         it('should not invoke dfs on target buses that do not exist in buses config (Line 32)', () => {
@@ -98,9 +96,8 @@ describe('RoutingCyclesRule', () => {
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
 
-            expect(() => {
-                rule.validate(context);
-            }).not.toThrow();
+            rule.validate(context);
+            expect(context.getErrors()).toHaveLength(0);
         });
 
         it('should skip invoking dfs from the outer loop for already visited buses (Line 44)', () => {
@@ -134,9 +131,8 @@ describe('RoutingCyclesRule', () => {
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
 
-            expect(() => {
-                rule.validate(context);
-            }).toThrow(
+            rule.validate(context);
+            expect(context.getErrors()).toContain(
                 'Fatal Error: Audio routing loop detected in configuration: Stryker was here -> sub_bus -> Stryker was here'
             );
         });

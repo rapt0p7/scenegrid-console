@@ -1,7 +1,8 @@
 // noinspection D
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { IAudioBufferLoader, IAudioBufferRequest } from '@infrastructure/types/IAudioBufferLoader.js';
-import { ConcurrencyThrottler } from '@scene-grid/shared';
+
+import { ConcurrencyThrottler, Result, Ok, Err } from '@scene-grid/shared';
 
 type Extension = 'mp3' | 'ogg' | 'wav' | 'm4a';
 
@@ -13,9 +14,8 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         m4a: 'audio/mp4'
     };
     #contextManager: AudioContextManager;
-    #throttler: ConcurrencyThrottler<AudioBuffer>;
-    #inFlightPromises: Map<string, Promise<AudioBuffer>> = new Map();
-    #dummyBuffer: AudioBuffer | null = null;
+    #throttler: ConcurrencyThrottler<Result<AudioBuffer, Error>>;
+    #inFlightPromises: Map<string, Promise<Result<AudioBuffer, Error>>> = new Map();
 
     readonly #maxCapacity: number;
     readonly #ramQuotaMb: number;
@@ -46,7 +46,7 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         onEmergencyEviction?: (url: string) => void
     ) {
         this.#contextManager = contextManager;
-        this.#throttler = new ConcurrencyThrottler<AudioBuffer>(concurrencyLimit, maxQueueSize);
+        this.#throttler = new ConcurrencyThrottler<Result<AudioBuffer, Error>>(concurrencyLimit, maxQueueSize);
         this.#maxCapacity = maxQueueSize;
         this.#ramQuotaMb = ramQuotaMb;
         this.#onEmergencyEviction = onEmergencyEviction;
@@ -67,13 +67,13 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         this.#freeIndexHead = maxQueueSize - 1;
     }
 
-    public async load(request: IAudioBufferRequest): Promise<AudioBuffer> {
+    public async load(request: IAudioBufferRequest): Promise<Result<AudioBuffer, Error>> {
         const resolvedUrl = this.resolveFirstSupportedUrl(request.url);
 
         const existingIdx = this.#urlToIndex.get(resolvedUrl);
         if (existingIdx !== undefined) {
             this.#updateMRU(existingIdx);
-            return this.#bufferPool[existingIdx]!;
+            return Ok(this.#bufferPool[existingIdx]!);
         }
 
         const inFlight = this.#inFlightPromises.get(resolvedUrl);
@@ -90,16 +90,16 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         this.#inFlightPromises.set(resolvedUrl, loadPromise);
 
         try {
-            const buffer = await loadPromise;
+            const result = await loadPromise;
 
-            if (!this.#urlToIndex.has(resolvedUrl)) {
+            if (result.ok && !this.#urlToIndex.has(resolvedUrl)) {
                 this.#evictFor(request.expectedSizeMb);
                 if (this.#freeIndexHead < 0) this.#forceEvictOne();
 
                 const idx = this.#freeIndices[this.#freeIndexHead--];
                 const priorityNum = request.priority === 'high' ? 1 : 0;
 
-                this.#bufferPool[idx] = buffer;
+                this.#bufferPool[idx] = result.value;
                 this.#bufferSizes[idx] = request.expectedSizeMb;
                 this.#priorities[idx] = priorityNum;
                 this.#indexToUrl[idx] = resolvedUrl;
@@ -109,7 +109,7 @@ export class AudioBufferLoader implements IAudioBufferLoader {
                 this.#pushToHead(idx, priorityNum);
             }
 
-            return buffer;
+            return result;
         } finally {
             this.#inFlightPromises.delete(resolvedUrl);
         }
@@ -128,17 +128,16 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         if (totalItems === 0) return results;
 
         const loadPromises = entries.map(async ([key, request]) => {
-            try {
-                const buffer = await this.load(request);
-                results[key] = buffer;
+            const result = await this.load(request);
 
-                loadedItems++;
-                if (onProgress !== undefined) onProgress(loadedItems, totalItems, key);
-            } catch (error) {
-                loadedItems++;
-                if (onError !== undefined) onError(key, error);
-                if (onProgress !== undefined) onProgress(loadedItems, totalItems, key);
+            if (result.ok) {
+                results[key] = result.value;
+            } else {
+                if (onError !== undefined) onError(key, result.error);
             }
+
+            loadedItems++;
+            if (onProgress !== undefined) onProgress(loadedItems, totalItems, key);
         });
 
         await Promise.allSettled(loadPromises);
@@ -202,14 +201,14 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         while (this.#currentRamMb + requiredMb > this.#ramQuotaMb) {
             if (this.#tailLow !== -1) {
                 this.#freeIndex(this.#tailLow);
-            } else if (this.#tailHigh !== -1) {
+            } else if (this.#tailHigh === -1) {
+                break;
+            } else {
                 const url = this.#indexToUrl[this.#tailHigh];
                 this.#freeIndex(this.#tailHigh);
                 if (this.#onEmergencyEviction) {
                     this.#onEmergencyEviction(url);
                 }
-            } else {
-                break;
             }
         }
     }
@@ -293,25 +292,21 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         }
     }
 
-    private async performLoad(url: string): Promise<AudioBuffer> {
+    private async performLoad(url: string): Promise<Result<AudioBuffer, Error>> {
         try {
             const response = await fetch(url);
             if (!response.ok) {
-                console.warn(`[AudioBufferLoader] Network error ${response.status} for ${url}. Using dummy buffer.`);
-                return this.getDummyBuffer();
+                console.warn(`[AudioBufferLoader] Network error ${response.status} for ${url}.`);
+                return Err(new Error(`Network error ${response.status} for ${url}`));
             }
 
             const arrayBuffer = await response.arrayBuffer();
-            return await this.#contextManager.context.decodeAudioData(arrayBuffer);
+            const decoded = await this.#contextManager.context.decodeAudioData(arrayBuffer);
+            return Ok(decoded);
         } catch (error) {
-            console.error(`[AudioBufferLoader] Failed to load or decode ${url}. Using dummy buffer.`, error);
-            return this.getDummyBuffer();
+            console.error(`[AudioBufferLoader] Failed to load or decode ${url}.`, error);
+            return Err(error instanceof Error ? error : new Error(String(error)));
         }
-    }
-
-    private getDummyBuffer(): AudioBuffer {
-        this.#dummyBuffer ??= this.#contextManager.context.createBuffer(1, 1, this.#contextManager.context.sampleRate);
-        return this.#dummyBuffer;
     }
 
     private resolveFirstSupportedUrl(url: string | readonly string[]): string {

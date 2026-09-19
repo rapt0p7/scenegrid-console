@@ -126,7 +126,10 @@ vi.mock('@infrastructure', async importOriginal => {
 
 vi.mock('@domain/Validation/ConsistencyChecker.js', () => ({
     default: {
-        validate: vi.fn().mockReturnValue(true)
+        validate: vi.fn().mockImplementation((config, options) => {
+            if (options?.isReturnWithReport) return [true, { errors: [], warnings: [] }];
+            return true;
+        })
     }
 }));
 
@@ -226,7 +229,7 @@ describe('AudioEngine', () => {
 
         it('should warn if config is invalid', async () => {
             const warnSpy = vi.spyOn(console, 'warn');
-            (ConsistencyChecker.validate as any).mockReturnValueOnce(false);
+            (ConsistencyChecker.validate as any).mockReturnValueOnce([false, { errors: ['warn'], warnings: [] }]);
             const badEngine = new AudioEngine({
                 manifest: {},
                 buses: {},
@@ -239,8 +242,8 @@ describe('AudioEngine', () => {
             expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('initialized with errors'));
         });
 
-        it('should emit engine:error and exit early if strict validation fails', async () => {
-            (ConsistencyChecker.validate as any).mockReturnValueOnce(false);
+        it('should emit engine:error and return Err Result if strict validation fails', async () => {
+            (ConsistencyChecker.validate as any).mockReturnValueOnce([false, { errors: ['Strict error 1'] }]);
 
             const badEngine = new AudioEngine({
                 manifest: {},
@@ -253,7 +256,7 @@ describe('AudioEngine', () => {
             const errorSpy = vi.fn();
             badEngine.events.on('engine:error', errorSpy);
 
-            await badEngine.init({ isStrictValidation: true });
+            const initResult = await badEngine.init({ isStrictValidation: true });
 
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining('initialized with errors'));
             expect(errorSpy).toHaveBeenCalledWith(
@@ -262,6 +265,11 @@ describe('AudioEngine', () => {
                     message: 'Strict validation failed'
                 })
             );
+
+            // @ts-expect-error - this will fail until the return type is updated
+            expect(initResult.ok).toBe(false);
+            // @ts-expect-error
+            expect(initResult.error).toContain('Strict error 1');
         });
 
         it('should initialize RTPC manifest if provided in config', async () => {
@@ -714,6 +722,49 @@ describe('AudioEngine', () => {
     });
 
     describe('Playback Control (Pause/Resume)', () => {
+        it('should safely return null/drop request when play is called before initialization', () => {
+            const uninitEngine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {}, events: {} } as any);
+            const warnSpy = vi.spyOn(console, 'warn');
+            const result = uninitEngine.play('sound1');
+            expect(result).toBeNull();
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Cannot call "play" before engine is initialized.')
+            );
+        });
+
+        it('should safely drop request when stop is called before initialization', () => {
+            const uninitEngine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {}, events: {} } as any);
+            const warnSpy = vi.spyOn(console, 'warn');
+            expect(() => {
+                uninitEngine.stop(1 as PlaybackId);
+            }).not.toThrow();
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Cannot call "stop" before engine is initialized.')
+            );
+        });
+
+        it('should safely drop request when pause is called before initialization', () => {
+            const uninitEngine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {}, events: {} } as any);
+            const warnSpy = vi.spyOn(console, 'warn');
+            expect(() => {
+                uninitEngine.pause(1 as PlaybackId);
+            }).not.toThrow();
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Cannot call "pause" before engine is initialized.')
+            );
+        });
+
+        it('should safely drop request when resume is called before initialization', () => {
+            const uninitEngine = new AudioEngine({ buses: {}, soundMap: {}, snapshots: {}, events: {} } as any);
+            const warnSpy = vi.spyOn(console, 'warn');
+            expect(() => {
+                uninitEngine.resume(1 as PlaybackId);
+            }).not.toThrow();
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Cannot call "resume" before engine is initialized.')
+            );
+        });
+
         it('should delegate pause and resume calls to the router', () => {
             engine.pause('play_123');
             expect(pauseSpy).toHaveBeenCalledWith('play_123');
@@ -932,7 +983,7 @@ describe('AudioEngine', () => {
             snapshots: {},
             events: {}
         });
-        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue([true, { errors: [], warnings: [] }] as any);
         await testEngine.init();
         await testEngine._hotReloadConfig({
             manifest: {},
@@ -961,7 +1012,7 @@ describe('AudioEngine', () => {
             snapshots: {},
             events: {}
         });
-        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue([true, { errors: [], warnings: [] }] as any);
         await testEngine.init();
 
         vi.spyOn(testEngine._debug.busSystem, 'updateConfig').mockRejectedValueOnce(new Error('Apply Fail'));
@@ -1081,7 +1132,7 @@ describe('AudioEngine', () => {
             snapshots: {},
             events: {}
         });
-        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue([true, { errors: [], warnings: [] }] as any);
         await testEngine.init();
 
         const validateSpy = vi.mocked(ConsistencyChecker.validate);
@@ -1559,10 +1610,10 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
         await engine._hotReloadConfig({} as any);
         expect(errorSpy).not.toHaveBeenCalled();
 
-        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue([true, { errors: [], warnings: [] }] as any);
         await engine.init();
 
-        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValueOnce(false);
+        vi.spyOn(ConsistencyChecker, 'validate').mockImplementationOnce(() => false);
         await engine._hotReloadConfig({} as any);
 
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Hot Reload aborted'));
@@ -1578,7 +1629,7 @@ describe('AudioEngine - HMR (_hotReloadConfig)', () => {
             events: {}
         });
 
-        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue(true);
+        vi.spyOn(ConsistencyChecker, 'validate').mockReturnValue([true, { errors: [], warnings: [] }] as any);
         await engine.init();
 
         const busSystem = engine._debug.busSystem;

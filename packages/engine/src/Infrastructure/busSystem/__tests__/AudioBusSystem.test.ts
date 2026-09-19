@@ -177,7 +177,7 @@ describe('AudioBusSystem', () => {
                 inputNode: {},
                 outputNode: {},
                 dispose: vi.fn(),
-                load: vi.fn().mockRejectedValue(new Error('Worklet crashed!'))
+                load: vi.fn().mockResolvedValue({ ok: false, error: new Error('Worklet crashed!') })
             });
 
             const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -213,36 +213,6 @@ describe('AudioBusSystem', () => {
 
             expect(system['routerMasterGain'].connect).toHaveBeenCalledWith(system['postLimiterGain']);
             expect(mockPluginFactory.createLimiter).not.toHaveBeenCalled();
-        });
-
-        it('should catch critical errors during limiter initialization and log error', async () => {
-            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-            const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-            mockPluginFactory.createLimiter = vi.fn().mockImplementation(() => {
-                throw new Error('Limiter Crash');
-            });
-            mockContext.createDynamicsCompressor.mockImplementation(() => {
-                throw new Error('Fallback Crash');
-            });
-
-            const busSystem = new AudioBusSystem({
-                context: mockContext,
-                automation: mockAutomation,
-                masterOutput: mockMasterOutput,
-                busConfig: mockBusConfig,
-                pluginFactory: mockPluginFactory
-            });
-
-            await busSystem.initialize(mockTicker);
-
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
-                '[AudioBusSystem] Critical failure during limiter initialization',
-                expect.any(Error)
-            );
-
-            consoleErrorSpy.mockRestore();
-            consoleWarnSpy.mockRestore();
         });
 
         it('should handle applySend edge cases (missing source/target, fade out)', async () => {
@@ -620,47 +590,6 @@ describe('AudioBusSystem', () => {
             expect(result.to).toBe(0.8);
         });
 
-        it('should catch and warn on sidechain addSource and removeAllSources errors', async () => {
-            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-            const throwSidechain = {
-                addSource: vi.fn(() => {
-                    throw new Error('AddError');
-                }),
-                removeAllSources: vi.fn(() => {
-                    throw new Error('ClearError');
-                }),
-                insertLookahead: vi.fn(),
-                start: vi.fn(),
-                dispose: vi.fn(),
-                activeEnvelope: 0
-            };
-            (mockPluginFactory.createSidechain as any).mockReturnValue(throwSidechain);
-
-            const system = new AudioBusSystem({
-                context: mockContext,
-                automation: mockAutomation,
-                masterOutput: mockMasterOutput,
-                busConfig: mockBusConfig,
-                pluginFactory: mockPluginFactory
-            });
-            await system.initialize(mockTicker);
-
-            system.addSidechainSource({} as any, 'sfx' as BusId, 1);
-            expect(warnSpy).toHaveBeenCalledWith(
-                expect.stringContaining('Failed to add source to sidechain'),
-                expect.any(Error)
-            );
-
-            system.clearAllSidechainTriggers();
-            expect(warnSpy).toHaveBeenCalledWith(
-                expect.stringContaining('Failed to clear sidechain sources'),
-                expect.any(Error)
-            );
-
-            warnSpy.mockRestore();
-        });
-
         it('should handle missing bus, existing instances, and start errors in createSidechain', async () => {
             const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
             const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -691,7 +620,10 @@ describe('AudioBusSystem', () => {
             expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('already exists. Disposing old instance'));
             expect(mockDucker.dispose).toHaveBeenCalled();
 
-            const throwDucker = { start: vi.fn().mockRejectedValue(new Error('Start Crash')), dispose: vi.fn() };
+            const throwDucker = {
+                start: vi.fn().mockResolvedValue({ ok: false, error: new Error('Start Crash') }),
+                dispose: vi.fn()
+            };
             (mockPluginFactory.createSidechain as any).mockReturnValue(throwDucker);
             await (system as any).createSidechain('sfx');
             expect(errorSpy).toHaveBeenCalledWith(
@@ -702,41 +634,6 @@ describe('AudioBusSystem', () => {
 
             warnSpy.mockRestore();
             errorSpy.mockRestore();
-        });
-
-        it('should catch errors silently inside fallback limiter dispose', async () => {
-            const mockFallbackNode = {
-                threshold: { value: 0 },
-                knee: { value: 0 },
-                ratio: { value: 0 },
-                attack: { value: 0 },
-                release: { value: 0 },
-                connect: vi.fn(),
-                disconnect: vi.fn(() => {
-                    throw new Error('Disconnect failed');
-                })
-            };
-            mockContext.createDynamicsCompressor.mockReturnValue(mockFallbackNode);
-
-            (mockPluginFactory.createLimiter as any).mockImplementation(() => {
-                throw new Error('Force Fallback');
-            });
-
-            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-            const system = new AudioBusSystem({
-                context: mockContext,
-                automation: mockAutomation,
-                masterOutput: mockMasterOutput,
-                busConfig: { master: { gain: 1 } },
-                pluginFactory: mockPluginFactory
-            });
-            await system.initialize(mockTicker);
-
-            const fallbackLimiter = (system as any).masterLimiter;
-
-            expect(() => fallbackLimiter.dispose()).not.toThrow();
-
-            warnSpy.mockRestore();
         });
 
         describe('AudioBusSystem - fillActiveModifiers', () => {
@@ -1215,7 +1112,12 @@ describe('AudioBusSystem', () => {
 
         it('should configure native fallback compressor parameters and disconnect on dispose', async () => {
             mockPluginFactory.createLimiter = vi.fn().mockImplementation(() => {
-                throw new Error('Plugin load failed');
+                return {
+                    inputNode: {},
+                    outputNode: {},
+                    dispose: vi.fn(),
+                    load: vi.fn().mockResolvedValue({ ok: false, error: new Error('Plugin load failed') })
+                };
             });
             const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

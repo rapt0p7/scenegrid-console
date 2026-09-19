@@ -1,11 +1,12 @@
-import AudioContextFactory from '@infrastructure/context/AudioContextFactory.js';
-import ListenerManager from '@infrastructure/context/ListenerManager.js';
-import UnlockManager from '@infrastructure/context/UnlockManager.js';
-
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 import type { IAudioContextManager } from '@infrastructure/types/IAudioContextManager.js';
 import type { ContextTime } from '@scene-grid/shared';
+
+import AudioContextFactory from '@infrastructure/context/AudioContextFactory.js';
+import ListenerManager from '@infrastructure/context/ListenerManager.js';
+import UnlockManager from '@infrastructure/context/UnlockManager.js';
+import { Result } from '@scene-grid/shared';
 
 export default class AudioContextManager implements IAudioContextManager {
     readonly #context: AudioCtx;
@@ -62,8 +63,8 @@ export default class AudioContextManager implements IAudioContextManager {
         }
     }
 
-    async resume(): Promise<void> {
-        await this.#unlocker.unlock();
+    async resume(): Promise<Result<void, Error>> {
+        return this.#unlocker.unlock();
     }
 
     async suspend(): Promise<void> {

@@ -11,6 +11,7 @@ import type { ILimiterNode, IPluginFactory, ISidechain } from '@infrastructure/t
 import type { IMasterOutput } from '@infrastructure/types/IMasterOutput.js';
 
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
+import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
 import { BusId, TickerTaskId, Milliseconds, ContextTime, TimeMath } from '@scene-grid/shared';
 import { typedEntries, typedKeys, isDefined } from '@scene-grid/shared';
 
@@ -63,11 +64,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
     public async initialize(ticker: EngineTicker): Promise<void> {
         if (this.isUseLimiter) {
-            try {
-                await this.initLimiter();
-            } catch (error) {
-                console.error('[AudioBusSystem] Critical failure during limiter initialization', error);
-            }
+            await this.initLimiter();
         } else {
             this.routerMasterGain.connect(this.postLimiterGain);
         }
@@ -156,32 +153,20 @@ export default class AudioBusSystem implements IAudioBusSystem {
     public addSidechainSource(node: AudioNodeLike, busId: BusId, intensity: number): void {
         const sidechain = this.sidechains.get(busId);
         if (sidechain) {
-            try {
-                sidechain.addSource(node, intensity);
-            } catch (error) {
-                console.warn(`[AudioBusSystem] Failed to add source to sidechain "${busId}"`, error);
-            }
+            sidechain.addSource(node, intensity);
         }
     }
 
     public removeSidechainSource(node: AudioNodeLike, busId: BusId): void {
         const sidechain = this.sidechains.get(busId);
         if (sidechain) {
-            try {
-                sidechain.removeSource(node);
-            } catch {
-                /* empty */
-            }
+            sidechain.removeSource(node);
         }
     }
 
     public clearAllSidechainTriggers(): void {
         for (const sidechain of this.sidechains.values()) {
-            try {
-                sidechain.removeAllSources();
-            } catch (error) {
-                console.warn('[AudioBusSystem] Failed to clear sidechain sources', error);
-            }
+            sidechain.removeAllSources();
         }
     }
 
@@ -325,12 +310,12 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 }
             }
 
-            if (busConfig.sidechain?.enabled && !this.sidechains.has(busId as string)) {
+            if (busConfig.sidechain?.enabled && !this.sidechains.has(busId)) {
                 promises.push(this.createSidechain(busId as BusId));
-            } else if (!busConfig.sidechain?.enabled && this.sidechains.has(busId as string)) {
-                const ducker = this.sidechains.get(busId as string);
+            } else if (!busConfig.sidechain?.enabled && this.sidechains.has(busId)) {
+                const ducker = this.sidechains.get(busId);
                 ducker?.dispose();
-                this.sidechains.delete(busId as string);
+                this.sidechains.delete(busId);
             }
         }
 
@@ -353,34 +338,36 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
         const ducker = this.pluginFactory.createSidechain(bus.inputNode, options);
 
-        try {
-            await ducker.start();
-
-            ducker.insertLookahead(bus.duckerTapNode);
-
-            this.sidechains.set(busId, ducker);
-        } catch (error) {
-            console.error(`[AudioBusSystem] Failed to start sidechain for bus '${busId}'`, error);
+        const result = await ducker.start();
+        if (result && !result.ok) {
+            console.error(`[AudioBusSystem] Failed to start sidechain for bus '${busId}'`, result.error);
             ducker.dispose();
+            return;
         }
+
+        ducker.insertLookahead(bus.duckerTapNode);
+        this.sidechains.set(busId, ducker);
     }
 
     private async initLimiter(): Promise<void> {
-        try {
-            this.masterLimiter = this.pluginFactory.createLimiter();
+        this.masterLimiter = this.pluginFactory.createLimiter();
 
-            if (this.masterLimiter.load) {
-                await this.masterLimiter.load();
+        let loaded = true;
+        if (this.masterLimiter.load) {
+            const result = await this.masterLimiter.load();
+            if (result && !result.ok) {
+                loaded = false;
+                console.warn(
+                    `[AudioBusSystem] Custom limiter failed to load. Falling back to native DynamicsCompressorNode.`,
+                    result.error
+                );
             }
+        }
 
+        if (loaded) {
             this.routerMasterGain.connect(this.masterLimiter.inputNode);
             this.masterLimiter.outputNode.connect(this.postLimiterGain);
-        } catch (error) {
-            console.warn(
-                `[AudioBusSystem] Custom limiter failed to load. Falling back to native DynamicsCompressorNode.`,
-                error
-            );
-
+        } else {
             const fallbackNode = this.context.createDynamicsCompressor();
             fallbackNode.threshold.value = -3;
             fallbackNode.knee.value = 0;
@@ -395,11 +382,7 @@ export default class AudioBusSystem implements IAudioBusSystem {
                 inputNode: fallbackNode,
                 outputNode: fallbackNode,
                 dispose: () => {
-                    try {
-                        fallbackNode.disconnect();
-                    } catch {
-                        /* empty */
-                    }
+                    safeDisconnect(fallbackNode);
                 }
             };
         }

@@ -61,7 +61,9 @@ describe('TinyLimiterNode', () => {
         it('should load the module, create the node with default options, and return it', async () => {
             const limiter = new TinyLimiterNode(mockContext);
 
-            const node = await limiter.load();
+            const result = await limiter.load();
+            if (!result.ok) throw new Error('Failed');
+            const node = result.value;
 
             expect(WorkletLoader.loadModule).toHaveBeenCalledWith(mockContext, 'mock-raw-processor-code');
 
@@ -89,7 +91,9 @@ describe('TinyLimiterNode', () => {
             const customOptions = { lookahead: 0.01, ceiling: 0.95, release: 0.2 };
             const limiter = new TinyLimiterNode(mockContext, customOptions);
 
-            const node = await limiter.load();
+            const result = await limiter.load();
+            if (!result.ok) throw new Error('Failed');
+            const node = result.value;
 
             // oxlint-disable-next-line no-underscore-dangle
             const passedOptions = (node as any)._mockOptions;
@@ -107,7 +111,9 @@ describe('TinyLimiterNode', () => {
 
         it('should disconnect the node and set it to undefined', async () => {
             const limiter = new TinyLimiterNode(mockContext);
-            const node = await limiter.load();
+            const result = await limiter.load();
+            if (!result.ok) throw new Error('Failed');
+            const node = result.value;
 
             limiter.dispose();
 
@@ -118,7 +124,9 @@ describe('TinyLimiterNode', () => {
 
         it('should silently catch errors if disconnect() fails', async () => {
             const limiter = new TinyLimiterNode(mockContext);
-            const node = await limiter.load();
+            const result = await limiter.load();
+            if (!result.ok) throw new Error('Failed');
+            const node = result.value;
 
             (node.disconnect as any).mockImplementationOnce(() => {
                 throw new Error('Disconnect failed natively');

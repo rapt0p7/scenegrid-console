@@ -785,29 +785,6 @@ describe('AudioBus (Filters, Sends, RTPC - Pull Model)', () => {
             });
         });
 
-        it('should log a descriptive warning with the bus ID when filter creation throws', () => {
-            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-            mockPluginFactory.getFiltersPlugin().createNode.mockImplementationOnce(() => {
-                throw new Error('AudioContext unavailable');
-            });
-
-            // oxlint-disable-next-line no-new
-            new AudioBus({
-                id: 'ui_bus' as BusId,
-                config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
-                context: mockContext,
-                automation: mockAutomation,
-                routerMasterGain: null,
-                pluginFactory: mockPluginFactory
-            });
-
-            expect(warnSpy).toHaveBeenCalledWith(
-                '[AudioBus] Failed to create filter for bus "ui_bus"',
-                expect.any(Error)
-            );
-            warnSpy.mockRestore();
-        });
-
         it('should wire preFilterGain directly to postFilterGain when config has no filter', () => {
             const bus = new AudioBus({
                 id: 'clean_bus' as BusId,
@@ -1363,7 +1340,7 @@ describe('AudioBus (Internal Branch Coverage & Edge Cases)', () => {
         }).not.toThrow();
     });
 
-    it('should handle reverb specific branching and catch createFilter errors', () => {
+    it('should handle reverb specific branching', () => {
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -1382,23 +1359,6 @@ describe('AudioBus (Internal Branch Coverage & Edge Cases)', () => {
             mockAutomation,
             expect.objectContaining({ type: 'reverb' })
         );
-
-        mockFiltersPlugin.createNode.mockImplementationOnce(() => {
-            throw new Error('Filter Creation Crash');
-        });
-
-        // oxlint-disable-next-line no-unused-vars
-        const errorBus = new AudioBus({
-            id: 'sfx_error' as BusId,
-            config: { gain: 1, filter: { type: 'lowpass', frequency: 1000 } },
-            context: mockContext,
-            automation: mockAutomation,
-            routerMasterGain: mockContext.createGain(),
-            pluginFactory: mockPluginFactory
-        });
-
-        const hasLogged = warnSpy.mock.calls.length > 0 || errorSpy.mock.calls.length > 0;
-        expect(hasLogged).toBe(true);
 
         warnSpy.mockRestore();
         errorSpy.mockRestore();
@@ -1428,41 +1388,6 @@ describe('AudioBus (Internal Branch Coverage & Edge Cases)', () => {
         }).not.toThrow();
 
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Unhandled RTPC target: magic_unknown'));
-
-        warnSpy.mockRestore();
-    });
-
-    it('should handle missing filterNode and catch topology connection errors', () => {
-        mockContext.currentTime = 0;
-
-        const bus = new AudioBus({
-            id: 'sfx' as BusId,
-            config: { gain: 1 },
-            context: mockContext,
-            automation: mockAutomation,
-            routerMasterGain: mockContext.createGain(),
-            pluginFactory: mockPluginFactory
-        });
-
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-        mockFiltersPlugin.createNode.mockReturnValue({
-            connect: vi.fn(() => {
-                throw new Error('Connect Exception');
-            }),
-            disconnect: vi.fn()
-        });
-
-        bus.safeReplaceFilter({ type: 'highpass', frequency: 1000 }, 0 as Milliseconds);
-
-        bus.processFrame(10 as Seconds);
-
-        expect(warnSpy).toHaveBeenCalledWith('[AudioBus] Failed to connect filterNode', expect.any(Error));
-
-        bus.safeReplaceFilter(null, 0 as Milliseconds);
-        expect(() => {
-            bus.processFrame(20 as Seconds);
-        }).not.toThrow();
 
         warnSpy.mockRestore();
     });

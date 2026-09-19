@@ -1,26 +1,27 @@
-import { isAbsent } from '@scene-grid/shared';
-import { ConsoleReporter } from '@domain/Validation/Reporters/ConsoleReporter.js';
-import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
-import RoutingCyclesRule from '@domain/Validation/Rules/RoutingCyclesRule.js';
-import BusesRule from '@domain/Validation/Rules/BusesRule.js';
-import SoundMapRule from '@domain/Validation/Rules/SoundMapRule.js';
-import SnapshotsRule from '@domain/Validation/Rules/SnapshotsRule.js';
-import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload.js';
 import type { IConsistencyCheckerOptions } from '@domain/Validation/Ports/IConsistencyCheckerOptions.js';
+import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload.js';
+import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
+
 import ValidationContext from '@domain/Validation/Core/ValidationContext.js';
-import GhostDuckingRule from '@domain/Validation/Rules/GhostDuckingRule.js';
-import OrphanManifestRule from '@domain/Validation/Rules/OrphanManifestRule.js';
-import MultiplicativeVetoesRule from '@domain/Validation/Rules/MultiplicativeVetoesRule.js';
-import RTPCManifestRule from '@domain/Validation/Rules/RTPCManifestRule.js';
+import { ConsoleReporter } from '@domain/Validation/Reporters/ConsoleReporter.js';
 import BankSystemRule from '@domain/Validation/Rules/BankSystemRule.js';
+import BusesRule from '@domain/Validation/Rules/BusesRule.js';
 import EventsRule from '@domain/Validation/Rules/EventsRule.js';
+import GhostDuckingRule from '@domain/Validation/Rules/GhostDuckingRule.js';
+import MultiplicativeVetoesRule from '@domain/Validation/Rules/MultiplicativeVetoesRule.js';
 import MusicFSMRule from '@domain/Validation/Rules/MusicFSMRule.js';
+import OrphanManifestRule from '@domain/Validation/Rules/OrphanManifestRule.js';
 import RamQuotaRule from '@domain/Validation/Rules/RamQuotaRule.js';
+import RoutingCyclesRule from '@domain/Validation/Rules/RoutingCyclesRule.js';
+import RTPCManifestRule from '@domain/Validation/Rules/RTPCManifestRule.js';
+import SnapshotsRule from '@domain/Validation/Rules/SnapshotsRule.js';
+import SoundMapRule from '@domain/Validation/Rules/SoundMapRule.js';
+import { isAbsent } from '@scene-grid/shared';
 
 export default class ConsistencyChecker {
     public static validate(
         config: IConsistencyCheckerPayload,
-        options: { isReturnWithReport: true }
+        options: { isReturnWithReport: true } & IConsistencyCheckerOptions
     ): [boolean, { errors: string[]; warnings: string[] }];
 
     public static validate(config: IConsistencyCheckerPayload, options?: IConsistencyCheckerOptions): boolean;
@@ -50,13 +51,8 @@ export default class ConsistencyChecker {
             new RamQuotaRule()
         ];
 
-        try {
-            for (const rule of rules) {
-                rule.validate(context);
-            }
-        } catch (error) {
-            console.error(error instanceof Error ? error.message : error);
-            return false;
+        for (const rule of rules) {
+            rule.validate(context);
         }
 
         context.report();

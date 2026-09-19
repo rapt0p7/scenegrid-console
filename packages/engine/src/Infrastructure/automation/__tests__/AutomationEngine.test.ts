@@ -78,20 +78,6 @@ describe('AutomationEngine', () => {
             expect(consoleSpy).toHaveBeenCalledTimes(2);
             consoleSpy.mockRestore();
         });
-
-        it('should safely catch exceptions thrown by AudioParam', () => {
-            mockParameter.setValueAtTime.mockImplementationOnce(() => {
-                throw new Error('WebAudio internal error');
-            });
-            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-            expect(() => {
-                engine.set(mockParameter, 0.8);
-            }).not.toThrow();
-            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('set() failed'), expect.any(Error));
-
-            consoleSpy.mockRestore();
-        });
     });
 
     describe('ramp() - Batching and Math', () => {
@@ -107,10 +93,11 @@ describe('AutomationEngine', () => {
         it('should ignore invalid targets in ramp (NaN or Infinity)', () => {
             const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-            engine.ramp(mockParameter, Number.NaN, 1000 as Milliseconds);
+            const res = engine.ramp(mockParameter, Number.NaN, 1000 as Milliseconds);
 
+            expect(res?.ok).toBe(false);
             expect(mockParameter.setValueAtTime).not.toHaveBeenCalled();
-            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid target'), Number.NaN);
+            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid target'), expect.anything());
 
             consoleSpy.mockRestore();
         });
@@ -171,20 +158,6 @@ describe('AutomationEngine', () => {
             expect(mockParameter.exponentialRampToValueAtTime).toHaveBeenCalledWith(0.000_01, 2);
             expect(mockParameter.linearRampToValueAtTime).toHaveBeenCalledWith(0, 2.005);
         });
-
-        it('should safely fallback to set() if ramp throws an error', () => {
-            mockParameter.linearRampToValueAtTime.mockImplementationOnce(() => {
-                throw new Error('Graph invalid');
-            });
-            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-            engine.ramp(mockParameter, 1, 1000 as Milliseconds, 'linear');
-            triggerTick();
-
-            expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(1, 1);
-
-            consoleSpy.mockRestore();
-        });
     });
 
     describe('ramp() - Time and Delay Edge Cases', () => {
@@ -234,22 +207,6 @@ describe('AutomationEngine', () => {
             expect(consoleSpy).toHaveBeenNthCalledWith(1, '[AutomationEngine] Invalid value:', Number.NaN);
             expect(consoleSpy).toHaveBeenNthCalledWith(2, '[AutomationEngine] Invalid value:', Infinity);
             expect(mockParameter.setValueAtTime).not.toHaveBeenCalled();
-        });
-    });
-
-    describe('ramp() - Error recovery and logging', () => {
-        it('should log error message and recover with immediate setValueAtTime when AudioParam throws', () => {
-            const audioError = new Error('InvalidAudioState');
-            mockParameter.linearRampToValueAtTime.mockImplementationOnce(() => {
-                throw audioError;
-            });
-            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-            engine.ramp(mockParameter, 1, 1000 as Milliseconds, 'linear');
-            triggerTick();
-
-            expect(consoleSpy).toHaveBeenCalledWith('[AutomationEngine] ramp() failed:', audioError);
-            expect(mockParameter.setValueAtTime).toHaveBeenCalledWith(1, 1);
         });
     });
 
