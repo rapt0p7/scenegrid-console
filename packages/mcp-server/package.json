@@ -1,0 +1,43 @@
+{
+    "name": "mcp-server",
+    "version": "1.0.0",
+    "description": "an mcp-use server with React views for MCP Apps",
+    "keywords": [
+        "chatgpt plugins",
+        "claude connector",
+        "manufact",
+        "mcp",
+        "mcp-app",
+        "mcp-server",
+        "mcp-use"
+    ],
+    "homepage": "https://github.com/mcp-use/mcp-use",
+    "license": "MIT",
+    "author": "mcp-use",
+    "type": "module",
+    "scripts": {
+        "build": "mcp-use build",
+        "dev": "mcp-use dev",
+        "start": "mcp-use start",
+        "deploy": "mcp-use deploy",
+        "typecheck": "mcp-use typecheck",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "mcp-use": "2.5.1",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
+        "zod": "^4.4.3"
+    },
+    "devDependencies": {
+        "@types/node": "^22.20.0",
+        "@types/react": "^19.2.17",
+        "@types/react-dom": "^19.2.3",
+        "@types/ws": "^8.18.1",
+        "typescript": "^7.0.2",
+        "vitest": "^5.0.1"
+    },
+    "engines": {
+        "node": ">=22.22.2"
+    }
+}

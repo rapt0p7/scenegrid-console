@@ -43,7 +43,8 @@ async function bootstrap() {
         musicFSM: MusicFSM,
         precalculatedSizes: AudioSizes,
         ramQuotaMb: Number.MAX_SAFE_INTEGER,
-        globalVoiceLimit: 32
+        globalVoiceLimit: 32,
+        remoteSyncUri: 'ws://localhost:8081'
     });
 
     const spinner = document.querySelector('#spinner');
