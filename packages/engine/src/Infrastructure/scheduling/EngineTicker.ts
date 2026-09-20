@@ -63,14 +63,14 @@ export class EngineTicker implements IEngineTicker {
 
     private onTick(): void {
         this.currentTick++;
-        const length = this.tasks.length;
-        if (length === 0) return;
+        if (this.tasks.length === 0) return;
 
         const currentContextTime = this.getContextTime();
         const now = performance.now();
 
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < this.tasks.length; i++) {
             const task = this.tasks[i];
+            if (!task) continue;
 
             if (this.currentTick % task.divider === 0) {
                 const physicalDeltaTime = (now - task.lastRunTime) as Milliseconds;

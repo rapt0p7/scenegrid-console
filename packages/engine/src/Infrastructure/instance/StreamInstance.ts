@@ -19,6 +19,7 @@ export class StreamInstance implements ISoundInstance, ITickable {
     private readonly listeners = new Map<string, Set<(instance: ISoundInstance) => void>>();
     private isVirtualState = false;
     private _isLooping: boolean;
+    private _disposed = false;
 
     constructor(
         private readonly streamNode: StreamNode,
@@ -69,7 +70,9 @@ export class StreamInstance implements ISoundInstance, ITickable {
     public stop(when?: ContextTime): void {
         this.streamNode.stop(when);
         this.emit('stopped', this);
-        this.emit('ended', this);
+        if (!this._disposed) {
+            this.emit('ended', this);
+        }
     }
 
     public pause(): void {
@@ -130,6 +133,8 @@ export class StreamInstance implements ISoundInstance, ITickable {
     }
 
     public dispose(): void {
+        if (this._disposed) return;
+        this._disposed = true;
         this.stop();
         this.emit('disposed', this);
         this.listeners.clear();
@@ -160,7 +165,7 @@ export class StreamInstance implements ISoundInstance, ITickable {
             this.listeners.set(event, new Set());
         }
         this.listeners.get(event)!.add(handler);
-        return () => this.listeners.get(event)!.delete(handler);
+        return () => this.listeners.get(event)?.delete(handler);
     }
 
     private emit(event: 'ended' | 'stopped' | 'disposed', instance: ISoundInstance): void {

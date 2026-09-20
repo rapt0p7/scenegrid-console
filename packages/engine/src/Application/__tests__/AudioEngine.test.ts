@@ -266,7 +266,6 @@ describe('AudioEngine', () => {
                 })
             );
 
-            // @ts-expect-error - this will fail until the return type is updated
             expect(initResult.ok).toBe(false);
             // @ts-expect-error
             expect(initResult.error).toContain('Strict error 1');
