@@ -1,6 +1,6 @@
 ## Context
 
-Web Audio asset preparation is a significant bottleneck. Developers need a way to build Codec Ladders and Chunked Streams seamlessly. See proposal.md for motivation - the tool must run as a standalone `@scenegrid/cli` workspace to keep the core engine runtime clear of heavy dependencies like `execa`, `commander`, and `zod`.
+Web Audio asset preparation is a significant bottleneck. Developers need a way to build Codec Ladders and Chunked Streams seamlessly. See proposal.md for motivation - the tool must run as a standalone `@scene-grid/cli` workspace to keep the core engine runtime clear of heavy dependencies like `execa`, `commander`, and `zod`.
 
 ## Goals / Non-Goals
 

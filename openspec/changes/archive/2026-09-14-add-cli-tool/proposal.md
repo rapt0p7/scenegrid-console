@@ -4,7 +4,7 @@ Web Audio `decodeAudioData` consumes massive amounts of RAM (uncompressed 32-bit
 
 ## What Changes
 
-- **NEW**: Introduce `@scenegrid/cli` as a standalone NPM workspace package (e.g., `packages/cli`) to guarantee that heavy Node dependencies (`commander`, `execa`, `music-metadata`, `zod`) never leak into the core engine runtime.
+- **NEW**: Introduce `@scene-grid/cli` as a standalone NPM workspace package (e.g., `packages/cli`) to guarantee that heavy Node dependencies (`commander`, `execa`, `music-metadata`, `zod`) never leak into the core engine runtime.
 - **NEW**: Native, cross-platform chunking logic in Node/TypeScript using `execa` to call `ffmpeg` directly. This eliminates the reliance on brittle bash scripts (e.g., `scripts/generate_stream.sh`) and provides robust support for Windows developers.
 - **NEW**: 12-Factor compliant configuration system. The CLI will accept configuration via CLI flags (`--input`, `--output`), environment variables, or a local `.scenegridrc` file, resolving paths safely with fallbacks to the Current Working Directory (CWD).
 - **NEW**: AOT size heuristics. The CLI will calculate the exact PCM footprint for each input file. Assets exceeding the engine's 15MB RAM quota (roughly 42 seconds) are automatically routed to the Chunked Stream generator, while smaller assets generate a standard Codec Ladder (`ISoundMap`).
@@ -14,7 +14,7 @@ Web Audio `decodeAudioData` consumes massive amounts of RAM (uncompressed 32-bit
 ## Capabilities
 
 ### New Capabilities
-- `cli-asset-pipeline`: The standalone `@scenegrid/cli` package that handles 12-factor configuration, AOT PCM footprint calculation, and cross-platform ffmpeg orchestration.
+- `cli-asset-pipeline`: The standalone `@scene-grid/cli` package that handles 12-factor configuration, AOT PCM footprint calculation, and cross-platform ffmpeg orchestration.
 
 ### Modified Capabilities
 - (None)
@@ -24,4 +24,4 @@ Web Audio `decodeAudioData` consumes massive amounts of RAM (uncompressed 32-bit
 - **Workspace:** Introduces a new `packages/cli` workspace to the monorepo.
 - **Tooling:** Deprecates/removes the brittle `scripts/generate_stream.sh` in favor of native TypeScript `execa` logic.
 - **Architectural Layers Affected:** The change primarily affects the **Infrastructure/Tooling** layer. It will import types and the `ConsistencyChecker` from the **Domain** layer to validate the generated payloads.
-- **Dependency Rule:** The dependency rule (inward to Domain) remains unbroken. The `@scenegrid/cli` package will depend on `@scenegrid/engine` (specifically its Domain ports and validation logic) during build time, but the engine runtime itself will remain entirely isolated and free of CLI-related Node dependencies.
+- **Dependency Rule:** The dependency rule (inward to Domain) remains unbroken. The `@scene-grid/cli` package will depend on `@scene-grid/engine` (specifically its Domain ports and validation logic) during build time, but the engine runtime itself will remain entirely isolated and free of CLI-related Node dependencies.

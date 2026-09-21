@@ -1,5 +1,5 @@
 {
-    "name": "@scenegrid/cli",
+    "name": "@scene-grid/cli",
     "version": "1.0.0",
     "bin": {
         "scenegrid": "./dist/cli.es.js"

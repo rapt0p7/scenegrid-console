@@ -40,7 +40,7 @@ generated: { by: "openwiki/0.5.2", at: "2026-09-15T07:28:56.245Z" }
 
 # Repository architecture and runtime boundaries
 
-SceneGrid is an npm workspace for a browser audio runtime. Its production-facing package is `@scene-grid/engine`; `@scene-grid/shared` supplies the lowest-level cross-package utilities; `@scene-grid/inspector` is an optional browser debugging UI; and `@scenegrid/cli` processes audio assets. The `examples` workspace is the integration host rather than part of the engine's runtime dependency graph.
+SceneGrid is an npm workspace for a browser audio runtime. Its production-facing package is `@scene-grid/engine`; `@scene-grid/shared` supplies the lowest-level cross-package utilities; `@scene-grid/inspector` is an optional browser debugging UI; and `@scene-grid/cli` processes audio assets. The `examples` workspace is the integration host rather than part of the engine's runtime dependency graph.
 
 ## Workspace responsibilities and public surfaces
 
@@ -49,7 +49,7 @@ SceneGrid is an npm workspace for a browser audio runtime. Its production-facing
 | `@scene-grid/shared` | Dependency-free common types, utilities, telemetry contracts, and the shared-worker factory. | Its root export provides branded/music/condition/culling and inspector-command types; memory, math, guard, immutability, and typed-object helpers; telemetry types; and `createTelemetryWorker()`. |
 | `@scene-grid/engine` | Browser audio application façade and its domain, kernel, and infrastructure implementation. | `AudioEngine`, configuration and registry types, selected domain types/enums, `WorkletLoader`, and a small set of infrastructure types. Consumers do not need to import internal layer paths. |
 | `@scene-grid/inspector` | Optional diagnostics and control UI. | `attachDebugUI()` builds analyzer views from `audioEngine._debug`; `initAudioDebugPanel()` builds the interactive debug pane. |
-| `@scenegrid/cli` | Node command-line asset pipeline and alias preparation. | The `scenegrid` executable resolves configuration, runs the asset pipeline, and exits nonzero on failure. |
+| `@scene-grid/cli` | Node command-line asset pipeline and alias preparation. | The `scenegrid` executable resolves configuration, runs the asset pipeline, and exits nonzero on failure. |
 | `examples` | Vite browser host and reference integration. | It owns authored audio configuration and creates, initializes, unlocks, loads, and drives an `AudioEngine`. |
 
 The package manifests make `shared` a dependency of both engine and inspector. The inspector has no declared engine package dependency; it accepts an engine-shaped object and its debug proxies at its integration boundary. The example workspace depends on all three browser packages, while the CLI depends on the engine package.
@@ -59,7 +59,7 @@ flowchart LR
     shared["@scene-grid/shared"]
     engine["@scene-grid/engine"]
     inspector["@scene-grid/inspector"]
-    cli["@scenegrid/cli"]
+    cli["@scene-grid/cli"]
     example["examples Vite host"]
 
     shared --> engine
