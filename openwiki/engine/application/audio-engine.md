@@ -2,9 +2,6 @@
 type: "Reference"
 title: "AudioEngine facade and lifecycle"
 openwiki_generated: true
-verified:
-  - by: openwiki/0.5.2
-    at: 2026-09-15T07:28:56.245Z
 sources:
   - id: openwiki-source-21f3cdfba5248f4c1a9cda5b
     resource: repo://examples/main.ts
@@ -19,6 +16,9 @@ sources:
   - id: openwiki-source-cb7652a6bc5670b325741638
     resource: repo://packages/engine/src/Infrastructure/telemetry/CommandReceiver.ts
 generated: { by: "openwiki/0.5.2", at: "2026-09-15T07:28:56.245Z" }
+verified:
+  - by: openwiki/0.5.0
+    at: 2026-09-21T16:32:27.121Z
 ---
 
 

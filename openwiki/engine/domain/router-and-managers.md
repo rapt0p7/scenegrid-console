@@ -22,7 +22,12 @@ sources:
     resource: repo://packages/engine/src/Domain/Router/AudioRouter.ts
   - id: openwiki-source-5effbca300242106581a320c
     resource: repo://packages/engine/src/Domain/Router/VariationResolver.ts
+  - id: openwiki-source-9445fc6390157ea6fbf89248
+    resource: repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts
 generated: { by: "openwiki/0.5.0", at: "2026-09-03T11:15:32.736Z" }
+verified:
+  - by: openwiki/0.5.0
+    at: 2026-09-21T16:32:27.121Z
 ---
 
 # Router and Playback Managers

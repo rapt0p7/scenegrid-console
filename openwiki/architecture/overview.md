@@ -4,8 +4,8 @@ title: Repository architecture and runtime boundaries
 description: Map of the SceneGrid workspace packages, their supported dependency directions, and the browser path from authored audio configuration through the engine, telemetry worker, inspector, and example host.
 tags: [architecture, monorepo, browser-runtime, audio, telemetry, inspector]
 verified:
-  - by: openwiki/0.5.2
-    at: 2026-09-15T07:28:56.245Z
+  - by: openwiki/0.5.0
+    at: 2026-09-21T16:32:27.121Z
 sources:
   - id: openwiki-source-739d3ff1d3f2cc6c1de83f4b
     resource: repo://.dependency-cruiser.cjs
@@ -35,24 +35,24 @@ sources:
     resource: repo://packages/shared/src/index.ts
   - id: openwiki-source-5b2c1d48af432dc4e7386288
     resource: repo://packages/shared/src/Workers/TelemetryWorker.ts
-generated: { by: "openwiki/0.5.2", at: "2026-09-15T07:28:56.245Z" }
+generated: { by: "openwiki/0.5.0", at: "2026-09-21T16:32:27.121Z" }
 ---
 
 # Repository architecture and runtime boundaries
 
-SceneGrid is an npm workspace for a browser audio runtime. Its production-facing package is `@scene-grid/engine`; `@scene-grid/shared` supplies the lowest-level cross-package utilities; `@scene-grid/inspector` is an optional browser debugging UI; and `@scene-grid/cli` processes audio assets. The `examples` workspace is the integration host rather than part of the engine's runtime dependency graph.
+SceneGrid is an npm workspace for a browser audio runtime. Its production-facing package is `@scene-grid/engine`; `@scene-grid/shared` supplies the lowest-level cross-package utilities; `@scene-grid/inspector` is an optional browser debugging UI; and `@scene-grid/cli` provides Node command-line processing dependent on the engine. The `examples` workspace is the integration host dependent on all three browser packages.
 
 ## Workspace responsibilities and public surfaces
 
 | Workspace | Responsibility | Consumer-facing surface |
 | --- | --- | --- |
-| `@scene-grid/shared` | Dependency-free common types, utilities, telemetry contracts, and the shared-worker factory. | Its root export provides branded/music/condition/culling and inspector-command types; memory, math, guard, immutability, and typed-object helpers; telemetry types; and `createTelemetryWorker()`. |
-| `@scene-grid/engine` | Browser audio application façade and its domain, kernel, and infrastructure implementation. | `AudioEngine`, configuration and registry types, selected domain types/enums, `WorkletLoader`, and a small set of infrastructure types. Consumers do not need to import internal layer paths. |
+| `@scene-grid/shared` | Dependency-free common types, utilities, telemetry contracts, and the shared-worker factory. | Root export provides branded/music/condition/culling and inspector-command types; memory, math, guard, immutability, and typed-object helpers; telemetry types; and `createTelemetryWorker()`. |
+| `@scene-grid/engine` | Browser audio application façade and its domain, kernel, and infrastructure implementation. | `AudioEngine`, configuration and registry types, selected domain types/enums, `WorkletLoader`, and infrastructure types. |
 | `@scene-grid/inspector` | Optional diagnostics and control UI. | `attachDebugUI()` builds analyzer views from `audioEngine._debug`; `initAudioDebugPanel()` builds the interactive debug pane. |
 | `@scene-grid/cli` | Node command-line asset pipeline and alias preparation. | The `scenegrid` executable resolves configuration, runs the asset pipeline, and exits nonzero on failure. |
-| `examples` | Vite browser host and reference integration. | It owns authored audio configuration and creates, initializes, unlocks, loads, and drives an `AudioEngine`. |
+| `examples` | Vite browser host and reference integration. | Owns authored audio configuration and creates, initializes, unlocks, loads, and drives an `AudioEngine`. |
 
-The package manifests make `shared` a dependency of both engine and inspector. The inspector has no declared engine package dependency; it accepts an engine-shaped object and its debug proxies at its integration boundary. The example workspace depends on all three browser packages, while the CLI depends on the engine package.
+The package manifests make `shared` a dependency of both engine and inspector. The inspector has no declared engine package dependency; it accepts an engine-shaped object and its debug proxies at its integration boundary. The example workspace depends on all three browser packages (`@scene-grid/engine`, `@scene-grid/inspector`, and `@scene-grid/shared`), while the CLI depends on `@scene-grid/engine`.
 
 ```mermaid
 flowchart LR

@@ -1,10 +1,10 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:ecca79e6462937f45a107db239e84aa3cb5cb1a0897c6481aa93d7c1cf7ce534",
+    "pageVersion": "sha256:646c19f50c0a88883390c65bdf9c3e7589380211da024a3c3803c60b76520681",
     "claims": [
         {
             "id": "claim_20b01eefcb144371b3cdc2be08056b55",
-            "statement": "The repository is an npm workspace monorepo with engine, shared, inspector, CLI, and examples workspaces: shared is a dependency of engine and inspector, the CLI depends on engine, and the examples host depends on all three browser packages.",
+            "statement": "The repository is an npm workspace monorepo with engine, shared, inspector, CLI, and examples workspaces: shared is a dependency of engine and inspector, the CLI depends on engine, and the examples host depends on all three browser packages (@scene-grid/engine, @scene-grid/inspector, and @scene-grid/shared).",
             "evidence": [
                 {
                     "resource": "repo://examples/package.json#L1-L22",
@@ -16,7 +16,7 @@
                 },
                 {
                     "resource": "repo://packages/cli/package.json#L1-L25",
-                    "version": "repo-lines-v1:sha256:a89a48bae0e490342fda11fd782cc6280926561365a10882169f205febad1beb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "version": "repo-lines-v1:sha256:7600324dc6bbae7832b2485a6ed6527b31c55cd96499ff547055cb2c10bd2ba7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
                 },
                 {
                     "resource": "repo://packages/engine/package.json#L16-L30",
@@ -33,16 +33,16 @@
             "statement": "`AudioEngine` is the runtime application façade: it deep-freezes its initial configuration, and successful `init()` creates telemetry and validation support, composes the audio, scheduling, routing, mixer, bank, culling, event, sequencer, and optional music-conductor graph, registers ticker work, dispatches the manifest, and emits `engine:ready`.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L274-L306",
-                    "version": "repo-lines-v1:sha256:b9c2fd4c9d7bbad8ae72ba010bf24a200a006793156338ef4e21426b66493d6b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkNjQ3MWNlYjY4MjI2NWM3M2VjZjM1NTQzYzExMDBjYzU3NjZmMGRjZDNiZmNkMzNjNTU1YzMyYzJjMzlkNTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMzFiYTgyZTM4MGEwOTI1NGYxYzY0OGY1ODlkYmU0NGZkODliN2VhOTMyODg3NjIzYmNmMWFiMmZhYWNmZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1ZGQxYmJmYmQzYzAzMWRlMDY3M2NjYTg5MWUwOGNjZDkyYzZiOTMzNmRiZTY5OTMxMmE4ZjE2NGRmNmE0YzYifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L280-L310",
+                    "version": "repo-lines-v1:sha256:24dc3752274146d8aaafe7f7e3b1ff637eafdd938ef0f92e9441da302ab8dcdc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5ZGExMGIwNzk1NWZhYzZmNzIyMDFjN2NhNTdmMTY2NGI0NjVjNTIyODE2NTYxMGQ3Y2ZmNzE1OTMwYTZhYTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5YTg1NzJiODg4YjA4Zjc5Nzk4YTE5YWNhZDFlZmRhZmVkMDI3MDQyNWEzZTFjMjJkODg4ZDEwNmQ2NTY4M2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1YjdkMDhhMjVlYzE3MWIyYjg2NDc3ODkwYWYwNDYwM2EzYmIyODI3MjI2YWIwNzlkYjc4ZGE5YmY0MTZkOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBkZWI1MDI2ZTE4Mjk5Y2QwNGNkYTE1YWE2N2ZlZDZkYWIwNGU2ZDMxYTY5OWJlNjU2MzYwYjY5NTkxNGRjYjgifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L308-L608",
-                    "version": "repo-lines-v1:sha256:1571d4a2be19d2153b2a0fb2be9c5125cfbb365679da6ce3e25bcba408e919f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5NjkwOWFjMTk2YzQ4Y2FkODQwMzczNjcwMjM2OTdlODk1ZGQ3YzEwZjIxNmE4MGJiZmQ4MTVkZWM4YTVjZTdmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJjZWY5NzIyYjJmYjY1ZDgwY2U5ODA5N2MwMzA2NGU5ZTIyYWVhMTAwNzgzOGQ4YzE1NzkyNWQwNzMyZmNkNzBmIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwZGViNTAyNmUxODI5OWNkMDRjZGExNWFhNjdmZWQ2ZGFiMDRlNmQzMWE2OTliZTY1NjM2MGI2OTU5MTRkY2I4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI3MGYwNDI2M2I2NzQzZThiNGI3MTk1YjJmYzJlMDk3ZmViMDk4NzIzMTA1OTEwYjA1NzQ1N2Q4M2FkYTI0MjMxIn0"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L311-L608",
+                    "version": "repo-lines-v1:sha256:be22a7f0fe68fc5e9e5f244e90d5adeca3601980f3e264d09916e9480a8c4fca:eyJzZWxlY3RlZExpbmVDb3VudCI6Mjk4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI3YmQyODI5OGM3NzUxYjhlYjA3YTU5ZjY5ODI3NTIxOGU5ODJjMjI5OGE1MmRmMzQ2NjVkNWQyODFjYTU0MTVhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3ZWI3MDI1NzU5M2RhMDZmNjgyYTNkZGRhNTRhOWQyNjBkNGZjNTE0ZjY0NTIzN2Y1Y2E3NGIwOGY4ZGE2MWE2IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJjMTY4YzllM2RkYmYyZjExMTA2YWI3YzAwYTIwMzg2MjAwODFmYWM4NzI3NGQ2ODlkYTQyNzNhOWZmYTgwYTg5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2OWZhNGI3YmI0NjdiNmE5MDk1NjNmODdmMTViYjA2MDBkYTcwMTNlYzViYmI4NTNjMDJlOTAzYjcyYjA4Y2Y0In0"
                 },
                 {
                     "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L610-L724",
-                    "version": "repo-lines-v1:sha256:9229c797292010b727632c22b25138852e08869bd235455e632154b330f6de4a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiODdjMmYzYzc5ZWMzMGVlOWYxMWE2NjJjMTZiZjQwOTg3OGI2ZDE4YjQ0OWI2ZWY2ZjE5ZDM1MTAxMmQzOTk5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiYTkzOTA4OGU1NzA4MjJlNGFmYTIyNDAzYmFkYTFmMTY1MGYwODg4MTYxMTYxY2MxZDdjODRlNTY0YWY0Y2MzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIxNzM4ZmFjNjk0N2NhNmZhNDg1MWVmNjcyZDg0ZjVlMzgyOWY0NjNhY2E0NDU4MWI5ZDQwOTg1ZTlkYjU0ODkxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJkNmI1YmE1ZTExOGY1ZWI2YmE3OWNjY2E3N2E1ZTkxYzQ4MGYxN2Q1OGJiZjM1ZGY2NTI0MjIyYjg3YjM4NDE4In0"
+                    "version": "repo-lines-v1:sha256:072352019fe60a9a060a2805b9ba3ee2c0a7b2293cdd9bf25478936df0c711c0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0NDk1ODdhZWU5ZTIzNGY4ZTliNjBhZjI2YjFlZTNmNDUyZjU4ODUyMzEzODFiMWJjZTBhN2YwMjQ0NWU0MWFiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJjOWE4NTcyYjg4OGIwOGY3OTc5OGExOWFjYWQxZWZkYWZlZDAyNzA0MjVhM2UxYzIyZDg4OGQxMDZkNjU2ODNiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJhMDVmNjNmYzY4N2YwNjExMmQ0YzA0ZmZjYzdhN2U0ZmRmNzZkZWI4MGIwYjU5ZDUyZTQwOTU1NGZjNzcyZjQ2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0OGRlZDZjNjFiNmUyMDQ4OTA0MGE1ZDAzYjY4NWY2OWYyNTAzMjQ1NjdjNzI3MDdkODA0ZWM1ZTA0M2Q3NDBhIn0"
                 }
             ]
         },
@@ -52,15 +52,15 @@
             "evidence": [
                 {
                     "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L119-L182",
-                    "version": "repo-lines-v1:sha256:bf604d9ffb6330f67bcbd26547719d914a5df2108dc472be3ba452a2017e17f7:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkYTgyZTgzNDlkOGFkNGVjOTQ5MGM5NGQwYThiOWJkMWE1Y2FiNDY4ZGI5NGQ2ZGVlNDY1YjNhY2ZiNTc5YWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzNGYwMzU2MTk4MDkyYTgxMDFmMTE3MGIwMDcxMDZhYzIzZDQ5OTNkNjM0ZjljOGE5Y2Q5NDk1MGJmNjNiZTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlZDgwNWE2ODE0ZmM1MjUwNjFmMmFiZTYxZjJjZTQxODRiZGNmYWQwNmJlYmZkZjliYTMxMjBiYjFlYWIyNTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkMzBlODcwMTYyYTQ4N2EwZDRlM2E3OWE2NGZkMDdhYjM0MzQzY2NiZjk5MDFiMTQ4MjZmYmRkNmZmZWMzOTkifQ"
+                    "version": "repo-lines-v1:sha256:d20ffa696d98f0e3de9c42932fd734c93c2b445c74c00ac60ac2bfa07c8e595c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEwYzY0ODU2Yjc2ZGQzNDE4NDdlOGU4ZTYwNWMyNDEyMjI0ZmI2ZmRhMjQyMWI3NTE1OGQxZDFjZWZhZjM5ODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5MGNhMTUxZTE2MzlmZDU4NzlkNTk2MTRmYzY4OTQ2ZDY2YWNlZWUyYjE5ZTJlMTMwYjczZjRhMDI3ZDBhOWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkOTUyNzk1ZGEwNjg2ODhmOGUwYTY0NDczNmVhMjhiZDdlODlkODliZTEzZmRlN2YxMjU1OTA4ZjY0OWYzMjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJmMTI0ODRkMGYzZDBkZmE0OWNlNTc3OWUwMjdkYzM5Yzc3ZjdjY2U2ZWUwNDQyMDA3Zjc0YTBhOWUxOGViZDIifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L184-L240",
-                    "version": "repo-lines-v1:sha256:e3289c87ab15f157d8255e430f7e8e3e96ba6d1887f55a5ebbcc48d682c56e83:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiMGYyMTI0ZmJjYmI1YmE4MDFhODE5NTZmYTRiYTEzZjFiOTU0ODgwZTc2MzYxMGU0OTkyNWYyOTIzMGNhZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5MDFhMTFmMmQ4MTcyMGMwMjU1ZDVlMTUyMjJiMTE4NTFmYTJmN2QxMjNjZjc0MzkyZGZkNWRmNmFlYTBmYWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1MGRhMzRlYzMxNWFiMjljZThiMTkwZmM3OTdlNDAxY2E1MmRmNzkzZjAwOGNlOWYzMDU4Y2RiYThiZjJiMTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlNTQwNmU5NmE3ODE4NzIwYTFiZWU1YTYwMTJhYWQyNTgxZTJjZDMxODg1YThhMDUxZGE2Njc4NjkyMTMyN2IifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L187-L233",
+                    "version": "repo-lines-v1:sha256:ce60e411981c3bc1aa6f32b2c2b12058caa4b432b5f67c6e8a701e975cb19567:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MzIwZGMyYzNkNTg4OGQ0NWE1MDc2NzE5ZmE1N2U4MzNiOTFjZWJlYWRhYTEzOTdkZjc2ZTJhNzZjYWFjYTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzNGYwMzU2MTk4MDkyYTgxMDFmMTE3MGIwMDcxMDZhYzIzZDQ5OTNkNjM0ZjljOGE5Y2Q5NDk1MGJmNjNiZTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1MGRhMzRlYzMxNWFiMjljZThiMTkwZmM3OTdlNDAxY2E1MmRmNzkzZjAwOGNlOWYzMDU4Y2RiYThiZjJiMTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzMzkwMDhmYmM0MTI0ZjcyOTM0OWY3MGI4M2EzNjBjMjBkZjlkODlmMjYwNTc4M2ZjZmRkNTkwYzY3YzQ2MjMifQ"
                 },
                 {
                     "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L675-L699",
-                    "version": "repo-lines-v1:sha256:39bb860de9d00a5413f934a1a47149236179a93b9cecbee3297a7d2999569fb6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA3ZjRhYjViZDBlN2ZkODZhODBjMmRkMjc3ODRmMDc4MDY1MWU4NWViOGY1MWY2OGU5NjcyZmU2NjM1MDMzZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1MmY5MzZkMzU3NWQ5MTc5MDQ4ZWMxZDU5NTEwZmU0ZjU2MDNiOWFiYTU2YzE0M2M2NmI5ZjJlMGZkNmQyZjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhYzMwMzc1YWU3ZTdiZDJjMmViZGRiYTZlMjMzNTBiZDQ3YTgzZjBjMDhmOGVmOThmNWE5ZGRlYjc0ZDRiOWYifQ"
+                    "version": "repo-lines-v1:sha256:fd0c994cf6fef8d1b3def24c34ac15a63408544d288f001e0fb6c5bcfab01dc5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwZTY3Y2M1MjUzNzVjNWI0ZmI5YjYwZDI0ZThkMWViZTM0ZTkzNTU2N2VlNDU5NDM5MzMwYjBjYzZkNjcxNmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2NmVkZmIwNjc2MDMxNDc0NzE1NTQ5NDAwNzI2YjM3MGU1MzNkMDU2NWFhNmExMWUzZDc5ZGFlMjE2ZDA3NzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiMGEyM2I1Y2VjOWY1NTFlOTZjZDEyNzgxOWNmM2YzNjViYjA5YmZhZDllNzNlOGVkZTlmNDY4MTg1MWY1YjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkzYzcxMjI5MjQ3NWMxYjRiMGY5ZjM1MGRjNTM3NzI1ZThjZGEzMWU5NDNiMmNkM2M2MmE2Y2IzZGU2NDIwMTMifQ"
                 }
             ]
         },
@@ -69,8 +69,8 @@
             "statement": "The engine only loads or unloads banks after initialization, and reports `UNLOADED` for bank state before init.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L226-L240",
-                    "version": "repo-lines-v1:sha256:f0bc9dd5013548821b44e980997c7c3d63d8d1405d6233caac898957153df8ea:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzMThiMWEyMmI2MzE2NjgyOWEzYTQwOWY5ZGFiOTVkZTVjZjAxMGU5MDI1NDcwNDM0MzFhNGIxZGJiOGYwOWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5MDFhMTFmMmQ4MTcyMGMwMjU1ZDVlMTUyMjJiMTE4NTFmYTJmN2QxMjNjZjc0MzkyZGZkNWRmNmFlYTBmYWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1MGRhMzRlYzMxNWFiMjljZThiMTkwZmM3OTdlNDAxY2E1MmRmNzkzZjAwOGNlOWYzMDU4Y2RiYThiZjJiMTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlNTQwNmU5NmE3ODE4NzIwYTFiZWU1YTYwMTJhYWQyNTgxZTJjZDMxODg1YThhMDUxZGE2Njc4NjkyMTMyN2IifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L235-L250",
+                    "version": "repo-lines-v1:sha256:92e13b404aaf9a9a2ef2d2eaa02db52a0ecc7e00169a56a45b94892ee58e0e50:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzMThiMWEyMmI2MzE2NjgyOWEzYTQwOWY5ZGFiOTVkZTVjZjAxMGU5MDI1NDcwNDM0MzFhNGIxZGJiOGYwOWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1MGRhMzRlYzMxNWFiMjljZThiMTkwZmM3OTdlNDAxY2E1MmRmNzkzZjAwOGNlOWYzMDU4Y2RiYThiZjJiMTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNkNGFjNGIwZmE4NzFiMDM0ZjFmMmVkNTY2NjNiMTAzNTBlOGUwYzJmZmIyNDZkMzJlODM3NmRjYTgwODc4NTEifQ"
                 }
             ]
         },
@@ -107,12 +107,12 @@
             "statement": "`@scene-grid/shared` exports the common identifier, telemetry, math, guard, typed-object, memory, and worker-construction utilities; both engine and inspector use its `createTelemetryWorker()` to connect to the named telemetry shared worker.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L281-L292",
-                    "version": "repo-lines-v1:sha256:2793fdec824f29534494e12defa54edc2b36c95862c5446fd474e0cd5e576979:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2ZDdlMDk2YTdlZWNhYjQ5YjdjMGI0ZWVlYTUxODlmYTRhYjc0YWM4YmYzOWNjZmFiNDEzYmJlNzU3NDI5ZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3N2EyMDBmNWUwOGZlYjIzZGRjMzFiNzYwNjVkM2UxNjA0MGFmZWFlMjM5ZTJlYTRjMWQyYzY1ZjE4ZjExMzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ODdjN2E0ZjRlM2Q0MWYxZmU5MGJmYjI5OTk1MWRhZGMwOThjOWM0YWZlNTdiZThkNjlkNTUxYzQ3NTE0YWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0MjhjMjQyOTQ3NGVlMGI1ZjJmNmQ5YmRhNTE5Y2MwNDEzYThkMjY4MjQwMDZmZDU0OTNlYmQ5NWU3NGMzYWMifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L285-L295",
+                    "version": "repo-lines-v1:sha256:e1dca8b9a27a2ac5b1722e8ffb312d16d6b893f9d92b18b5ff0cae0b9cc4304e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjZGI5YTZhMTIzYWMwZDA5NDA0ZTRmZDk1ZmU1MDA2YTZhYjBmMTljNzVlNmUyNGQ3ODM5OWI1Y2MyYTM5MGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhOGUwOTI2YTI0NDBhYzM0OWI3NDNkMGIyNmFlZmZhNDRlOWE4ZWE0MmE2ZjA3MDRmM2Y0Mzc3M2RhMGM1YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ODdjN2E0ZjRlM2Q0MWYxZmU5MGJmYjI5OTk1MWRhZGMwOThjOWM0YWZlNTdiZThkNjlkNTUxYzQ3NTE0YWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhNDE1OWFhYjJlMzVhZGE1NmE3NWQ5NWY2NzA0Yjc1MmEzMTFhNmI5OTk1M2M5ZTMzMDQxMjk3ZDA0YTExMjkifQ"
                 },
                 {
                     "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L90-L99",
-                    "version": "repo-lines-v1:sha256:507715fb39bfd1be4be86f436970ef37e4019e9e415c36a9fc471c5894f28577:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlZjZlYWQ3NzZlNGU1ZGNjZGQ0MDUwNjJlNTlmNjRmZmRmMmVjNmRmNzQ5OTAyOWUxNDUxZjhiYjdmODZjMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY4MzY4NWJhMDgyMjc4ODM1NzE0ZmQ4MmM0ZmRjMWQ1YjI3OGE2NTEzNzkxNTYzODJkMmZlYzg4MDRlOWY5OWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmMDM0ZTg4ZDU2NjBhMzBhYjNkNTBkN2ZhMDY5NTA2OTdjZWRlZDFmMGYxYzVlYjhjODU1OTU4YTFkODBkNTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0M2U2ZDc2NTg2MjM5ZjgwY2IyNDdhZGYwYzRlNmQ3MzRjYmM3NjNhOGIyYzU1OGJkMmY4MzQ5NjcwN2E0ODgifQ"
+                    "version": "repo-lines-v1:sha256:1e5519c531ea9f12fcd098f2b4027aee99e568df97089ca565ab8299c827e05f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhMzliYjRhYzY1MzQ1MjA3ZmYxZmIyZTRiOThkMWEwNThhOThhMDUwNzVmOGY1NDFmNWIzMDA2MTVlYzJhZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5NGUzZmQyNDBiMzViNjY2NDc1NzA1OGM2NTlhNmNjYzBjNzM2NTEzNTYyMjBjNWIzZTA2ZjQ2Y2ZiYmVhMzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3MWYwYWI0YmViZTU2ZDA5M2MyMDMyZDA0Yzk1MGE1NDM5ZGNiYzE5ZTk1NDNlY2MwMjkzNGJiYWE1OWYyM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmM2E2ZDFjZDNkOWNmZWZjODg4ZGQyMzBkYTg4MjFjMjFhMzQ5MTgzMjlhNzdhMWY4MGU1NzM2MTY1MTYxMDQifQ"
                 },
                 {
                     "resource": "repo://packages/inspector/src/hooks/useCommandTransmitter.ts#L1-L27",
@@ -124,7 +124,7 @@
                 },
                 {
                     "resource": "repo://packages/shared/src/index.ts#L1-L46",
-                    "version": "repo-lines-v1:sha256:6a8da18b6cde8e1542a225f1d6c004b4a8c94fb2e25a27df21e787d792783de9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxMmY5ZGY4OTg3NWQxNDQxYzQ4MTNlYmRmMzY4YTBhMmY5ZGQ1Mzk2YTlhOGVkNDBkMDhjMWZlYjRhNTBhNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4ZjgzOGVlYjgzZGZjMGQ0ODE4NjU0NzAyMmY2Y2M5MmEzNTJiNWYyZTIwYTBkMjAwMGJjMWRlNzE2ODAxMjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "version": "repo-lines-v1:sha256:bde1f12f6585c44a75d324e097388bf329cb340c3e75ec04eb33407bc05d4ac3:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxMmY5ZGY4OTg3NWQxNDQxYzQ4MTNlYmRmMzY4YTBhMmY5ZGQ1Mzk2YTlhOGVkNDBkMDhjMWZlYjRhNTBhNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0OWQxMTI1NzU1ZmI5YTNhZTY2YTgyOTY5MzU3ZGU2MWViODUxNzBkYmNjNWQwNDA3MjRiZjU0ZTkyNGM1MjQifQ"
                 }
             ]
         },
@@ -158,7 +158,7 @@
                 },
                 {
                     "resource": "repo://examples/main.ts#L34-L47",
-                    "version": "repo-lines-v1:sha256:d6228bd84de1f9b48722fe972524fd1719382b8b5d5d9cb5604a2c805d2a5002:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4YjY1MDNhNWM0OGYxOWFiNWVmNzk2NTgxMGY0MjFjMGEwZWY3ODFjNDlhMDg3ZGQ0YmEzMTE2Y2UxYjg2NjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0NTAwM2MxNTM0NmExMjNiN2I1YzUwYTY5ZWVhNTRmNjQwYjhlZjY1Yjg4YTk1ZGZmMjljMzg5MTE4OTlhYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4NzUxZTk1ZTBkMDgyNzk3NGZkYzkyMWJlZTViOGYzNThlNTNjYjQ2ZGZkMmQ5YTA4YmU1OWNhZjAwMjAyNDUifQ"
+                    "version": "repo-lines-v1:sha256:6e1c09282e80162083849aded2b65d5bdcb46510ab181ea26fd88e815582c9d4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4YjY1MDNhNWM0OGYxOWFiNWVmNzk2NTgxMGY0MjFjMGEwZWY3ODFjNDlhMDg3ZGQ0YmEzMTE2Y2UxYjg2NjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0NTAwM2MxNTM0NmExMjNiN2I1YzUwYTY5ZWVhNTRmNjQwYjhlZjY1Yjg4YTk1ZGZmMjljMzg5MTE4OTlhYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4NzUxZTk1ZTBkMDgyNzk3NGZkYzkyMWJlZTViOGYzNThlNTNjYjQ2ZGZkMmQ5YTA4YmU1OWNhZjAwMjAyNDUifQ"
                 },
                 {
                     "resource": "repo://examples/main.ts#L52-L113",
@@ -186,7 +186,7 @@
         }
     ],
     "verification": {
-        "by": "openwiki/0.5.2",
-        "at": "2026-09-15T07:28:56.245Z"
+        "by": "openwiki/0.5.0",
+        "at": "2026-09-21T16:32:27.121Z"
     }
 }

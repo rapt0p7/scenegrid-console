@@ -2,6 +2,6 @@
 
 ## OpenWiki
 
-@AGENTS.md
+See [AGENTS.md](AGENTS.md) for OpenWiki agent instructions.
 
 <!-- OPENWIKI:END -->

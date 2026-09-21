@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:63572762d7aeffc49dc30a666d6546b2bebd4c1df78411536224bc7259c63eeb",
+    "pageVersion": "sha256:846ea4e778f9a57812a8e925c5af68b90d28cf172d73de02c20ae91da4016f96",
     "claims": [
         {
             "id": "claim_5d07c3c4b6d54f4db9ce5ab1c3952a4c",
@@ -187,10 +187,90 @@
                     "version": "repo-lines-v1:sha256:3b3fdd90d36351c8ae5b197b93a99eee8928494761cbb13bc55362c89cccc32b:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0YzkxNTcxNGNhOGNlZjIzZmFmODc4YjAxMmU0ZTIzZmQ4YTU2ZDI0NDcwOGQ0YjA2YzI0MWZiMzJiZTVlZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5OGI1MGEzNWFiMzk0ODk0ZTMzMDZmZWNmZmFkOTFjYzYxNTQwNmI2NjM4Mzk5MDlmMWRiYzJlOTkzNGJhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzNGRkOTVkZDYyMDdmZTkwZTFkNmE0OTc1YmY4MjE3N2ZlYjRhYzJhOTA2NmFjNzRlZTdhZmUyNmI4MmFlN2EifQ"
                 }
             ]
+        },
+        {
+            "id": "claim_74848b2d29854cd79bcf1c088c0eca29",
+            "statement": "AudioRouter is the main entrypoint for runtime audio routing, validating sound existence, preventing fallback inventions for missing IDs, and dispatching play requests to container policies, switch policies, layered sounds, scatterers, and variation resolvers.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/AudioRouter.ts",
+                    "version": "repo-file-v1:sha256:801825e697e6c1f968ecf304704956e01973cb51e4b98947408b1df4f80cdef4"
+                }
+            ]
+        },
+        {
+            "id": "claim_e84cedf14e4d40f2b917237c144f2aed",
+            "statement": "ContainerPlaybackPolicy manages sequential, weighted random, and non-repeating random source selection within containers, updating and returning state history to prevent immediate repeat playbacks.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/ContainerPlaybackPolicy.ts",
+                    "version": "repo-file-v1:sha256:d0e686e9ae47d8478705954be4e813b3f745833c9823b36ba17bc3761d1efb6a"
+                }
+            ]
+        },
+        {
+            "id": "claim_5d17497812994b54a1f7547ad22d14c6",
+            "statement": "SwitchPlaybackPolicy evaluates numeric thresholds or string overrides with optional hysteresis against game parameter values, selecting appropriate switch keys or returning null without forcing a fallback asset.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/SwitchPlaybackPolicy.ts",
+                    "version": "repo-file-v1:sha256:c75ed7eb341d12ef0be3fbadd2f466f29031ca7e0593d5b631b27f547fe998d0"
+                }
+            ]
+        },
+        {
+            "id": "claim_f362a8172af8457cbc75925d1ca7a33f",
+            "statement": "VariationResolver is a pure option transformer that perturbs pitch, volume, and seek offset before sound controller scheduling when source configs request variation.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Router/VariationResolver.ts",
+                    "version": "repo-file-v1:sha256:61da7c13361dee61c43e2d6fa4377c357a2974918f3e9f1d27aa8f047ff3f3b0"
+                }
+            ]
+        },
+        {
+            "id": "claim_7b7b9b46ece641709d422ae8c859a1f6",
+            "statement": "DuckingManager acts as a sidechain trigger adapter that wires bus targets and intensities into the sound controller after a playback is initiated.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/DuckingManager.ts",
+                    "version": "repo-file-v1:sha256:71ca596fef63ed16afc5032c62f334f7471f66a821159863793fc389b5dcc9a7"
+                }
+            ]
+        },
+        {
+            "id": "claim_5c549f07be6c4fb2b443eb0c2f8e7302",
+            "statement": "InstanceRTPCBinder maintains active per-voice RTPC parameter bindings, synchronizing sound properties with parameter changes and cleaning up listeners on voice termination.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Managers/InstanceRTPCBinder.ts",
+                    "version": "repo-file-v1:sha256:aa642626f88a88566aa7101e75161ae99a53064b599f62efe5cc33fe9abcd5d0"
+                }
+            ]
+        },
+        {
+            "id": "claim_43f28c4b875e49099491da83035d4387",
+            "statement": "VoiceCullingArbiter monitors bus volume and physical playback state against hysteresis windows to dynamically virtualize or devirtualize active voices under system pressure.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Domain/Culling/VoiceCullingArbiter.ts",
+                    "version": "repo-file-v1:sha256:6f40765e02165fc41a443be3028b791987d8f39e355bd1a0ab8a9884a3846444"
+                }
+            ]
+        },
+        {
+            "id": "claim_9da90be6f1d44123aae5aba24f878792",
+            "statement": "BankManagerAdapter implements IBankManager to manage bank load states (UNLOADED, LOADING, LOADED, ERROR), batch-loading sound asset buffers and registering decoded audio data into the audio pool.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts",
+                    "version": "repo-file-v1:sha256:bcea726b46dfbf1f013363950878bc195adbd4ea98f017d76fd35a7ce88d3178"
+                }
+            ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.0",
-        "at": "2026-09-03T11:15:32.736Z"
+        "at": "2026-09-21T16:32:27.121Z"
     }
 }

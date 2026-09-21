@@ -18,6 +18,9 @@ sources:
     resource: repo://packages/engine/src/Domain/Orchestration/Sequencer.ts
   - id: openwiki-source-b833b320e9b507c252fc879e
     resource: repo://packages/engine/src/Domain/Orchestration/SmartLoopTransitionPolicy.ts
+verified:
+  - by: openwiki/0.5.0
+    at: 2026-09-21T16:32:27.121Z
 generated: { by: "openwiki/0.5.0", at: "2026-09-03T11:15:32.736Z" }
 ---
 
