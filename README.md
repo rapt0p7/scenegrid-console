@@ -41,6 +41,8 @@ SceneGrid is structured as a monorepo to enforce strict architectural boundaries
 - **`@scene-grid/engine`**: The core zero-allocation audio runtime and domain logic.
 - **`@scene-grid/inspector`**: A fully decoupled, drop-in visual debugger and profiler UI.
 - **`@scene-grid/shared`**: High-performance math kernels, randomizers, and shared domain types.
+- **`@scene-grid/cli`**: Ahead-of-Time audio processing and manifest generation utilities.
+- **`@scene-grid/mcp-server`**: A Model Context Protocol (MCP) server providing standardized external access to engine telemetry and control APIs.
 
 ---
 
@@ -135,7 +137,9 @@ _Note: Core stability and Parameter Resolution Pipeline are part of the v1.0 mil
 
 ### 🟡 Phase 2: Telemetry & Live Bridge (v1.2)
 
-- **Remote Sync Adapter (The Live Bridge):** An infrastructure module powered by WebSockets. Allows a running `AudioEngine` to act as a client, broadcasting telemetry and receiving live property updates from external authoring tools.
+- ✅ **Remote Sync Adapter (The Live Bridge):** An infrastructure module powered by WebSockets. Allows a running `AudioEngine` to act as a client, broadcasting telemetry and receiving live property updates from external authoring tools.
+- ✅ **Telemetry API (MCP Server):** A Model Context Protocol server that provides standardized external access to engine telemetry and control APIs.
+- ✅ **AOT Asset Pipeline & Streaming:** CLI utility for Ahead-of-Time audio processing, manifest generation, and a chunked streaming pipeline for large assets.
 - **SceneGrid CLI Bridge:** A Node.js utility that monitors your local workspace and pushes changes directly into your running game instance.
 - **Semantic Music States:** Logic-based states (e.g., _Exploration_ → _Combat_) where the engine automatically resolves loop regions and layers, providing a single source of truth for the debugger.
 - **Internal Modulators:** Native LFOs and Envelopes for continuous parameter modulation, decoupling audio animation from the game engine's main ticker for maximum stability.

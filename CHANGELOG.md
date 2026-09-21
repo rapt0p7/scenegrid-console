@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Introduce mcp server for engine telemetry and control
+
+- Introduce 'mcp-apps-builder' skill
+
+- Implement result monad and degradation policies
+
+- Add repowise usage rules and guidelines for agents
+
 - Introduce cli asset pipeline for aot audio processing
 
 - Introduce `apply` skill and enhance agent workflows
@@ -254,6 +262,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Updated changelog, dev journal, diagram
+
 - Updated 'openwiki'
 
 - Sort generated manifests and add newlines
@@ -682,6 +692,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Fixed
+- Prevent events on disposed instances and improve ticker
+
 - Strengthen test suite with mutation testing
 
 - Improve scheduling precision and transition handling

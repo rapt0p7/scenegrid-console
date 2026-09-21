@@ -399,6 +399,19 @@
 
 ---
 
+## [Phase 27] Focus: Telemetry API (MCP) and Architectural Resiliency (Result Monad)
+
+* **Context/Problem:** External tooling and AI agents lacked a standardized, unified API to query real-time engine telemetry or dynamically control engine states. Furthermore, error handling relied heavily on exceptions, which could cause unpredictable crashes or undefined behavior during edge cases or asset loading failures.
+* **Solution:** Introduced a Model Context Protocol (MCP) server to provide standardized access to engine telemetry and control APIs. Transitioned the architectural error handling toward a safer model by implementing a Result monad pattern alongside explicit degradation policies, ensuring the engine fails gracefully. Additionally, established explicit Repowise usage rules for autonomous agents.
+
+*Manual notes (to be filled):*
+
+* **❌ What didn't work:**
+* **⚖️ Trade-off:**
+* **🎯 Next step:**
+
+---
+
 ## [Architectural Invariants] Documented Rules (from docs/architecture commits)
 
 The following explicit rules have been locked in the documentation:
