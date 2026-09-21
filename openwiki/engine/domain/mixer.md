@@ -25,6 +25,9 @@ sources:
   - id: openwiki-source-6eca053f88eb46affdb7530a
     resource: repo://packages/engine/src/Domain/Mixer/MixerTransitionEngine.ts
 generated: { by: "openwiki/0.5.0", at: "2026-09-03T11:15:32.736Z" }
+verified:
+  - by: openwiki/0.5.0
+    at: 2026-09-03T11:15:32.736Z
 ---
 
 # Domain Mixer and Snapshot Resolution

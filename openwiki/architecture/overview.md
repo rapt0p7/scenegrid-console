@@ -4,8 +4,8 @@ title: Repository architecture and runtime boundaries
 description: Map of the SceneGrid workspace packages, their supported dependency directions, and the browser path from authored audio configuration through the engine, telemetry worker, inspector, and example host.
 tags: [architecture, monorepo, browser-runtime, audio, telemetry, inspector]
 verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-21T16:32:27.121Z
+  - by: openwiki/0.5.2
+    at: 2026-09-22T06:36:54.215Z
 sources:
   - id: openwiki-source-739d3ff1d3f2cc6c1de83f4b
     resource: repo://.dependency-cruiser.cjs

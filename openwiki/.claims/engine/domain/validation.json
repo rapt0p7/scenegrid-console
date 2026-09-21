@@ -1,24 +1,14 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:13285d3ffa3ccb58b5eef94ee6bee353876d85c0e41e0f79cde99d9b2d11f4b0",
+    "pageVersion": "sha256:7c5ec184f38eda1b6bcf8a1ca55151d6442aac09994d4f51b8ea1db955a5dd20",
     "claims": [
-        {
-            "id": "claim_33d23fc6a06147cd90533d831e0263ce",
-            "statement": "`ConsistencyChecker.validate()` rejects missing, undefined, and non-object configuration payloads before any rules run.",
-            "evidence": [
-                {
-                    "resource": "repo://packages/engine/src/Domain/Validation/ConsistencyChecker.ts#L20-L34",
-                    "version": "repo-lines-v1:sha256:e36307c42396e2ce2219d48e027a39f1747c9991d6dfeb6c07bf575d1fd7e1b8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ODQ1YTFiODVmYmNlNWYwYTdhOTg5M2VkNGM5N2Q1YzYxMTVkNjExZDVlOGM3MDU5YjljYTI0MzExODMwMjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyZDhjY2VmNTk1NWZlYzVkMDA0OWM2MzJmNWU0MzZkNjgwMGEwM2MzNzI3ZDI0YzcwNzQxNDRlOGQ3MzMwMDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjYWUzZmQ4ZjgzNzE2YzE0NGQ1YWVhZGFhMGVhMjUzYTdjOTRlNDQyMGJiZmNkOWYzM2RiYTY3MTZkYTRkZWMifQ"
-                }
-            ]
-        },
         {
             "id": "claim_6d66a57fe4c5461a89a26364cd4851cd",
             "statement": "The checker builds a `ValidationContext`, runs the configured validation rules in sequence, then reports accumulated findings through the context before returning either a boolean or `[isConsistent, { errors, warnings }]` when report output is requested.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Validation/ConsistencyChecker.ts#L35-L69",
-                    "version": "repo-lines-v1:sha256:c7d54050c37853cefd98852e5d0d0972982cc2598cfa8b4c28e19df5a5886936:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2NDU0YmI3MjZmNTI0YWQ2ODQzYTQ2YTMxOTgxNjI1MDAwMjEyZjBlMzhmNWMxY2FkNThjMDllODJhMWY1NzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyNzU5ODJjNzM3MmM5NTgyOGI2Y2MwY2Y3MWNlYTcyNmQzMjUxZWIyYTk0ZTEyZjNmY2NhMjY2YjY4N2E0ZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkMTMxZTBhYTk2MjEyNjRjMGE1ZDk5OTM5ZDQ1NDhhN2MwNDkyN2Y5ZWJjZjAxMjkxOTU5YTUyZTdlYTg3MmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZlYTI1NDA3YTQ1YmU2M2I1ZmI2YmY3MGVmMDVhOTVhYzEyMTU0MTVmNTM1ODJhYWIwZGQwNDQxNWU2OTQ0MmQifQ"
+                    "resource": "repo://packages/engine/src/Domain/Validation/ConsistencyChecker.ts#L35-L66",
+                    "version": "repo-lines-v1:sha256:10e201b49e0383c74ba8c52a0c34d84e2298587736787065e9fbd9ab797d1efe:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwYjVmMmYwZDc1MjVlMjM3YjQzODBiNGI0YTNmZjMzMWViMzhiNTUzZGFiMjdiNmRmYWNkODhlZTNmMWNiZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1YzBjMmM0YzE1ZjMxNWFlNzEwYTEyNTRmZWRkMDY5Nzg1Y2MwMzMwYzhjZWFiNTU1MGNlZWM2YzkzM2RmNDMifQ"
                 },
                 {
                     "resource": "repo://packages/engine/src/Domain/Validation/Core/ValidationContext.ts#L138-L160",
@@ -71,20 +61,6 @@
             ]
         },
         {
-            "id": "claim_568335cfdd604ed8b951ad1d7b2931d9",
-            "statement": "`RoutingCyclesRule` performs depth-first search over bus sends and throws a fatal error when it finds a routing loop, which stops validation immediately.",
-            "evidence": [
-                {
-                    "resource": "repo://packages/engine/src/Domain/Validation/ConsistencyChecker.ts#L53-L60",
-                    "version": "repo-lines-v1:sha256:2d1e0b5c773a6822c4cae541e01e86696da8e9538aa402c37f8f1d0aabc1d6f9:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTY5MDlhYzE5NmM0OGNhZDg0MDM3MzY3MDIzNjk3ZTg5NWRkN2MxMGYyMTZhODBiYmZkODE1ZGVjOGE1Y2U3ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODI1MWJmYWJjZmI2ZDg5ZmQ5ZjRlM2I3YmM0YTE3NGZkOTBjOTk4MTg2ZTRmZGUyYzhmYTM0ZTZkNWMyOTNhYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGViNWJjN2M1MmYxMThjMWNkMWE2YWU0NTRjNDQxMTRkNWU5NTc1NDFmOTZiNGIzYjY3NWQ2ZGNlNWMwMjc1MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTY2ZTYxNjlhNDAzMjhmNzk4ZDNiNzViNjUzZWYxYjE1MmUzYzYxN2RkMWQ1Y2Y0ODUyZDVjM2FhZmJlNjUxYyJ9"
-                },
-                {
-                    "resource": "repo://packages/engine/src/Domain/Validation/Rules/RoutingCyclesRule.ts#L7-L48",
-                    "version": "repo-lines-v1:sha256:81cd776cd3eafbc57857e86f3478cd2abcc613f7cb64bb26d30c66ec4088c40b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiYmZlMjRmNzYxOWJmMjIyMWIyMjA0ODVmYTg3NGY4NDdlNDYxMzk2ODkxMmFlODA2NmEzNTRiZDkyNDUyZjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmZDEyN2U1ZmU1NGEzMjliMTVkMGUxZWQ4ZDUzYmEwM2QxOWNmNmEzYTZkNmY1YWM3OTA4ZWRhZjRjMjJkNGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
-                }
-            ]
-        },
-        {
             "id": "claim_b821f5f10dd842969c349d4768551953",
             "statement": "`SoundMapRule` validates each sound-map entry against the bus registry, requires a bus for ordinary sounds, and delegates RTPC and shape-specific subrules for ducking, spatial, layered, container, switch, smart-loop, and scatterer sound forms.",
             "evidence": [
@@ -123,28 +99,10 @@
                     "version": "repo-lines-v1:sha256:0ac6ccffe88683678b2c8a1a4d8ff65385eb67c6337ecd5e807e605c86f6e4c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmYWU0NThmOTMyZDdjNWI4Y2RlOGIwZTg2MGEwMjAxMWU3NTRiYmJjOTI4NDI5OTRkZDViN2ZiZGY5NTBiYjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNlN2VhZDEzYmE3YWJiOGRmNTRiNDIxYWMwNDljN2QyZTg3MjZiMWZkZWNkNTVjZmM3ZGM5YzlhNGI4ZDkzM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
                 }
             ]
-        },
-        {
-            "id": "claim_9beeaa27a4ee4655ad0de74b05451e59",
-            "statement": "The validation test suite covers valid startup, empty-bus rejection, non-object input rejection, routing-cycle failures, bus and sound-map validation, and representative warnings such as orphan manifest references.",
-            "evidence": [
-                {
-                    "resource": "repo://packages/engine/src/Domain/Validation/__tests__/ConsistencyChecker.test.ts#L22-L60",
-                    "version": "repo-lines-v1:sha256:f38aa4cf182cb8bee9950921daf880e5ca45993fe3de4afa781f6558556927ec:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiMjMxZjQyNDFhOTkyNDVjM2U4ODg5MTE0Yzk2NjlmMGQyZGVkN2FjYjhmYTdjNjMwMzdkZTgzMGNjMjg5MGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjMzI2OTQzNGY4ZDY1NzZhYTBjNDgzODQ3YTAzNzhmNzc3MzMwYjYzMjdhODc5ZGI5NjYyNzQ3NThjZTcyMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0YWFiNTk2M2NiZmFlODI0ODdkMTQyZmRjYWRiMzk5MTQ1NDA1ODdmZDU2YjRhZjIxYTUyNWY0NzhlY2Y1MjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5YmYwMmQ3ZTQxYzQ3YjMyODk0NzA5MjYwODgzMTM3M2NhZGRhYjg4OGJkNzhhNTc4ODgzNGY2MzlmOWFmZTYifQ"
-                },
-                {
-                    "resource": "repo://packages/engine/src/Domain/Validation/__tests__/ConsistencyChecker.test.ts#L503-L533",
-                    "version": "repo-lines-v1:sha256:c5f3fd7da240102beb3e0ae32e2f58afa900e415a63b2e688ef0167d8a3d8496:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxOTkwYjMxZTMwYjczNjYzZTA2YjI5MmNmOTQzNDVjOTRjNzQ4NzQ5Zjk5ZjA0NGMwOTY3NTkyM2ZlYTM5ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2MDNiMWU5YWMwZmE3NGNjZDViNjZmZTVhOWIwMTRmYTdkNjhkZjQwMjdlNmMwMjFjM2ZmOGIxNTQ0ODJiNzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmYTA4NzM1ZGU4MTY2NGM4MWVlNjcwYmY0ZjBlYzM3ZjQzOTBjZjQzYTJlNGNkOGRhM2NjNGJlNGJlY2JmNDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2MzA0MDFjYTQ1NWQ1N2E2YTQ1YzMxODgyNWJiNTQxNzJkZjJiMzQ0YTMxMmUyOTI3YmVhNjBhNWE2YjkzYzgifQ"
-                },
-                {
-                    "resource": "repo://packages/engine/src/Domain/Validation/__tests__/ConsistencyChecker.test.ts#L83-L191",
-                    "version": "repo-lines-v1:sha256:011e67b489d816a87d1a16c99a6811adfa8c635b6afac1ec463199f4fb74a4e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwMzMwYjNjNmY0NGU0NTM0Mzc2NzlhZTk4NThiYzA5NWMzMWMxYmU0NjU0NjRjNTNlYjcwMmU4ZmNjYTc5MjI3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5NjAzYjFlOWFjMGZhNzRjY2Q1YjY2ZmU1YTliMDE0ZmE3ZDY4ZGY0MDI3ZTZjMDIxYzNmZjhiMTU0NDgyYjcyIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI2ZmEwODczNWRlODE2NjRjODFlZTY3MGJmNGYwZWMzN2Y0MzkwY2Y0M2EyZTRjZDhkYTNjYzRiZTRiZWNiZjQzIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0MTljMmNlMTNjMDFkZDE5ODA4ZTZjZGQ2MmFhMjJjY2IwMTZlMDg4ZDY0MzczOGJiYzgyNGUwNGRiMjQ4NDc5In0"
-                }
-            ]
         }
     ],
     "verification": {
-        "by": "openwiki/0.5.0",
-        "at": "2026-09-03T11:15:32.736Z"
+        "by": "openwiki/0.5.2",
+        "at": "2026-09-22T06:36:54.215Z"
     }
 }

@@ -4,8 +4,6 @@ title: Domain Validation and Consistency Checking
 description: The engine startup validation gate that checks configuration structure, cross-reference consistency, and routing safety before initialization completes.
 tags: [engine, validation, rules, startup]
 sources:
-  - id: openwiki-source-f35df08652e1a591bdc013de
-    resource: repo://packages/engine/src/Domain/Validation/__tests__/ConsistencyChecker.test.ts
   - id: openwiki-source-04a897785f9bd6dff00b7261
     resource: repo://packages/engine/src/Domain/Validation/ConsistencyChecker.ts
   - id: openwiki-source-e180714f3187a37bdc608cf5
@@ -18,11 +16,12 @@ sources:
     resource: repo://packages/engine/src/Domain/Validation/Rules/BusesRule.ts
   - id: openwiki-source-1838f8979f86560e7aa25eee
     resource: repo://packages/engine/src/Domain/Validation/Rules/EventsRule.ts
-  - id: openwiki-source-96c0378873f7b3207729a73f
-    resource: repo://packages/engine/src/Domain/Validation/Rules/RoutingCyclesRule.ts
   - id: openwiki-source-34b12302c193ec83666e75ae
     resource: repo://packages/engine/src/Domain/Validation/Rules/SoundMapRule.ts
 generated: { by: "openwiki/0.5.0", at: "2026-09-03T11:15:32.736Z" }
+verified:
+  - by: openwiki/0.5.2
+    at: 2026-09-22T06:36:54.215Z
 ---
 
 # Domain Validation and Consistency Checking
