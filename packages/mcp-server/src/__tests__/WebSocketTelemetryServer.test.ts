@@ -23,12 +23,16 @@ describe('WebSocketTelemetryServer', () => {
 
             client.on('open', () => {
                 const telemetryPayload = {
-                    type: 'SNAPSHOT',
-                    playbacks: [{ id: 'pb_1', state: 'playing' }]
+                    batchId: 1,
+                    packets: [
+                        {
+                            type: 'SNAPSHOT',
+                            activePlaybacks: [{ id: 'pb_1', state: 'playing' }]
+                        }
+                    ]
                 };
                 client.send(JSON.stringify(telemetryPayload));
 
-                // wait a bit for server to process
                 setTimeout(() => {
                     try {
                         const snapshot = server.getSnapshot();

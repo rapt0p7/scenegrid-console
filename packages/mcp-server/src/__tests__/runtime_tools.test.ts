@@ -41,7 +41,6 @@ describe('runtime tools', () => {
         it('should delegate to command dispatcher', async () => {
             const mockDispatcher = { fireEvent: vi.fn(), setRtpc: vi.fn(), globalAction: vi.fn() };
 
-            // Assuming triggerEventHandler is imported
             const { triggerEventHandler } = await import('../runtime_tools.js');
             await triggerEventHandler(mockDispatcher as any, 'event_123');
 

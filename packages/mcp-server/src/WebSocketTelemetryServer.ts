@@ -114,7 +114,6 @@ export class WebSocketTelemetryServer {
                 } else if (parsed.type === 'FULL_SYNC' && parsed.payload && Array.isArray(parsed.payload.packets)) {
                     console.log('[TelemetryServer] Received FULL_SYNC payload');
                     packets = parsed.payload.packets;
-                    // Reset logs on full sync to avoid duplicates
                     this.state.logs = [];
                 } else if (parsed.batchId !== undefined && Array.isArray(parsed.packets)) {
                     packets = parsed.packets;
@@ -131,7 +130,6 @@ export class WebSocketTelemetryServer {
                     } else if (packet.type === 'CAUSE_CHAIN' || packet.type === 'LIFECYCLE') {
                         if (!this.state.logs) this.state.logs = [];
                         this.state.logs.push(packet);
-                        // keep only the last 200 to match inspector
                         if (this.state.logs.length > 200) this.state.logs.shift();
                     } else if (packet.type === 'RAM_REPORT') {
                         this.state.ramReport = packet.report || packet;

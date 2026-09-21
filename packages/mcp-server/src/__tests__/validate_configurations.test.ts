@@ -6,7 +6,7 @@ describe('validate_configurations', () => {
     it('should return ConsistencyChecker errors for invalid JSON configurations', async () => {
         const invalidPayload = {
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            banks: { bank_1: { id: 'bank_1', name: 'Bank 1' } }, // Missing sounds
+            banks: { bank_1: { id: 'bank_1', name: 'Bank 1' } },
             buses: {},
             events: {},
             sounds: {},
