@@ -5,7 +5,18 @@ import { getActivePlaybacksHandler, getEngineLogsHandler, getRamReportHandler } 
 import { WebSocketTelemetryServer } from '../WebSocketTelemetryServer.js';
 
 vi.mock('../WebSocketTelemetryServer.js');
-
+vi.mock('node:fs', () => ({
+    readdirSync: vi.fn(),
+    statSync: vi.fn(),
+    existsSync: vi.fn()
+}));
+vi.mock('@scene-grid/cli', () => ({
+    processAssets: vi.fn(),
+    prepareAliases: vi.fn(),
+    extractMetadata: vi.fn(),
+    calculatePCMSize: vi.fn(),
+    routeAsset: vi.fn()
+}));
 describe('runtime tools', () => {
     describe('get_active_playbacks', () => {
         it('should correctly retrieve active playbacks', async () => {
@@ -143,6 +154,84 @@ describe('runtime tools', () => {
             const result = await getDebugAudioIssuePrompt();
             expect(result).toContain('scenegrid://telemetry/live');
             expect(result).toContain('scenegrid://validation/latest');
+        });
+    });
+
+    describe('process_assets', () => {
+        it('should call processAssets from CLI', async () => {
+            const { processAssetsHandler } = await import('../runtime_tools.js');
+            const cli = await import('@scene-grid/cli');
+            await processAssetsHandler({
+                inputDir: 'in',
+                outputDir: 'out',
+                manifestsDir: 'man',
+                quotaMb: 50,
+                streamRules: [],
+                streamExclusions: [],
+                hash: false
+            });
+            expect(cli.processAssets).toHaveBeenCalledWith({
+                inputDir: 'in',
+                outputDir: 'out',
+                manifestsDir: 'man',
+                quotaMb: 50,
+                streamRules: [],
+                streamExclusions: [],
+                hash: false
+            });
+        });
+    });
+
+    describe('generate_aliases', () => {
+        it('should call prepareAliases from CLI', async () => {
+            const { generateAliasesHandler } = await import('../runtime_tools.js');
+            const cli = await import('@scene-grid/cli');
+            await generateAliasesHandler('in', 'out.json');
+            expect(cli.prepareAliases).toHaveBeenCalledWith('in', 'out.json');
+        });
+    });
+
+    describe('inspect_pcm_weight', () => {
+        it('should extract metadata and calculate PCM size', async () => {
+            const { inspectPcmWeightHandler } = await import('../runtime_tools.js');
+            const cli = await import('@scene-grid/cli');
+            (cli.extractMetadata as any).mockResolvedValue({ durationSec: 10, channels: 2, sampleRate: 44100 });
+            (cli.calculatePCMSize as any).mockReturnValue(3.36);
+
+            const result = await inspectPcmWeightHandler('file.wav');
+
+            expect(cli.extractMetadata).toHaveBeenCalledWith('file.wav');
+            expect(cli.calculatePCMSize).toHaveBeenCalledWith(10, 2, 44100);
+            expect(result).toEqual({
+                durationSec: 10,
+                channels: 2,
+                sampleRate: 44100,
+                exactSizeBytes: 3523215,
+                exactSizeMb: 3.36
+            });
+        });
+    });
+
+    describe('getQuotaPreviewHandler', () => {
+        it('should return dry run report based on CLI logic', async () => {
+            const { getQuotaPreviewHandler } = await import('../runtime_tools.js');
+            const cli = await import('@scene-grid/cli');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readdirSync as any).mockReturnValue(['a.wav', 'b.ogg']);
+            (fs.statSync as any).mockReturnValue({ isFile: () => true });
+
+            (cli.extractMetadata as any).mockResolvedValue({ durationSec: 10, channels: 2, sampleRate: 44100 });
+            (cli.calculatePCMSize as any).mockReturnValue(3.36);
+            (cli.routeAsset as any).mockImplementation((size: number, q: number, b: string) =>
+                b === 'a.wav' ? 'chunk' : 'ladder'
+            );
+
+            const result = await getQuotaPreviewHandler('in', 50, [], []);
+
+            expect(result.files['a.wav'].route).toBe('chunk');
+            expect(result.files['b.ogg'].route).toBe('ladder');
+            expect(result.totalMemoryMb).toBe(3.36); // b.ogg is ladder, a.wav is chunk (but chunk takes zero memory in dry run? We'll define totalMemory as total ladder memory)
         });
     });
 });

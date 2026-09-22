@@ -31,6 +31,7 @@ export default defineConfig({
             '@scene-grid/shared': path.resolve(__dirname, './packages/shared/src/index.ts'),
             '@scene-grid/engine': path.resolve(__dirname, './packages/engine/src/index.ts'),
             '@scene-grid/inspector': path.resolve(__dirname, './packages/inspector/src/index.ts'),
+            '@scene-grid/cli': path.resolve(__dirname, './packages/cli/src/index.ts'),
 
             '@infrastructure': path.resolve(__dirname, './packages/engine/src/Infrastructure'),
             '@domain': path.resolve(__dirname, './packages/engine/src/Domain'),

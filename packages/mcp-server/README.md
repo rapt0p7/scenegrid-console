@@ -46,11 +46,24 @@ These tools interact with the live state of the engine. Use them when you need t
   - **Purpose**: Activates a mixer VCA snapshot with a transition over a specified time.
   - **Usage**: Testing dynamic switching of mixer presets on the fly.
 
-### Static Configuration
+### Static Configuration & AOT Processing
 
 - **`validate_configurations`**
   - **Purpose**: Runs a provided JSON configuration payload against the strict `ConsistencyChecker` rules (such as checking for Routing Cycles, Valid Parent Buses, Sound Maps, etc.).
   - **Usage**: Call this before saving a configuration payload to ensure it conforms to the `scenegrid-console` strict validation requirements.
+- **`process_assets`**
+  - **Purpose**: Programmatically executes the main `@scene-grid/cli` pipeline.
+  - **Usage**: Use this to automatically apply stream rules, check memory quotas, and generate ready-to-use production assets and JSON manifests from a folder of raw recordings.
+- **`generate_aliases`**
+  - **Purpose**: Scans a directory of WAV files and generates a `SoundId` aliases JSON file.
+  - **Usage**: Automatically map raw file names (e.g. `explosion_v2.wav`) to strict domain types.
+- **`inspect_pcm_weight`**
+  - **Purpose**: Reads raw audio file headers and returns the exact uncompressed RAM footprint (in bytes) along with duration and sample rate.
+  - **Usage**: Determine how much memory a specific track will consume before adding it to the engine, allowing intelligent decisions on streaming vs preloading.
+
+- **`get_quota_preview`**
+  - **Purpose**: Generates a dry-run report showing how raw audio assets will be allocated between memory (`AudioBuffer`) and disk (`ChunkedStream`) based on the provided RAM quota and streaming rules.
+  - **Usage**: Simulate memory allocation for a specific folder before running the full asset processing pipeline.
 
 ## Available MCP Prompts
 

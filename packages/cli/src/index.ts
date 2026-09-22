@@ -4,6 +4,10 @@ import path from 'node:path';
 import { resolveConfig } from './config.js';
 import { processAssets, prepareAliases } from './pipeline.js';
 
+export { processAssets, prepareAliases } from './pipeline.js';
+export { extractMetadata, calculatePCMSize } from './pcm.js';
+export { routeAsset } from './router.js';
+
 async function main() {
     try {
         if (process.argv.includes('init-aliases')) {
@@ -50,7 +54,6 @@ async function main() {
 }
 
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
 
 const isMain = () => {
     if (!process.argv[1]) return false;

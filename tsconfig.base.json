@@ -16,7 +16,9 @@
         "paths": {
             "@scene-grid/shared": ["./packages/shared/src/index.ts"],
             "@scene-grid/engine": ["./packages/engine/src/index.ts"],
-            "@scene-grid/inspector": ["./packages/inspector/src/index.ts"]
+            "@scene-grid/inspector": ["./packages/inspector/src/index.ts"],
+            "@scene-grid/cli": ["./packages/cli/src/index.ts"],
+            "@scene-grid/mcp-server": ["./packages/inspector/index.ts"]
         }
     },
     "exclude": ["node_modules", "dist", "public"]

@@ -341,4 +341,119 @@ server.prompt(
     }
 );
 
+import {
+    processAssetsHandler,
+    generateAliasesHandler,
+    inspectPcmWeightHandler,
+    getQuotaPreviewHandler
+} from './src/runtime_tools.js';
+
+export const getQuotaPreviewTool = server.tool(
+    {
+        name: 'get_quota_preview',
+        title: 'Get Quota Preview',
+        description:
+            'Generates a dry-run report showing how memory will be allocated between AudioBuffer and ChunkedStream.',
+        inputSchema: z.object({
+            inputDir: z.string().describe('Directory containing raw audio files'),
+            quotaMb: z.number().describe('RAM quota limit in megabytes'),
+            streamRules: z.array(z.string()).describe('Regex patterns for files to stream'),
+            streamExclusions: z.array(z.string()).describe('Regex patterns for files to exclude from streaming')
+        }),
+        outputSchema: z.object({
+            totalMemoryMb: z.number(),
+            files: z.record(
+                z.object({
+                    sizeMb: z.number(),
+                    route: z.enum(['ladder', 'chunk'])
+                })
+            )
+        }),
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    },
+    async ({ inputDir, quotaMb, streamRules, streamExclusions }) => {
+        const report = await getQuotaPreviewHandler(inputDir, quotaMb, streamRules, streamExclusions);
+        return {
+            content: [{ type: 'text', text: JSON.stringify(report, null, 2) }],
+            structuredContent: report
+        };
+    }
+);
+
+export const processAssetsTool = server.tool(
+    {
+        name: 'process_assets',
+        title: 'Process Audio Assets',
+        description: 'Runs the AOT audio asset processing pipeline programmatically.',
+        inputSchema: z.object({
+            inputDir: z.string().describe('Directory containing raw audio files'),
+            outputDir: z.string().describe('Output directory for processed audio files'),
+            manifestsDir: z.string().describe('Output directory for JSON manifests'),
+            quotaMb: z.number().describe('RAM quota limit in megabytes'),
+            streamRules: z.array(z.string()).describe('Regex patterns for files to stream'),
+            streamExclusions: z.array(z.string()).describe('Regex patterns for files to exclude from streaming'),
+            streamPriority: z.enum(['high', 'low']).optional(),
+            hash: z.boolean().optional(),
+            baseUrl: z.string().optional(),
+            aliases: z.string().optional()
+        }),
+        outputSchema: z.object({ success: z.boolean() }),
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+    },
+    async options => {
+        await processAssetsHandler(options);
+        return {
+            content: [{ type: 'text', text: 'Audio assets processed successfully.' }],
+            structuredContent: { success: true }
+        };
+    }
+);
+
+export const generateAliasesTool = server.tool(
+    {
+        name: 'generate_aliases',
+        title: 'Generate Sound Aliases',
+        description: 'Scans a directory of WAV files and generates a SoundId aliases JSON file.',
+        inputSchema: z.object({
+            inputDir: z.string().describe('Directory containing raw audio files'),
+            outputPath: z.string().describe('Output JSON file path for aliases')
+        }),
+        outputSchema: z.object({ success: z.boolean() }),
+        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
+    },
+    async ({ inputDir, outputPath }) => {
+        await generateAliasesHandler(inputDir, outputPath);
+        return {
+            content: [{ type: 'text', text: `Aliases generated at ${outputPath}` }],
+            structuredContent: { success: true }
+        };
+    }
+);
+
+export const inspectPcmWeightTool = server.tool(
+    {
+        name: 'inspect_pcm_weight',
+        title: 'Inspect PCM Weight',
+        description: 'Calculates the uncompressed RAM footprint of a raw audio file.',
+        inputSchema: z.object({
+            filePath: z.string().describe('Path to the raw audio file (WAV/OGG/MP3)')
+        }),
+        outputSchema: z.object({
+            durationSec: z.number(),
+            channels: z.number(),
+            sampleRate: z.number(),
+            exactSizeMb: z.number(),
+            exactSizeBytes: z.number()
+        }),
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false }
+    },
+    async ({ filePath }) => {
+        const report = await inspectPcmWeightHandler(filePath);
+        return {
+            content: [{ type: 'text', text: JSON.stringify(report, null, 2) }],
+            structuredContent: report
+        };
+    }
+);
+
 export default server;
