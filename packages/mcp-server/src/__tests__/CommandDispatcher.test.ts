@@ -32,5 +32,38 @@ describe('CommandDispatcher', () => {
                 action: 'pause'
             })
         );
+
+        dispatcher.stopAll();
+        expect(mockBroadcast).toHaveBeenCalledWith(
+            JSON.stringify({
+                type: 'GLOBAL_ACTION',
+                action: 'STOP_ALL'
+            })
+        );
+
+        dispatcher.pauseAll();
+        expect(mockBroadcast).toHaveBeenCalledWith(
+            JSON.stringify({
+                type: 'GLOBAL_ACTION',
+                action: 'PAUSE_ALL'
+            })
+        );
+
+        dispatcher.resumeAll();
+        expect(mockBroadcast).toHaveBeenCalledWith(
+            JSON.stringify({
+                type: 'GLOBAL_ACTION',
+                action: 'RESUME_ALL'
+            })
+        );
+
+        dispatcher.applySnapshot('snap_master', 500);
+        expect(mockBroadcast).toHaveBeenCalledWith(
+            JSON.stringify({
+                type: 'APPLY_SNAPSHOT',
+                snapshotId: 'snap_master',
+                fadeTime: 500
+            })
+        );
     });
 });

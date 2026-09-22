@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from 'vitest';
 // oxlint-disable-next-line import/no-named-as-default
 import WebSocket from 'ws';
 
@@ -6,7 +6,12 @@ import { WebSocketTelemetryServer } from '../WebSocketTelemetryServer.js';
 
 describe('WebSocketTelemetryServer', () => {
     let server: WebSocketTelemetryServer;
-    const testPort = 8081;
+    const testPort = 8089;
+
+    beforeAll(() => {
+        vi.spyOn(console, 'log').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
 
     beforeEach(async () => {
         server = new WebSocketTelemetryServer(testPort);

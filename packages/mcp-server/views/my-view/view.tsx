@@ -25,7 +25,7 @@ import './view.css';
 
 export default function McpApp() {
     // useToolContext — tool lifecycle (pending / error / result)
-    const view = useToolContext<'get_engine_manifest'>();
+    const view = useToolContext<'stop_all_sounds'>();
     // useHostContext — locale, timezone, platform, capabilities
     const { hostCapabilities, platform, displayMode, locale, timeZone } = useHostContext();
     const theme = useViewTheme();

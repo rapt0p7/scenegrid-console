@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { validateConfigurations } from '../validate_configurations.js';
 
 describe('validate_configurations', () => {
+    beforeEach(() => {
+        vi.spyOn(console, 'log').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
     it('should return ConsistencyChecker errors for invalid JSON configurations', async () => {
         const invalidPayload = {
             // eslint-disable-next-line @typescript-eslint/naming-convention

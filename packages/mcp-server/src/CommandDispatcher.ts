@@ -33,4 +33,26 @@ export class CommandDispatcher {
             })
         );
     }
+
+    public stopAll(): void {
+        this.globalAction('STOP_ALL');
+    }
+
+    public pauseAll(): void {
+        this.globalAction('PAUSE_ALL');
+    }
+
+    public resumeAll(): void {
+        this.globalAction('RESUME_ALL');
+    }
+
+    public applySnapshot(snapshotId: string, fadeTime?: number): void {
+        this.server.broadcast(
+            JSON.stringify({
+                type: 'APPLY_SNAPSHOT',
+                snapshotId,
+                fadeTime
+            })
+        );
+    }
 }
