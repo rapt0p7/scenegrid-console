@@ -19,4 +19,16 @@ describe('Routing Logic', () => {
     it('forces ladder for matching streamExclusions', () => {
         expect(routeAsset(20.0, 15.0, 'sfx_explosion', [], ['sfx_.*'])).toBe('ladder');
     });
+
+    it('skips non-matching streamExclusion rules (branch not taken)', () => {
+        expect(routeAsset(16.0, 15.0, 'bgm_theme', [], ['sfx_.*'])).toBe('chunk');
+    });
+
+    it('skips non-matching streamRules (branch not taken)', () => {
+        expect(routeAsset(1.0, 15.0, 'sfx_shot', ['bgm_.*'], [])).toBe('ladder');
+    });
+
+    it('exclusion takes precedence over matching streamRule', () => {
+        expect(routeAsset(1.0, 15.0, 'bgm_theme', ['bgm_.*'], ['bgm_.*'])).toBe('ladder');
+    });
 });

@@ -8,7 +8,7 @@ export { processAssets, prepareAliases } from './pipeline.js';
 export { extractMetadata, calculatePCMSize } from './pcm.js';
 export { routeAsset } from './router.js';
 
-async function main() {
+export async function main() {
     try {
         if (process.argv.includes('init-aliases')) {
             const inputIdx = process.argv.indexOf('--input');
@@ -55,6 +55,7 @@ async function main() {
 
 import fs from 'node:fs';
 
+/* v8 ignore start */
 const isMain = () => {
     if (!process.argv[1]) return false;
     try {
@@ -70,3 +71,4 @@ if (isMain()) {
         process.exit(1);
     });
 }
+/* v8 ignore stop */

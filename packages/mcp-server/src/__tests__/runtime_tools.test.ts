@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { describe, it, expect, vi } from 'vitest';
 
-import { getActivePlaybacksHandler, getEngineLogsHandler, getRamReportHandler } from '../runtime_tools.js';
+import {
+    getActivePlaybacksHandler,
+    getBusStateHandler,
+    getEngineLogsHandler,
+    getRamReportHandler,
+    getRtpcValuesHandler
+} from '../runtime_tools.js';
 import { WebSocketTelemetryServer } from '../WebSocketTelemetryServer.js';
 
 vi.mock('../WebSocketTelemetryServer.js');
@@ -17,9 +23,10 @@ vi.mock('@scene-grid/cli', () => ({
     calculatePCMSize: vi.fn(),
     routeAsset: vi.fn()
 }));
+
 describe('runtime tools', () => {
     describe('get_active_playbacks', () => {
-        it('should correctly retrieve active playbacks', async () => {
+        it('returns active playbacks from the snapshot', async () => {
             const mockServer = new WebSocketTelemetryServer(8080);
             mockServer.getSnapshot = vi.fn().mockReturnValue({ activePlaybacks: [{ id: 'pb_1' }] });
 
@@ -27,30 +34,88 @@ describe('runtime tools', () => {
             expect(result).toEqual([{ id: 'pb_1' }]);
             expect(mockServer.getSnapshot).toHaveBeenCalled();
         });
+
+        it('returns an empty array when activePlaybacks is absent', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({});
+
+            expect(await getActivePlaybacksHandler(mockServer)).toEqual([]);
+        });
+    });
+
+    describe('get_bus_state', () => {
+        it('returns buses from the snapshot', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({ buses: [{ id: 'bus_master' }] });
+
+            const result = await getBusStateHandler(mockServer);
+            expect(result).toEqual([{ id: 'bus_master' }]);
+        });
+
+        it('returns an empty array when buses is absent', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({});
+
+            expect(await getBusStateHandler(mockServer)).toEqual([]);
+        });
+    });
+
+    describe('get_rtpc_values', () => {
+        it('returns a param→value map from the snapshot rtpcs', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({
+                rtpcs: [
+                    { param: 'music_vol', value: 0.8 },
+                    { param: 'sfx_vol', value: 0.5 }
+                ]
+            });
+
+            const result = await getRtpcValuesHandler(mockServer);
+            expect(result).toEqual({ music_vol: 0.8, sfx_vol: 0.5 });
+        });
+
+        it('returns an empty object when rtpcs is absent', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({});
+
+            expect(await getRtpcValuesHandler(mockServer)).toEqual({});
+        });
     });
 
     describe('get_engine_logs', () => {
-        it('should correctly retrieve engine logs', async () => {
+        it('returns logs from the snapshot', async () => {
             const mockServer = new WebSocketTelemetryServer(8080);
             mockServer.getSnapshot = vi.fn().mockReturnValue({ logs: ['log_1'] });
 
-            const result = await getEngineLogsHandler(mockServer);
-            expect(result).toEqual(['log_1']);
+            expect(await getEngineLogsHandler(mockServer)).toEqual(['log_1']);
+        });
+
+        it('returns an empty array when logs is absent', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({});
+
+            expect(await getEngineLogsHandler(mockServer)).toEqual([]);
         });
     });
 
     describe('get_ram_report', () => {
-        it('should correctly retrieve ram report', async () => {
+        it('returns the ram report from the snapshot', async () => {
             const mockServer = new WebSocketTelemetryServer(8080);
             mockServer.getSnapshot = vi.fn().mockReturnValue({ ramReport: { used: 100 } });
 
-            const result = await getRamReportHandler(mockServer);
-            expect(result).toEqual({ used: 100 });
+            expect(await getRamReportHandler(mockServer)).toEqual({ used: 100 });
+        });
+
+        it('returns an empty object when ramReport is absent', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({});
+
+            expect(await getRamReportHandler(mockServer)).toEqual({});
         });
     });
 
     describe('getTelemetryLiveHandler', () => {
-        it('should retrieve combined telemetry state', async () => {
+        it('returns combined telemetry state', async () => {
             const mockServer = new WebSocketTelemetryServer(8080);
             mockServer.getSnapshot = vi.fn().mockReturnValue({
                 activePlaybacks: [{ id: 'pb_1' }],
@@ -66,33 +131,60 @@ describe('runtime tools', () => {
                 rtpcs: { p_1: 0.5 }
             });
         });
+
+        it('defaults to empty arrays and object when snapshot fields are absent', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({});
+
+            const { getTelemetryLiveHandler } = await import('../runtime_tools.js');
+            const result = await getTelemetryLiveHandler(mockServer);
+            expect(result).toEqual({ activePlaybacks: [], buses: [], rtpcs: {} });
+        });
     });
 
     describe('getManifestHandler', () => {
-        it('should retrieve manifest', async () => {
+        it('returns the manifest from the snapshot', async () => {
             const mockServer = new WebSocketTelemetryServer(8080);
             mockServer.getSnapshot = vi.fn().mockReturnValue({ manifest: { version: '1.0' } });
 
             const { getManifestHandler } = await import('../runtime_tools.js');
-            const result = await getManifestHandler(mockServer);
-            expect(result).toEqual({ version: '1.0' });
+            expect(await getManifestHandler(mockServer)).toEqual({ version: '1.0' });
+        });
+
+        it('returns an empty object when manifest is absent', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({});
+
+            const { getManifestHandler } = await import('../runtime_tools.js');
+            expect(await getManifestHandler(mockServer)).toEqual({});
         });
     });
 
-    describe('getValidationHandler', () => {
-        it('should retrieve consistency report', async () => {
+    describe('getConsistencyReportHandler', () => {
+        it('returns the consistency report from the snapshot', async () => {
             const mockServer = new WebSocketTelemetryServer(8080);
             mockServer.getSnapshot = vi.fn().mockReturnValue({ consistencyReport: { errors: [] } });
 
             const { getConsistencyReportHandler } = await import('../runtime_tools.js');
-            const result = await getConsistencyReportHandler(mockServer);
-            expect(result).toEqual({ errors: [] });
+            expect(await getConsistencyReportHandler(mockServer)).toEqual({ errors: [] });
+        });
+
+        it('returns the default report when consistencyReport is absent', async () => {
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({});
+
+            const { getConsistencyReportHandler } = await import('../runtime_tools.js');
+            expect(await getConsistencyReportHandler(mockServer)).toEqual({
+                isConsistent: true,
+                errors: [],
+                warnings: []
+            });
         });
     });
 
     describe('trigger_event', () => {
-        it('should delegate to command dispatcher', async () => {
-            const mockDispatcher = { fireEvent: vi.fn(), setRtpc: vi.fn(), globalAction: vi.fn() };
+        it('delegates to command dispatcher fireEvent', async () => {
+            const mockDispatcher = { fireEvent: vi.fn() };
 
             const { triggerEventHandler } = await import('../runtime_tools.js');
             await triggerEventHandler(mockDispatcher as any, 'event_123');
@@ -102,8 +194,8 @@ describe('runtime tools', () => {
     });
 
     describe('set_rtpc_value', () => {
-        it('should delegate to command dispatcher', async () => {
-            const mockDispatcher = { fireEvent: vi.fn(), setRtpc: vi.fn(), globalAction: vi.fn() };
+        it('delegates to command dispatcher setRtpc', async () => {
+            const mockDispatcher = { setRtpc: vi.fn() };
 
             const { setRtpcValueHandler } = await import('../runtime_tools.js');
             await setRtpcValueHandler(mockDispatcher as any, 'rtpc_1', 0.5);
@@ -113,43 +205,51 @@ describe('runtime tools', () => {
     });
 
     describe('stop_all_sounds', () => {
-        it('should delegate to command dispatcher', async () => {
+        it('delegates to command dispatcher stopAll', async () => {
             const mockDispatcher = { stopAll: vi.fn() };
+
             const { stopAllSoundsHandler } = await import('../runtime_tools.js');
             await stopAllSoundsHandler(mockDispatcher as any);
+
             expect(mockDispatcher.stopAll).toHaveBeenCalled();
         });
     });
 
     describe('pause_engine', () => {
-        it('should delegate to command dispatcher', async () => {
+        it('delegates to command dispatcher pauseAll', async () => {
             const mockDispatcher = { pauseAll: vi.fn() };
+
             const { pauseEngineHandler } = await import('../runtime_tools.js');
             await pauseEngineHandler(mockDispatcher as any);
+
             expect(mockDispatcher.pauseAll).toHaveBeenCalled();
         });
     });
 
     describe('resume_engine', () => {
-        it('should delegate to command dispatcher', async () => {
+        it('delegates to command dispatcher resumeAll', async () => {
             const mockDispatcher = { resumeAll: vi.fn() };
+
             const { resumeEngineHandler } = await import('../runtime_tools.js');
             await resumeEngineHandler(mockDispatcher as any);
+
             expect(mockDispatcher.resumeAll).toHaveBeenCalled();
         });
     });
 
     describe('apply_mixer_snapshot', () => {
-        it('should delegate to command dispatcher', async () => {
+        it('delegates to command dispatcher applySnapshot', async () => {
             const mockDispatcher = { applySnapshot: vi.fn() };
+
             const { applyMixerSnapshotHandler } = await import('../runtime_tools.js');
             await applyMixerSnapshotHandler(mockDispatcher as any, 'snap_1', 100);
+
             expect(mockDispatcher.applySnapshot).toHaveBeenCalledWith('snap_1', 100);
         });
     });
 
     describe('debug_audio_issue_prompt', () => {
-        it('should return the correct system message', async () => {
+        it('returns a string referencing key telemetry resources', async () => {
             const { getDebugAudioIssuePrompt } = await import('../runtime_tools.js');
             const result = await getDebugAudioIssuePrompt();
             expect(result).toContain('scenegrid://telemetry/live');
@@ -158,10 +258,10 @@ describe('runtime tools', () => {
     });
 
     describe('process_assets', () => {
-        it('should call processAssets from CLI', async () => {
+        it('calls processAssets from CLI with the given options', async () => {
             const { processAssetsHandler } = await import('../runtime_tools.js');
             const cli = await import('@scene-grid/cli');
-            await processAssetsHandler({
+            const opts = {
                 inputDir: 'in',
                 outputDir: 'out',
                 manifestsDir: 'man',
@@ -169,21 +269,14 @@ describe('runtime tools', () => {
                 streamRules: [],
                 streamExclusions: [],
                 hash: false
-            });
-            expect(cli.processAssets).toHaveBeenCalledWith({
-                inputDir: 'in',
-                outputDir: 'out',
-                manifestsDir: 'man',
-                quotaMb: 50,
-                streamRules: [],
-                streamExclusions: [],
-                hash: false
-            });
+            };
+            await processAssetsHandler(opts);
+            expect(cli.processAssets).toHaveBeenCalledWith(opts);
         });
     });
 
     describe('generate_aliases', () => {
-        it('should call prepareAliases from CLI', async () => {
+        it('calls prepareAliases from CLI with input dir and output path', async () => {
             const { generateAliasesHandler } = await import('../runtime_tools.js');
             const cli = await import('@scene-grid/cli');
             await generateAliasesHandler('in', 'out.json');
@@ -192,7 +285,7 @@ describe('runtime tools', () => {
     });
 
     describe('inspect_pcm_weight', () => {
-        it('should extract metadata and calculate PCM size', async () => {
+        it('returns metadata combined with computed PCM size', async () => {
             const { inspectPcmWeightHandler } = await import('../runtime_tools.js');
             const cli = await import('@scene-grid/cli');
             (cli.extractMetadata as any).mockResolvedValue({ durationSec: 10, channels: 2, sampleRate: 44100 });
@@ -213,25 +306,58 @@ describe('runtime tools', () => {
     });
 
     describe('getQuotaPreviewHandler', () => {
-        it('should return dry run report based on CLI logic', async () => {
+        it('returns a dry-run report routing files by size and rules', async () => {
             const { getQuotaPreviewHandler } = await import('../runtime_tools.js');
             const cli = await import('@scene-grid/cli');
             const fs = await import('node:fs');
             (fs.existsSync as any).mockReturnValue(true);
-            (fs.readdirSync as any).mockReturnValue(['a.wav', 'b.ogg']);
+            (fs.readdirSync as any).mockReturnValue(['a.wav', 'b.ogg', 'ignore.txt']);
             (fs.statSync as any).mockReturnValue({ isFile: () => true });
 
             (cli.extractMetadata as any).mockResolvedValue({ durationSec: 10, channels: 2, sampleRate: 44100 });
             (cli.calculatePCMSize as any).mockReturnValue(3.36);
-            (cli.routeAsset as any).mockImplementation((size: number, q: number, b: string) =>
-                b === 'a.wav' ? 'chunk' : 'ladder'
+            (cli.routeAsset as any).mockImplementation((_s: number, _q: number, basename: string) =>
+                basename === 'a.wav' ? 'chunk' : 'ladder'
             );
 
             const result = await getQuotaPreviewHandler('in', 50, [], []);
 
             expect(result.files['a.wav'].route).toBe('chunk');
             expect(result.files['b.ogg'].route).toBe('ladder');
-            expect(result.totalMemoryMb).toBe(3.36); // b.ogg is ladder, a.wav is chunk (but chunk takes zero memory in dry run? We'll define totalMemory as total ladder memory)
+            expect(result.totalMemoryMb).toBe(3.36);
+        });
+
+        it('throws when the input directory does not exist', async () => {
+            const { getQuotaPreviewHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockReturnValue(false);
+
+            await expect(getQuotaPreviewHandler('missing', 50, [], [])).rejects.toThrow('Directory not found: missing');
+        });
+
+        it('skips non-audio files in the directory', async () => {
+            const { getQuotaPreviewHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readdirSync as any).mockReturnValue(['readme.txt', 'image.png']);
+            (fs.statSync as any).mockReturnValue({ isFile: () => true });
+
+            const result = await getQuotaPreviewHandler('in', 50, [], []);
+
+            expect(Object.keys(result.files)).toHaveLength(0);
+            expect(result.totalMemoryMb).toBe(0);
+        });
+
+        it('skips directory entries that are not files', async () => {
+            const { getQuotaPreviewHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readdirSync as any).mockReturnValue(['subdir.wav']);
+            (fs.statSync as any).mockReturnValue({ isFile: () => false });
+
+            const result = await getQuotaPreviewHandler('in', 50, [], []);
+
+            expect(Object.keys(result.files)).toHaveLength(0);
         });
     });
 });

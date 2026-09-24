@@ -74,6 +74,7 @@ export class WebSocketTelemetryServer {
             this.clients.clear();
 
             this.wss.close(err => {
+                /* v8 ignore next 4 */
                 if (err) {
                     console.error('[TelemetryServer] Error stopping server:', err);
                     reject(err);
@@ -142,6 +143,7 @@ export class WebSocketTelemetryServer {
             }
         });
 
+        /* v8 ignore next 3 */
         ws.on('error', err => {
             console.error('[TelemetryServer] Client error:', err);
         });

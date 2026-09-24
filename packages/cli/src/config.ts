@@ -44,6 +44,7 @@ export async function resolveConfig(readonlyArgv: readonly string[]): Promise<CL
     };
 
     for (const key of Object.keys(merged)) {
+        /* v8 ignore next 3 — Commander v15 never emits undefined-valued option keys */
         if (merged[key] === undefined) {
             delete merged[key];
         }
