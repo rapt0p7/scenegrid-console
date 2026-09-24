@@ -14,6 +14,14 @@
     "homepage": "https://github.com/mcp-use/mcp-use",
     "license": "MIT",
     "author": "mcp-use",
+    "bin": {
+        "scenegrid-mcp": "./bin/run.js"
+    },
+    "files": [
+        ".mcp-use/build",
+        "bin",
+        "public"
+    ],
     "type": "module",
     "scripts": {
         "build": "mcp-use build",
