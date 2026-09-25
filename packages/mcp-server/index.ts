@@ -363,6 +363,7 @@ export const getQuotaPreviewTool = server.tool(
         outputSchema: z.object({
             totalMemoryMb: z.number(),
             files: z.record(
+                z.string(),
                 z.object({
                     sizeMb: z.number(),
                     route: z.enum(['ladder', 'chunk'])

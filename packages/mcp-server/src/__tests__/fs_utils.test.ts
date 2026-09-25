@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('node:fs/promises', () => ({
-    writeFile: vi.fn().mockResolvedValue(),
+    writeFile: vi.fn().mockResolvedValue(null),
     readFile: vi.fn().mockResolvedValue('{"key":"value"}')
 }));
 

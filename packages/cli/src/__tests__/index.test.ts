@@ -16,8 +16,8 @@ const mockResolveConfig = vi.hoisted(() =>
     })
 );
 
-const mockProcessAssets = vi.hoisted(() => vi.fn().mockResolvedValue());
-const mockPrepareAliases = vi.hoisted(() => vi.fn().mockResolvedValue());
+const mockProcessAssets = vi.hoisted(() => vi.fn().mockResolvedValue(null));
+const mockPrepareAliases = vi.hoisted(() => vi.fn().mockResolvedValue(null));
 
 vi.mock('../config.js', () => ({ resolveConfig: mockResolveConfig }));
 vi.mock('../pipeline.js', () => ({
@@ -66,8 +66,8 @@ describe('main() — normal pipeline flow', () => {
             hash: false,
             aliases: undefined
         });
-        mockProcessAssets.mockResolvedValue();
-        mockPrepareAliases.mockResolvedValue();
+        mockProcessAssets.mockResolvedValue(null);
+        mockPrepareAliases.mockResolvedValue(null);
         vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
     });
@@ -124,7 +124,7 @@ describe('main() — init-aliases sub-command', () => {
     beforeEach(() => {
         originalArgv = [...process.argv];
         vi.clearAllMocks();
-        mockPrepareAliases.mockResolvedValue();
+        mockPrepareAliases.mockResolvedValue(null);
         vi.spyOn(console, 'log').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
     });
