@@ -3,6 +3,16 @@ type: infrastructure subsystem
 title: Plugins, sidechain, and limiter
 description: Audio plugin implementations for filters, sidechain ducking, and the custom brickwall limiter used by the bus system.
 tags: [engine, plugins, limiter, sidechain]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-6aa1ab75c650fd98f1f3a76b
+    resource: repo://packages/engine/src/Infrastructure/plugins/FiltersPlugin.ts
+  - id: openwiki-source-2f48f98a4f6788eb8ea6f854
+    resource: repo://packages/engine/src/Infrastructure/plugins/SidechainDucker.ts
+  - id: openwiki-source-29b0a41b71ba27e652649eaf
+    resource: repo://packages/engine/src/Infrastructure/plugins/TinyLimiterNode.ts
 ---
 
 # Plugins, sidechain, and limiter

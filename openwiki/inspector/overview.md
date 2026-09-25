@@ -3,6 +3,14 @@ type: package overview
 title: Inspector package overview
 description: Canonical map of the `@scene-grid/inspector` package, its browser-debugger entrypoints, and the UI, hook, and worklet subsystems that power the live overlay.
 tags: [inspector, package, debugger]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-1d5210582c2e4047cd94c6c3
+    resource: repo://packages/inspector/src/AudioDebugger.ts
+  - id: openwiki-source-fbd7fb9bd8ae10b828f46f70
+    resource: repo://packages/inspector/src/index.ts
 ---
 
 # Inspector package overview

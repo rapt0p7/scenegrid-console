@@ -1,0 +1,30 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:a9402d0ae7ef94b33e19a37b1eaf4e9ac986608a34acc5a4f5b9d39dd5ec1b79",
+    "claims": [
+        {
+            "id": "claim_1d74c04ed17344f0b820b42e13130207",
+            "statement": "`EngineTicker` runs periodic engine tasks using background worker timers at a 10 ms base interval, allowing task-specific tick dividers to regulate update frequency.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/scheduling/EngineTicker.ts#L14-L60",
+                    "version": "repo-lines-v1:sha256:09770636e710fdeccc7076fbfdc17eda5c5ff55d0b56021d0237f763ff07b6d7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4MTZiODlkYjQxOTlmYWZhODI1NWMyYmU2NmEyYTAwYmYzY2E0YjgyY2NlNjcyYzYzMzg1ZGVmNjdiZGMyMjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlNmU1MzNkNjc0ZDUyNDE1ZmJiZTg3OWE4NzBjMTBiMmFjZWJmNjk1Njk5YjE2ZmZhYTQzMmQxOWRmMzFhOTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjYjVhMDY0ZDg3ZDFlM2I5NDI2ODIxMTQwMzE5ZjEwODBmYTkzNWFhMjg5MGY4ZWRkZjAxZTk1OWEwYWUyNGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_1f2892e1178f4c6e944e00abd601de37",
+            "statement": "`PlaybackScheduler` manages playback scheduling into fixed-capacity preallocated slots, triggering instance playback or stopping at targeted audio context times and cleaning up slots upon playback end.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/scheduling/PlaybackScheduler.ts#L6-L54",
+                    "version": "repo-lines-v1:sha256:f23de7c8974f1681deab71fcc49f3daf9e96ad5462842ab1fce0b7def7bb1cac:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkYjg3MDg2OTY0Nzg3NzdiNjRkNWNmMzIwM2ExY2M2NGYwN2JlODA5YjA4MWM5MGNjOTA1ZTk4YjMzNTBlZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxNmM1ZTNhOWY2MDMyMTUwMmNjODA1MDM5YTZkMTIxMTZiMTVmNmRmNjEzOGM5ZjgxZTk3ZmZkNzA3MmUyZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0YzUyNjE2Y2FjOTk3OTkwYTRkODQ3NGVlNWFlZDE5MWIzN2U5MmYxZTI2M2ViNzgwMzI0MjBhNjFkNzI5ZTQifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

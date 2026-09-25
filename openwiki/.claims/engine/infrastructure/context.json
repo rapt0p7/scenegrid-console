@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:33782fafc8bc61b671b985e990e6335a1da9430186ee44bf29d391c997f047ac",
+    "pageVersion": "sha256:e5f796d4576866b437eeb8ae0e00cc77f0074b583f98bcbfc9ba408b86d0ea19",
     "claims": [
         {
             "id": "claim_0f37dd4c26b3445894b7f08626af1413",
@@ -31,8 +31,8 @@
             "statement": "AudioContextManager routes `resume()` through UnlockManager, while `suspend()` and `close()` are guarded so they only call the native context in the appropriate current state.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/context/AudioContextManager.ts#L65-L79",
-                    "version": "repo-lines-v1:sha256:971c46e49ef5c1e69485c44492d23b63c292c0545be624bc26f36b5fe59b6fdb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5YjhlM2Q0MmFlM2IwNDRhOTYxYzFjNGMxYjgxZmFkYmY4M2VlYjI3YWRmYjI4NTliNDdhMWEwYjhmMGYzNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/context/AudioContextManager.ts#L66-L80",
+                    "version": "repo-lines-v1:sha256:2cb37747a1c9544dec8ba0037ca6cfb562957af207ccdc8fea4f459132ee395e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2NDkzYmQxMWVlODIyYmU2OGU4NjgzZGRjZmIyYTk2NTU5ODRlMzY0ZmY5M2Q3OWZkMTBjYTI4MTA0MTcwN2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
                 },
                 {
                     "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/AudioContextManager.test.ts#L111-L149",
@@ -73,12 +73,12 @@
             "statement": "UnlockManager makes a best-effort audio unlock attempt by playing a one-sample silent buffer before calling `context.resume()`, but skips the silent probe on later unlock calls once the context has already been unlocked or is already running.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/context/UnlockManager.ts#L3-L29",
-                    "version": "repo-lines-v1:sha256:8ba6e5416068ff001904292be7e2b2be9aba4f6ac165094270fcad9f5f526f57:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMTRmM2EwOTBlYjg0MDhkNzE5ZTU3MjNkMjMzNDNjZjYyOTA3M2M4YWVmMWE4OGFjNDA5Y2Q0ZmNlZTIwMDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhYzcwNjExZmFhYjQxODYxZTFiOGQ1OTBiOTgxZDVhZjNlZjY3MTI1NmFkNDRjMGYyM2YyOGFlNWY1MjYyYzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/context/UnlockManager.ts#L11-L36",
+                    "version": "repo-lines-v1:sha256:e0e3ed6d1f6003178dfcfc99c5861b0e40e87cf6231f742b0c92baca86c88e45:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5YWI5ZmMxYTk2NjBhZmRhNDJiNWI2YjdiNzJmYmNkOWUxYjAyOGI2OTllOTM3NGZjNGRkMzY1ZmM3YjI1NGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyZDJlZDBjZDUyMDA0OGM4NGM0ZmM5MTUwZDdiNzAyOWMyYzQwMTNmZTg2MGVjNzlhMDgwMGQ3MDRhMWRmYTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/UnlockManager.test.ts#L31-L87",
-                    "version": "repo-lines-v1:sha256:0dc36a2391e1082d9c1e1dab71a233741fb84d5cf644242b8a3bde131d9565c9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjYTBjZjVjMWQ2NDY3ZjIwNjM1MjVkYmUwZWFlMzhmNjUyNzcyYjVjODE4ZjI0NzljNjQ0ZmRkMTE4NDQ0NzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0MTg5N2M4NmI0MGRhNTIzMWM5MTVhNmMwZThkZTZiYzQyY2UxY2ExMzFmZDUxZTczNzMzMTgyMGYxNGZhNTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/UnlockManager.test.ts#L31-L74",
+                    "version": "repo-lines-v1:sha256:a7ca84d486944c6eaecf256accd055d9d0f01415a1fa2e5c66b0faaf9b64f7dc:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjYTBjZjVjMWQ2NDY3ZjIwNjM1MjVkYmUwZWFlMzhmNjUyNzcyYjVjODE4ZjI0NzljNjQ0ZmRkMTE4NDQ0NzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0MTg5N2M4NmI0MGRhNTIzMWM5MTVhNmMwZThkZTZiYzQyY2UxY2ExMzFmZDUxZTczNzMzMTgyMGYxNGZhNTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwZDYwMTMwOTJhN2ZhYzE2NGRmN2QxYjljYzZiZTIwNTdmZDNjYTkwNzk2MWY2ZmY1NmQwODRkZjEwZmQ4OTcifQ"
                 }
             ]
         },
@@ -87,12 +87,12 @@
             "statement": "UnlockManager tolerates errors during the silent-buffer probe and still proceeds to `context.resume()`, which makes the unlock flow resilient to browser playback failures.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/context/UnlockManager.ts#L8-L28",
-                    "version": "repo-lines-v1:sha256:76127215d15d7656b71885e839c509aaea73e36ad4351d67245460da036bdedc:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MTY0OTc0MTQ3MjQ0NDQyMDBiNzZjM2Y5MTZmYjNlZDM5ODFlNWNkMjNlZmZlODYxMjI3ZjgzZjNlZjA3YjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyZDJlZDBjZDUyMDA0OGM4NGM0ZmM5MTUwZDdiNzAyOWMyYzQwMTNmZTg2MGVjNzlhMDgwMGQ3MDRhMWRmYTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/context/UnlockManager.ts#L17-L35",
+                    "version": "repo-lines-v1:sha256:8a0b5151832f92da666c20730baf738499d0c015b9cc20d0315a65e7adf88b29:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhNmFjYThhNDg0YWQyN2RlYjUyM2IzN2NmYmU1MzMyMDljYTIzN2QxNjcyYmM0MGQwNTQxOTMwYjlhYTA1MDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwMGIzMWFlYmJhYTRjZGNkMDVhZWQzMTViNzRmZjA5YjNiMTg5Yjc2Yjc4YWFhOTA2MGUwODA2NTRhMmMxOTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNmYmNjYjkyZTI2MzkxZTkyZmNlMGYzMmM5MzEyMDcxY2JiYWFlYTg3MTA2YzEwNmI4YTE2NmU2YTBjYzAwODIifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/UnlockManager.test.ts#L76-L87",
-                    "version": "repo-lines-v1:sha256:f9c201e535965ac5ac955038f1e7cd379d9ab808de80a72e668112608268fde1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyNTRjOGY2MGUyYTJmODE3MGJiZWZhOTJiYTYzNzRjOTEzOGRmZGZhY2QwOGUyNzkwMDNmMjRkNTAyNjRjMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0NjFkZTgyNDcyMGYxOWFjYTkwYjVlMDE4NjE2OGMzMjU2YjQzNjA5YjM3NDM2NTJiOTUwMTdiZDcwMzBiNzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/UnlockManager.test.ts#L76-L88",
+                    "version": "repo-lines-v1:sha256:ed2e93b7491e9b39d70064c5ad720f2891b83e9647d4ff53b8d751db1872690c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyNTRjOGY2MGUyYTJmODE3MGJiZWZhOTJiYTYzNzRjOTEzOGRmZGZhY2QwOGUyNzkwMDNmMjRkNTAyNjRjMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0NjFkZTgyNDcyMGYxOWFjYTkwYjVlMDE4NjE2OGMzMjU2YjQzNjA5YjM3NDM2NTJiOTUwMTdiZDcwMzBiNzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzYmE2NTZiM2YwMTcwNjQxZjM0YzMxNjFmNDFjMTBkYjRhNjE2N2U4OWJmODU5NThmOWUwY2U4M2U0ODBmMzcifQ"
                 }
             ]
         },
@@ -126,7 +126,7 @@
         }
     ],
     "verification": {
-        "by": "openwiki/0.5.0",
-        "at": "2026-09-03T11:15:32.736Z"
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
     }
 }

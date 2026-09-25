@@ -1,0 +1,30 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:8d09c25d71d5818aa657e86d504a6e90dadbb733708b0ffb6a89deb01bea9061",
+    "claims": [
+        {
+            "id": "claim_d19916e66ddd47dcaf477a3d4a47b426",
+            "statement": "`TelemetryDispatcher` buffers telemetry packets into preallocated batches of up to 2048 packets and flushes them to an `ITelemetryTransport` on tick or when the buffer is full.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/telemetry/TelemetryDispatcher.ts#L4-L62",
+                    "version": "repo-lines-v1:sha256:25cd5273d9917d2e374a10a90584bc0a45bd1da12ba3aebef353ced481f82806:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlNjYzNjIyNTUyYmEyYWE4YjIyN2EyYmJiYzU3OThkMDM5NTU1MzVhZTRkMDUwMzQzYzJkZDJjMzBiOGEzZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0NzZhYTc3NjYzZWZkOWE3ZmQ1NmZlMzEyYzA0ZTc0MjY1ZTUwOWUxZTBiOWM1NjcwOGQ2NzE5MDAyZGNiNTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVkMDg4YmQyOGVkYzNmOWMwYTJlODlkODMxNDFkMjNjZmM0MDA1NTIxYzZhMDc3NDk4Zjg4NjkwZTI0YWVhM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkzNWJhYjJmNmVmMDFhM2QzZDE4N2Q4MGI4NTQ3NDk1OGVjZmUwYzE5Y2EwZWRkOWM5MDc4MTBhMmU4ZDAyMzQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_e71de366be7a4d5992b065a6a546aff9",
+            "statement": "`WorkerTelemetryTransport` adapts telemetry batching to Web Worker message ports by posting serialized batches and configuration manifests to a connected `MessagePort`",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/telemetry/WorkerTelemetryTransport.ts#L3-L20",
+                    "version": "repo-lines-v1:sha256:ccfd7d824731fe26445e6e6167b054513c599f27d6642ba7130a1dfb3179ab18:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwM2VmMzcwY2NjYmU5MmZhNTQ5M2NhM2U5OGM1MDYzNzM1Yjc2OTI3ZWEzZjBmNWRlNmQ4ODBiMmUxMGNlMjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExMTgzM2IxNzgwNzdmMTczNTJmYmZmMzQ1ODY1ZmNkMWM0MDEyNTczMTU3ZDZiZDUyOGFiYTE3MGUxNjYzY2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

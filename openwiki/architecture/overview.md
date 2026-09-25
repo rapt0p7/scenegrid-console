@@ -4,8 +4,8 @@ title: Repository architecture and runtime boundaries
 description: Map of the SceneGrid workspace packages, their supported dependency directions, and the browser path from authored audio configuration through the engine, telemetry worker, inspector, and example host.
 tags: [architecture, monorepo, browser-runtime, audio, telemetry, inspector]
 verified:
-  - by: openwiki/0.5.2
-    at: 2026-09-22T06:36:54.215Z
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
 sources:
   - id: openwiki-source-739d3ff1d3f2cc6c1de83f4b
     resource: repo://.dependency-cruiser.cjs
@@ -35,7 +35,7 @@ sources:
     resource: repo://packages/shared/src/index.ts
   - id: openwiki-source-5b2c1d48af432dc4e7386288
     resource: repo://packages/shared/src/Workers/TelemetryWorker.ts
-generated: { by: "openwiki/0.5.0", at: "2026-09-21T16:32:27.121Z" }
+generated: { by: "antigravity", at: "2026-09-25T08:14:31.202Z" }
 ---
 
 # Repository architecture and runtime boundaries
@@ -146,5 +146,3 @@ In a non-production engine build, `init()` additionally makes an inspector comma
 - [Engine overview](../engine/overview.md)
 - [Inspector overview](../inspector/overview.md)
 - [Example runtime](../examples/runtime.md)
-<!-- openwiki: broken internal link [../cli/asset-pipeline.md] file "../cli/asset-pipeline.md" does not exist. Fix the href or restore the target, then delete this comment. -->
-- [Asset pipeline](../cli/asset-pipeline.md)

@@ -3,6 +3,14 @@ type: infrastructure subsystem
 title: Scheduling and culling
 description: Engine ticker integration, playback scheduling, culling evaluation, and context-driven frame processing for active voices.
 tags: [engine, scheduling, culling]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-4c5cf432a6783b64244bfe99
+    resource: repo://packages/engine/src/Infrastructure/scheduling/EngineTicker.ts
+  - id: openwiki-source-f017a0997a493c25b81d6599
+    resource: repo://packages/engine/src/Infrastructure/scheduling/PlaybackScheduler.ts
 ---
 
 # Scheduling and culling

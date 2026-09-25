@@ -3,6 +3,18 @@ type: quickstart
 title: OpenWiki quickstart
 description: Entry map for the repository wiki, with the canonical pages for each package, runtime workflow, and the minimal validation path for common change intents.
 tags: [openwiki, quickstart, navigation]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-85a2f85f45f76d7dd1978389
+    resource: repo://examples/package.json
+  - id: openwiki-source-a038f25a99dd9c7512d4a006
+    resource: repo://packages/engine/package.json
+  - id: openwiki-source-a1c5d4117cfa37afc36cb8c7
+    resource: repo://packages/inspector/package.json
+  - id: openwiki-source-c83ceec2d47257f066951051
+    resource: repo://packages/shared/package.json
 ---
 
 # OpenWiki quickstart

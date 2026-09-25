@@ -1,0 +1,40 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:facc9eab4746a8ba37b8983ce21c9b9dc2a70791543f2c949e2a0ae707fb28bc",
+    "claims": [
+        {
+            "id": "claim_8259eeee14d741d49fa552bdb532aa74",
+            "statement": "`FiltersPlugin` creates either biquad filter nodes or algorithmic convolution reverb nodes with cached synthetic impulse responses based on filter configuration.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/plugins/FiltersPlugin.ts#L16-L60",
+                    "version": "repo-lines-v1:sha256:a48dd9806932c5c0c516839fe320caa3bd3408c5455ccfef32049a560b97bbfc:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1NGQ5NWM1M2U1ZGI4YmRlNTFmZGIwZjNmOWUzOTZiMGE3Y2IzMzY0MGIxOTVmNjY3NDEyMjZkMzExY2QwZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxYzU4ZmVkNzk1ODY1ZTAzM2Y4OWU0MzQzNTQ2NTMwZjEzNzIwZjM2YTY5NDdlMzI0OWJlOTgzODU5MDI5Y2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZhODZlNjg3YzVjMmM1ZWViYzEwOWFmYTg1ODYzM2IxYzYzNmQ4MWRlMjU5MjM4MDVkYWI5OTJmNjY5Zjg1MzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNkZTk4ODUxM2MyZmU2NzhiM2YzZjkyNGJlOGU5NTBjZjI3OWE2MWY2NjgwY2E2ZmI5NWNhNjhkNWU3MjQ3YmYifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_ba77d7f43dc44c0e980a456fcd29e948",
+            "statement": "`TinyLimiterNode` loads the lookahead brickwall limiter worklet into the audio context and manages its lifecycle with input/output node access and safe disconnection.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/plugins/TinyLimiterNode.ts#L12-L57",
+                    "version": "repo-lines-v1:sha256:c9f7b0e9997292f1853404312ad32481872cbcd034f3dbaac5290854f067d69e:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYwZTNiODY1MDNjZGNjOTY5MzUwN2NmM2MxNTc0M2Q2OTA2MWM1NjU0M2NlNDYyZTI0YjdiMzQxYzc1YmE1MDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE4Y2M5OGVhMjZkN2RlOWIzM2E4MTA2ZDY0ZWQ5N2RmYTQyM2NjNDgxZGNmNDE0MmI5MWM2NzQyZDE0NzkwNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_58e431f8c7d2434badabcdc04924a122",
+            "statement": "`SidechainDucker` implements dynamic ducking on a target gain node by routing sidechain trigger sources through an envelope follower and delay line.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/plugins/SidechainDucker.ts#L22-L60",
+                    "version": "repo-lines-v1:sha256:7ad6d37ae04ccf237c2f2a6c5e7ec4032a37b3d2fe95654ee59e7ba8d0ad82bc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNGNmNWEyMDhjYTg4NDUzNDhiYWY1OTMxYTIxZTVlMzU0NWUwMDkzNjEwYzQ3NmI4YTJhZDBlNDZkOWJiNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhiNTkwYjFlMmY2MGJlNWE4OGQzMTVmZjcwNGU4NDgxNGQ3OTI0NjAwNmExMzQwYjNhZThkOTMxYmQzYTNlY2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5NTM3YjAxYmEwMWE2MjBiY2JlODI5NGMxOGJmMWI5ZTc1NGJjODljMGUwMjk0MjFhNzRmYjlmYzIzYjQ0MWMifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

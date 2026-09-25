@@ -1,30 +1,30 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:01e50541eda8cf60ad833c3d1192f3b9eb112082da073ec3c7124a8e4f850fe8",
+    "pageVersion": "sha256:2717ae08b2eaf88bf8282b8ead0b8f43c1de0ee18bd83257fb1a67dcc359845f",
     "claims": [
         {
             "id": "claim_20b01eefcb144371b3cdc2be08056b55",
             "statement": "The repository is an npm workspace monorepo with engine, shared, inspector, CLI, and examples workspaces: shared is a dependency of engine and inspector, the CLI depends on engine, and the examples host depends on all three browser packages (@scene-grid/engine, @scene-grid/inspector, and @scene-grid/shared).",
             "evidence": [
                 {
-                    "resource": "repo://examples/package.json#L1-L22",
-                    "version": "repo-lines-v1:sha256:323f186859be731b4d80d5c6ac6804fda26d109e441545d055b8b17e59702f5b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://examples/package.json#L11-L17",
+                    "version": "repo-lines-v1:sha256:1bca8e7fd6813c376157ac300bd9e9fcddfed70dbe4d7201e9b20672e798d8a0:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjcxZTk3NzU0YWZkYTAzNzAyZjk3ZWNmYWJmNDI5NTNmYzRmZjgyZmJmNzJkNGU2MDA2YWM5NDg0NTMxYjJiMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTg3NGYwNTUyZTg2ZjM3MmNmMjczNGU5ODFhMzRlZTNkZDVlODI1NzdlNzc2ZDc1YmQ3ZDQzYTkzNGU2NDdjZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2VlNmJmNjAxODU3MjYxYTE0YmNjZTBjMTM1M2VjZjkzYTAwNDNmMzNiNDlhOTNlODVjNmZjYWU3ODdjOTdlZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjFhNzQ5OGU5ZGE5YmY4NTIyZWU1ZjlhNzkyYzMwYWZkNjEwM2UzMDE4ZTg5NzcyMmNiNWJjZTY5NTBkZTJkNSJ9"
                 },
                 {
-                    "resource": "repo://package.json#L14-L20",
-                    "version": "repo-lines-v1:sha256:28c683aff5bd2eaf930caff1293583ac34f384d1df17351ef5f1ed24559615ad:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjQ4YTExYmY5MmY3MmVlN2JmNjkzMTgyZDQzOGIxZGQ3NjE1NzRjZDhiZWI0YmVlYTJlMDc4NGFlMmIwZGFlZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUxMGM1N2YyYTI0YjBkY2E3Y2YxYTk5MWY5YTc2ZTU2ZWU5OTVmNWUxMjY4YzBkYjRlMjI5ODU5OTgzZmMyOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjVhYTYxYTYxNDczYTIyMWNhNDI5ZWIyMDRlMzgyYWNlOGRiYzU0Y2I0NTdhMjljYzk1NjNhMmNiZTlhN2ZmMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzQ4MTA0MzJkZDhjMDk0NDAxM2ExNzE3NTc5MWU4ZmIzNjA2NGU2Y2E4YWQ2Nzk2NTRkODRkN2Y1ZmIzNzc0YSJ9"
+                    "resource": "repo://package.json#L14-L17",
+                    "version": "repo-lines-v1:sha256:3b3a63625030dbbaacd883dfc00d96813d0560068eff9c718550adf2ee574843:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTcxMDNhZDhiNzQ3NDEzZGJkYmNhNjhmOGRkNWFjNWNmMGM5MjlmYmRlMmU4YTU4MGQ0OTdhNWZkMzAwNWU3ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzYzZDUzNWNlMzgwNjNkNmI0YzUxZDhjMzg2YTdmOWIzZTU4MGExNGExMGMwN2IxOThkZmFmMTljOTNhM2JmZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjQ4ZGUxYTQ2YjIxMzk0MDE0ZjRjOTBkOGUwMDQ0N2ZmMzYzZWJlN2EwNjQ4ZTI4NzRlYzI3MTg3MmU3NjVjYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTU3MWY5YTc2ZjJkNGNmOTc4NzU4OGQzODgxNjBjNmQ3M2Q2NjRhOWQ4Mzc4MjFhOWUxMWNmMGRhMTc2MjU0OSJ9"
                 },
                 {
-                    "resource": "repo://packages/cli/package.json#L1-L25",
-                    "version": "repo-lines-v1:sha256:7600324dc6bbae7832b2485a6ed6527b31c55cd96499ff547055cb2c10bd2ba7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/cli/package.json#L14-L16",
+                    "version": "repo-lines-v1:sha256:fa7ea53a5191160d89f8cd7b19297782587e409876a0643ce439d3533860cb51:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjcxZTk3NzU0YWZkYTAzNzAyZjk3ZWNmYWJmNDI5NTNmYzRmZjgyZmJmNzJkNGU2MDA2YWM5NDg0NTMxYjJiMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDIyMTI2ZDA4NGE5ZGI2OTk2M2Q2ZDRlM2E5YjdkODliNWZjYjQ0OGZjZTc5ZGYzOGIzZjc0ZTBhYzQxYjRiNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzliMjFmYjNhNTMwNmUwZGEzNzI0MTcyNzA0OTdiM2Y5MjllMWI4M2ExZGNmMTQ5MGYzNDQ3YmNlNmUzZDVmMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2ZjZTUwNjBjN2FhYzBjOTJlYjBmNTRiYjM4YTI2YTJhYjkyNzM0MWNkZGUyZDBkMjQzOTMzZGIxNWRmYzAwYiJ9"
                 },
                 {
-                    "resource": "repo://packages/engine/package.json#L16-L30",
-                    "version": "repo-lines-v1:sha256:ae005f81235ccb327163f4bf2075de3abcb6fb14081745e5497b9b83eb5bc877:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmZjdjYjI4MzYxNzBhODU0MDA2MWE4MTgzMzk5OTQ3MGRmNzhhYjdmN2M2ODc2ZjFjNmIyNGIxY2JmM2ZkZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiMGJmMGFkOWZmY2JkOTQ0Y2MyODU5ZWY0ODEwNWUxOWYwOGQ3MGI5ZTFmODI2ZWQ3MzVhM2YzYTUyY2YyNDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/engine/package.json#L19-L23",
+                    "version": "repo-lines-v1:sha256:5545fa7e3c0dda41389818e0c32f221d20fbae8b284c601f68decbdd2ab774fc:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjcxZTk3NzU0YWZkYTAzNzAyZjk3ZWNmYWJmNDI5NTNmYzRmZjgyZmJmNzJkNGU2MDA2YWM5NDg0NTMxYjJiMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWY2ZDM3ZmVkZTgzZTUwM2JmMmUxMjVjNTVhYzA0Njk1ZjdkNTY3OWRmOGUxMjgwMThiN2NhY2ZkNjczZDVmOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzM2MDNjOTAxOTJmM2YwYzVjNmQzMjBjMTQ4NmFkMGE1NGJjZjcxYTRjMTdlNDFjZjdlNDA3Mzg4NmRjMjA0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGRmZTQxNzNhNmE2YjJkNzllNDExNzBlYzY5NGVjN2E1ZGJmMTVjNzRhYjBjMWI3YTQxNzY4YWZkMjIwMzdjZSJ9"
                 },
                 {
-                    "resource": "repo://packages/inspector/package.json#L16-L34",
-                    "version": "repo-lines-v1:sha256:36ba45b02c34a73d9e3571696774f3274f5dc27b0f4ebc73f8e44759e96b3338:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmZjdjYjI4MzYxNzBhODU0MDA2MWE4MTgzMzk5OTQ3MGRmNzhhYjdmN2M2ODc2ZjFjNmIyNGIxY2JmM2ZkZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwZDJjOTUzOThmY2I3MjFiNjE2MjIwMzQ3NjM3MmI4NmUxNzdmZDE4YjE0YzUzZDIwNmI5MGFjMjUyYzhkYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/inspector/package.json#L19-L23",
+                    "version": "repo-lines-v1:sha256:b01c51ea2a780096ef0b6c48d03f91620b4f4074f140b53621bc356b3e7d23c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjcxZTk3NzU0YWZkYTAzNzAyZjk3ZWNmYWJmNDI5NTNmYzRmZjgyZmJmNzJkNGU2MDA2YWM5NDg0NTMxYjJiMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWIxNjVlNzU2ZDkxMWRlMGE1ZDhiZDYyNzA0MmJiMGFkOTkzMjg0Njc0MjE5ZTViYzFkYzcwZjI5MDY3ZDM3ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzM2MDNjOTAxOTJmM2YwYzVjNmQzMjBjMTQ4NmFkMGE1NGJjZjcxYTRjMTdlNDFjZjdlNDA3Mzg4NmRjMjA0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTJiZTUyM2RiNmYxMTlhYmVhMTFmNDVjMGMzZjg2NDZmNTVhZWJkNjM1NzRjZTNjMzRhMTQxMTg0YTMyNjQwYSJ9"
                 }
             ]
         },
@@ -133,8 +133,8 @@
             "statement": "The workspace root provides workspace-wide package builds and a development command for the examples workspace, plus root test, typecheck, formatting, lint, architecture-lint, and mutation-test scripts.",
             "evidence": [
                 {
-                    "resource": "repo://package.json#L14-L40",
-                    "version": "repo-lines-v1:sha256:324cee259b97e2f8776cce8651bac92e0ed1e5d7617a492673ea3fe65bead3dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0OGExMWJmOTJmNzJlZTdiZjY5MzE4MmQ0MzhiMWRkNzYxNTc0Y2Q4YmViNGJlZWEyZTA3ODRhZTJiMGRhZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1MmJjNTE3NjI4YzRkYWVhYjQ5ODY1ZTZmY2JjZmE5NzhjNjM1YTdiM2I1YjI3YWFmZjJmZWVkNTk5ZDJkNWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI1YWE2MWE2MTQ3M2EyMjFjYTQyOWViMjA0ZTM4MmFjZThkYmM1NGNiNDU3YTI5Y2M5NTYzYTJjYmU5YTdmZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyMDZiMjY2YTVlNjc5Y2ZjYmJjNzBmNzVmNDZkNjIzYzgxMmQxMTMzNGZjYzFiODVhNjgxMDJlMjU3ZDE3ZmYifQ"
+                    "resource": "repo://package.json#L19-L41",
+                    "version": "repo-lines-v1:sha256:417ab24e72503ca8d6225b35d0115c75ad16e5b97bebb81275c1fbd0086f5a61:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwOGYxYjMxODg3Y2U0ZWE2NmU0ODI3MjdiMTY5MWUxMDRmMjVmZTEzYWZiYjVjZDczYjI0NjExMjRkMzkzZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjNmI1YzNjMTg5OTU5ZTNmMzQ5YTZhYThhMmRjMDYwOTFhZWI2MDNmNjg0NGM3Nzg2NDUwN2QzM2YwY2JjNzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwZmZkNWUzMWE0MDg5MTBkMTBiOGVhZTEyNjc4NGFkYmE4NjY1NWRlZDMwY2U0MjRkYjA4NTVjYjgxMDI1ZmQifQ"
                 }
             ]
         },
@@ -186,7 +186,7 @@
         }
     ],
     "verification": {
-        "by": "openwiki/0.5.2",
-        "at": "2026-09-22T06:36:54.215Z"
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
     }
 }

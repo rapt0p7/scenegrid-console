@@ -1,0 +1,32 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:893644c4f710f4fef13ff084ede4cb2c3b26531cc87f28b99fbf4797d8944365",
+    "claims": [
+        {
+            "id": "claim_d267ffde258b4721b12ef55a8dd35753",
+            "statement": "The SceneGrid repository is structured around `@scene-grid/engine` for audio runtime, `@scene-grid/inspector` for browser debugging, `@scene-grid/shared` for common contracts and worker bridges, and `examples` for browser integration.",
+            "evidence": [
+                {
+                    "resource": "repo://examples/package.json#L1-L10",
+                    "version": "repo-lines-v1:sha256:152dd4b033cc074e8d428e281563d204dc4e8ab14b2706ee6b29dc867e6429cf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4NzRmMDU1MmU4NmYzNzJjZjI3MzRlOTgxYTM0ZWUzZGQ1ZTgyNTc3ZTc3NmQ3NWJkN2Q0M2E5MzRlNjQ3Y2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1OWZkMjU1OTMxYTFiNGZkMmRlMTc2YWJlZDJjNDU1ZGZkOGFmNTQ1M2YzZmVlZTc5ZTEzZWFiMjY4Y2QwOTgifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/package.json#L1-L10",
+                    "version": "repo-lines-v1:sha256:b5c64fa46b6de894e26c16ce64b664c27b5311cdf5f2963cde96451346a267a0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0N2Y1NDA2MjUyZjA4NjI4ODVmZjE2ZGU1ODk0MzMyNGVmMjkyY2NkNDkzNWU3MzdmYzNiNTY2MzFjNmQzNmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiZDc0MzdjODgyZWIwYWE2ZjNjODllNTgwNDU5M2JiNDg5ZGE3YjY0N2VmNmIzYWVkMWNhNjQ2NzNhYTZlNjQifQ"
+                },
+                {
+                    "resource": "repo://packages/inspector/package.json#L1-L10",
+                    "version": "repo-lines-v1:sha256:e3ee9abef84bb2f51f09c276d733ad2e71b9114638723e9f3ee4e68909e2bb2a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0N2Y1NDA2MjUyZjA4NjI4ODVmZjE2ZGU1ODk0MzMyNGVmMjkyY2NkNDkzNWU3MzdmYzNiNTY2MzFjNmQzNmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFmMWE0MDBjZDc1YTRmMDE4ZmY4YWU3YzFlOTM4NTc5YmVkMWYyZTRlZmE1ZWZjYzU2ZGYzNzlkMDFlZDJjMzkifQ"
+                },
+                {
+                    "resource": "repo://packages/shared/package.json#L1-L10",
+                    "version": "repo-lines-v1:sha256:ad56bbf8aada1b862e667633c58e4d72a00796f64db06e4af4f7845df248df74:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0N2Y1NDA2MjUyZjA4NjI4ODVmZjE2ZGU1ODk0MzMyNGVmMjkyY2NkNDkzNWU3MzdmYzNiNTY2MzFjNmQzNmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlNWY4NzhhNmZmZmJkN2VlZjU0NWNlMjZhNzQ4NDFmYzdhMTcyNzVkZDcxMzM5OTYwNjNlOTI2MzM0YTIzOTIifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

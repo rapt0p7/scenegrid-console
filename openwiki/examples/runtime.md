@@ -3,6 +3,12 @@ type: runtime workflow
 title: Example app runtime
 description: The demo bootstrap in `examples/main.ts` and `examples/inspector.tsx`, including bank loading, unlock-on-gesture, suspend/resume, dev-only inspector attach, and HMR config reload.
 tags: [examples, runtime, demo]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-21f3cdfba5248f4c1a9cda5b
+    resource: repo://examples/main.ts
 ---
 
 # Example app runtime

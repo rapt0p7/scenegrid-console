@@ -3,6 +3,16 @@ type: infrastructure subsystem
 title: Nodes and master output
 description: Audio node factories, node-chain composition, and the final master-output path used by the engine bus system.
 tags: [engine, audio-nodes, master-output]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-387972ee594d6475db41100d
+    resource: repo://packages/engine/src/Infrastructure/nodes/AudioNodeFactory.ts
+  - id: openwiki-source-c030c681033496e964d27890
+    resource: repo://packages/engine/src/Infrastructure/nodes/MasterOutput.ts
+  - id: openwiki-source-ac4b7f45cf61d79b294b8c17
+    resource: repo://packages/engine/src/Infrastructure/nodes/NodeChain.ts
 ---
 
 # Nodes and master output

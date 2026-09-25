@@ -1,0 +1,40 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:672da611666025aad64278696182f2c93ac855cbabb6dd849ed4f394500430f5",
+    "claims": [
+        {
+            "id": "claim_31beea0bdfe3431c807abb5e4b36e787",
+            "statement": "`MasterOutput` manages the final audio destination stage, connecting its input to a master gain node routed to `context.destination`, while exposing volume control, 50 ms mute/unmute fades, and a zero-gain `silentTail` connection.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/nodes/MasterOutput.ts#L6-L49",
+                    "version": "repo-lines-v1:sha256:4f7626a3ae293a023096cc4ec620c61ee60c210b441fd74500a9cfd77e011701:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3MGM0YzlmZGNjZjc0YjQzYzEwMWE3Mjc4NjkwM2JjNzM2NDEzNWYzYjY3ZWI4M2I3OTVhNzYxMmI1MmUwZjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3NGI0YTk4OGMzNDJjZGY5MzViYjQ1NTcxYjQ5ZjhlMTY1YjEzYzQ0NzdhYWYxYzc1OTMxY2FiY2RhYjUxYzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_3a752a5144d640d28af9a1dd649801a2",
+            "statement": "`AudioNodeFactory` encapsulates the instantiation of Web Audio nodes including gain, panner, dynamics compressor, and biquad filters, providing fallbacks for stereo panning and safe clamping for gain and pan values.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/nodes/AudioNodeFactory.ts#L29-L65",
+                    "version": "repo-lines-v1:sha256:f259857242f2faaa254f8bbac6a984be43d5d3658693cbe8603e3ac0e167189e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhYzQ2YTJjNjQ3OTM4ZGM5ZDEyYmFlMjVlZDNkNGQ1MjZkMGE1ZTkxY2FhOGQxM2E0N2FkOWY5NDhlOGY2YjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmMGQ5NDA2YTBmNmNjZDQ1ZTAxNDUwYjAxYjgzYzUzYzExZTc3NjIwMzQ4ZWZjZDFmM2MxMjVmM2UyNWVmZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzMjNkNzdiOGE3MWM0OGU2MTZhYzBhNmMxYTFhZTY3NDFlMzU2MTc5M2I2MWIzNmI3NjJhZDM1NzE3OTRjZGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2OThiYTU4Y2E0NzBiYzExMTMwYjBhNTQ0ZjlkMjU2MTI4NDE4NmM5MWRhYzg0M2I3MGEyNzM2YjkzYmE2YmEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_7f696e109e33456cb01c05e9b74e107a",
+            "statement": "`NodeChain` composes audio processing nodes between an input gain node and an output gain node, optionally attaching a stereo or 3D panner and dynamic biquad filters.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/nodes/NodeChain.ts#L19-L50",
+                    "version": "repo-lines-v1:sha256:4c513bef1e63d9f7efa3e5f0073a1867e1cebb8e35fc732a239b389c35957922:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlNTcwMDdhMGM4OWJjZGI4YWY5ZDg5NTlmNWVkMmVmMzRhMTBlYzZiMzAxODUzMWUxZDJjZDdmMTBjNGQ3OTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY3YjZjOTI2OWQzOWY4ZDdjOTQzNmQ1ZmVlYjNlODAwMTczYjA3NTgxZGUyZGRiNWFkMmNhYWU5ZDQ4MTBlNmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzOGIwN2NmMDFkZTc3MmNhYjlmNzcwYzEyMzU4NjNiZjljYWFiZWEyYTU3NjA1M2RmMjU4MDNlNTg1YjJlNjcifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

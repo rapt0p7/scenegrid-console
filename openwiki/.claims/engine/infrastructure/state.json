@@ -1,0 +1,30 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:6e45e6cd2dde7dc871f5e9f300e0f7a36b20eb6400464c3c52c3760ec6c32038",
+    "claims": [
+        {
+            "id": "claim_5bce43c830274c2d802a7461e18e7b41",
+            "statement": "`ContainerHistoryRegistry` tracks container playback state by sound ID to preserve selection history such as the last played index across repeated playback calls.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/state/ContainerHistoryRegistry.ts#L5-L19",
+                    "version": "repo-lines-v1:sha256:d9b26f90a24abe0e6f7913b2cd2fa4df1b6a4a959e5cf14f7339037f53d6b843:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyMGMyZjRmZmM1N2JiZjk3YTJmOTIyODFhMmVjY2Q2ZTNkMzI2ZTQyNWIzNTIyNzEyNjA1YjY3YzI0NGE0NDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiMTFlZGU4YmY3NTAzNjQzMGZiMDZiMDAzMGI4MjdlODc3YmFiYmM4ZTkwYjQyMzk2YzU5MmYxOThhMjA4ZGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_3718e2f0957849debc314a1b755c05ba",
+            "statement": "`SwitchHistoryRegistry` tracks switch playback state and runtime switch overrides by sound ID, supporting state retrieval, updates, and override resets.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Infrastructure/state/SwitchHistoryRegistry.ts#L5-L37",
+                    "version": "repo-lines-v1:sha256:fa3b0178849315d1f258bf34c7f92c73036e1ceac6d5b87f93739dcf22a23b48:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwOTU3MTc4MmVkOTEzZjEyMmRkMTA3ZDcwMTgxODhjOGM3MzFkNGI3ZmYxNzgxYTQ5OWJiZjBlNDQzNGFlZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhkOTU2YmVjMjlkYjQzNGYyZDlkMmZlOTVlZWUxNjVlNmE1YjhkZmI2OGM5NDg2MWIyZGM4MWQ4ZmIzZGVlOGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

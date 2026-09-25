@@ -4,8 +4,8 @@ title: Configuration and Sound Registry
 description: Documents sound configuration ports, manifests (ISpriteSoundManifest, IStreamManifest), SoundRegistry, BankManagerAdapter, and aggregate audio engine configuration.
 tags: [configuration, manifests, sound-registry, banks, audio-engine]
 verified:
-  - by: openwiki/0.5.0
-    at: 2026-09-21T16:32:27.121Z
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
 sources:
   - id: openwiki-source-5236a07fa61d4cd901388060
     resource: repo://packages/engine/src/Application/AudioEngine.ts

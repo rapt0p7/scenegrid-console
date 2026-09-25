@@ -23,6 +23,9 @@ sources:
   - id: openwiki-source-fdb2359846e85080555f66ca
     resource: repo://packages/engine/src/Infrastructure/context/WorkletLoader.ts
 generated: { by: "openwiki/0.5.0", at: "2026-09-03T11:15:32.736Z" }
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
 ---
 
 # Audio Context and Unlock Lifecycle

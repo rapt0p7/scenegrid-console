@@ -3,6 +3,14 @@ type: infrastructure subsystem
 title: Runtime state registries
 description: History registries that preserve container and switch playback state across transitions and repeated selections.
 tags: [engine, state, history]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-452c81af9acc9fb46eb0fba1
+    resource: repo://packages/engine/src/Infrastructure/state/ContainerHistoryRegistry.ts
+  - id: openwiki-source-e78567def34a6399dc24cc2a
+    resource: repo://packages/engine/src/Infrastructure/state/SwitchHistoryRegistry.ts
 ---
 
 # Runtime state registries

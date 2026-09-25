@@ -3,6 +3,14 @@ type: runtime entrypoint
 title: Inspector debugger runtime
 description: The `AudioDebugger` and `attachDebugUI` entrypoints that attach live bus visualizations to an initialized engine instance.
 tags: [inspector, runtime, debugger]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-1d5210582c2e4047cd94c6c3
+    resource: repo://packages/inspector/src/AudioDebugger.ts
+  - id: openwiki-source-fbd7fb9bd8ae10b828f46f70
+    resource: repo://packages/inspector/src/index.ts
 ---
 
 # Inspector debugger runtime

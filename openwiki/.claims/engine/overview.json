@@ -1,0 +1,30 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:721e7d0494873e81d338c745371666339039720ad8d7cf7ae3039705f6604b5f",
+    "claims": [
+        {
+            "id": "claim_84d6ca1983e94a03be3dafb1c67934c2",
+            "statement": "The `@scene-grid/engine` package root exports `AudioEngine`, `PRIORITY`, `LoopState`, `WorkletLoader`, and `ConsistencyChecker`, alongside public types for buses, snapshots, sound configurations, manifests, and RTPC.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/index.ts#L1-L40",
+                    "version": "repo-lines-v1:sha256:c7ea2dff2878783cf24f5b5e91f9a972fef73bd81961b21797bb5bd1b8bbf481:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YjAxMjkwNzgwN2Y0ZjljOTlkZjM3ZmM4ZDg4MTNjOWNmYzE5OWIwYzFiMGM1MDZjZjdlNmFjOTNkMmU5MmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4M2I2NjMwMjc5NzdlMTE0MDg2ZTQxYWM0NjBmYjUzOWMxNDRiZTMyNGNjZmExNzYzZDViMTNmYTA5NzUxZWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_4867fd32a05c43e294b6b8e38598476d",
+            "statement": "`AudioEngine` serves as the primary application facade composing domain orchestration, validation, mixer snapshots, and infrastructure adapters into a single runtime surface.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L52-L95",
+                    "version": "repo-lines-v1:sha256:71ebdc61d5d59f4e8cd231ff5ed104c017af3d681af56c7619711d1805f5388c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjODRlODA1YmQwODM1MDdlZjM1NGVlYzQ3ZWM2MzZjZDM3NzJiZmFjZDU0YWQxMzNjZDQ5ZjQzMzhhZTI0NmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjMjI0ODVmNTY3NTJjZGQ5NWY0NDVhYjZiNTQ1MTE5OTAzM2IwODEyODVjMDIyNjhmNDAwZTlhMzQyMTZjNGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxYjZlYTBmZjZmNWQxMDg2YjEzN2Q0NzQwY2EyY2VlOTc1ZGRjYTBjOTQzYzMyYzUzNTYxZTMyZjYwZThhMDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmZWIwNDliMWEzNTVmNjQyNzYyZTM0ZWJhOGFjYTE5ZWM4Y2RjMjMyMDYzMjRjMGRlODhhZTJmYWE5Yjk0ODgifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

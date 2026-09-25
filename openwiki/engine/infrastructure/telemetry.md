@@ -3,6 +3,14 @@ type: infrastructure subsystem
 title: Telemetry transports
 description: Engine-side telemetry dispatchers, snapshotters, and transport adapters for browser, worker, and broadcast channels.
 tags: [engine, telemetry, transport]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-a6cd3ba5b282a78dba9614b7
+    resource: repo://packages/engine/src/Infrastructure/telemetry/TelemetryDispatcher.ts
+  - id: openwiki-source-31719f824200e2413a666c58
+    resource: repo://packages/engine/src/Infrastructure/telemetry/WorkerTelemetryTransport.ts
 ---
 
 # Telemetry transports

@@ -3,6 +3,14 @@ type: infrastructure subsystem
 title: Worklets
 description: Audio-thread and inspector worklet processors used for ducking, limiting, and metering.
 tags: [engine, worklets, audio-thread]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-f7ce4eb73c6c314317e5578a
+    resource: repo://packages/engine/src/Infrastructure/worklets/ducker.processor.ts
+  - id: openwiki-source-296e37a5b6b009a3bf142c63
+    resource: repo://packages/engine/src/Infrastructure/worklets/lookahead-brickwall-limiter.processor.ts
 ---
 
 # Worklets

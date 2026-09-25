@@ -1,0 +1,30 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:52d895fb507e83995498a27a378217363322acb85639115f02c21e076d4b3f8f",
+    "claims": [
+        {
+            "id": "claim_73f7c3a56e7a4dabab93fb392775d8da",
+            "statement": "`MeterProcessor` is an `AudioWorkletProcessor` computing real-time RMS, peak, and K-weighted audio energy levels for inspector visualizers.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/inspector/src/worklets/meter.processor.ts#L30-L45",
+                    "version": "repo-lines-v1:sha256:02a2ac1ab26e79d6a5f875dde103ea4d7552a94b9dca269b60d34e8ffc6eff8f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViNDIzMjUyMTZiNDNmYTNmM2EwMzg2MjVhMTM1ZjI2MzU1N2Q3YzY2ZDRmYzBkYjNkZTRlNmExMmEyZmVmYjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3Nzg4NWRiYjA0MWYyZWY5ZmMyZTkxYWJjNDUxNDg4OGI1ZDNjM2JhNTliYTcxYjM3NjE1NTRmM2ZlOGVhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1OWU3MjcwMjU2ZGQyOTI2ZmQ0NGM4MzczZDdmOTBiMzMxMjQxNTkyYjQwYzRiNTA3ODQ2MjliOTZlNzk2ZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwY2MwYmYzM2YxNWEwODE1NTk1ODU0MmEyMTIxZTBjNWIxYmI3MGY4NDBiN2NhYzI1MTEwNzQ3ZjNmYjdlYjIifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_df49f139187847f29fded2da34390147",
+            "statement": "`AudioDebugPanel` constructs a Tweakpane control interface with `AudioProfiler`, `VoiceMeterWidget`, and `VoiceListWidget` to inspect engine debug state and trigger playback operations.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/inspector/src/AudioDebugPanel.ts#L5-L40",
+                    "version": "repo-lines-v1:sha256:e434a7c8ba09338671d9436253cc5251546deeb161d933307f1ed8893e13fbbb:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmNThjNTg0OWU5NmM0OWE0MGVjNTQ3ZTU2NzBmZWZmZjE3MTk4MGM3OTI0ZjBjM2UyNGExYTBkMTY4YjZmN2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2M2I0Y2ZjNGEyMDVjNWQ1Yzc5MmQ5ZDQxMmE4ZTk5Nzg4ZTc0NDdmYzkzNzhlZmE2NGZkNmUwZTEzYTYwOGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzZjY3MDdmM2NjYmZhMmY3ZThkNjA5NjE3OTBjODE5M2I1NDRiMTZkYzM3OGFiZmJlNmFiYjk5NWZhZjkzOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE0MGY1ODFlZWZjMDZhZWIwMDViN2ZkZDNmYjA3YTg2Y2ZkZTNkOTZmNjkwYWI2MDkzNWEzOTgwZTkyYmE4YmYifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

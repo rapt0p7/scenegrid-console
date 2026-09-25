@@ -17,6 +17,9 @@ sources:
   - id: openwiki-source-6d4c48df67f3190c1aef57ee
     resource: repo://packages/engine/src/Infrastructure/loader/SoundController.ts
 generated: { by: "openwiki/0.5.0", at: "2026-09-03T11:15:32.736Z" }
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
 ---
 
 # Loaders and Sound Control

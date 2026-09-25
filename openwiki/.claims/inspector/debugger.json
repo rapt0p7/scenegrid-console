@@ -1,0 +1,30 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:03604835cf970bf1e888e9d3ee2f5c6ac6bea4e3b333fc99dc07784df798795e",
+    "claims": [
+        {
+            "id": "claim_cfcdd8e0bb0e408898b8fcbc66b1ab9d",
+            "statement": "`attachDebugUI` verifies the presence of `_debug.busSystem` on the passed `AudioEngine` instance before instantiating `AudioDebugger` and initializing DOM visualization.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/inspector/src/index.ts#L7-L18",
+                    "version": "repo-lines-v1:sha256:9003efd54ef9558e279569411f9f4e2c9a00808dc5515258d8d6eea260fe410d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjMjkwNzRjYzk3MTM5Njk1NGNmYTU4NTFmOTFiZTAwZGM2NTlkOTkxMDJlODNlZWQwMjI4YzI2MzEyMTIzMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlNWZmZjk2ZDk4N2RlNGZkMGIwMTkwYTBmYmQxNGU1OWU5MmZjMzI3ODA4YTZmY2U5Zjg5NDFlMTViOGNiOGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_5ad1d152590b45a3968a0ccdb2b947c4",
+            "statement": "`AudioDebugger.init` queries the specified DOM wrapper element, warning and returning if missing, and dynamically constructs spectrum and meter columns for the master node and active bus analyzer taps.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/inspector/src/AudioDebugger.ts#L23-L60",
+                    "version": "repo-lines-v1:sha256:e3ea641ef86103d16ade6a18957362e02f9d8698634e5044c93db075d5f1fd89:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0NTJmMmExZjJhMGY3YjIzZWVmMzAyOWYzNmRhZmM1MDc5YmZmOGMyYjNkN2U0N2IwNWI3NTI2YzhjZDQzNzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ODdjN2E0ZjRlM2Q0MWYxZmU5MGJmYjI5OTk1MWRhZGMwOThjOWM0YWZlNTdiZThkNjlkNTUxYzQ3NTE0YWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0MDQwNTVjYjI0OTNiN2Y5YjBiYzdkN2M0NjBkMzkxMDBiNWNiNGZmZDAyMmQzNDIwYzcxOGJkOWY1ZmY2NjYifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

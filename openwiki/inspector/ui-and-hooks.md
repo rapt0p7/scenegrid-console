@@ -3,6 +3,14 @@ type: inspector subsystem
 title: Inspector UI and hooks
 description: Tweakpane control panels, profiler widgets, telemetry hooks, visualizer helpers, and the meter worklet used by the inspector package.
 tags: [inspector, ui, hooks, worklet]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-6f2f07a38d4c4a6926b35ac8
+    resource: repo://packages/inspector/src/AudioDebugPanel.ts
+  - id: openwiki-source-fc6c0b5e3ddbca159052e109
+    resource: repo://packages/inspector/src/worklets/meter.processor.ts
 ---
 
 # Inspector UI and hooks

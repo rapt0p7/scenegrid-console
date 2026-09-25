@@ -3,6 +3,14 @@ type: package overview
 title: Engine package overview
 description: Canonical map of the `@scene-grid/engine` package, its public API families, and the domain and infrastructure pages that own each workflow.
 tags: [engine, package, api]
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-25T08:14:31.202Z
+sources:
+  - id: openwiki-source-5236a07fa61d4cd901388060
+    resource: repo://packages/engine/src/Application/AudioEngine.ts
+  - id: openwiki-source-47db8ab555df91361739a053
+    resource: repo://packages/engine/src/index.ts
 ---
 
 # Engine package overview

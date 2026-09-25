@@ -1,0 +1,30 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:75b32a7701257460648b15e2cddb3e45a2fc7a7e505fe20280901ae24522e2bf",
+    "claims": [
+        {
+            "id": "claim_8d1dda4688e743829b92c9adf122eef8",
+            "statement": "The `@scene-grid/inspector` package exports `AudioDebugger`, `initAudioDebugPanel`, and `attachDebugUI` as its public browser debugging interface.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/inspector/src/index.ts#L1-L18",
+                    "version": "repo-lines-v1:sha256:f56a3993893cdc7be9d881b9a4465265ce885c4f121c614479532b427eff88e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1NmViNDNjNjU2NDFmM2ZkMTdkMmEwMTc5YzhlMWQ2Nzc4ZDZiNDRiNjU5NzU4MzZiMjYwN2ZiOGYxZWJiNTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_78f1799f0a6f45dc8d0720ffc18d66dd",
+            "statement": "The inspector package consumes engine debug proxies to construct visual meter, spectrum, and tweakpane control surfaces for live audio runtime monitoring.",
+            "evidence": [
+                {
+                    "resource": "repo://packages/inspector/src/AudioDebugger.ts#L13-L40",
+                    "version": "repo-lines-v1:sha256:a85b28fd4c34d792274a69bb4ee540b788f2531e758d39b5ac858eaf21ffd2d4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1MWVmMDk3MjQ5ZWNlNDdmNzY2YTU2NDgyYzU2MjczNWYxMzBhYzdhMWMyZjkyMTBjOWY1NWY2YWMyZDMyZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlYjhjMjg0MjExNWRkZDk2YzZjZWM3MjNkYWE1ZjRjNjNkNjY0MmZjYzNmODEyODhlYzgyMTk5NTJmNzM2YTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4NzZmMDBiZDg2ZWI4MWVlYjk1MTYyZmRhNGUwZGEyYWMzZWIwMjEwZGM1YmVlZjc0N2RmNGE2NzRhNzFlNDMifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}

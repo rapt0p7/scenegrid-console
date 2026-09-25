@@ -1,0 +1,30 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:ffddc26017cf42dcabd805145c01292496c5591cfddcbb27d52dc4228046a2cb",
+    "claims": [
+        {
+            "id": "claim_7fa06695b9b5427cb753b5c109c92e12",
+            "statement": "The example app boots `AudioEngine` with non-strict validation, loads demo audio banks and streams, and defers context unlocking and initial playback until a user `pointerup` interaction.",
+            "evidence": [
+                {
+                    "resource": "repo://examples/main.ts#L34-L100",
+                    "version": "repo-lines-v1:sha256:d23b9993c59c4b2030552fc1c7e7e1c62019d2f2c976ab3e9c51f54c3306bce5:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4YjY1MDNhNWM0OGYxOWFiNWVmNzk2NTgxMGY0MjFjMGEwZWY3ODFjNDlhMDg3ZGQ0YmEzMTE2Y2UxYjg2NjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0MWMzZWI4NWEwYzc1M2NhODVlOWNjNGI1MTQ5MDVkYjBkN2U0MTM2MDZhZDFlMjlmZWZhYWQwZDkxZmNlN2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0NTAwM2MxNTM0NmExMjNiN2I1YzUwYTY5ZWVhNTRmNjQwYjhlZjY1Yjg4YTk1ZGZmMjljMzg5MTE4OTlhYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxODkwMDk2NzE4NjcyMGU3NDVlMTIyMTJiMjY4Nzc1YWUzMDE3NGQ5YTM1MTc0MzI5ODU3Y2E3YjU1YzI5OWQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_5e38fefec26748a0bab47036c969c813",
+            "statement": "The example app listens for Vite HMR updates to `./audio-config/index.js` and applies modified bus, snapshot, sound map, and RTPC configs live via `audio._hotReloadConfig`.",
+            "evidence": [
+                {
+                    "resource": "repo://examples/main.ts#L132-L151",
+                    "version": "repo-lines-v1:sha256:cc418d3e018ecfdb442283c9713ce9b7a55a5a69a3cd256b701e2ed91ddd1c78:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4ODk3MzcyNzMwNjI0MzI3NmMwYjYzMDQ0N2NjMzhjN2JkOWZiZGVhNzJjNjEwODVkMzViYWI0N2ZmZmYxNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5ZDM2NDZkMjZlZDk3Y2Y4YzMyOWI5ZTBiN2E4Y2Y5ZmFhYjZiNmQxZTA2NWFmZmU3MTFiODU5ZGJhNWIyMDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZmZmE2NTBmNDQ5MmVhYmU3NmE5MjEyM2ZmNTJiNDU1ODhmYzU1OTkzZmRiMGZiZjUwZDE2MGM5NzZkYjUxZTEifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.5.1",
+        "at": "2026-09-25T08:14:31.202Z"
+    }
+}
