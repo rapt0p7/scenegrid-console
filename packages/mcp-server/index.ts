@@ -458,3 +458,105 @@ export const inspectPcmWeightTool = server.tool(
 );
 
 export default server;
+
+import {
+    contextConventionsHandler,
+    getSchemaHandler,
+    queryGraphHandler,
+    traceEventHandler,
+    recordSessionTelemetryHandler
+} from './src/runtime_tools.js';
+
+server.resource(
+    {
+        uri: 'scenegrid://context/conventions',
+        name: 'agent-conventions',
+        description: 'Dynamically reads the project AGENTS.md conventions'
+    },
+    // oxlint-disable-next-line no-unused-vars
+    async (uri, ctx) => {
+        const workspaceRoot = process.cwd();
+        const data = await contextConventionsHandler(workspaceRoot);
+        return {
+            contents: [
+                {
+                    uri: uri.href,
+                    mimeType: 'text/markdown',
+                    text: data
+                }
+            ]
+        };
+    }
+);
+
+export const getSchemaTool = server.tool(
+    {
+        name: 'get_schema',
+        title: 'Get Engine Schema',
+        description: 'Exposes the pre-generated JSON Schema for the engine configuration',
+        inputSchema: z.object({
+            variant: z.enum(['referenced', 'dereferenced']).default('referenced'),
+            targetSlice: z.string().optional()
+        })
+    },
+    async ({ variant, targetSlice }) => {
+        const schema = await getSchemaHandler(variant, targetSlice);
+        return {
+            content: [{ type: 'text', text: JSON.stringify(schema, null, 2) }],
+            structuredContent: schema
+        };
+    }
+);
+
+export const queryGraphTool = server.tool(
+    {
+        name: 'query_graph',
+        title: 'Query Manifest Graph',
+        description: 'Fetches localized manifest branches using dot-notation (e.g. buses.sfx)',
+        inputSchema: z.object({
+            queryPath: z.string()
+        })
+    },
+    async ({ queryPath }) => {
+        const result = await queryGraphHandler(telemetryServer, queryPath);
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+            structuredContent: result
+        };
+    }
+);
+
+export const traceEventTool = server.tool(
+    {
+        name: 'trace_event',
+        title: 'Trace Event History',
+        description: 'Returns recent history of CAUSE_CHAIN and LIFECYCLE events',
+        inputSchema: z.object({})
+    },
+    async () => {
+        const history = await traceEventHandler(telemetryServer);
+        return {
+            content: [{ type: 'text', text: JSON.stringify(history, null, 2) }],
+            structuredContent: history
+        };
+    }
+);
+
+export const recordSessionTelemetryTool = server.tool(
+    {
+        name: 'record_session_telemetry',
+        title: 'Record Session Telemetry',
+        description: 'Starts or stops telemetry buffering',
+        inputSchema: z.object({
+            state: z.enum(['start', 'stop'])
+        })
+    },
+    async ({ state }) => {
+        const result = await recordSessionTelemetryHandler(telemetryServer, state);
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+            structuredContent: result
+        };
+    }
+);
+

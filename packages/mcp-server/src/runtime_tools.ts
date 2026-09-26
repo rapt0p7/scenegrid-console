@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 // oxlint-disable typescript/require-await
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { WebSocketTelemetryServer } from './WebSocketTelemetryServer.js';
 
 export async function getActivePlaybacksHandler(server: WebSocketTelemetryServer): Promise<any[]> {
@@ -126,8 +129,6 @@ export async function getQuotaPreviewHandler(
     // oxlint-disable-next-line typescript/no-explicit-any
 ): Promise<any> {
     const { extractMetadata, calculatePCMSize, routeAsset } = await import('@scene-grid/cli');
-    const fs = await import('node:fs');
-    const path = await import('node:path');
 
     if (!fs.existsSync(inputDir)) {
         throw new Error(`Directory not found: ${inputDir}`);
@@ -163,4 +164,66 @@ export async function getQuotaPreviewHandler(
     }
 
     return report;
+}
+export async function queryGraphHandler(server: WebSocketTelemetryServer, queryPath: string): Promise<any> {
+    const snapshot = server.getSnapshot();
+    const manifest = snapshot.manifest;
+    if (!manifest) return null;
+
+    const parts = queryPath.split('.');
+    let current = manifest;
+    for (const part of parts) {
+        if (current === null || typeof current !== 'object') return null;
+        current = current[part];
+    }
+    return current;
+}
+
+export async function traceEventHandler(server: WebSocketTelemetryServer): Promise<any[]> {
+    return server.getTraceHistory();
+}
+
+export async function recordSessionTelemetryHandler(server: WebSocketTelemetryServer, state: 'start' | 'stop'): Promise<any> {
+    if (state === 'start') {
+        server.startRecording();
+        return { status: 'recording_started' };
+    } else if (state === 'stop') {
+        return server.stopRecording();
+    }
+    throw new Error('Invalid state for record_session_telemetry');
+}
+export async function contextConventionsHandler(workspaceRoot: string): Promise<string> {
+    const p1 = path.join(workspaceRoot, 'AGENTS.md');
+    const p2 = path.join(workspaceRoot, '.agents', 'AGENTS.md');
+
+    if (fs.existsSync(p1)) return fs.readFileSync(p1, 'utf-8');
+    if (fs.existsSync(p2)) return fs.readFileSync(p2, 'utf-8');
+
+    return 'No agent conventions found.';
+}
+
+export async function getSchemaHandler(variant: 'referenced' | 'dereferenced', targetSlice?: string): Promise<any> {
+    const { fileURLToPath } = await import('node:url');
+
+    const currentFilename = fileURLToPath(import.meta.url);
+    const currentDirname = path.dirname(currentFilename);
+    const schemaDir = path.join(currentDirname, '../generated');
+    const filename = variant === 'dereferenced' ? 'schema.dereferenced.json' : 'schema.json';
+    const filepath = path.join(schemaDir, filename);
+
+    if (!fs.existsSync(filepath)) {
+        throw new Error(`Schema file not found: ${filepath}`);
+    }
+
+    const content = fs.readFileSync(filepath, 'utf-8');
+    const schema = JSON.parse(content);
+
+    if (variant === 'dereferenced' && targetSlice) {
+        if (schema.definitions && schema.definitions[targetSlice]) {
+            return schema.definitions[targetSlice];
+        }
+        throw new Error(`Slice ${targetSlice} not found in dereferenced schema`);
+    }
+
+    return schema;
 }

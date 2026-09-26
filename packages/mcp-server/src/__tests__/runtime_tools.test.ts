@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+// noinspection D
+
 import { describe, it, expect, vi } from 'vitest';
 
 import {
@@ -14,7 +16,8 @@ vi.mock('../WebSocketTelemetryServer.js');
 vi.mock('node:fs', () => ({
     readdirSync: vi.fn(),
     statSync: vi.fn(),
-    existsSync: vi.fn()
+    existsSync: vi.fn(),
+    readFileSync: vi.fn()
 }));
 vi.mock('@scene-grid/cli', () => ({
     processAssets: vi.fn(),
@@ -358,6 +361,160 @@ describe('runtime tools', () => {
             const result = await getQuotaPreviewHandler('in', 50, [], []);
 
             expect(Object.keys(result.files)).toHaveLength(0);
+        });
+    });
+
+    describe('AI Integration Tools', () => {
+        it('query_graph traverses the cached manifest JSON', async () => {
+            const { queryGraphHandler } = await import('../runtime_tools.js');
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({
+                manifest: {
+                    buses: { master: { volume: 1 }, sfx: { volume: 0.5 } }
+                }
+            });
+
+            const result = await queryGraphHandler(mockServer, 'buses.sfx');
+            expect(result).toEqual({ volume: 0.5 });
+        });
+
+        it('query_graph returns null if manifest is not present', async () => {
+            const { queryGraphHandler } = await import('../runtime_tools.js');
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({});
+
+            const result = await queryGraphHandler(mockServer, 'buses.sfx');
+            expect(result).toBeNull();
+        });
+
+        it('query_graph returns null if path goes beyond an object', async () => {
+            const { queryGraphHandler } = await import('../runtime_tools.js');
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getSnapshot = vi.fn().mockReturnValue({
+                manifest: {
+                    buses: { master: { volume: 1 } }
+                }
+            });
+
+            const result = await queryGraphHandler(mockServer, 'buses.master.volume.tooDeep');
+            expect(result).toBeNull();
+        });
+
+        it('trace_event returns the trace buffer', async () => {
+            const { traceEventHandler } = await import('../runtime_tools.js');
+            const mockServer = new WebSocketTelemetryServer(8080);
+            mockServer.getTraceHistory = vi.fn().mockReturnValue([{ type: 'CAUSE_CHAIN', id: 1 }]);
+
+            const result = await traceEventHandler(mockServer);
+            expect(result).toEqual([{ type: 'CAUSE_CHAIN', id: 1 }]);
+        });
+
+        it('record_session_telemetry toggles state and returns buffer', async () => {
+            const { recordSessionTelemetryHandler } = await import('../runtime_tools.js');
+            const mockServer = new WebSocketTelemetryServer(8080);
+
+            mockServer.startRecording = vi.fn();
+            mockServer.stopRecording = vi.fn().mockReturnValue([{ type: 'SNAPSHOT', id: 1 }]);
+
+            const startResult = await recordSessionTelemetryHandler(mockServer, 'start');
+            expect(mockServer.startRecording).toHaveBeenCalled();
+            expect(startResult).toEqual({ status: 'recording_started' });
+
+            const stopResult = await recordSessionTelemetryHandler(mockServer, 'stop');
+            expect(mockServer.stopRecording).toHaveBeenCalled();
+            expect(stopResult).toEqual([{ type: 'SNAPSHOT', id: 1 }]);
+        });
+
+        it('record_session_telemetry throws on invalid state', async () => {
+            const { recordSessionTelemetryHandler } = await import('../runtime_tools.js');
+            const mockServer = new WebSocketTelemetryServer(8080);
+
+            await expect(recordSessionTelemetryHandler(mockServer, 'invalid' as any)).rejects.toThrow('Invalid state');
+        });
+
+        it('contextConventionsHandler reads AGENTS.md', async () => {
+            const { contextConventionsHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockImplementation((path: string) => path.includes('AGENTS.md') && !path.includes('.agents'));
+            (fs.readFileSync as any).mockReturnValue('Mock AGENTS.md content');
+
+            const result = await contextConventionsHandler('some/workspace');
+            expect(result).toBe('Mock AGENTS.md content');
+        });
+
+        it('contextConventionsHandler reads .agents/AGENTS.md fallback', async () => {
+            const { contextConventionsHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockImplementation((path: string) => path.includes('.agents'));
+            (fs.readFileSync as any).mockReturnValue('Mock .agents/AGENTS.md content');
+
+            const result = await contextConventionsHandler('some/workspace');
+            expect(result).toBe('Mock .agents/AGENTS.md content');
+        });
+
+        it('contextConventionsHandler returns default string when neither exists', async () => {
+            const { contextConventionsHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockReturnValue(false);
+
+            const result = await contextConventionsHandler('some/workspace');
+            expect(result).toBe('No agent conventions found.');
+        });
+
+        it('getSchemaHandler returns referenced schema by default', async () => {
+            const { getSchemaHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockImplementation((path: string) => {
+                if (path.includes('schema.json')) return JSON.stringify({ type: 'object' });
+                return '';
+            });
+
+            const result = await getSchemaHandler('referenced');
+            expect(result).toEqual({ type: 'object' });
+        });
+
+        it('getSchemaHandler slices the dereferenced schema when target is provided', async () => {
+            const { getSchemaHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockImplementation((path: string) => {
+                if (path.includes('schema.dereferenced.json')) {
+                    return JSON.stringify({
+                        definitions: {
+                            ISoundConfig: { type: 'string' },
+                            Other: { type: 'number' }
+                        }
+                    });
+                }
+                return '';
+            });
+
+            const result = await getSchemaHandler('dereferenced', 'ISoundConfig');
+            expect(result).toEqual({ type: 'string' });
+        });
+
+        it('getSchemaHandler throws if schema file is missing', async () => {
+            const { getSchemaHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockReturnValue(false);
+
+            await expect(getSchemaHandler('referenced')).rejects.toThrow('Schema file not found');
+        });
+
+        it('getSchemaHandler throws if slice is missing in dereferenced schema', async () => {
+            const { getSchemaHandler } = await import('../runtime_tools.js');
+            const fs = await import('node:fs');
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockImplementation(() => {
+                return JSON.stringify({
+                    definitions: {
+                        Other: { type: 'number' }
+                    }
+                });
+            });
+
+            await expect(getSchemaHandler('dereferenced', 'ISoundConfig')).rejects.toThrow('Slice ISoundConfig not found');
         });
     });
 });

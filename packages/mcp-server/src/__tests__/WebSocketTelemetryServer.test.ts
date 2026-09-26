@@ -194,10 +194,10 @@ describe('WebSocketTelemetryServer', () => {
         const client2 = await connectClient(TEST_PORT);
 
         const received: string[] = [];
-        // oxlint-disable-next-line typescript/strict-void-return typescript/no-base-to-string
-        client1.on('message', d => received.push(d.toString()));
-        // oxlint-disable-next-line typescript/strict-void-return typescript/no-base-to-string
-        client2.on('message', d => received.push(d.toString()));
+        // oxlint-disable-next-line typescript/strict-void-return
+        client1.on('message', (d: Buffer) => received.push(d.toString('utf-8')));
+        // oxlint-disable-next-line typescript/strict-void-return
+        client2.on('message', (d: Buffer) => received.push(d.toString('utf-8')));
 
         server.broadcast('hello');
         await new Promise(r => setTimeout(r, 50));
@@ -239,5 +239,68 @@ describe('WebSocketTelemetryServer', () => {
     it('rejects start() when the port is already in use', async () => {
         const duplicate = new WebSocketTelemetryServer(TEST_PORT);
         await expect(duplicate.start()).rejects.toThrow();
+    });
+
+    describe('Trace History Ring Buffer', () => {
+        it('evicts older CAUSE_CHAIN and LIFECYCLE events when max capacity is reached', async () => {
+            const client = await connectClient(TEST_PORT);
+
+            const packets = [];
+            for (let i = 0; i < 1005; i++) {
+                packets.push({
+                    type: i % 2 === 0 ? 'CAUSE_CHAIN' : 'LIFECYCLE',
+                    message: `Event ${i}`
+                });
+            }
+
+            await sendAndWait(client, { batchId: 99, packets });
+            client.close();
+
+            const history = server.getTraceHistory();
+            expect(history.length).toBe(1000);
+
+            expect(history[0].message).toBe('Event 5');
+            expect(history[999].message).toBe('Event 1004');
+        });
+    });
+
+    describe('Session Recording State Machine', () => {
+        it('only captures events between startRecording and stopRecording', async () => {
+            const client = await connectClient(TEST_PORT);
+
+            await sendAndWait(client, { batchId: 100, packets: [{ type: 'SNAPSHOT', playbacks: [{ id: 1 }] }] });
+
+            server.startRecording();
+
+            await sendAndWait(client, { batchId: 101, packets: [{ type: 'SNAPSHOT', playbacks: [{ id: 2 }] }] });
+            await sendAndWait(client, { batchId: 102, packets: [{ type: 'SNAPSHOT', playbacks: [{ id: 3 }] }] });
+
+            const buffer = server.stopRecording();
+
+            await sendAndWait(client, { batchId: 103, packets: [{ type: 'SNAPSHOT', playbacks: [{ id: 4 }] }] });
+
+            client.close();
+
+            expect(buffer.length).toBe(2);
+            expect(buffer[0].playbacks[0].id).toBe(2);
+            expect(buffer[1].playbacks[0].id).toBe(3);
+        });
+
+        it('caps the sessionBuffer at 10000 items to prevent OOM', async () => {
+            const client = await connectClient(TEST_PORT);
+
+            server.startRecording();
+
+            const packets = Array.from({ length: 10005 }, (_, i) => ({ type: 'SNAPSHOT', id: i }));
+            
+            await sendAndWait(client, { batchId: 104, packets });
+
+            const buffer = server.stopRecording();
+            client.close();
+
+            expect(buffer.length).toBe(10000);
+            expect(buffer[0].id).toBe(5); // Oldest 5 items should be evicted
+            expect(buffer[9999].id).toBe(10004); // Newest item should be at the end
+        });
     });
 });

@@ -11,7 +11,7 @@
     "options": {
         "typeAware": true
     },
-    "ignorePatterns": ["node_modules/", "**/build/**", "**/dist/**", "**/*.js", "coverage/"],
+    "ignorePatterns": ["node_modules/", "**/build/**", "**/dist/**", "**/*.js", "coverage/", "packages/mcp-server/mcp-env.d.ts"],
     "settings": {
         "boundaries/root-path": "./",
         "boundaries/elements": [

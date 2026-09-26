@@ -28,6 +28,10 @@ vi.mock('../pcm.js', () => ({
     extractMetadata: vi.fn(),
     calculatePCMSize: vi.fn()
 }));
+const mockExecSync = vi.hoisted(() => vi.fn().mockReturnValue(Buffer.from('')));
+vi.mock('node:child_process', () => ({
+    execSync: mockExecSync
+}));
 vi.mock('../router.js', () => ({ routeAsset: vi.fn() }));
 
 import { main, processAssets, prepareAliases, extractMetadata, calculatePCMSize, routeAsset } from '../index.js';
@@ -149,5 +153,18 @@ describe('main() — init-aliases sub-command', () => {
         await main();
 
         expect(mockPrepareAliases).toHaveBeenCalledWith(path.resolve('./my-sounds'), path.resolve('./my-aliases.json'));
+    });
+
+    describe('generate-schemas command', () => {
+        it('calls the underlying generator script', async () => {
+            process.argv = ['node', 'index.js', 'generate-schemas'];
+
+            await main();
+
+            expect(mockExecSync).toHaveBeenCalledWith(
+                expect.stringContaining('npm run generate-schema'),
+                expect.any(Object)
+            );
+        });
     });
 });

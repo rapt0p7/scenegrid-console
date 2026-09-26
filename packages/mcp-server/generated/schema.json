@@ -1,0 +1,1928 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/IAudioEngineConfig",
+  "definitions": {
+    "IAudioEngineConfig": {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "$ref": "#/definitions/ISpriteSoundManifest"
+        },
+        "buses": {
+          "$ref": "#/definitions/IBuses"
+        },
+        "snapshots": {
+          "$ref": "#/definitions/ISnapshots"
+        },
+        "soundMap": {
+          "$ref": "#/definitions/ISoundMap"
+        },
+        "rtpcManifest": {
+          "$ref": "#/definitions/IRTPCManifest"
+        },
+        "events": {
+          "$ref": "#/definitions/IEventMap"
+        },
+        "musicFSM": {
+          "$ref": "#/definitions/IMusicFSMConfig"
+        },
+        "banks": {
+          "$ref": "#/definitions/IBankManifest"
+        },
+        "globalVoiceLimit": {
+          "type": "number"
+        },
+        "seed": {
+          "type": "number"
+        },
+        "ramQuotaMb": {
+          "type": "number"
+        },
+        "precalculatedSizes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "sequencer": {
+          "type": "object",
+          "properties": {
+            "ppqn": {
+              "type": "number",
+              "enum": [
+                96,
+                192,
+                480,
+                960
+              ]
+            }
+          }
+        },
+        "remoteSyncUri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "manifest",
+        "buses",
+        "snapshots",
+        "soundMap",
+        "events",
+        "banks"
+      ]
+    },
+    "ISpriteSoundManifest": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "high",
+              "low"
+            ]
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    },
+    "IBuses": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/IBus"
+      }
+    },
+    "IBus": {
+      "type": "object",
+      "properties": {
+        "gain": {
+          "type": "number"
+        },
+        "filter": {
+          "$ref": "#/definitions/IFilter"
+        },
+        "sends": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "rtpc": {
+          "type": "object",
+          "properties": {
+            "gain": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "filterFrequency": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pan": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pitch": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "sendLevel": {
+              "$ref": "#/definitions/IRTPCConfig"
+            }
+          }
+        },
+        "sidechain": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        }
+      }
+    },
+    "IFilter": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/IBiquadConfig"
+        },
+        {
+          "$ref": "#/definitions/IReverbConfig"
+        }
+      ]
+    },
+    "IBiquadConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/AudioFilterType"
+        },
+        "frequency": {
+          "type": "number"
+        },
+        "Q": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "frequency"
+      ]
+    },
+    "AudioFilterType": {
+      "type": "string",
+      "enum": [
+        "lowpass",
+        "highpass",
+        "bandpass",
+        "lowshelf",
+        "highshelf",
+        "peaking",
+        "notch",
+        "allpass"
+      ]
+    },
+    "IReverbConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "reverb"
+        },
+        "reverbTime": {
+          "type": "number"
+        },
+        "reverbDecay": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "IRTPCConfig": {
+      "type": "object",
+      "properties": {
+        "gameParam": {
+          "$ref": "#/definitions/GameParamId"
+        },
+        "curve": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RTPCCurveDefinition"
+            },
+            {
+              "$ref": "#/definitions/RTPCCurvePreset"
+            }
+          ]
+        },
+        "sendTargetBus": {
+          "$ref": "#/definitions/BusId"
+        },
+        "smoothing": {
+          "$ref": "#/definitions/Milliseconds"
+        }
+      },
+      "required": [
+        "gameParam",
+        "curve"
+      ]
+    },
+    "GameParamId": {
+      "type": "string"
+    },
+    "RTPCCurveDefinition": {
+      "$ref": "#/definitions/MathCurveDefinition"
+    },
+    "MathCurveDefinition": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Point2D"
+          }
+        },
+        {
+          "$ref": "#/definitions/MathCurvePresetDefinition"
+        }
+      ]
+    },
+    "Point2D": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "MathCurvePresetDefinition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/MathCurveType"
+        },
+        "minX": {
+          "type": "number"
+        },
+        "maxX": {
+          "type": "number"
+        },
+        "minY": {
+          "type": "number"
+        },
+        "maxY": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "minX",
+        "maxX",
+        "minY",
+        "maxY"
+      ]
+    },
+    "MathCurveType": {
+      "type": "string",
+      "enum": [
+        "linear",
+        "logarithmic",
+        "exponential",
+        "s-curve"
+      ]
+    },
+    "RTPCCurvePreset": {
+      "$ref": "#/definitions/MathCurvePresetDefinition"
+    },
+    "BusId": {
+      "type": "string"
+    },
+    "Milliseconds": {
+      "type": "number"
+    },
+    "ISnapshots": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ISnapshot"
+      }
+    },
+    "ISnapshot": {
+      "$ref": "#/definitions/MixerSnapshot"
+    },
+    "MixerSnapshot": {
+      "type": "object",
+      "properties": {
+        "buses": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "gain": {
+                "type": "number"
+              },
+              "filter": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/IFilter"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sends": {
+                "$ref": "#/definitions/Sends"
+              },
+              "rtpc": {
+                "type": "object",
+                "properties": {
+                  "gain": {
+                    "$ref": "#/definitions/IRTPCConfig"
+                  },
+                  "filterFrequency": {
+                    "$ref": "#/definitions/IRTPCConfig"
+                  },
+                  "pan": {
+                    "$ref": "#/definitions/IRTPCConfig"
+                  },
+                  "pitch": {
+                    "$ref": "#/definitions/IRTPCConfig"
+                  },
+                  "sendLevel": {
+                    "$ref": "#/definitions/IRTPCConfig"
+                  }
+                }
+              }
+            },
+            "required": [
+              "gain"
+            ]
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "snapshotId": {
+              "$ref": "#/definitions/SnapshotId"
+            },
+            "timestamp": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "timestamp"
+          ]
+        }
+      }
+    },
+    "Sends": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "number",
+          "null"
+        ]
+      }
+    },
+    "SnapshotId": {
+      "type": "string"
+    },
+    "ISoundMap": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/AnySoundConfig"
+      }
+    },
+    "AnySoundConfig": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ISoundConfig"
+        },
+        {
+          "$ref": "#/definitions/ISmartLoopSoundConfig"
+        },
+        {
+          "$ref": "#/definitions/IContainerSoundConfig"
+        },
+        {
+          "$ref": "#/definitions/ILayeredSoundConfig"
+        },
+        {
+          "$ref": "#/definitions/ISwitchSoundConfig"
+        },
+        {
+          "$ref": "#/definitions/IScattererSoundConfig"
+        }
+      ]
+    },
+    "ISoundConfig": {
+      "type": "object",
+      "properties": {
+        "busId": {
+          "$ref": "#/definitions/BusId"
+        },
+        "variation": {
+          "$ref": "#/definitions/IVariationConfig"
+        },
+        "ducking": {
+          "$ref": "#/definitions/IDuckingConfig"
+        },
+        "rtpc": {
+          "type": "object",
+          "properties": {
+            "gain": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "filterFrequency": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pan": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pitch": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "sendLevel": {
+              "$ref": "#/definitions/IRTPCConfig"
+            }
+          }
+        },
+        "tail": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "isLoop": {
+          "type": "boolean"
+        },
+        "voice": {
+          "$ref": "#/definitions/IVoiceConfig"
+        },
+        "src": {
+          "type": "string"
+        },
+        "spatial": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ISpatialConfig"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "hasPanner": {
+          "type": "boolean"
+        }
+      }
+    },
+    "IVariationConfig": {
+      "type": "object",
+      "properties": {
+        "pitchVar": {
+          "type": "number"
+        },
+        "volumeVar": {
+          "type": "number"
+        },
+        "randomOffset": {
+          "type": "number"
+        }
+      }
+    },
+    "IDuckingConfig": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BusId"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/BusId"
+              }
+            }
+          ]
+        },
+        "intensity": {
+          "type": "number"
+        }
+      }
+    },
+    "SoundId": {
+      "type": "string"
+    },
+    "IVoiceConfig": {
+      "type": "object",
+      "properties": {
+        "priority": {
+          "type": "number"
+        },
+        "virtualization": {
+          "type": "string",
+          "enum": [
+            "kill",
+            "virtualize"
+          ]
+        }
+      }
+    },
+    "ISpatialConfig": {
+      "type": "object",
+      "properties": {
+        "distanceModel": {
+          "type": "string",
+          "enum": [
+            "exponential",
+            "inverse",
+            "linear"
+          ]
+        },
+        "refDistance": {
+          "type": "number"
+        },
+        "maxDistance": {
+          "type": "number"
+        },
+        "rolloffFactor": {
+          "type": "number"
+        },
+        "panningModel": {
+          "type": "string",
+          "enum": [
+            "HRTF",
+            "equalpower"
+          ]
+        }
+      }
+    },
+    "ISmartLoopSoundConfig": {
+      "type": "object",
+      "properties": {
+        "busId": {
+          "$ref": "#/definitions/BusId"
+        },
+        "smartLoop": {
+          "type": "object",
+          "properties": {
+            "bpm": {
+              "$ref": "#/definitions/BPM"
+            },
+            "beatsPerBar": {
+              "$ref": "#/definitions/Beats"
+            },
+            "crossfade": {
+              "$ref": "#/definitions/Milliseconds"
+            },
+            "regions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 4,
+                "items": [
+                  {
+                    "$ref": "#/definitions/Samples",
+                    "title": "startSample"
+                  },
+                  {
+                    "$ref": "#/definitions/Samples",
+                    "title": "endSample"
+                  },
+                  {
+                    "$ref": "#/definitions/Milliseconds",
+                    "title": "preEntry"
+                  },
+                  {
+                    "$ref": "#/definitions/Milliseconds",
+                    "title": "tail"
+                  }
+                ],
+                "maxItems": 4
+              }
+            },
+            "magnets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IMagnetConfig"
+              }
+            }
+          },
+          "required": [
+            "regions"
+          ]
+        }
+      },
+      "required": [
+        "busId",
+        "smartLoop"
+      ]
+    },
+    "BPM": {
+      "type": "number"
+    },
+    "Beats": {
+      "type": "number"
+    },
+    "Samples": {
+      "type": "number"
+    },
+    "IMagnetConfig": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "$ref": "#/definitions/RegionId"
+        },
+        "targetRegion": {
+          "$ref": "#/definitions/RegionId"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "quantize": {
+          "$ref": "#/definitions/QuantizeType"
+        },
+        "transitionRegionName": {
+          "$ref": "#/definitions/RegionId"
+        },
+        "crossfadeDuration": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "tailDuration": {
+          "$ref": "#/definitions/Milliseconds"
+        }
+      },
+      "required": [
+        "region",
+        "targetRegion",
+        "condition",
+        "quantize"
+      ]
+    },
+    "RegionId": {
+      "type": "string"
+    },
+    "IConditionConfig": {
+      "type": "object",
+      "properties": {
+        "param": {
+          "$ref": "#/definitions/GameParamId"
+        },
+        "operator": {
+          "$ref": "#/definitions/ConditionOperator"
+        },
+        "value": {
+          "type": "number"
+        },
+        "hysteresis": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "param",
+        "operator",
+        "value"
+      ]
+    },
+    "ConditionOperator": {
+      "type": "string",
+      "enum": [
+        "==",
+        "!=",
+        ">",
+        ">=",
+        "<",
+        "<="
+      ]
+    },
+    "QuantizeType": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "Immediate"
+        },
+        {
+          "type": "string",
+          "const": "NextBeat"
+        },
+        {
+          "type": "string",
+          "const": "NextBar"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "NextGridDivision"
+            },
+            "division": {
+              "$ref": "#/definitions/GridDivision"
+            }
+          },
+          "required": [
+            "type",
+            "division"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "ExactPulse"
+            },
+            "pulseOffset": {
+              "$ref": "#/definitions/Pulses"
+            }
+          },
+          "required": [
+            "type",
+            "pulseOffset"
+          ]
+        }
+      ]
+    },
+    "GridDivision": {
+      "type": "string",
+      "enum": [
+        "1/4",
+        "1/8",
+        "1/16",
+        "1/32"
+      ]
+    },
+    "Pulses": {
+      "type": "number"
+    },
+    "IContainerSoundConfig": {
+      "type": "object",
+      "properties": {
+        "busId": {
+          "$ref": "#/definitions/BusId"
+        },
+        "variation": {
+          "$ref": "#/definitions/IVariationConfig"
+        },
+        "ducking": {
+          "$ref": "#/definitions/IDuckingConfig"
+        },
+        "rtpc": {
+          "type": "object",
+          "properties": {
+            "gain": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "filterFrequency": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pan": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pitch": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "sendLevel": {
+              "$ref": "#/definitions/IRTPCConfig"
+            }
+          }
+        },
+        "tail": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "isContainer": {
+          "type": "boolean",
+          "const": true
+        },
+        "mode": {
+          "$ref": "#/definitions/ContainerMode"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContainerSourceItem"
+          }
+        },
+        "volumeRange": {
+          "type": "array",
+          "minItems": 2,
+          "items": [
+            {
+              "type": "number",
+              "title": "min"
+            },
+            {
+              "type": "number",
+              "title": "max"
+            }
+          ],
+          "maxItems": 2
+        },
+        "pitchRange": {
+          "type": "array",
+          "minItems": 2,
+          "items": [
+            {
+              "type": "number",
+              "title": "min"
+            },
+            {
+              "type": "number",
+              "title": "max"
+            }
+          ],
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "isContainer",
+        "mode",
+        "sources"
+      ]
+    },
+    "ContainerMode": {
+      "type": "string",
+      "enum": [
+        "random",
+        "random_no_repeat",
+        "sequence"
+      ]
+    },
+    "ContainerSourceItem": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SoundId"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/SoundId"
+            },
+            "weight": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "id",
+            "weight"
+          ]
+        }
+      ]
+    },
+    "ILayeredSoundConfig": {
+      "type": "object",
+      "properties": {
+        "isLayered": {
+          "type": "boolean",
+          "const": true
+        },
+        "busId": {
+          "$ref": "#/definitions/BusId"
+        },
+        "ducking": {
+          "$ref": "#/definitions/IDuckingConfig"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ILayerConfig"
+          }
+        }
+      },
+      "required": [
+        "isLayered",
+        "busId",
+        "layers"
+      ]
+    },
+    "ILayerConfig": {
+      "type": "object",
+      "properties": {
+        "src": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "rate": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "src",
+        "delay",
+        "volume",
+        "rate"
+      ]
+    },
+    "ISwitchSoundConfig": {
+      "type": "object",
+      "properties": {
+        "busId": {
+          "$ref": "#/definitions/BusId"
+        },
+        "variation": {
+          "$ref": "#/definitions/IVariationConfig"
+        },
+        "ducking": {
+          "$ref": "#/definitions/IDuckingConfig"
+        },
+        "rtpc": {
+          "type": "object",
+          "properties": {
+            "gain": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "filterFrequency": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pan": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pitch": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "sendLevel": {
+              "$ref": "#/definitions/IRTPCConfig"
+            }
+          }
+        },
+        "tail": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "isSwitch": {
+          "type": "boolean",
+          "const": true
+        },
+        "switchGroup": {
+          "$ref": "#/definitions/GameParamId"
+        },
+        "switches": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/SoundId"
+          }
+        },
+        "defaultSwitch": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "hysteresis": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "isSwitch",
+        "switchGroup",
+        "switches"
+      ]
+    },
+    "IScattererSoundConfig": {
+      "type": "object",
+      "properties": {
+        "busId": {
+          "$ref": "#/definitions/BusId"
+        },
+        "variation": {
+          "$ref": "#/definitions/IVariationConfig"
+        },
+        "ducking": {
+          "$ref": "#/definitions/IDuckingConfig"
+        },
+        "rtpc": {
+          "type": "object",
+          "properties": {
+            "gain": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "filterFrequency": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pan": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "pitch": {
+              "$ref": "#/definitions/IRTPCConfig"
+            },
+            "sendLevel": {
+              "$ref": "#/definitions/IRTPCConfig"
+            }
+          }
+        },
+        "tail": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "isScatterer": {
+          "type": "boolean",
+          "const": true
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContainerSourceItem"
+          }
+        },
+        "spawnRate": {
+          "type": "array",
+          "minItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/Milliseconds",
+              "title": "min"
+            },
+            {
+              "$ref": "#/definitions/Milliseconds",
+              "title": "max"
+            }
+          ],
+          "maxItems": 2
+        },
+        "scatterDistance": {
+          "type": "array",
+          "minItems": 2,
+          "items": [
+            {
+              "type": "number",
+              "title": "min"
+            },
+            {
+              "type": "number",
+              "title": "max"
+            }
+          ],
+          "maxItems": 2
+        },
+        "maxPolyphony": {
+          "type": "number"
+        },
+        "sync": {
+          "$ref": "#/definitions/IScattererSyncConfig"
+        }
+      },
+      "required": [
+        "isScatterer",
+        "sources",
+        "spawnRate"
+      ]
+    },
+    "IScattererSyncConfig": {
+      "type": "object",
+      "properties": {
+        "quantize": {
+          "$ref": "#/definitions/QuantizeType"
+        },
+        "referenceTrackId": {
+          "$ref": "#/definitions/SoundId"
+        }
+      },
+      "required": [
+        "quantize",
+        "referenceTrackId"
+      ]
+    },
+    "IRTPCManifest": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/IGlobalRTPCParameterConfig"
+      }
+    },
+    "IGlobalRTPCParameterConfig": {
+      "type": "object",
+      "properties": {
+        "attack": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "release": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "defaultValue": {
+          "type": "number"
+        }
+      }
+    },
+    "IEventMap": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/IEventConfig"
+      }
+    },
+    "IEventConfig": {
+      "type": "object",
+      "properties": {
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EventAction"
+          }
+        }
+      },
+      "required": [
+        "actions"
+      ]
+    },
+    "EventAction": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/IPlayAction"
+        },
+        {
+          "$ref": "#/definitions/IStopAction"
+        },
+        {
+          "$ref": "#/definitions/IPauseAction"
+        },
+        {
+          "$ref": "#/definitions/IResumeAction"
+        },
+        {
+          "$ref": "#/definitions/ISetRtpcAction"
+        },
+        {
+          "$ref": "#/definitions/IStartLoopAction"
+        },
+        {
+          "$ref": "#/definitions/IStopLoopAction"
+        },
+        {
+          "$ref": "#/definitions/IMusicTransitionAction"
+        },
+        {
+          "$ref": "#/definitions/IPlayStingerAction"
+        },
+        {
+          "$ref": "#/definitions/ISetMixerStateAction"
+        },
+        {
+          "$ref": "#/definitions/IAddMixerModifierAction"
+        },
+        {
+          "$ref": "#/definitions/IRemoveMixerModifierAction"
+        },
+        {
+          "$ref": "#/definitions/ITriggerEventAction"
+        },
+        {
+          "$ref": "#/definitions/ILoadBankAction"
+        },
+        {
+          "$ref": "#/definitions/IUnloadBankAction"
+        },
+        {
+          "$ref": "#/definitions/ICancelPendingAction"
+        }
+      ]
+    },
+    "IPlayAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "play"
+        },
+        "target": {
+          "$ref": "#/definitions/SoundId"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ]
+    },
+    "IStopAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "stop"
+        },
+        "target": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "options": {
+          "$ref": "#/definitions/IStopOptions"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ]
+    },
+    "IStopOptions": {
+      "type": "object",
+      "properties": {
+        "allowTail": {
+          "type": "boolean"
+        },
+        "fadeOut": {
+          "$ref": "#/definitions/Milliseconds"
+        }
+      }
+    },
+    "IPauseAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "pause"
+        },
+        "target": {
+          "$ref": "#/definitions/SoundId"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ]
+    },
+    "IResumeAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "resume"
+        },
+        "target": {
+          "$ref": "#/definitions/SoundId"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ]
+    },
+    "ISetRtpcAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "set_rtpc"
+        },
+        "param": {
+          "$ref": "#/definitions/GameParamId"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "param",
+        "value"
+      ]
+    },
+    "IStartLoopAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "start_loop"
+        },
+        "target": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "startRegion": {
+          "$ref": "#/definitions/RegionId"
+        }
+      },
+      "required": [
+        "type",
+        "target",
+        "startRegion"
+      ]
+    },
+    "IStopLoopAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "stop_loop"
+        },
+        "target": {
+          "$ref": "#/definitions/SoundId"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ]
+    },
+    "IMusicTransitionAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "music_transition"
+        },
+        "target": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "targetRegion": {
+          "$ref": "#/definitions/RegionId"
+        },
+        "transitionRegionName": {
+          "$ref": "#/definitions/RegionId"
+        },
+        "options": {
+          "$ref": "#/definitions/TransitionOptions"
+        }
+      },
+      "required": [
+        "type",
+        "target",
+        "targetRegion"
+      ]
+    },
+    "TransitionOptions": {
+      "type": "object",
+      "properties": {
+        "quantize": {
+          "$ref": "#/definitions/QuantizeType"
+        },
+        "quantizeInterval": {
+          "$ref": "#/definitions/Beats"
+        },
+        "crossfadeDuration": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "tailDuration": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "grid": {
+          "$ref": "#/definitions/IAudioGrid"
+        },
+        "blendMode": {
+          "$ref": "#/definitions/TransitionBlendMode"
+        },
+        "interruptable": {
+          "type": "boolean"
+        },
+        "offsetMode": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Relative",
+            "Inverted"
+          ]
+        }
+      }
+    },
+    "IAudioGrid": {
+      "type": "object",
+      "properties": {
+        "ppqn": {
+          "$ref": "#/definitions/Pulses"
+        },
+        "beatsPerBar": {
+          "$ref": "#/definitions/Beats"
+        }
+      },
+      "required": [
+        "ppqn",
+        "beatsPerBar"
+      ]
+    },
+    "TransitionBlendMode": {
+      "type": "string",
+      "enum": [
+        "overlap",
+        "crossfade"
+      ]
+    },
+    "IPlayStingerAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "play_stinger"
+        },
+        "target": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "quantize": {
+          "$ref": "#/definitions/QuantizeType"
+        },
+        "referenceTrackId": {
+          "$ref": "#/definitions/SoundId"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ]
+    },
+    "ISetMixerStateAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "set_mixer_state"
+        },
+        "snapshotName": {
+          "$ref": "#/definitions/SnapshotId"
+        }
+      },
+      "required": [
+        "type",
+        "snapshotName"
+      ]
+    },
+    "IAddMixerModifierAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "add_mixer_modifier"
+        },
+        "snapshotName": {
+          "$ref": "#/definitions/SnapshotId"
+        },
+        "modifierId": {
+          "$ref": "#/definitions/LayerId"
+        },
+        "priority": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "snapshotName",
+        "modifierId"
+      ]
+    },
+    "LayerId": {
+      "type": "string"
+    },
+    "IRemoveMixerModifierAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "remove_mixer_modifier"
+        },
+        "modifierId": {
+          "$ref": "#/definitions/LayerId"
+        }
+      },
+      "required": [
+        "type",
+        "modifierId"
+      ]
+    },
+    "ITriggerEventAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "trigger_event"
+        },
+        "target": {
+          "$ref": "#/definitions/EventId"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ]
+    },
+    "EventId": {
+      "type": "string"
+    },
+    "ILoadBankAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "load_bank"
+        },
+        "target": {
+          "$ref": "#/definitions/BankId"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ]
+    },
+    "BankId": {
+      "type": "string"
+    },
+    "IUnloadBankAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "unload_bank"
+        },
+        "target": {
+          "$ref": "#/definitions/BankId"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ]
+    },
+    "ICancelPendingAction": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "probability": {
+          "type": "number"
+        },
+        "condition": {
+          "$ref": "#/definitions/IConditionConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "cancel_pending"
+        },
+        "targetTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stopActiveVoices": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "targetTags"
+      ]
+    },
+    "IMusicFSMConfig": {
+      "type": "object",
+      "properties": {
+        "initialState": {
+          "$ref": "#/definitions/MusicStateId"
+        },
+        "globalEdges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IMusicTransitionEdge"
+          }
+        },
+        "states": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/IMusicStateNode"
+          }
+        }
+      },
+      "required": [
+        "initialState",
+        "globalEdges",
+        "states"
+      ]
+    },
+    "MusicStateId": {
+      "type": "string"
+    },
+    "IMusicTransitionEdge": {
+      "type": "object",
+      "properties": {
+        "targetState": {
+          "$ref": "#/definitions/MusicStateId"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IConditionConfig"
+          }
+        },
+        "syncRule": {
+          "$ref": "#/definitions/QuantizeType"
+        },
+        "crossfadeDuration": {
+          "$ref": "#/definitions/Milliseconds"
+        },
+        "transitionRegionName": {
+          "$ref": "#/definitions/RegionId"
+        },
+        "stingerId": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "interruptable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "targetState",
+        "conditions",
+        "syncRule",
+        "interruptable"
+      ]
+    },
+    "IMusicStateNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/MusicStateId"
+        },
+        "soundId": {
+          "$ref": "#/definitions/SoundId"
+        },
+        "sequencerRegion": {
+          "$ref": "#/definitions/RegionId"
+        },
+        "activeSnapshot": {
+          "$ref": "#/definitions/SnapshotId"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IMusicTransitionEdge"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "soundId",
+        "sequencerRegion",
+        "edges"
+      ]
+    },
+    "IBankManifest": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/IBankConfig"
+      }
+    },
+    "IBankConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/BankId"
+        },
+        "sounds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SoundId"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "sounds"
+      ]
+    }
+  }
+}

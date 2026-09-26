@@ -10,6 +10,13 @@ export { routeAsset } from './router.js';
 
 export async function main() {
     try {
+        if (process.argv.includes('generate-schemas')) {
+            const { execSync } = await import('node:child_process');
+            console.log('Generating JSON schemas...');
+            execSync('npm run generate-schema', { stdio: 'inherit' });
+            return;
+        }
+
         if (process.argv.includes('init-aliases')) {
             const inputIdx = process.argv.indexOf('--input');
             const outputIdx = process.argv.indexOf('--output');

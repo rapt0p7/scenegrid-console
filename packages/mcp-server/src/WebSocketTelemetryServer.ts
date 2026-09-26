@@ -36,9 +36,28 @@ export class WebSocketTelemetryServer {
     private port: number;
     private state: TelemetrySnapshot = {};
     private clients: Set<WebSocket> = new Set();
+    private traceHistory: any[] = [];
+    private isRecordingSession: boolean = false;
+    private sessionBuffer: any[] = [];
 
     constructor(port: number = 8081) {
         this.port = port;
+    }
+
+    public getTraceHistory(): any[] {
+        return this.traceHistory;
+    }
+
+    public startRecording(): void {
+        this.isRecordingSession = true;
+        this.sessionBuffer = [];
+    }
+
+    public stopRecording(): any[] {
+        this.isRecordingSession = false;
+        const result = [...this.sessionBuffer];
+        this.sessionBuffer = [];
+        return result;
     }
 
     public start(): Promise<void> {
@@ -104,10 +123,10 @@ export class WebSocketTelemetryServer {
         console.log('[TelemetryServer] Client connected');
         this.clients.add(ws);
 
-        ws.on('message', message => {
+        ws.on('message', (message: Buffer) => {
             try {
-                // oxlint-disable-next-line typescript/no-unsafe-assignment typescript/no-base-to-string
-                const parsed = JSON.parse(message.toString());
+                // oxlint-disable-next-line typescript/no-unsafe-assignment
+                const parsed = JSON.parse(message.toString('utf-8'));
                 let packets: any[] = [];
 
                 if (parsed.type === 'MANIFEST') {
@@ -122,6 +141,14 @@ export class WebSocketTelemetryServer {
 
                 for (const packet of packets) {
                     if (!packet) continue;
+                    
+                    if (this.isRecordingSession) {
+                        this.sessionBuffer.push(packet);
+                        if (this.sessionBuffer.length > 10000) {
+                            this.sessionBuffer.shift();
+                        }
+                    }
+
                     if (packet.type === 'MANIFEST') {
                         this.state.manifest = packet.payload;
                     } else if (packet.type === 'SNAPSHOT') {
@@ -132,6 +159,9 @@ export class WebSocketTelemetryServer {
                         if (!this.state.logs) this.state.logs = [];
                         this.state.logs.push(packet);
                         if (this.state.logs.length > 200) this.state.logs.shift();
+
+                        this.traceHistory.push(packet);
+                        if (this.traceHistory.length > 1000) this.traceHistory.shift();
                     } else if (packet.type === 'RAM_REPORT') {
                         this.state.ramReport = packet.report || packet;
                     } else if (packet.type === 'CONSISTENCY_REPORT') {

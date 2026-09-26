@@ -20,7 +20,8 @@
     "files": [
         ".mcp-use/build",
         "bin",
-        "public"
+        "public",
+        "generated"
     ],
     "type": "module",
     "scripts": {
