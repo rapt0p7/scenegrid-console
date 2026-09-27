@@ -29,7 +29,7 @@ Conceptually, the system bridges the gap between:
 
 SceneGrid is an **Enterprise-grade** tool designed to solve complex routing, polyphony culling, and memory-leak issues in massive projects.
 
-- If you are building a lightweight promo site, an indie Match-3 game, or just need to play a few sound effects quickly with a great Developer Experience, **you probably don't need SceneGrid.** We highly recommend checking out [zvuk](https://github.com/schmooky/zvuk) or [Howler.js](https://howlerjs.com/) for excellent, lightweight plug-and-play solutions.
+- If you are building a lightweight promo site, an indie Match-3 game, or just need to play a few sound effects quickly with a great Developer Experience, **you probably don't need SceneGrid.** We highly recommend checking out [zvuk](https://github.com/schmooky/zvuk) for excellent, lightweight plug-and-play solutions.
 - If you are building a **heavy 60-FPS game, a complex WebGL experience, or a multi-state interactive app** where Garbage Collection spikes cause visual stuttering, and you need a visual debugger to understand _why_ a specific sound was ducked or culled—**SceneGrid is built for you.**
 
 ---
