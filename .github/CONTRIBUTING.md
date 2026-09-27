@@ -36,6 +36,20 @@ We use `dependency-cruiser` to enforce the **Inward Dependency Rule**: logic flo
 - **Role:** Mathematical constants, universal types, and guards used by all layers.
 - **Strict Rule:** Must have **zero dependencies** on other internal layers.
 
+### 6. Inspector Package (`packages/inspector`) — _The DevTools_
+
+- **Role:** Real-time telemetry, live signal graph visualization, and What-If simulation.
+- **Dependency:** Runs isolated from the engine via a Proxy / SharedWorker architecture.
+
+### 7. MCP Server Package (`packages/mcp-server`) — _The Agent API_
+
+- **Role:** Standardized Model Context Protocol APIs for telemetry queries and engine control.
+- **Dependency:** Interfaces with the engine via the debug port and telemetry bus.
+
+### 8. CLI Package (`packages/cli`) — _The Asset Pipeline_
+
+- **Role:** Ahead-of-Time (AOT) audio processing and manifest generation tools.
+
 ---
 
 ## 📜 Commit Guidelines (Conventional Commits)
@@ -50,10 +64,10 @@ We use a strict commit messaging system. Every commit must follow the format: `<
 
 Your scope must indicate the affected layer or logical module:
 
-- **Layer Scopes:** `domain`, `infra`, `kernel`, `app`, `shared`.
-- **Domain Components:** `mixer`, `router`, `registry`, `orchestration`, `culling`, `logic`.
-- **Infrastructure Components:** `bus-adapter`, `dsp`, `voices`, `output`, `automation`, `loader`, `context`, `nodes`.
-- **Quality & Tooling:** `test`, `unit`, `integration`, `mocks`, `build`, `ci`, `readme`, `api`, `architecture`.
+- **Package & Layer Scopes:** `domain`, `infra`, `kernel`, `app`, `shared`, `inspector`, `mcp`, `cli`.
+- **Domain Components:** `mixer`, `router`, `registry`, `orchestration`, `culling`, `logic`, `validation`, `events`.
+- **Infrastructure Components:** `bus-adapter`, `dsp`, `voices`, `output`, `automation`, `loader`, `context`, `nodes`, `telemetry`, `worklets`, `scheduling`.
+- **Quality & Tooling:** `test`, `unit`, `integration`, `mocks`, `build`, `ci`, `readme`, `api`, `architecture`, `docs`, `openwiki`, `openspec`.
 
 _Example of a good commit:_
 
@@ -70,6 +84,10 @@ To protect the integrity of the engine, the following are strictly forbidden:
 2.  **Bypass Routing:** Connecting audio sources (Voices) directly to the Master Output. All signals **must** flow through the hierarchical `AudioBus` system.
 3.  **Direct Parameter Manipulation:** Bypassing the `RTPCManager` or `AutomationEngine`. All real-time parameter changes must be batched and throttled to protect the Audio Thread.
 4.  **Circular Dependencies:** Creating circular references between components (e.g., `Mixer` calling `Router` while `Router` calls `Mixer`). Use events or third-party orchestrators.
+5.  **Primitive Identity:** Using strings as IDs for domain entities is strictly prohibited. You must exclusively use Branded Types.
+6.  **Domain Mutation (Zero Side-Effects):** Implicit mutation of engine configurations or control-plane structures in the Domain layer. They must be treated as `DeepReadonly`. _Note: In Infrastructure and Orchestration layers (Data Plane), in-place mutations are mandatory to prevent GC spikes._
+7.  **Unstructured Exception Throwing:** Relying on exceptions for expected runtime errors. Use the `Result` monad pattern and explicit degradation policies to ensure graceful failure.
+8.  **Multiplicative Vetoes:** A base gain and a snapshot override simultaneously zeroing out the resulting gain unpredictably. Each bus must have only one primary driver for its gain.
 
 ---
 
@@ -77,9 +95,11 @@ To protect the integrity of the engine, the following are strictly forbidden:
 
 1.  **Branching:** Create a branch from `main` (e.g., `feat/kernel-optimizations`).
 2.  **Architecture Verification:** Run `npm run lint:architecture` (or your equivalent `dependency-cruiser` command). If you imported an Infra adapter into a Domain service, the build **will** fail.
-3.  **Unit Testing:** \* **Domain Logic:** Test using pure TypeScript mocks (no `AudioContext` required).
+3.  **Unit Testing:**
+    - **Domain Logic:** Test using pure TypeScript mocks (no `AudioContext` required).
     - **Infrastructure:** Use integration tests with `vitest` and Web Audio mocks.
-4.  **Submission:** Ensure all tests pass and the dependency graph remains clean.
+4.  **Documentation & Context:** Update architecture docs in `OpenWiki` and maintain the `keep-the-why` architectural records for any design decisions made. Use `openspec` for agent workflows where applicable.
+5.  **Submission:** Ensure all tests pass, the dependency graph remains clean, and validation rules (via `ConsistencyChecker`) are satisfied.
 
 ---
 
