@@ -5,7 +5,7 @@ description: The demo bootstrap in `examples/main.ts` and `examples/inspector.ts
 tags: [examples, runtime, demo]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-25T08:14:31.202Z
+    at: 2026-09-27T15:02:32.352Z
 sources:
   - id: openwiki-source-21f3cdfba5248f4c1a9cda5b
     resource: repo://examples/main.ts

@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:2717ae08b2eaf88bf8282b8ead0b8f43c1de0ee18bd83257fb1a67dcc359845f",
+    "pageVersion": "sha256:3cf8a976d0a5ca175cc4133376879e6c952727e764990f31925778716e3b3814",
     "claims": [
         {
             "id": "claim_20b01eefcb144371b3cdc2be08056b55",
@@ -133,8 +133,8 @@
             "statement": "The workspace root provides workspace-wide package builds and a development command for the examples workspace, plus root test, typecheck, formatting, lint, architecture-lint, and mutation-test scripts.",
             "evidence": [
                 {
-                    "resource": "repo://package.json#L19-L41",
-                    "version": "repo-lines-v1:sha256:417ab24e72503ca8d6225b35d0115c75ad16e5b97bebb81275c1fbd0086f5a61:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwOGYxYjMxODg3Y2U0ZWE2NmU0ODI3MjdiMTY5MWUxMDRmMjVmZTEzYWZiYjVjZDczYjI0NjExMjRkMzkzZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjNmI1YzNjMTg5OTU5ZTNmMzQ5YTZhYThhMmRjMDYwOTFhZWI2MDNmNjg0NGM3Nzg2NDUwN2QzM2YwY2JjNzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwZmZkNWUzMWE0MDg5MTBkMTBiOGVhZTEyNjc4NGFkYmE4NjY1NWRlZDMwY2U0MjRkYjA4NTVjYjgxMDI1ZmQifQ"
+                    "resource": "repo://package.json#L19-L42",
+                    "version": "repo-lines-v1:sha256:5bd6bd0741a65ce1e4661fc00776d7232b61c07c2de25e42db6284c2633625aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwOGYxYjMxODg3Y2U0ZWE2NmU0ODI3MjdiMTY5MWUxMDRmMjVmZTEzYWZiYjVjZDczYjI0NjExMjRkMzkzZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjNmI1YzNjMTg5OTU5ZTNmMzQ5YTZhYThhMmRjMDYwOTFhZWI2MDNmNjg0NGM3Nzg2NDUwN2QzM2YwY2JjNzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlNmEzZWZiZWYxN2IzZDkzYTNlM2YwMDUyY2Y0MmY5NTI3MzI4MDk1NjJhNThmNWVkNzc1MzY1NmI4MDY1M2QifQ"
                 }
             ]
         },
@@ -187,6 +187,6 @@
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-25T08:14:31.202Z"
+        "at": "2026-09-27T15:02:32.352Z"
     }
 }

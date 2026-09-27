@@ -5,7 +5,7 @@ description: Tweakpane control panels, profiler widgets, telemetry hooks, visual
 tags: [inspector, ui, hooks, worklet]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-25T08:14:31.202Z
+    at: 2026-09-27T15:02:32.352Z
 sources:
   - id: openwiki-source-6f2f07a38d4c4a6926b35ac8
     resource: repo://packages/inspector/src/AudioDebugPanel.ts

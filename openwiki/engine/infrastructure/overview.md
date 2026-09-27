@@ -5,7 +5,7 @@ description: Map of the Web Audio adapters, loaders, scheduling, telemetry, stat
 tags: [engine, infrastructure, web-audio]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-25T08:14:31.202Z
+    at: 2026-09-27T15:02:32.352Z
 sources:
   - id: openwiki-source-0c3d4233b100c93352d0e0b4
     resource: repo://packages/engine/src/Infrastructure/index.ts

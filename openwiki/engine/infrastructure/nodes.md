@@ -5,7 +5,7 @@ description: Audio node factories, node-chain composition, and the final master-
 tags: [engine, audio-nodes, master-output]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-25T08:14:31.202Z
+    at: 2026-09-27T15:02:32.352Z
 sources:
   - id: openwiki-source-387972ee594d6475db41100d
     resource: repo://packages/engine/src/Infrastructure/nodes/AudioNodeFactory.ts

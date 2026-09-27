@@ -5,7 +5,7 @@ description: Canonical map of the `@scene-grid/inspector` package, its browser-d
 tags: [inspector, package, debugger]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-25T08:14:31.202Z
+    at: 2026-09-27T15:02:32.352Z
 sources:
   - id: openwiki-source-1d5210582c2e4047cd94c6c3
     resource: repo://packages/inspector/src/AudioDebugger.ts
