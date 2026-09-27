@@ -46,6 +46,7 @@
                 "helpers",
                 "utils",
                 "telemetry",
+                "worklets",
 
                 "debug",
                 "profiler",
@@ -69,7 +70,9 @@
                 "readme",
                 "architecture",
                 "api",
-                "examples"
+                "examples",
+                "openwiki",
+                "openspec"
             ]
         ],
         "scope-case": [2, "always", "kebab-case"],
