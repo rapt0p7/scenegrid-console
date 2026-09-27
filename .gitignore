@@ -180,3 +180,5 @@ openwiki/.page-manifest.json
 .vitest/
 
 examples/assets/*.*
+
+scripts/vite-worklet-isolator.d.ts

@@ -1,4 +1,5 @@
-import type { ISnapshot, BusId } from '@scene-grid/engine';
+import type { ISnapshot } from '@scene-grid/engine';
+import type { BusId } from '@scene-grid/shared';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default {

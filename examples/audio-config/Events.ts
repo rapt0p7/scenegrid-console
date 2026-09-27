@@ -1,4 +1,5 @@
-import type { IEventMap, Milliseconds, SoundId } from '@scene-grid/engine';
+import type { IEventMap } from '@scene-grid/engine';
+import type { Milliseconds, SoundId } from '@scene-grid/shared';
 
 export default {
     stop: {

@@ -1,4 +1,5 @@
-import { Milliseconds, IGlobalRTPCParameterConfig } from '@scene-grid/engine';
+import type { IGlobalRTPCParameterConfig } from '@scene-grid/engine';
+import type { Milliseconds } from '@scene-grid/shared';
 
 export default {
     kickType: {

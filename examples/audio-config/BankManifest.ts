@@ -1,4 +1,5 @@
-import type { IBankManifest, BankId, SoundId } from '@scene-grid/engine';
+import type { IBankManifest } from '@scene-grid/engine';
+import type { BankId, SoundId } from '@scene-grid/shared';
 
 export default {
     music: {
