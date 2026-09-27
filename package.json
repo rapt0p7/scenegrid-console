@@ -37,6 +37,7 @@
         "format:check": "oxfmt --check",
         "lint:fast": "oxlint --deny-warnings",
         "lint:arch": "eslint .",
+        "lint:ci": "oxlint --quiet",
         "lint": "npm run lint:fast && npm run lint:arch",
         "notebooklm:update": "npx repomix"
     },
