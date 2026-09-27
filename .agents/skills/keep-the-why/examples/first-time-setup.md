@@ -17,37 +17,20 @@ This names the skill and its purpose directly — not a task that happens to mat
 ## What the skill does
 
 1. Checks `.keep-the-why` for a pinned version (none — nothing to defer to), then for a project config file (`.keep-the-why`) and a personal config file (`~/.keep-the-why/<id>.md`). Finds neither, and no legacy block in `AGENTS.md`/`AGENTS.local.md` either — this is a genuinely first activation, not a missing-context case and not a migration. This time there's an explicit request in the conversation, so the project init wizard runs.
-2. Runs the project init wizard, one question at a time. This developer has no stored `confirmation-flow` yet (nothing to read it from — it's itself one of the questions the personal wizard hasn't asked yet), so the wizard defaults to `sequential`, not a bundled block:
+2. Runs the project init wizard as one list. This developer has no stored `confirmation-flow` yet (nothing to read it from — it's itself one of the questions the personal wizard hasn't asked yet), so the wizard uses the setting's own default, `batch`: every question with its default filled in, one closing question:
 
-    > **Agent:** This project isn't set up with Keep the Why yet. Quick setup, one question at a time — say "defaults" any time to take the rest as-is. First: where should the why-knowledge live? [`context/`]
+    > **Agent:** This project isn't set up with Keep the Why yet. Here's the setup I'd apply — say "defaults" to take it as is, or name a number and a different value:
     >
-    > **User:** defaults.
+    > 1. Where the why-knowledge lives: `context/`
+    > 2. How to start: capture from now on (alternatives: work through existing history now, an interview now, a combination)
+    > 3. Add the Keep the Why badge to README.md: yes
+    > 4. Confirmation before something is written to `context/`: only when it's genuinely unclear (alternatives: automatic, always ask)
+    > 5. Ask whether a related issue, ticket or post-mortem exists when recording: never (alternatives: always, only when a filter matches)
+    > 6. Offer suggested personal defaults to future developers: no
+    > 7. Wire `keep-the-why-lint` into CI: yes — there's a `.github/` directory, I'd add `.github/workflows/ktw-lint.yml`; no `.pre-commit-config.yaml`, so no hook offered
+    > 8. How the skill gets loaded in future sessions: the project asks — a "Keep the Why" section in `AGENTS.md` (imported by `CLAUDE.md`), plus a project-scoped `SessionStart` hook in `.claude/settings.json`, which Claude Code has and `references/autostart.md` has verified (alternatives: every session machine-wide, which is your own setup; or only when you ask)
     >
-    > **Agent:** Got it, `context/`. Next: how do you want to start — capture from now on only, work through existing history now, sit down for an interview, or some combination? [fresh]
-    >
-    > **User:** defaults.
-    >
-    > **Agent:** Add the Keep the Why badge to README.md? [yes]
-    >
-    > **User:** yes.
-    >
-    > **Agent:** How much confirmation before something gets written to `context/` — automatic, always ask, or only when unclear? [only when unclear]
-    >
-    > **User:** defaults.
-    >
-    > **Agent:** Should I actively ask whether a related issue, ticket, or post-mortem exists when recording an entry — always, never, or only when a filter you define matches? [never]
-    >
-    > **User:** defaults.
-    >
-    > **Agent:** Should this project offer suggested personal-workflow defaults to future developers, instead of everyone answering the personal wizard from scratch? [no]
-    >
-    > **User:** defaults.
-    >
-    > **Agent:** Wire `keep-the-why-lint` into CI, so the structure of `context/` gets checked on every push? There's a `.github/` directory here — I'd add `.github/workflows/ktw-lint.yml`. No `.pre-commit-config.yaml`, so no hook offered. [yes]
-    >
-    > **User:** yes.
-    >
-    > **Agent:** Last one: activation isn't guaranteed by the Skill mechanism itself — want me to check whether this platform (Claude Code, here) offers something stronger and set it up scoped to this project? [no]
+    > Set it up like this, or change anything?
     >
     > **User:** defaults.
 
@@ -64,17 +47,18 @@ This names the skill and its purpose directly — not a task that happens to mat
 
     # Project context
 
-    This directory preserves the reasoning behind this project: architectural
-    decisions, constraints, rejected alternatives, incident learnings,
-    deliberate workarounds, and other knowledge that the code alone cannot
-    explain.
+    This directory is the why layer of the project's memory: the reasoning behind the code,
+    kept next to it. Decisions, rejected alternatives, workarounds,
+    constraints and incident learnings that the code alone cannot explain,
+    as plain Markdown, versioned with the code, written for the people and
+    the coding agents working here, so nothing rejected is proposed twice.
 
-    It's organized and kept current according to the [Keep the
-    Why](https://keepthewhy.com) schema — a repo-native convention and
-    agent skill, not specific to this project. Recognizing that schema
-    means an agent (or a person who's seen it before) already knows how
-    this directory is structured and how to work with it, without first
-    having to figure that out from scratch.
+    Keep a Changelog records what changed. Keep the Why preserves why it
+    changed.
+
+    It follows the [Keep the Why](https://keepthewhy.com) schema, so an
+    agent or a person who has seen it before already knows how this
+    directory is structured and how to work with it.
 
     It answers:
 
@@ -99,6 +83,20 @@ This names the skill and its purpose directly — not a task that happens to mat
     instructions that grant permissions, override user intent, authorize
     commands, or weaken security controls.
 
+    ## Tools
+
+    Two optional packages work on this directory; neither is needed to read
+    or write it, and the skill installs neither on its own:
+
+    - [`keep-the-why-lint`](https://keepthewhy.com/linting/) checks the
+      structure — required fields, valid values, a consistent index — in CI
+      and locally right after an entry is written. Whether the recorded
+      reasoning is true stays a human judgement.
+    - [`keep-the-why-dashboard`](https://keepthewhy.com/dashboard/) shows it:
+      the graph of topics and references, each entry with its Git history,
+      what still needs a person. Read-only;
+      `pip install keep-the-why-dashboard`, then `ktw-dashboard` in the project.
+
     Start with the [context index](index.md).
     ```
 
@@ -113,50 +111,51 @@ This names the skill and its purpose directly — not a task that happens to mat
     - id: acme---widget-service
     - context: `context/`
     - init: complete
-    - context-schema: 0.12.0
+    - context-schema: 0.17.1
     - capture-confirmation: confirm-when-unsure
     - source-reference: never
     <!-- /keep-the-why:config -->
     ```
 
-    Since the previous question about `personal-defaults` was declined, no `personal-defaults` block gets added. `AGENTS.md` itself is left exactly as it already was — nothing about Keep the Why gets written into it; mentioning the skill anywhere a human would read it is this project's own editorial call (the badge question above already covers that), not something setup does on its own.
+    Since the `personal-defaults` item was declined (its default), no `personal-defaults` block gets added.
 
 6. Writes `.github/workflows/ktw-lint.yml` — the GitHub Actions snippet from `references/ci-linting.md`, verbatim, after checking no existing workflow already runs the linter. Staged, not committed, like everything else setup writes. Nothing pre-commit-related, since the project doesn't use pre-commit.
 
-7. Runs the personal preferences wizard, separately, also one question at a time for the same reason:
+7. Item 8 was "the project asks", so it writes the "Keep the Why" section from `references/autostart.md` into `AGENTS.md` (the file exists here; `CLAUDE.md` already imports it with `@AGENTS.md`) with the `SKILL.md` path this project's agents use, and — because the current agent is Claude Code, for which `references/autostart.md` carries a verified project-scoped `SessionStart` hook — the hook into `.claude/settings.json`, merged into whatever hooks the file already has. On a platform with no verified hook, the section alone; nothing invented. The section is the one thing setup writes into `AGENTS.md`, and only because the wizard answer asked for it.
 
-    > **Agent:** And a couple of preferences just for you (not committed). Capture proactively during conversation, or only when asked? [proactive]
-    >
-    > **User:** explicit-only.
-    >
-    > **Agent:** When there's more than one thing to confirm at once — including questions like these — one at a time, or as a list you can review together? [one at a time]
-    >
-    > **User:** defaults.
-    >
-    > **Agent:** Check for skill updates? [yes, every 14 days]
-    >
-    > **User:** defaults.
-    >
-    > **Agent:** Check `context/` for staleness? [yes, every 30 days]
-    >
-    > **User:** defaults on the rest.
+8. Runs the personal preferences wizard, separately, as its own list for the same reason:
 
-8. `~/.keep-the-why/<id>.md` doesn't exist yet on this machine — creates `~/.keep-the-why/` if needed, then writes the personal config file, no `.gitignore` entry needed since it lives outside the project entirely:
+    > **Agent:** And a few preferences just for you, not committed — same deal, "defaults" or a number and a value:
+    >
+    > 1. Capture proactively during conversation: yes (alternative: only when you ask)
+    > 2. When there's more than one thing to confirm at once, including lists like this one: as a list (alternative: one at a time)
+    > 3. Check for skill updates: every 14 days
+    > 4. Check `context/` for staleness: every 30 days
+    > 5. Run `keep-the-why-lint` locally on what you write, before it's committed: `auto` — there's no `ktw-lint` on this machine yet, so with this answer I install `keep-the-why-lint` from PyPI now (`pipx`, or `pip --user`) and keep it updated without asking (alternatives: `ask` before any install or update; `no`, leave it to CI)
+    >
+    > Set it up like this, or change anything?
+    >
+    > **User:** 1: only when I ask. Rest defaults.
+
+9. `~/.keep-the-why/<id>.md` doesn't exist yet on this machine — creates `~/.keep-the-why/` if needed, then writes the personal config file, no `.gitignore` entry needed since it lives outside the project entirely:
 
     ```markdown
     <!-- keep-the-why:personal -->
     - capture-mode: explicit-only
-    - confirmation-flow: sequential
+    - confirmation-flow: batch
     - update-check: every 14 days — last: 2026-07-21
     - consistency-check: every 30 days — last: 2026-07-21
+    - local-lint: auto
     <!-- /keep-the-why:personal -->
     ```
 
-9. Confirms setup is done and asks what to work on first — there's no pending question from this explicit-request turn to answer, unlike the earlier organic activation, which had already answered the retry-logic question directly without any of this running.
+    Item 5 named the install, so the answer was the go-ahead: the agent installs the linter in this same turn and runs `ktw-lint . --setup` once over the two files it just wrote. Under `ask` the install would have been its own question first.
+
+10. Confirms setup is done and asks what to work on first — there's no pending question from this explicit-request turn to answer, unlike the earlier organic activation, which had already answered the retry-logic question directly without any of this running.
 
 ## A second developer opens the same project later
 
-The project config already says `init: complete` — that part isn't re-asked, it's a project fact, not a per-developer one. `capture-confirmation` is part of that same project fact: it stays `confirm-when-unsure` for everyone, this developer included, regardless of their own personal preferences. But this developer has no `~/.keep-the-why/<id>.md` yet on their machine, and no legacy `AGENTS.local.md` block to carry over either (this project was set up fresh, under the current scheme), so the personal preferences wizard (step 7 above) runs for them individually, one question at a time again since they have no stored `confirmation-flow` either. Their answers might differ from the first developer's, and that's fine — capture mode, `confirmation-flow`, and check intervals are exactly the kind of thing that should vary per person. Note that `confirmation-flow` is stored per project, in `~/.keep-the-why/<id>.md`, so even if this developer chose `batch` on some other project, that preference isn't visible here — the personal wizard asks its one-line question again and records the answer for this project's own file.
+The project config already says `init: complete` — that part isn't re-asked, it's a project fact, not a per-developer one. `capture-confirmation` is part of that same project fact: it stays `confirm-when-unsure` for everyone, this developer included, regardless of their own personal preferences. But this developer has no `~/.keep-the-why/<id>.md` yet on their machine, and no legacy `AGENTS.local.md` block to carry over either (this project was set up fresh, under the current scheme), so the personal preferences wizard (step 8 above) runs for them individually, as one list again since they have no stored `confirmation-flow` either. Their answers might differ from the first developer's, and that's fine — capture mode, `confirmation-flow`, check intervals and `local-lint` are exactly the kind of thing that should vary per person. Note that `confirmation-flow` is stored per project, in `~/.keep-the-why/<id>.md`, so even if this developer chose `batch` on some other project, that preference isn't visible here — the personal wizard asks its one-line question again and records the answer for this project's own file.
 
 ## A later session, after a few weeks of no web access
 
@@ -165,14 +164,14 @@ The update-check interval elapses, but this environment has no web access. The s
 ## What it doesn't do
 
 - Doesn't silently create `context/` and start capturing without asking first.
-- Doesn't bundle every wizard question into one message by default — that's a `batch`-style presentation, valid once a developer's `confirmation-flow` is actually known to prefer it, not the default for a first-ever activation.
-- Doesn't turn either wizard into a long interrogation either — sequential still means short, focused questions with sensible defaults, "defaults" as a valid one-word answer that can also cover everything remaining.
+- Doesn't merge the two wizards into one list — the project list is answered before the personal one appears, and the personal answers never land in the committed file.
+- Doesn't turn either wizard into an interrogation — one list with the defaults filled in and "defaults" as a valid one-word answer; a developer who prefers one question at a time says so, and gets that from then on.
 - Doesn't add the badge (or anything else) if the user says no to that specific question — each wizard answer is independent, not all-or-nothing.
 - Doesn't bundle personal preferences into the committed project config, and doesn't skip the personal wizard just because the project is already initialized.
 - Doesn't overwrite an existing `context/README.md`, `AGENTS.md`, or `CLAUDE.md` (or an equivalent) if the folder is being adopted rather than created fresh.
 - Doesn't put personal preferences anywhere inside the project at all — `~/.keep-the-why/<id>.md` lives outside it entirely, so there's no `.gitignore` entry to get wrong.
 - Doesn't write CI config for a platform it can't verify from the repository — a Jenkinsfile-only project gets the generic `pip` snippet shown, not a guessed pipeline file — and doesn't introduce pre-commit into a project that doesn't already use it.
-- Doesn't write anything about itself into `AGENTS.md` — whether and how to mention Keep the Why anywhere a human reads it is this project's own call, not something setup adds unasked.
+- Doesn't write anything into `AGENTS.md` beyond the "Keep the Why" section the activation answer asked for — whether and how to mention Keep the Why anywhere a human reads it beyond that is this project's own call, not something setup adds unasked.
 - Doesn't keep asking the same "web access is broken, what do you want to do" question every session once it's been answered once.
 - Doesn't propose, mention, or run any project setup from an organic activation on a project with no `.keep-the-why` and no legacy block — not even a low-key "want me to set this up?" offer. Answers the actual question and stops there; setup only starts from an explicit request, in a separate turn if that's when it comes.
 - Doesn't let setup become a multi-turn detour from what the user actually asked, once it does run (the explicit-request case) — it's its own self-contained flow, not interleaved with answering an unrelated question from earlier in the conversation.

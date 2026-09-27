@@ -4,14 +4,25 @@ Loading is not acting. Once loaded, the skill does nothing in a project that
 has no `.keep-the-why` unless a developer explicitly asks to set it up
 (`setup.md`, "Detection and the two independent wizards") — so every start
 path below either gates on that file or *is* the developer asking. What a
-start path decides is only whether the skill is in the session at all before
-the first request, instead of hoping the agent's own skill discovery matches
-the conversation against `SKILL.md`'s description.
+start path decides is only whether the skill is in the session before the
+first request, rather than when the conversation matches `SKILL.md`'s
+description.
+
+With a start path in place the skill is loaded in every session — this
+works completely, not sometimes. What no skill can do is load itself: a
+skill package is instructions, no agent tool gives a skill a way to load
+itself, and the open Agent Skills spec has no cross-tool start mechanism —
+this is true of every skill, not of this one. Loading is therefore the
+agent's job, configured once by a person with the agent's own means, and the
+skill hands that job over explicitly: the wizard asks which start path the
+project wants and has the agent set up what its platform offers. With one
+in place the skill is in the session before the first request; the per-tool
+sections below say what was measured, and how.
 
 Referenced by `setup.md`'s wizard (the start-path question and step 2), not a
 mandate. Each entry states what was actually verified and how, so "listed
-here" never gets mistaken for "guaranteed to work for you". Growing and
-incomplete by design — a pull request adding a verified example for a tool
+here" means "measured", nothing less. One section per verified tool, and
+it grows that way — a pull request adding a verified example for a tool
 that isn't here yet is welcome any time; for anything else, [open a new
 issue](https://github.com/oliver-zehentleitner/keep-the-why/issues/new).
 
@@ -234,6 +245,34 @@ runs read `.claude/skills/keep-the-why/SKILL.md` unprompted, as the first
 or second tool call. Control without the section: 0 of 3.
 
 Path 1 not checked. Path 3: the eval suite's own mode.
+
+## Cursor
+
+**Path 1 — every session, machine-wide.** The Cursor plugin
+(`.cursor-plugin/plugin.json` at the repository root) ships
+`rules/keep-the-why.mdc`, an always-on rule with the same gate as the Claude
+Code hook: a `.keep-the-why` at the workspace root, or the pre-0.10.0 config
+block in `AGENTS.md`; with neither it does not load the skill, does not
+mention it and does not offer setup. Install from the Cursor marketplace once
+listed; until then a real clone under `~/.cursor/plugins/local/keep-the-why`
+(a symlink there is not loaded, cursor/plugins#35), restart Cursor, then
+Customize → Install.
+
+**Evidence:** live, 2026-09-10, Cursor 3.19.19, Grok 4.6 Medium. Project
+with `.keep-the-why`, first request "look at the repo": the skill loaded
+before anything else (the personal wizard opened, since that machine had no
+personal file for the project). Workspace with neither marker, first request
+"which directory are you in", then "look around": nothing about Keep the Why;
+switching the same session's workspace to the project brought the skill in at
+once. One session each, one model, not an eval series.
+
+**Path 2, entry-point section:** one observation the same day says it does
+not carry on its own: in a project whose `AGENTS.md` had the section, the
+agent read the file and loaded the skill only when asked. Not counted either
+way until run properly.
+
+**Path 3:** as anywhere — name the skill, with the plugin installed or the
+skill directory under `.cursor/skills/`.
 
 ## Other agents
 
