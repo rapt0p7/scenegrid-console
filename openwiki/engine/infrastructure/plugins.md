@@ -5,7 +5,7 @@ description: Audio plugin implementations for filters, sidechain ducking, and th
 tags: [engine, plugins, limiter, sidechain]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T15:02:32.352Z
+    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-6aa1ab75c650fd98f1f3a76b
     resource: repo://packages/engine/src/Infrastructure/plugins/FiltersPlugin.ts

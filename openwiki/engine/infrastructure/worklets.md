@@ -5,7 +5,7 @@ description: Audio-thread and inspector worklet processors used for ducking, lim
 tags: [engine, worklets, audio-thread]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T15:02:32.352Z
+    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-f7ce4eb73c6c314317e5578a
     resource: repo://packages/engine/src/Infrastructure/worklets/ducker.processor.ts

@@ -5,7 +5,7 @@ description: Map of the SceneGrid workspace packages, their supported dependency
 tags: [architecture, monorepo, browser-runtime, audio, telemetry, inspector]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T15:02:32.352Z
+    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-739d3ff1d3f2cc6c1de83f4b
     resource: repo://.dependency-cruiser.cjs

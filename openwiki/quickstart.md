@@ -5,7 +5,7 @@ description: Entry map for the repository wiki, with the canonical pages for eac
 tags: [openwiki, quickstart, navigation]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T15:02:32.352Z
+    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-85a2f85f45f76d7dd1978389
     resource: repo://examples/package.json

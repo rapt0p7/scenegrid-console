@@ -5,7 +5,7 @@ description: Engine-side telemetry dispatchers, snapshotters, and transport adap
 tags: [engine, telemetry, transport]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T15:02:32.352Z
+    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-a6cd3ba5b282a78dba9614b7
     resource: repo://packages/engine/src/Infrastructure/telemetry/TelemetryDispatcher.ts

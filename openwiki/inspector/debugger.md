@@ -5,7 +5,7 @@ description: The `AudioDebugger` and `attachDebugUI` entrypoints that attach liv
 tags: [inspector, runtime, debugger]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T15:02:32.352Z
+    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-1d5210582c2e4047cd94c6c3
     resource: repo://packages/inspector/src/AudioDebugger.ts

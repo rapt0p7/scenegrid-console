@@ -5,7 +5,7 @@ description: History registries that preserve container and switch playback stat
 tags: [engine, state, history]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T15:02:32.352Z
+    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-452c81af9acc9fb46eb0fba1
     resource: repo://packages/engine/src/Infrastructure/state/ContainerHistoryRegistry.ts

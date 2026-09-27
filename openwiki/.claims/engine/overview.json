@@ -1,14 +1,14 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:59781114f054df41b09fd0f64323a3c0fcb469367e5d7c532b6b1aeca80efe32",
+    "pageVersion": "sha256:4aaf9a7aff2be8e89aed5d1aba554d1fd77883fbd88cd73ae1eb7f576a365cdf",
     "claims": [
         {
             "id": "claim_84d6ca1983e94a03be3dafb1c67934c2",
-            "statement": "The `@scene-grid/engine` package root exports `AudioEngine`, `PRIORITY`, `LoopState`, `WorkletLoader`, and `ConsistencyChecker`, alongside public types for buses, snapshots, sound configurations, manifests, and RTPC.",
+            "statement": "The `@scene-grid/engine` package root exports `AudioEngine`, `WorkletLoader`, and `ConsistencyChecker`, alongside public types for configuration, buses, snapshots, sound configurations, manifests, RTPC, events, and music FSM.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/index.ts#L1-L40",
-                    "version": "repo-lines-v1:sha256:c7ea2dff2878783cf24f5b5e91f9a972fef73bd81961b21797bb5bd1b8bbf481:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YjAxMjkwNzgwN2Y0ZjljOTlkZjM3ZmM4ZDg4MTNjOWNmYzE5OWIwYzFiMGM1MDZjZjdlNmFjOTNkMmU5MmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4M2I2NjMwMjc5NzdlMTE0MDg2ZTQxYWM0NjBmYjUzOWMxNDRiZTMyNGNjZmExNzYzZDViMTNmYTA5NzUxZWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    "resource": "repo://packages/engine/src/index.ts#L1-L14",
+                    "version": "repo-lines-v1:sha256:b2f1631dd2d90967045fee9d9e6d484063f11276d946f913e1f13e48a1b2ea45:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YjAxMjkwNzgwN2Y0ZjljOTlkZjM3ZmM4ZDg4MTNjOWNmYzE5OWIwYzFiMGM1MDZjZjdlNmFjOTNkMmU5MmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4M2I2NjMwMjc5NzdlMTE0MDg2ZTQxYWM0NjBmYjUzOWMxNDRiZTMyNGNjZmExNzYzZDViMTNmYTA5NzUxZWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         },
@@ -25,6 +25,6 @@
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T15:02:32.352Z"
+        "at": "2026-09-27T16:32:49.021Z"
     }
 }

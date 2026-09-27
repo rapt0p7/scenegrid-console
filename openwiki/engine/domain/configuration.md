@@ -5,7 +5,7 @@ description: Documents sound configuration ports, manifests (ISpriteSoundManifes
 tags: [configuration, manifests, sound-registry, banks, audio-engine]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T15:02:32.352Z
+    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-5236a07fa61d4cd901388060
     resource: repo://packages/engine/src/Application/AudioEngine.ts

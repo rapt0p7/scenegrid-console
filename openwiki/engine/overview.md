@@ -3,14 +3,15 @@ type: package overview
 title: Engine package overview
 description: Canonical map of the `@scene-grid/engine` package, its public API families, and the domain and infrastructure pages that own each workflow.
 tags: [engine, package, api]
-verified:
-  - by: openwiki/0.5.1
-    at: 2026-09-27T15:02:32.352Z
 sources:
   - id: openwiki-source-5236a07fa61d4cd901388060
     resource: repo://packages/engine/src/Application/AudioEngine.ts
   - id: openwiki-source-47db8ab555df91361739a053
     resource: repo://packages/engine/src/index.ts
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-09-27T16:32:49.021Z
+generated: { by: "antigravity", at: "2026-09-27T16:32:49.021Z" }
 ---
 
 # Engine package overview
@@ -22,10 +23,9 @@ sources:
 The engine barrel exposes:
 
 - `AudioEngine`
-- `PRIORITY`
-- `LoopState`
-- the package-wide type surface for buses, snapshots, manifests, RTPC, banks, events, music FSM, and infrastructure adapters
 - `WorkletLoader`
+- `ConsistencyChecker`
+- the package-wide type surface for configuration, buses, snapshots, manifests, RTPC, events, and music FSM
 
 ## Public API families
 
