@@ -15,11 +15,11 @@
 > **Understand your audio system before it plays.**
 > _Independent research project started ~mid 2025._
 
-**SceneGrid** is an observability-first simulation, debugging, and execution platform for real-time Web Audio. Built with a strict Hexagonal Architecture and Zero-Allocation memory management, it is designed for complex, state-driven applications (games, interactive web environments) where audio predictability and FPS stability are mission-critical.
+**SceneGrid** is an observability-first debugging and execution platform for real-time Web Audio. Built with a strict Hexagonal Architecture and Zero-Allocation memory management, it is designed for complex, state-driven applications (games, interactive web environments) where audio predictability and FPS stability are mission-critical.
 
 Conceptually, the system bridges the gap between:
 
-- **A System-Level Debugger:** Causal tracing, state simulation, and visual observability.
+- **A System-Level Debugger:** Causal tracing, real-time state overrides (What-If testing), and visual observability.
 - **A Runtime Engine:** High-performance, GC-safe audio execution.
 - **Hardware Consoles:** Total recall capabilities via snapshots and multi-layered mix states.
 
@@ -144,17 +144,18 @@ _Note: Core stability and Parameter Resolution Pipeline are part of the v1.0 mil
 - **Semantic Music States:** Logic-based states (e.g., _Exploration_ → _Combat_) where the engine automatically resolves loop regions and layers, providing a single source of truth for the debugger.
 - **Internal Modulators:** Native LFOs and Envelopes for continuous parameter modulation, decoupling audio animation from the game engine's main ticker for maximum stability.
 
-### 🟢 Phase 3: SceneGrid Studio & Environments (v2.0)
+### 🟢 Phase 3: Offline Simulation & SceneGrid Studio (v2.0)
 
+- **Offline Simulation API:** A headless engine adapter for mathematically simulating mixer states, evaluating RTPC curves, and predicting voice culling decisions without an active browser `AudioContext`.
 - **SceneGrid Studio (Standalone Web App):** A fully decoupled, visual authoring and simulation tool. Build routing graphs, draw RTPC curves, and simulate mix states offline. Changes are pushed instantly to your running game via the Live Bridge.
 - **Environment System:** Logic-based Reverb Zones and Acoustic States utilizing the existing Aux Sends.
-- **Dattorro Reverb Integration:** Implementing high-quality, algorithmic plate reverb natively as the standard FX Bus plugin for Environment simulation.
+- **Dattorro Reverb Integration:** Implementing high-quality, algorithmic plate reverb natively as the standard FX Bus plugin for acoustic environments.
 
 ---
 
 ## 🏗️ Architecture: The Hexagonal Approach
 
-The system is built using **Hexagonal Architecture (Ports & Adapters)**, ensuring that the core reasoning logic remains independent of the Web Audio API. This allows SceneGrid to run simulations and evaluate mixer states mathematically without requiring active audio playback.
+The system is built using **Hexagonal Architecture (Ports & Adapters)**, ensuring that the core reasoning logic remains independent of the Web Audio API. This decoupling lays the foundation for future offline simulation, allowing the core domain to mathematically evaluate mixer states without requiring active audio playback.
 
 | Layer              | Responsibility      | Content                                                           |
 | ------------------ | ------------------- | ----------------------------------------------------------------- |

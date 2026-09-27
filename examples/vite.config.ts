@@ -1,10 +1,10 @@
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
 /* eslint-disable @typescript-eslint/naming-convention */
 import path from 'node:path';
 import { defineConfig } from 'vite';
 import { checker } from 'vite-plugin-checker';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 
 // oxlint-disable-next-line typescript/ban-ts-comment typescript/prefer-ts-expect-error
 // @ts-ignore

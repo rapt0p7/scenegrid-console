@@ -1,10 +1,10 @@
 ## General System Positioning & Observability
 
-The system is an **observability-first simulation, debugging, and execution platform** for real-time Web Audio. While conceptually featuring a virtual digital mixing console, its primary goal is to make complex audio states predictable, traceable, and GC-safe.
+The system is an **observability-first debugging and execution platform** for real-time Web Audio. While conceptually featuring a virtual digital mixing console, its primary goal is to make complex audio states predictable, traceable, and GC-safe.
 
 Conceptually, it is a hybrid of:
 
-- A System-Level Debugger (Causal tracing and mix simulation)
+- A System-Level Debugger (Causal tracing and real-time state overrides)
 - A DAW mixer (Professional-grade channel strips and routing)
 - A Game Audio Engine (Data-driven triggering and Zero-Allocation resource management)
 
@@ -24,10 +24,10 @@ The engine natively supports **Hot Module Replacement (HMR)** via `_hotReloadCon
 
 ## 0. Architectural Philosophy: Ports & Adapters
 
-To ensure long-term maintainability, testability, and **offline simulation capabilities**, the system follows a **Hexagonal (Ports and Adapters)** pattern.
+To ensure long-term maintainability, testability, and **future offline simulation capabilities**, the system follows a **Hexagonal (Ports and Adapters)** pattern.
 
 - **Logic vs. Implementation:** The logic of how a signal _should_ flow (Domain) is separated from the creation of `GainNode` or `AudioWorklet` (Infrastructure).
-- **Simulation & Tracing:** Because the Domain is pure, the DevTools can mathematically simulate mixer states, evaluate RTPC curves, and predict voice culling decisions without requiring an active browser `AudioContext`.
+- **Tracing & Future Simulation:** Because the Domain is pure, it lays the foundation for future tools to mathematically simulate mixer states, evaluate RTPC curves, and predict voice culling decisions without requiring an active browser `AudioContext`.
 - **Modularity:** You can theoretically replace the Web Audio implementation with a different backend without modifying the `Domain` layer.
 
 ---
