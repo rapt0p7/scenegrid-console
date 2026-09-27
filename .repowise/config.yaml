@@ -1,8 +1,8 @@
 editor_files:
   agents_md: true
-provider: gemini
-model: gemini-3.1-flash-lite-preview
-embedder: gemini
+provider: deepseek
+model: deepseek-chat
+embedder: mock
 reasoning: auto
 distill:
   commands:
