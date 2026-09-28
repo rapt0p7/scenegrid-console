@@ -1,10 +1,11 @@
 // noinspection D
 
-import { isAbsent } from '@scene-grid/shared';
-import type { DeepReadonly, LayerId } from '@scene-grid/shared';
 import type MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
 import type { IMixerLayer } from '@domain/Mixer/Ports/IMixerLayer.js';
 import type { MixerSnapshot, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
+import type { DeepReadonly, LayerId } from '@scene-grid/shared';
+
+import { isAbsent } from '@scene-grid/shared';
 
 export const PRIORITY = {
     BASE: 0,
@@ -59,7 +60,7 @@ export default class MixerLayerStack {
             state = this.resolver.resolve(state, layer.snapshot);
         }
 
-        return state as MixerState;
+        return state;
     }
 
     public getLayers(): DeepReadonly<IMixerLayer>[] {

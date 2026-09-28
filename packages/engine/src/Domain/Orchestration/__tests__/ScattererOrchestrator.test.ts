@@ -1,15 +1,15 @@
+import type { IScattererSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
+import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
+import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
+import type { PlaybackId, SoundId, IPRNG, Milliseconds, ContextTime } from '@scene-grid/shared';
+import type { Mocked } from 'vitest';
+
+import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
-
-import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
-import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
-import type { IScattererSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import type { PlaybackId, SoundId, IPRNG, Milliseconds, ContextTime } from '@scene-grid/shared';
-import type { Mocked } from 'vitest';
 
 describe('ScattererOrchestrator', () => {
     let mockRouter: Mocked<IAudioRouter>;
@@ -90,7 +90,7 @@ describe('ScattererOrchestrator', () => {
             orchestrator.start(99 as PlaybackId, dummyConfig, 0 as ContextTime);
             mockController.getLogicalState.mockReturnValue('playing');
             mockPolicy.evaluateNext.mockReturnValue({ soundId: 'bird_chirp' as SoundId, nextState: {} as any });
-            mockRouter.play.mockReturnValue(100 as PlaybackId);
+            mockRouter.play.mockReturnValue(100);
         });
 
         it('should not spawn if currentTime is less than nextSpawnTime', () => {

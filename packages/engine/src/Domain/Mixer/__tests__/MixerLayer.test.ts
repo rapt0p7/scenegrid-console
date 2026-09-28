@@ -1,11 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-import MixerLayerStack, { PRIORITY } from '@domain/Mixer/MixerLayer.js';
-
-import type MixerStateResolver from '@domain/Mixer/MixerStateResolver.js';
 import type { IMixerLayer } from '@domain/Mixer/Ports/IMixerLayer.js';
 import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { BusId, LayerId } from '@scene-grid/shared';
+
+import MixerLayerStack, { PRIORITY } from '@domain/Mixer/MixerLayer.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('MixerLayerStack', () => {
     let layerStack: MixerLayerStack;
@@ -18,7 +16,7 @@ describe('MixerLayerStack', () => {
         };
         onChangeSpy = vi.fn();
 
-        layerStack = new MixerLayerStack(mockResolver as unknown as MixerStateResolver, onChangeSpy);
+        layerStack = new MixerLayerStack(mockResolver, onChangeSpy);
     });
 
     it('should expose PRIORITY constants correctly', () => {

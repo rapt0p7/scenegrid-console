@@ -4,7 +4,8 @@ import { safeDisconnect } from '../safeDisconnect.js';
 
 describe('safeDisconnect', () => {
     it('should return immediately if node is undefined', () => {
-        const result = safeDisconnect(undefined as any);
+        // oxlint-disable-next-line unicorn/no-useless-undefined
+        const result = safeDisconnect(undefined);
         expect(result).toBeUndefined();
     });
 

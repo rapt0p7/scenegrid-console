@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-// oxlint-disable max-lines-per-function, typescript/prefer-readonly-parameter-types
+// oxlint-disable max-lines-per-function, typescript/prefer-readonly-parameter-types, no-underscore-dangle
 // noinspection D
 
-import { Pane, FolderApi } from 'tweakpane';
-import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
-import { AudioProfiler } from './AudioProfiler.js';
-import { VoiceMeterWidget } from './ui/VoiceMeterWidget.js';
-import { VoiceListWidget } from './ui/VoiceListWidget.js';
 import type { QuantizeType } from '@scene-grid/shared';
+
+import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
+import { Pane, FolderApi } from 'tweakpane';
+
+import { AudioProfiler } from './AudioProfiler.js';
+import { VoiceListWidget } from './ui/VoiceListWidget.js';
+import { VoiceMeterWidget } from './ui/VoiceMeterWidget.js';
 
 interface IDebuggableEngine {
     play(soundId: string): any;
@@ -371,7 +373,7 @@ function setupSpatialSection(pane: Pane, audio: IDebuggableEngine, PARAMS: IDebu
             y: { min: -15, max: 15, inverted: true }
         })
         .on('change', event => {
-            const { x, y } = event.value as { x: number; y: number };
+            const { x, y } = event.value;
             const targetSoundId = PARAMS.spatialSoundId;
 
             lastDebuggerPlaybackIds.forEach(id => {

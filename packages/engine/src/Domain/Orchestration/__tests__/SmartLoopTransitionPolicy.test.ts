@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISmartLoopSoundConfig, IMagnetConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { RegionId, GameParamId, BusId, Milliseconds, Samples } from '@scene-grid/shared';
+
+import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
     let mockRtpcAdapter: any;
@@ -16,7 +16,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
             getValue: vi.fn(),
             setValue: vi.fn(),
             configureParam: vi.fn()
-        } as unknown as IRTPCAdapter;
+        };
 
         policy = new SmartLoopTransitionPolicy(mockRtpcAdapter);
     });
@@ -128,7 +128,7 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
         });
 
         it('should ignore unknown operators', () => {
-            runOperatorTest('???' as any, 50, 40, false);
+            runOperatorTest('???', 50, 40, false);
         });
     });
 

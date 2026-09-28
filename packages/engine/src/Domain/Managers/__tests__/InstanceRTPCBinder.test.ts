@@ -1,14 +1,13 @@
 // noinspection D
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
-
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { GameParamId, Milliseconds, PlaybackId } from '@scene-grid/shared';
 import type { Mocked } from 'vitest';
+
+import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
     let mockRtpcAdapter: Mocked<IRTPCAdapter>;
@@ -174,7 +173,7 @@ describe('InstanceRTPCBinder (Data-Oriented Polling)', () => {
 
         it('should continue loop if a specific config property is absent', () => {
             const configs: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
-                gain: undefined as any,
+                gain: undefined,
                 pitch: {
                     gameParam: 'engine' as GameParamId,
                     curve: [

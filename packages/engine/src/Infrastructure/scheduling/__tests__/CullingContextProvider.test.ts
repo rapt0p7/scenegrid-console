@@ -1,15 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
-// noinspection D
+
+import type { BusId, PlaybackId, SoundId } from '@scene-grid/shared';
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { CullingContextProvider } from '../CullingContextProvider.js';
-
-import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
-import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
-import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import type { BusId, PlaybackId, SoundId } from '@scene-grid/shared';
 
 describe('CullingContextProvider (Infrastructure Adapter)', () => {
     let mockController: any;
@@ -42,11 +38,7 @@ describe('CullingContextProvider (Infrastructure Adapter)', () => {
             orphan_sound: {}
         };
 
-        provider = new CullingContextProvider(
-            mockController as unknown as ISoundController,
-            mockBusSystem as unknown as IAudioBusSystem,
-            mockSoundMap as unknown as ISoundMap
-        );
+        provider = new CullingContextProvider(mockController, mockBusSystem, mockSoundMap);
     });
 
     it('should delegate activePlaybacks getter to SoundController', () => {

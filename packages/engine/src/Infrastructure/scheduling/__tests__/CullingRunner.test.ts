@@ -1,12 +1,12 @@
-// noinspection D
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-import { CullingRunner } from '../CullingRunner.js';
-
 import type { ICullingArbiter, ICullingContext, CullingDecisions } from '@domain/Culling/Ports/ICullingArbiter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type { Milliseconds, PlaybackId } from '@scene-grid/shared';
+
+// noinspection D
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+import { CullingRunner } from '../CullingRunner.js';
 
 describe('CullingRunner (Infrastructure Adapter)', () => {
     let mockArbiter: ICullingArbiter;
@@ -24,7 +24,7 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
                 virtualizeCount: 0,
                 toDevirtualize: [],
                 devirtualizeCount: 0
-            } as CullingDecisions)
+            })
         };
 
         mockController = {
@@ -79,7 +79,7 @@ describe('CullingRunner (Infrastructure Adapter)', () => {
             virtualizeCount: 0,
             toDevirtualize: [201 as PlaybackId],
             devirtualizeCount: 1
-        } as unknown as CullingDecisions);
+        });
 
         runner.tick(12.0, 0 as Milliseconds);
 

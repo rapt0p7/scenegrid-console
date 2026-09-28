@@ -1,15 +1,16 @@
 // noinspection D
 
-import mitt from 'mitt';
-import type { Emitter } from 'mitt';
-import { CyclePool, isDefined, type ITelemetryCauseChain, Milliseconds } from '@scene-grid/shared';
-import type { LayerId, SnapshotId, TelemetryPacket } from '@scene-grid/shared';
 import type MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
 import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
 import type { MixerEvents } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { ISnapshots } from '@domain/Mixer/Ports/ISnapshots.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+import type { LayerId, SnapshotId, TelemetryPacket } from '@scene-grid/shared';
+import type { Emitter } from 'mitt';
+
+import { CyclePool, isDefined, type ITelemetryCauseChain, Milliseconds } from '@scene-grid/shared';
+import mitt from 'mitt';
 
 export default class MixerSnapshotManager {
     public readonly events: Emitter<MixerEvents> = mitt<MixerEvents>();
@@ -21,7 +22,7 @@ export default class MixerSnapshotManager {
         result: {
             type: 'SET_MIX_SNAPSHOT',
             snapshotId: '',
-            fadeTime: 0 as Milliseconds
+            fadeTime: 0
         },
         conditionTrace: undefined
     }));

@@ -1,11 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
-
-import type MixerLayerStack from '@domain/Mixer/MixerLayer.js';
-import type MixerTransitionEngine from '@domain/Mixer/MixerTransitionEngine.js';
 import type { MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { BusId } from '@scene-grid/shared';
+
+import MixerCoordinator from '@domain/Mixer/MixerCoordinator.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('MixerCoordinator', () => {
     let coordinator: MixerCoordinator;
@@ -23,10 +20,7 @@ describe('MixerCoordinator', () => {
             getState: vi.fn()
         };
 
-        coordinator = new MixerCoordinator(
-            mockLayerStack as unknown as MixerLayerStack,
-            mockTransitionEngine as unknown as MixerTransitionEngine
-        );
+        coordinator = new MixerCoordinator(mockLayerStack, mockTransitionEngine);
     });
 
     it('should recompute state using baseState and apply it', () => {

@@ -1,11 +1,12 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
+import type { ITelemetrySnapshot } from '@scene-grid/shared';
+
 import React, { useEffect, useRef } from 'react';
-import uPlot from 'uplot';
 // oxlint-disable-next-line import/no-unassigned-import
 import 'uplot/dist/uPlot.min.css';
-import type { ITelemetrySnapshot } from '@scene-grid/shared';
+import uPlot from 'uplot';
 
 interface Props {
     snapshotRef: React.MutableRefObject<ITelemetrySnapshot | null>;
@@ -65,7 +66,7 @@ export const PerformanceGraph: React.FC<Props> = ({ snapshotRef }) => {
             }
         };
 
-        plotRef.current = new uPlot(opts, data as unknown as uPlot.AlignedData, containerRef.current);
+        plotRef.current = new uPlot(opts, data, containerRef.current);
 
         let frameId: number;
         const loop = () => {
@@ -90,7 +91,7 @@ export const PerformanceGraph: React.FC<Props> = ({ snapshotRef }) => {
                 data[1][HISTORY_SIZE - 1] = total;
                 data[2][HISTORY_SIZE - 1] = virtual;
 
-                plotRef.current.setData(data as unknown as uPlot.AlignedData);
+                plotRef.current.setData(data);
             }
             frameId = requestAnimationFrame(loop);
         };
@@ -115,5 +116,5 @@ export const PerformanceGraph: React.FC<Props> = ({ snapshotRef }) => {
         };
     }, [snapshotRef]);
 
-    return <div ref={containerRef} className="w-full h-full" />;
+    return <div ref={containerRef} className="h-full w-full" />;
 };

@@ -12,7 +12,7 @@ export default class EventsRule implements IValidationRule {
         if (!context.assertOptionalType('events', context.config.events, 'object')) return;
 
         for (const [eventIdRaw, eventConfigOriginal] of typedEntries(context.config.events)) {
-            const eventId = eventIdRaw as string;
+            const eventId = eventIdRaw;
             const eventPath = `events.${eventId}`;
 
             const eventConfig = eventConfigOriginal as Record<string, any>;

@@ -1,7 +1,8 @@
 // noinspection D
 
-import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
 import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
+import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
+
 import { typedEntries } from '@scene-grid/shared';
 
 export default class MultiplicativeVetoesRule implements IValidationRule {
@@ -10,7 +11,7 @@ export default class MultiplicativeVetoesRule implements IValidationRule {
 
         for (const [busId, busCfg] of typedEntries(context.config.buses || {})) {
             if (busCfg.rtpc?.gain) {
-                rtpcGainBuses.add(busId as string);
+                rtpcGainBuses.add(busId);
 
                 if (busCfg.gain !== undefined && busCfg.gain < 1) {
                     context.addWarning(

@@ -1,11 +1,11 @@
 // noinspection D
 
-import type { BusId, DeepReadonly } from '@scene-grid/shared';
-import { isDefined, isAbsent, clamp, typedEntries, typedKeys } from '@scene-grid/shared';
-
 import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCConfig, RTPCTargetProperty } from '@domain/Configuration/Ports/IRTPCConfig.js';
 import type { MixerSnapshot, MixerState, Sends } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
+import type { BusId, DeepReadonly } from '@scene-grid/shared';
+
+import { isDefined, isAbsent, clamp, typedEntries, typedKeys } from '@scene-grid/shared';
 
 export interface MixerResolverOptions {
     readonly defaultBusGain?: number;
@@ -40,7 +40,7 @@ export default class MixerStateResolver {
                 ...patch.metadata,
                 timestamp: performance.now()
             }
-        } as unknown as DeepReadonly<MixerState>;
+        };
     }
 
     private resolveBus(
@@ -62,7 +62,7 @@ export default class MixerStateResolver {
 
     private resolveSends(base?: DeepReadonly<Sends>, patch?: DeepReadonly<Sends>): DeepReadonly<Sends> {
         if (isAbsent(patch)) {
-            return (isDefined(base) ? { ...base } : {}) as DeepReadonly<Sends>;
+            return isDefined(base) ? { ...base } : {};
         }
 
         const result: Record<string, number> = { ...(base as Record<string, number>) };
@@ -79,7 +79,7 @@ export default class MixerStateResolver {
             }
         }
 
-        return result as DeepReadonly<Sends>;
+        return result;
     }
 
     private resolveFilter(
@@ -107,9 +107,7 @@ export default class MixerStateResolver {
         if (patch === null) return {};
 
         if (isAbsent(patch)) {
-            return (isDefined(base) ? { ...base } : {}) as DeepReadonly<
-                Partial<Record<RTPCTargetProperty, IRTPCConfig>>
-            >;
+            return isDefined(base) ? { ...base } : {};
         }
 
         const result: Partial<Record<RTPCTargetProperty, IRTPCConfig>> = {
@@ -122,11 +120,11 @@ export default class MixerStateResolver {
             if (patchValue === null) {
                 delete result[key];
             } else if (isDefined(patchValue)) {
-                result[key] = patchValue as IRTPCConfig;
+                result[key] = patchValue;
             }
         }
 
-        return result as DeepReadonly<Partial<Record<RTPCTargetProperty, IRTPCConfig>>>;
+        return result;
     }
 }
 

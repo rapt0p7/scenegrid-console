@@ -1,8 +1,9 @@
 // oxlint-disable max-depth max-lines-per-function
 // noinspection D
 
-import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
 import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
+import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
+
 import { isAbsent, isDefined, typedEntries } from '@scene-grid/shared';
 
 export default class BankSystemRule implements IValidationRule {
@@ -51,7 +52,7 @@ export default class BankSystemRule implements IValidationRule {
         }
 
         for (const [soundId, cfg] of typedEntries(context.config.soundMap || {})) {
-            if (context.isContainer(cfg as any) || context.isScatterer(cfg as any) || context.isSwitch(cfg as any)) {
+            if (context.isContainer(cfg) || context.isScatterer(cfg) || context.isSwitch(cfg as any)) {
                 continue;
             }
 
