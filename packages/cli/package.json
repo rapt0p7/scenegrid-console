@@ -1,9 +1,9 @@
 {
     "name": "@scene-grid/cli",
-    "version": "1.0.0",
+    "version": "0.0.0",
     "license": "MIT",
     "bin": {
-        "scenegrid": "./dist/cli.es.js"
+        "scenegrid": "dist/cli.es.js"
     },
     "type": "module",
     "main": "./dist/cli.es.js",

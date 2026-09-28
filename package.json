@@ -43,6 +43,7 @@
         "lint:arch": "eslint .",
         "lint:ci": "oxlint --quiet",
         "lint": "npm run lint:fast && npm run lint:arch",
+        "release": "release-it",
         "notebooklm:update": "npx repomix"
     },
     "devDependencies": {
@@ -80,6 +81,7 @@
         "oxfmt": "0.61.0",
         "oxlint": "1.76.0",
         "oxlint-tsgolint": "7.0.2001",
+        "release-it": "21.1.0",
         "repomix": "1.17.0",
         "standardized-audio-context-mock": "10.0.0",
         "ts-json-schema-generator": "2.9.0",

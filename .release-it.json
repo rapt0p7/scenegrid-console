@@ -1,0 +1,21 @@
+{
+    "$schema": "https://unpkg.com/release-it@21/schema/release-it.json",
+    "git": {
+        "commitMessage": "chore: release v${version}",
+        "changelog": "npx git-cliff --unreleased --strip all",
+        "requireCleanWorkingDir": true
+    },
+    "github": {
+        "release": true,
+        "releaseName": "v${version}"
+    },
+    "npm": {
+        "publish": false,
+        "versionArgs": ["--workspaces"]
+    },
+    "hooks": {
+        "before:init": ["npm run lint", "npm run test"],
+        "after:bump": "npx git-cliff --tag v${version} -o CHANGELOG.md && git add CHANGELOG.md",
+        "after:release": "npm publish --workspaces"
+    }
+}
