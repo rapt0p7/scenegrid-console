@@ -1,6 +1,6 @@
 {
     "name": "@scene-grid/cli",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Command-line asset pipeline and AOT (Ahead-of-Time) audio processing tools for the SceneGrid platform.",
     "keywords": [
         "audio",

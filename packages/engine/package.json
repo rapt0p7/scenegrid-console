@@ -1,6 +1,6 @@
 {
     "name": "@scene-grid/engine",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "High-performance AudioWorklet-based runtime engine for SceneGrid, handling low-latency signal routing, polyphony culling, and orchestration.",
     "keywords": [
         "audio",
