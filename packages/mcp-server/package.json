@@ -35,7 +35,7 @@
         "test": "vitest run"
     },
     "dependencies": {
-        "@scene-grid/cli": "^1.0.0",
+        "@scene-grid/cli": "*",
         "mcp-use": "2.5.1",
         "react": "^19.2.7",
         "react-dom": "^19.2.7",

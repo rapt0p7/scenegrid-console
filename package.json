@@ -43,7 +43,7 @@
         "lint:arch": "eslint .",
         "lint:ci": "oxlint --quiet",
         "lint": "npm run lint:fast && npm run lint:arch",
-        "release": "release-it",
+        "release": "dotenv release-it --",
         "notebooklm:update": "npx repomix"
     },
     "devDependencies": {
@@ -65,6 +65,7 @@
         "cross-env": "10.1.0",
         "dependency-cruiser": "17.4.3",
         "dotenv": "17.3.1",
+        "dotenv-cli": "11.0.0",
         "eslint": "9.39.4",
         "eslint-import-resolver-typescript": "4.4.4",
         "eslint-plugin-boundaries": "7.1.0",
