@@ -44,7 +44,8 @@ export default defineConfig(({ mode }) => ({
 
     resolve: {
         alias: {
-            '@scene-grid/inspector': path.resolve(__dirname, '../packages/inspector/src/index.ts'),
+            '@scene-grid/debugger': path.resolve(__dirname, '../packages/debugger/src/index.ts'),
+            '@scene-grid/inspector': path.resolve(__dirname, '../packages/inspector/src/index.tsx'),
             '@scene-grid/engine': path.resolve(__dirname, '../packages/engine/src/index.ts'),
             '@scene-grid/shared': path.resolve(__dirname, '../packages/shared/src/index.ts'),
             '@domain': path.resolve(__dirname, '../packages/engine/src/Domain'),
@@ -61,7 +62,8 @@ export default defineConfig(({ mode }) => ({
 
     server: {
         host: 'localhost',
-        open: true
+        open: true,
+        port: 3115
     },
     build: {
         rollupOptions: {

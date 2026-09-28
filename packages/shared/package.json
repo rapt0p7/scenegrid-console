@@ -1,10 +1,37 @@
 {
     "name": "@scene-grid/shared",
     "version": "0.1.0",
+    "description": "Shared domain types, telemetry transport, and strict TypeScript utilities for the SceneGrid platform.",
+    "keywords": [
+        "audio",
+        "audio-engine",
+        "game-audio",
+        "scenegrid",
+        "web-audio-api",
+        "webaudio"
+    ],
+    "homepage": "https://github.com/rapt0p7/scenegrid-console/tree/main/packages/shared#readme",
+    "bugs": {
+        "url": "https://github.com/rapt0p7/scenegrid-console/issues"
+    },
     "license": "MIT",
+    "author": {
+        "name": "Igor Zabrodin",
+        "url": "https://github.com/rapt0p7"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/rapt0p7/scenegrid-console",
+        "directory": "packages/shared"
+    },
+    "funding": {
+        "type": "github",
+        "url": "https://github.com/sponsors/rapt0p7"
+    },
     "files": [
         "dist",
-        "LICENSE"
+        "LICENSE",
+        "README.md"
     ],
     "type": "module",
     "main": "./dist/shared.es.js",

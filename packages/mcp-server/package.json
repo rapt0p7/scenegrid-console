@@ -1,19 +1,35 @@
 {
     "name": "@scene-grid/mcp-server",
     "version": "0.1.0",
-    "description": "an mcp-use server with React views for MCP Apps",
+    "description": "Model Context Protocol (MCP) server for SceneGrid, providing AI agents with telemetry and control over the audio engine.",
     "keywords": [
-        "chatgpt plugins",
-        "claude connector",
-        "manufact",
-        "mcp",
-        "mcp-app",
+        "audio",
+        "audio-engine",
+        "game-audio",
         "mcp-server",
-        "mcp-use"
+        "mcp-use",
+        "scenegrid",
+        "web-audio-api",
+        "webaudio"
     ],
-    "homepage": "https://github.com/mcp-use/mcp-use",
+    "homepage": "https://github.com/rapt0p7/scenegrid-console/tree/main/packages/mcp-server#readme",
+    "bugs": {
+        "url": "https://github.com/rapt0p7/scenegrid-console/issues"
+    },
     "license": "MIT",
-    "author": "mcp-use",
+    "author": {
+        "name": "Igor Zabrodin",
+        "url": "https://github.com/rapt0p7"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/rapt0p7/scenegrid-console",
+        "directory": "packages/mcp-server"
+    },
+    "funding": {
+        "type": "github",
+        "url": "https://github.com/sponsors/rapt0p7"
+    },
     "bin": {
         "scenegrid-mcp": "./bin/run.js"
     },

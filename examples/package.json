@@ -9,6 +9,7 @@
         "type-check:watch": "tsc -p tsconfig.json --noEmit -w"
     },
     "dependencies": {
+        "@scene-grid/debugger": "*",
         "@scene-grid/engine": "*",
         "@scene-grid/inspector": "*",
         "@scene-grid/shared": "*",

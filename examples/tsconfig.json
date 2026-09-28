@@ -8,16 +8,18 @@
         "rootDir": "../",
         "paths": {
             "@scene-grid/engine": ["../packages/engine/src/index.ts"],
-            "@scene-grid/inspector": ["../packages/inspector/src/index.ts"],
-            "@scene-grid/shared": ["../packages/shared/src/index.ts"]
+            "@scene-grid/inspector": ["../packages/inspector/src/index.tsx"],
+            "@scene-grid/shared": ["../packages/shared/src/index.ts"],
+            "@scene-grid/debugger": ["../packages/debugger/src/index.ts"]
         },
         "types": ["vite/client", "node"]
     },
-    "include": ["./src/**/*", "./**/*.config.ts", "./main.ts"],
+    "include": ["./src/**/*", "./**/*.config.ts", "./main.ts", "./inspector.tsx"],
     "exclude": ["node_modules", "**/dist", "**/build", "../packages/*/dist", "../packages/**/dist"],
     "references": [
         { "path": "../packages/shared" },
         { "path": "../packages/engine" },
-        { "path": "../packages/inspector" }
+        { "path": "../packages/inspector" },
+        { "path": "../packages/debugger" }
     ]
 }

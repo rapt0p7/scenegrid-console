@@ -1,6 +1,66 @@
-# SceneGrid MCP Server
+# @scene-grid/mcp-server
 
-The SceneGrid MCP Server provides diagnostic and orchestration tools for the SceneGrid virtual digital mixing console and audio engine. It bridges the engine's internal telemetry worker with agents through standard MCP (Model Context Protocol) tool calls, resources, and prompts.
+> Model Context Protocol (MCP) server for the SceneGrid virtual mixing console
+
+[![npm version](https://badge.fury.io/js/@scene-grid%2Fmcp-server.svg)](https://badge.fury.io/js/@scene-grid%2Fmcp-server)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+The SceneGrid MCP Server provides diagnostic and orchestration tools for the SceneGrid audio engine. It acts as a bridge, allowing AI Agents (like Claude Desktop or Cursor) to query the engine's internal telemetry, trigger dynamic changes, and utilize guided Prompts through standard MCP (Model Context Protocol).
+
+## Installation & Usage
+
+You can run the SceneGrid MCP Server directly using `npx`, or integrate it into your AI assistant (like Claude Desktop or Cursor).
+
+### Running directly (via npx)
+
+To boot the server directly without cloning the repository, you can use `npx`:
+
+```bash
+npx -y @scene-grid/mcp-server
+```
+
+*(This command uses `mcp-use` under the hood to start the server and listener).*
+
+### Integrating with Claude Desktop
+
+Add the following to your Claude Desktop configuration file (e.g., `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "scenegrid": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@scene-grid/mcp-server"
+      ]
+    }
+  }
+}
+```
+
+### Application Setup
+
+Once the MCP Server is running, boot your `scenegrid-console` engine with the `remoteSyncUri` configuration:
+
+```ts
+const audio = new AudioEngine({
+    // ... other config ...
+    remoteSyncUri: 'ws://localhost:8081'
+});
+```
+
+The engine will automatically stream telemetry to the MCP server, and your AI assistant will have real-time access to the console!
+
+## Development
+
+If you are developing the server locally inside the monorepo:
+
+```bash
+npm run dev -w packages/mcp-server
+```
+
+---
 
 ## Overview
 
@@ -85,55 +145,5 @@ These tools interact with the live state of the engine. Use them when you need t
   - **Purpose**: Guided instructions for troubleshooting missing or incorrect audio playback.
   - **Usage**: Invoke this prompt when debugging silent voices or routing failures to receive a checklist of required resource checks.
 
-## Installation & Usage
-
-You can run the SceneGrid MCP Server directly using `npx`, or integrate it into your AI assistant (like Claude Desktop or Cursor).
-
-### Running directly (via npx)
-
-To boot the server directly without cloning the repository, you can use `npx`:
-
-```bash
-npx -y @scene-grid/mcp-server
-```
-
-*(This command uses `mcp-use` under the hood to start the server and listener).*
-
-### Integrating with Claude Desktop
-
-Add the following to your Claude Desktop configuration file (e.g., `claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "scenegrid": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@scene-grid/mcp-server"
-      ]
-    }
-  }
-}
-```
-
-### Application Setup
-
-Once the MCP Server is running, boot your `scenegrid-console` engine with the `remoteSyncUri` configuration:
-
-```ts
-const audio = new AudioEngine({
-    // ... other config ...
-    remoteSyncUri: 'ws://localhost:8081' 
-});
-```
-
-The engine will automatically stream telemetry to the MCP server, and your AI assistant will have real-time access to the console!
-
-## Development
-
-If you are developing the server locally inside the monorepo:
-
-```bash
-npm run dev -w packages/mcp-server
-```
+## License
+MIT © Igor Zabrodin

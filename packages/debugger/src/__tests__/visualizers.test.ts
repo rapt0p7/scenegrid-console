@@ -53,7 +53,6 @@ describe('Visualizers (Smoke Tests)', () => {
                 smoothingTimeConstant: 0.8,
                 frequencyBinCount: 1024,
                 getFloatFrequencyData: vi.fn((array: Float32Array) => {
-                    // eslint-disable-next-line no-param-reassign
                     for (let index = 0; index < array.length; index++) array[index] = -50;
                 })
             })

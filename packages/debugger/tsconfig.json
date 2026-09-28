@@ -2,13 +2,12 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "outDir": "./dist",
-        "skipLibCheck": true,
-        "types": ["node"]
+        "types": ["audioworklet"]
     },
-    "include": ["src/**/*.ts"],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "**/scripts/**/*.ts"],
     "references": [
         {
-            "path": "../engine"
+            "path": "../shared"
         }
     ]
 }

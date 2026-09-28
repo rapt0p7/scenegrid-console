@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { InspectorApp } from './InspectorApp';
 // oxlint-disable-next-line import/no-unassigned-import
 import './styles/index.css';

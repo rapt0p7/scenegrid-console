@@ -13,7 +13,7 @@ export default tseslint.config(
         ignores: ['node_modules/', '**/build/**', '**/dist/**', '**/*.js', 'coverage/', 'scripts/']
     },
     {
-        files: ['**/*.ts', '**/*.config.ts'],
+        files: ['**/*.ts', '**/*.tsx', '**/*.config.ts'],
         ignores: ['**/*.json', '**/*md'],
         languageOptions: {
             parser: tseslint.parser,
@@ -21,7 +21,13 @@ export default tseslint.config(
                 ecmaVersion: 'latest',
                 sourceType: 'module',
                 projectService: {
-                    allowDefaultProject: ['vitest.config.ts', 'vitest.setup.ts', 'eslint.config.js'],
+                    allowDefaultProject: [
+                        'vitest.config.ts',
+                        'vitest.setup.ts',
+                        'eslint.config.js',
+                        'packages/*/vite.config.ts',
+                        'vite.config.ts'
+                    ],
                     defaultProject: './tsconfig.base.json'
                 },
                 tsconfigRootDir: import.meta.dirname

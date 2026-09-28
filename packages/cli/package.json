@@ -1,10 +1,41 @@
 {
     "name": "@scene-grid/cli",
     "version": "0.1.0",
+    "description": "Command-line asset pipeline and AOT (Ahead-of-Time) audio processing tools for the SceneGrid platform.",
+    "keywords": [
+        "audio",
+        "audio-engine",
+        "game-audio",
+        "scenegrid",
+        "web-audio-api",
+        "webaudio"
+    ],
+    "homepage": "https://github.com/rapt0p7/scenegrid-console/tree/main/packages/cli#readme",
+    "bugs": {
+        "url": "https://github.com/rapt0p7/scenegrid-console/issues"
+    },
     "license": "MIT",
+    "author": {
+        "name": "Igor Zabrodin",
+        "url": "https://github.com/rapt0p7"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/rapt0p7/scenegrid-console",
+        "directory": "packages/cli"
+    },
+    "funding": {
+        "type": "github",
+        "url": "https://github.com/sponsors/rapt0p7"
+    },
     "bin": {
         "scenegrid": "dist/cli.es.js"
     },
+    "files": [
+        "dist",
+        "LICENSE",
+        "README.md"
+    ],
     "type": "module",
     "main": "./dist/cli.es.js",
     "types": "./dist/src/index.d.ts",

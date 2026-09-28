@@ -10,9 +10,9 @@
             "@kernel/*": ["./src/Kernel/*"],
             "@application/*": ["./src/Application/*"]
         },
-        "types": ["audioworklet"]
+        "types": ["audioworklet", "node"]
     },
-    "include": ["src/**/*.ts", "**/scripts/**/*.ts", "vite.config.ts"],
+    "include": ["src/**/*.ts", "**/scripts/**/*.ts"],
     "references": [
         {
             "path": "../shared"

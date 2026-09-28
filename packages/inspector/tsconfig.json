@@ -2,9 +2,9 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "outDir": "./dist",
-        "types": ["audioworklet"]
+        "types": ["audioworklet", "vite/client"]
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "**/scripts/**/*.ts", "vite.config.ts"],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "**/scripts/**/*.ts"],
     "references": [
         {
             "path": "../shared"

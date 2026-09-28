@@ -1,16 +1,18 @@
 {
-    "name": "@scene-grid/engine",
-    "version": "0.1.0",
-    "description": "High-performance AudioWorklet-based runtime engine for SceneGrid, handling low-latency signal routing, polyphony culling, and orchestration.",
+    "name": "@scene-grid/debugger",
+    "version": "0.0.0",
+    "description": "Embedded in-game Tweakpane diagnostic UI for debugging the SceneGrid audio engine.",
     "keywords": [
         "audio",
         "audio-engine",
+        "debugger",
         "game-audio",
         "scenegrid",
+        "tweakpane",
         "web-audio-api",
         "webaudio"
     ],
-    "homepage": "https://github.com/rapt0p7/scenegrid-console/tree/main/packages/engine#readme",
+    "homepage": "https://github.com/rapt0p7/scenegrid-console/tree/main/packages/debugger#readme",
     "bugs": {
         "url": "https://github.com/rapt0p7/scenegrid-console/issues"
     },
@@ -22,7 +24,7 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/rapt0p7/scenegrid-console",
-        "directory": "packages/engine"
+        "directory": "packages/debugger"
     },
     "funding": {
         "type": "github",
@@ -34,27 +36,23 @@
         "README.md"
     ],
     "type": "module",
-    "main": "./dist/engine.es.js",
+    "main": "./dist/debugger.es.js",
     "types": "./dist/src/index.d.ts",
     "exports": {
         ".": {
             "types": "./dist/src/index.d.ts",
-            "import": "./dist/engine.es.js"
+            "import": "./dist/debugger.es.js"
         }
     },
     "scripts": {
         "build": "vite build"
     },
     "dependencies": {
-        "@scene-grid/shared": "*",
-        "globalthis": "1.0.4"
-    },
-    "devDependencies": {
-        "@types/audioworklet": "0.0.100"
+        "@scene-grid/shared": "*"
     },
     "peerDependencies": {
-        "mitt": "3.0.1",
-        "standardized-audio-context": "25.3.77",
-        "worker-timers": "8.0.30"
+        "@tweakpane/core": "2.0.5",
+        "@tweakpane/plugin-essentials": "0.2.1",
+        "tweakpane": "4.0.5"
     }
 }

@@ -177,7 +177,6 @@ class MeterProcessor extends AudioWorkletProcessor {
 try {
     registerProcessor('meter-processor', MeterProcessor);
 } catch (error) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     if (error.name !== 'NotSupportedError') throw error;
     console.warn('meter-processor уже зарегистрирован');

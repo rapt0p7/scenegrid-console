@@ -16,9 +16,10 @@
         "paths": {
             "@scene-grid/shared": ["./packages/shared/src/index.ts"],
             "@scene-grid/engine": ["./packages/engine/src/index.ts"],
-            "@scene-grid/inspector": ["./packages/inspector/src/index.ts"],
+            "@scene-grid/inspector": ["./packages/inspector/src/index.tsx"],
+            "@scene-grid/debugger": ["./packages/debugger/src/index.ts"],
             "@scene-grid/cli": ["./packages/cli/src/index.ts"],
-            "@scene-grid/mcp-server": ["./packages/inspector/index.ts"]
+            "@scene-grid/mcp-server": ["./packages/mcp-server/index.ts"]
         }
     },
     "exclude": ["node_modules", "dist", "public"]

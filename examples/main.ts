@@ -83,7 +83,6 @@ async function bootstrap() {
     await audio.banks.load('sfx2');
     await audio.streams.load('backgroundMain');
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     globalThis.AudioEngine = audio;
 
@@ -104,7 +103,7 @@ async function bootstrap() {
             // audio.conductor.start();
 
             if (process.env.NODE_ENV !== 'production') {
-                void import('@scene-grid/inspector').then(({ attachDebugUI, initAudioDebugPanel }) => {
+                void import('@scene-grid/debugger').then(({ attachDebugUI, initAudioDebugPanel }) => {
                     void attachDebugUI(audio, { wrapperSelector: '#wrapper', workletLoader: WorkletLoader });
                     initAudioDebugPanel(audio);
                 });
