@@ -5,9 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-09-28
 
 ### Added
+- Add funding and sponsorship information
+
+- Add contents read permission to ci workflow
+
+- Add inspector, mcp, and cli package descriptions
+
+- Add ai integration tools and schema capabilities
+
+- Add comprehensive unit tests for cli and mcp-server modules
+
+- Add `scenegrid-mcp` command for direct server execution
+
+- Add cli aot asset processing and memory tools in mcp
+
+- Introduce mcp resources, tools, and debug prompt
+
+- Support batched telemetry packets
+
 - Introduce mcp server for engine telemetry and control
 
 - Introduce 'mcp-apps-builder' skill
@@ -262,6 +280,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Update monorepo package versions to *
+
+- Configure release-it hook
+
+- Configure release-it and reset package versions
+
+- Relicense workspace under mit license
+
+- Setup github actions workflow and add `lint:ci` script
+
+- Update system positioning and simulation roadmap
+
+- Updated 'openwiki'
+
+- Update dependencies in package-lock.json
+
+- Update commitlint scopes
+
+- Updated 'openwiki'
+
+- Update repowise indexing information
+
+- Update `keepthewhy` skill
+
+- Refine api schema and test mocks
+
+- Updated 'openwiki'
+
+- Update node.js version to 22.23.2
+
+- Updated 'openwiki'
+
+- Updated 'openwiki'
+
+- Rename package from @scenegrid to @scene-grid
+
+- Updated changelog, dev journal, diagram, readme
+
 - Updated changelog, dev journal, diagram
 
 - Updated 'openwiki'
@@ -746,6 +802,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Removed
+- Remove redundant type assertions and reorder imports
+
+- Remove unused types and internal re-exports from engine
+
+- Remove reference to `Howler.js`
+
 - Remove `import/no-restricted-paths` rule
 
 - Remove redundant `IAudioWorkletProcessor` interface
@@ -777,4 +839,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove audiomotion-analyzer
 
 
+[0.1.0]: ..v0.1.0
 
