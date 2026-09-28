@@ -1,6 +1,6 @@
 {
     "name": "@scene-grid/inspector",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Real-time telemetry and visual inspector interface for debugging and monitoring the SceneGrid audio graph.",
     "keywords": [
         "audio",
