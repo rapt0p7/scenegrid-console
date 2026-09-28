@@ -112,4 +112,21 @@ Always keep the **Ports and Adapters** pattern in mind:
 
 If you need to access a new Web Audio feature, first define its logical behavior as an interface in `packages/engine/src/Domain/BusSystem/Ports`.
 
+---
+
+## Support Development
+
+If you find SceneGrid valuable, please consider supporting its development:
+
+- **[GitHub Sponsors](https://github.com/sponsors/rapt0p7)** — Regular support
+- **[Buy Me a Coffee](https://buymeacoffee.com/rapt0p7)** — One-time contribution
+- **[Patreon](https://patreon.com/rapt0p7)** — Patron tier
+
+Your support directly helps pay for:
+- Infrastructure and hosting
+- R&D for new features
+- Time spent on documentation and community support
+
+---
+
 Thank you for contributing to the **SceneGrid Console**!

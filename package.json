@@ -11,6 +11,10 @@
         "type": "git",
         "url": "https://github.com/rapt0p7/scenegrid-console"
     },
+    "funding": {
+        "type": "github",
+        "url": "https://github.com/sponsors/rapt0p7"
+    },
     "workspaces": [
         "packages/*",
         "examples"
