@@ -1,8 +1,10 @@
 {
     "name": "@scene-grid/shared",
     "version": "1.0.0",
+    "license": "MIT",
     "files": [
-        "dist"
+        "dist",
+        "LICENSE"
     ],
     "type": "module",
     "main": "./dist/shared.es.js",

@@ -2,7 +2,7 @@
     "name": "scenegrid-workspace",
     "private": true,
     "description": "Snapshot-Driven Virtual Mixing Console Workspace",
-    "license": "SEE LICENSE IN LICENSE.md",
+    "license": "MIT",
     "author": {
         "name": "Igor Zabrodin",
         "url": "https://github.com/rapt0p7"

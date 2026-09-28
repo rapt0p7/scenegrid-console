@@ -21,7 +21,9 @@
         ".mcp-use/build",
         "bin",
         "public",
-        "generated"
+        "generated",
+        "README.md",
+        "LICENSE"
     ],
     "type": "module",
     "scripts": {

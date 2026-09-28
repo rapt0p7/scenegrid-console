@@ -8,7 +8,7 @@
 [![Mutation Score](https://img.shields.io/badge/Mutation_Score-92%25-brightgreen)](https://stryker-mutator.io)
 [![Powered by Oxlint](https://img.shields.io/badge/powered%20by-Oxlint-blue)](https://oxc.rs)
 [![Formatted with Oxfmt](https://img.shields.io/badge/formatted%20with-Oxfmt-blue)](https://oxc.rs)
-[![License: PolyForm](https://img.shields.io/badge/License-PolyForm%20Noncommercial-purple.svg?style=flat-square)](./LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
 [![Web Audio API](https://img.shields.io/badge/Web_Audio-API-ffb244.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 [![Keep the Why](https://keepthewhy.com/assets/badge.svg)](https://keepthewhy.com)
 
@@ -231,7 +231,21 @@ bootstrap().catch(console.error);
 ## License
 
 Copyright © 2025-2026 Igor Zabrodin.
-Licensed under the **PolyForm Noncommercial License 1.0.0**. See the `LICENSE.md` file for details.
+
+Licensed under the **MIT License**. See [`LICENSE`](./LICENSE) for details.
+
+SceneGrid is free to use in commercial products, games, websites, and applications.
 
 ---
 
+## Support & Sponsorship
+
+If SceneGrid helps your project, consider supporting its development:
+
+- 💰 **[GitHub Sponsors](https://github.com/sponsors/rapt0p7)** — Recurring support
+- ☕ **[Buy Me a Coffee](https://buymeacoffee.com/rapt0p7)** — One-time tip
+- 🎁 **[Patreon](https://patreon.com/rapt0p7)** — Join the community
+
+**SceneGrid Studio** (Commercial SaaS) is coming soon — a professional-grade authoring and testing platform for complex audio projects.
+
+---
