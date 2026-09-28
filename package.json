@@ -22,7 +22,7 @@
     ],
     "type": "module",
     "scripts": {
-        "build": "npm run build --workspaces --if-present",
+        "build": "npm run build -w @scene-grid/shared && npm run build -w @scene-grid/engine && npm run build -w @scene-grid/cli -w @scene-grid/debugger -w @scene-grid/inspector -w @scene-grid/mcp-server",
         "dev": "npm run dev --workspace=examples",
         "generate-schema": "node ./scripts/generate-schema.mjs",
         "changelog": "git cliff -o CHANGELOG.md",
