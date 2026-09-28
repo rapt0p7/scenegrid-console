@@ -14,7 +14,7 @@
         "versionArgs": ["--workspaces"]
     },
     "hooks": {
-        "before:init": ["npm run lint", "npm run test"],
+        "before:init": ["npm run lint:ci", "npm run test"],
         "after:bump": "npx git-cliff --tag v${version} -o CHANGELOG.md && git add CHANGELOG.md",
         "after:release": "npm publish --workspaces"
     }
