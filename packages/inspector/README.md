@@ -50,7 +50,7 @@ Open `http://localhost:<YOUR_PORT>/inspector.html` in a new tab alongside your g
 
 ## How It Works
 
-* **Telemetry Observer**: Connects to the engine's `TelemetryWorker` via native `MessagePort`s and receives standardized JSON telemetry frames (`VOICE_STARTED`, `RTPC_UPDATED`, `SNAPSHOT_ACTIVATED`). 
+* **Telemetry Observer**: Connects to the engine's `TelemetryWorker` via native `MessagePort`s and receives standardized JSON telemetry frames (`LIFECYCLE`, `CAUSE_CHAIN`, `SNAPSHOT`, `RAM_REPORT`).
 * **Throttling & Buffering**: Audio state can change thousands of times per second (e.g., during rapid RTPC parameter sweeps). The Inspector applies strict debouncing and throttling via an internal telemetry store (`useTelemetryBus`) to prevent React from re-rendering out of control.
 * **Visualization**: Updates the `AudioGraph` (mapping nodes and edges), `PolyphonyCounter` (tracking active voices), and the `TimelineScrubber` (visualizing Snapshot transitions).
 

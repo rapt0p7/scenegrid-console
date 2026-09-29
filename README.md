@@ -1,7 +1,13 @@
 # SceneGrid: Audio Observability & Runtime Platform
 
+[![Publish to NPM](https://github.com/rapt0p7/scenegrid-console/actions/workflows/publish.yml/badge.svg)](https://github.com/rapt0p7/scenegrid-console/actions/workflows/publish.yml)
+[![CI Checks](https://github.com/rapt0p7/scenegrid-console/actions/workflows/ci.yml/badge.svg)](https://github.com/rapt0p7/scenegrid-console/actions/workflows/ci.yml)
 [![npm engine](https://img.shields.io/npm/v/@scene-grid/engine.svg?style=flat-square&color=cb3837)](https://www.npmjs.com/package/@scene-grid/engine)
 [![npm inspector](https://img.shields.io/npm/v/@scene-grid/inspector.svg?style=flat-square&color=007acc)](https://www.npmjs.com/package/@scene-grid/inspector)
+[![npm debugger](https://img.shields.io/npm/v/@scene-grid/debugger.svg?style=flat-square&color=9c27b0)](https://www.npmjs.com/package/@scene-grid/debugger)
+[![npm shared](https://img.shields.io/npm/v/@scene-grid/shared.svg?style=flat-square&color=4caf50)](https://www.npmjs.com/package/@scene-grid/shared)
+[![npm cli](https://img.shields.io/npm/v/@scene-grid/cli.svg?style=flat-square&color=ff9800)](https://www.npmjs.com/package/@scene-grid/cli)
+[![npm mcp-server](https://img.shields.io/npm/v/@scene-grid/mcp-server.svg?style=flat-square&color=e91e63)](https://www.npmjs.com/package/@scene-grid/mcp-server)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Tested with Vitest](https://img.shields.io/badge/tested_with-Vitest-729B1B.svg?style=flat-square&logo=vitest)](https://vitest.dev/)
 [![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg?style=flat-square)](https://github.com/rapt0p7/scenegrid-console)

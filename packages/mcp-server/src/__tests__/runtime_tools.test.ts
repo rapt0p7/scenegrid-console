@@ -291,8 +291,8 @@ describe('runtime tools', () => {
         it('returns metadata combined with computed PCM size', async () => {
             const { inspectPcmWeightHandler } = await import('../runtime_tools.js');
             const cli = await import('@scene-grid/cli');
-            (cli.extractMetadata as any).mockResolvedValue({ durationSec: 10, channels: 2, sampleRate: 44100 });
-            (cli.calculatePCMSize as any).mockReturnValue(3.36);
+            cli.extractMetadata.mockResolvedValue({ durationSec: 10, channels: 2, sampleRate: 44100 });
+            cli.calculatePCMSize.mockReturnValue(3.36);
 
             const result = await inspectPcmWeightHandler('file.wav');
 
@@ -317,9 +317,9 @@ describe('runtime tools', () => {
             (fs.readdirSync as any).mockReturnValue(['a.wav', 'b.ogg', 'ignore.txt']);
             (fs.statSync as any).mockReturnValue({ isFile: () => true });
 
-            (cli.extractMetadata as any).mockResolvedValue({ durationSec: 10, channels: 2, sampleRate: 44100 });
-            (cli.calculatePCMSize as any).mockReturnValue(3.36);
-            (cli.routeAsset as any).mockImplementation((_s: number, _q: number, basename: string) =>
+            cli.extractMetadata.mockResolvedValue({ durationSec: 10, channels: 2, sampleRate: 44100 });
+            cli.calculatePCMSize.mockReturnValue(3.36);
+            cli.routeAsset.mockImplementation((_s: number, _q: number, basename: string) =>
                 basename === 'a.wav' ? 'chunk' : 'ladder'
             );
 
@@ -435,7 +435,9 @@ describe('runtime tools', () => {
         it('contextConventionsHandler reads AGENTS.md', async () => {
             const { contextConventionsHandler } = await import('../runtime_tools.js');
             const fs = await import('node:fs');
-            (fs.existsSync as any).mockImplementation((path: string) => path.includes('AGENTS.md') && !path.includes('.agents'));
+            (fs.existsSync as any).mockImplementation(
+                (path: string) => path.includes('AGENTS.md') && !path.includes('.agents')
+            );
             (fs.readFileSync as any).mockReturnValue('Mock AGENTS.md content');
 
             const result = await contextConventionsHandler('some/workspace');
@@ -514,7 +516,9 @@ describe('runtime tools', () => {
                 });
             });
 
-            await expect(getSchemaHandler('dereferenced', 'ISoundConfig')).rejects.toThrow('Slice ISoundConfig not found');
+            await expect(getSchemaHandler('dereferenced', 'ISoundConfig')).rejects.toThrow(
+                'Slice ISoundConfig not found'
+            );
         });
     });
 });
