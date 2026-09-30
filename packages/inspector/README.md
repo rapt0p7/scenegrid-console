@@ -3,6 +3,7 @@
 > Real-time telemetry and visual inspector interface for SceneGrid
 
 [![npm version](https://badge.fury.io/js/@scene-grid%2Finspector.svg)](https://badge.fury.io/js/@scene-grid%2Finspector)
+[![Socket Badge](https://socket.dev/api/badge/npm/package/@scene-grid/inspector)](https://socket.dev/npm/package/@scene-grid/inspector)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `@scene-grid/inspector` is a comprehensive, standalone React application for deep telemetry analysis of the `@scene-grid/engine`. It transforms opaque audio behavior into a highly observable, transparent graph, allowing developers to debug memory leaks, phase coherence issues, and routing visually.
@@ -18,7 +19,7 @@ npm install -D @scene-grid/inspector
 
 ## Quick Start
 
-The Inspector is distributed as a side-effecting React application that automatically mounts itself to a specific DOM node. 
+The Inspector is distributed as a side-effecting React application that automatically mounts itself to a specific DOM node.
 
 Because it connects to your game engine via an HTML5 `SharedWorker`, it runs entirely in a separate browser tab while maintaining real-time communication with **zero networking overhead**—as long as both tabs share the same origin (e.g., `localhost`).
 
@@ -37,7 +38,7 @@ Create an `inspector.html` file in your project's `public/` directory (or config
 <body>
     <!-- The React app will automatically mount here -->
     <div id="inspector-root"></div>
-    
+
     <!-- Import the inspector bundle -->
     <script type="module">
         import '@scene-grid/inspector';

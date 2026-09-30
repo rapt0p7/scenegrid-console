@@ -3,6 +3,7 @@
 > Embedded in-game Tweakpane diagnostic UI for debugging the SceneGrid audio engine
 
 [![npm version](https://badge.fury.io/js/@scene-grid%2Fdebugger.svg)](https://badge.fury.io/js/@scene-grid%2Fdebugger)
+[![Socket Badge](https://socket.dev/api/badge/npm/package/@scene-grid/debugger)](https://socket.dev/npm/package/@scene-grid/debugger)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `@scene-grid/debugger` is a lightweight, floating UI overlay (powered by Tweakpane) that attaches directly to a running `@scene-grid/engine` instance. It provides instant in-game access to test RTPCs, spatial audio panning, events, and smart loops without needing to run a separate inspector application.
@@ -28,11 +29,11 @@ await audio.init();
 if (process.env.NODE_ENV !== 'production') {
     import('@scene-grid/debugger').then(({ attachDebugUI, initAudioDebugPanel }) => {
         // Attaches the debug canvas overlay (e.g., for spatial visualizers)
-        attachDebugUI(audio, { 
+        attachDebugUI(audio, {
             wrapperSelector: '#wrapper', // Your game's main container
-            workletLoader: WorkletLoader 
+            workletLoader: WorkletLoader
         });
-        
+
         // Initializes the floating Tweakpane panel
         initAudioDebugPanel(audio);
     });

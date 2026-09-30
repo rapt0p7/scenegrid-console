@@ -1,0 +1,2 @@
+- name: OpenSpec Badge
+  uses: wearetechnative/openspec-badge-action@v1.1.1

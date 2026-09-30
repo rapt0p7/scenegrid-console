@@ -3,6 +3,7 @@
 > Foundation types, telemetry transport, and mathematical utilities for SceneGrid
 
 [![npm version](https://badge.fury.io/js/@scene-grid%2Fshared.svg)](https://badge.fury.io/js/@scene-grid%2Fshared)
+[![Socket Badge](https://socket.dev/api/badge/npm/package/@scene-grid/shared)](https://socket.dev/npm/package/@scene-grid/shared)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `@scene-grid/shared` is the absolute foundation of the SceneGrid ecosystem. It enforces strict vocabulary, domain types, and mathematical consistency across the entire platform, guaranteeing that the engine, CLI, Inspector UI, and external AI agents speak the exact same language.
@@ -23,8 +24,8 @@ Because this is a library of shared utilities, it has no standalone execution fl
 
 ## Constraints & Limitations
 
-* **Zero Dependencies**: To guarantee absolute portability across vastly different environments, this package heavily restricts external dependencies. 
-* **Environment Agnostic**: Code in this package is strictly isomorphic TypeScript/JavaScript. It must never reference environment-specific globals like `window`, `document`, or `process`. 
+* **Zero Dependencies**: To guarantee absolute portability across vastly different environments, this package heavily restricts external dependencies.
+* **Environment Agnostic**: Code in this package is strictly isomorphic TypeScript/JavaScript. It must never reference environment-specific globals like `window`, `document`, or `process`.
 * **Side-Effect Free**: All math evaluators and data transformers are pure functions.
 
 ## License

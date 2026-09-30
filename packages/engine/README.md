@@ -3,6 +3,7 @@
 > High-performance AudioWorklet-based runtime engine for SceneGrid
 
 [![npm version](https://badge.fury.io/js/@scene-grid%2Fengine.svg)](https://badge.fury.io/js/@scene-grid%2Fengine)
+[![Socket Badge](https://socket.dev/api/badge/npm/package/@scene-grid/engine)](https://socket.dev/npm/package/@scene-grid/engine)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `@scene-grid/engine` is the core runtime package that orchestrates complex signal routing, polyphony culling, and deterministic parameter control through a high-performance, AudioWorklet-based engine. It transforms static audio configurations into live playback while guaranteeing zero Garbage Collection (GC) overhead at runtime.
@@ -71,7 +72,7 @@ await audio.streams.load('backgroundMain');
 // 6. Unlock the Web Audio API context within a user gesture!
 document.addEventListener('pointerup', async () => {
     await audio.unlock();
-    
+
     // 7. Play sounds directly or trigger events
     audio.play('backgroundMain', { isLoop: true });
     audio.postEvent('start_combat_music');
