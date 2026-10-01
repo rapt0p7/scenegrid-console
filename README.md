@@ -19,13 +19,11 @@
 > **Understand your audio system before it plays.**
 > _Independent research project started ~mid 2025._
 
-**SceneGrid** is an observability-first debugging and execution platform for real-time Web Audio. Built with a strict Hexagonal Architecture and Zero-Allocation memory management, it is designed for complex, state-driven applications (games, interactive web environments) where audio predictability and FPS stability are mission-critical.
+**SceneGrid** is an advanced runtime audio engine for the web, designed to bridge the gap between AAA desktop game engines and browser-based experiences. It acts as an **audio middleware** (conceptually similar to FMOD or Wwise), allowing teams to build complex, data-driven audio behaviors without writing scattered trigger code.
 
-Conceptually, the system bridges the gap between:
+**What problem does it solve?** Modern web games lack the mature, data-driven audio middleware that PC and Console developers take for granted. SceneGrid eliminates Garbage Collection (GC) spikes, untangles spaghetti audio logic, and provides deep visual observability into the live signal graph.
 
-- **A System-Level Debugger:** Causal tracing, real-time state overrides (What-If testing), and visual observability.
-- **A Runtime Engine:** High-performance, GC-safe audio execution.
-- **Hardware Consoles:** Total recall capabilities via snapshots and multi-layered mix states.
+**Who is this for?** It is built for teams working with professional audio engineers who are used to the capabilities of mature audio middleware, but feel restricted by the web platform's native tools. If you need data to drive your sound — not raw code — this is for you.
 
 ---
 
@@ -38,6 +36,123 @@ SceneGrid is an **Enterprise-grade** tool designed to solve complex routing, pol
 
 ---
 
+## 🚀 Quick Start
+
+The system follows a strict **Data-Driven** pattern. Defining assets and routing upfront enables SceneGrid to validate the signal graph and trace errors before any sound is even triggered.
+
+### 1. Installation
+
+Install the engine and the optional visual inspector (debugger):
+
+```bash
+npm install @scene-grid/engine
+npm install @scene-grid/debugger --save-dev
+```
+
+### 2. Initialization
+
+Here is a standard bootstrap flow demonstrating strong typing, asset loading, and attaching the dev tools (based on our `examples/main.ts`):
+
+```typescript
+import { AudioEngine, WorkletLoader } from '@scene-grid/engine';
+
+// Import your data-driven manifests (routing, snapshots, events, etc.)
+import { Buses, Snapshots, SoundMap, Events, BankManifest, SoundManifest } from './audio-config/index.js';
+
+// 1. Strongly type the engine by extending the SceneGridRegistry
+declare module '@scene-grid/engine' {
+    export interface SceneGridRegistry {
+        SoundIds: keyof typeof SoundMap;
+        EventIds: keyof typeof Events;
+        BankIds: keyof typeof BankManifest;
+        SnapshotIds: keyof typeof Snapshots;
+    }
+}
+
+async function bootstrap() {
+    // 2. Instantiate the Engine
+    const audio = new AudioEngine({
+        manifest: SoundManifest,
+        buses: Buses,
+        snapshots: Snapshots,
+        soundMap: SoundMap,
+        events: Events,
+        banks: BankManifest,
+        globalVoiceLimit: 32 // Critical for GC Safety & Culling
+    });
+
+    // 3. Subscribe to lifecycle events (Decoupled from UI)
+    audio.events.on('load:progress', ({ progress, lastLoadedResource }) => {
+        console.log(`Loading: ${Math.round(progress * 100)}% (${lastLoadedResource})`);
+    });
+
+    // 4. Initialize engine and load assets
+    await audio.init({ isStrictValidation: false });
+    await audio.banks.load('music');
+
+    // 5. Browser Security: Unlock AudioContext via User Interaction
+    globalThis.addEventListener('pointerup', async () => {
+        await audio.unlock();
+        await audio.mixer.setState('idle');
+
+        // Trigger strongly-typed sounds
+        audio.play('backgroundMain', { isLoop: true });
+
+        // 6. Attach the visual inspector (only in development)
+        if (process.env.NODE_ENV !== 'production') {
+            const { attachDebugUI, initAudioDebugPanel } = await import('@scene-grid/debugger');
+            await attachDebugUI(audio, { wrapperSelector: '#wrapper', workletLoader: WorkletLoader });
+            initAudioDebugPanel(audio);
+        }
+    }, { once: true });
+}
+
+bootstrap().catch(console.error);
+```
+
+---
+
+## ✨ Features at a Glance
+
+* **Zero-Allocation Object Pools:** Eliminates GC spikes during heavy gameplay by managing voices via `O(1)` free-list stacks.
+* **Deterministic Voice Culling:** Transparently virtualizes low-priority sounds in the background to guarantee strict FPS stability.
+* **Total Recall Snapshots:** Safely layer mix states (e.g., "Combat Layer" over "Explore Layer") with zero-latency protection and crossfading.
+* **Lookahead Sidechain Ducking:** Predictive attenuation powered by an `AudioWorklet` to duck background music *before* the trigger peak.
+* **Deterministic Parameter Control (RTPC):** Connect game variables to audio properties with fixed, FPS-independent slew rates (inertia).
+* **Predictable Parallel Routing:** Tap and send audio to global FX chains (like Reverbs) without breaking acyclic graph observability.
+* **Horizontal Music Sequencing:** Built-in musical quantization and audio sprites for seamless, beat-accurate transitions.
+---
+
+## 🏗️ Architecture & Documentation
+
+The system is built using **Hexagonal Architecture (Ports & Adapters)**, ensuring that the core reasoning logic remains independent of the Web Audio API. This decoupling lays the foundation for future offline simulation, allowing the core domain to mathematically evaluate mixer states without requiring active audio playback.
+
+| Layer              | Responsibility      | Content                                                           |
+| ------------------ | ------------------- | ----------------------------------------------------------------- |
+| **Domain**         | Pure Business Logic | Mixer state, Routing logic, Culling rules, Port definitions.      |
+| **Infrastructure** | Technical Adapters  | Web Audio Node implementations, Worklet processors, File loading. |
+| **Application**    | Orchestration       | System bootstrapping, high-level API Facades (`AudioEngine`).     |
+| **Kernel**         | Math & Performance  | RTPC modulation engine, curve evaluation, high-speed math.        |
+| **Shared**         | Cross-cutting       | Mathematical constants, shared types, and universal guards.       |
+
+
+### 📚 Documentation & Diagrams
+
+For a deep dive into the system's topology, including **C4 Container Diagrams** and the complete **Audio Signal Flow**, please refer to the detailed documentation:
+
+- 🇬🇧 [Audio System Architecture - English](./docs/ARCHITECTURE.md)
+- 🇷🇺 [Архитектура Аудио Системы - Русский](./docs/ARCHITECTURE[RU].md)
+
+---
+
+## 🎛️ Audio Debugger & Visualizer (DevTools MVP)
+
+Because SceneGrid separates Domain Logic from Web Audio Infrastructure, the visual tools are provided as a completely independent package: **`@scene-grid/inspector`**.
+
+Act as a true audio engineer: monitor Bus levels, RMS envelopes, and Spectrum Analysis to ensure your mix stays out of the red, and trace exactly why a specific snapshot or RTPC curve is affecting your audio—all without adding a single byte to your production runtime bundle.
+
+---
+
 ## 📦 Monorepo Packages
 
 SceneGrid is structured as a monorepo to enforce strict architectural boundaries between the runtime engine and developer tooling:
@@ -47,84 +162,6 @@ SceneGrid is structured as a monorepo to enforce strict architectural boundaries
 - **`@scene-grid/shared`**: High-performance math kernels, randomizers, and shared domain types.
 - **`@scene-grid/cli`**: Ahead-of-Time audio processing and manifest generation utilities.
 - **`@scene-grid/mcp-server`**: A Model Context Protocol (MCP) server providing standardized external access to engine telemetry and control APIs.
-
----
-
-## 📚 Documentation & Architecture Diagrams
-
-For a deep dive into the system's topology, including **C4 Container Diagrams** and the complete **Audio Signal Flow**, please refer to the detailed documentation:
-
-- 🇬🇧 [Audio System Architecture - English](./docs/ARCHITECTURE.md)
-- 🇷🇺 [Архитектура Аудио Системы - Русский](./docs/ARCHITECTURE[RU].md)
-
----
-
-## 1. System Architecture & Observability
-
-Audio systems usually fail not because playback is hard, but because system behavior is opaque. SceneGrid enforces a strict hierarchical flow to ensure phase coherence, predictable routing, and deep observability. No bypass routes are permitted.
-
-### The Core Hierarchy
-
-**Source (Voice) → Individual Channel (NodeChain) → Group Bus → Master Output**
-
-- **Zero-Allocation Object Pools:** Each sound is fully isolated with its own local processing chain. Voices are managed via a Free-list stack, ensuring `O(1)` access time and **eliminating Garbage Collection (GC) spikes** during heavy gameplay.
-- **Deterministic Voice Culling:** The `PlaybackScheduler` and `VoiceCullingArbiter` monitor active voice limits. Low-priority sounds are transparently virtualized (computed in the background without AudioNodes), maintaining strict FPS stability.
-- **Data-Driven Buses:** Function as group channels with a fixed channel strip structure. Routing is immutable, preventing uncontrolled summing and making the entire audio graph visually traceable.
-
-### Master Section
-
-The single exit point to the hardware destination includes:
-
-- A master fader and **Brickwall Limiter** (`TinyLimiterNode`).
-- **`silentTail`:** A zero-volume output branch that keeps DSP processors active without leaking internal "trigger" audio into the final mix.
-
----
-
-## 2. Advanced Audio Mechanics
-
-### Lookahead Sidechain Ducking
-
-Powered by a custom `AudioWorklet`, the system supports predictive ducking with cascade protection—running entirely on the audio thread, not the main UI thread.
-
-1. **Hard Clipping Protection:** A `WaveShaperNode` safely clamps overlapping triggers.
-2. **Predictive Attenuation:** A `DelayNode` is inserted into the target bus, allowing the gain to drop _before_ the trigger peak for a pop-free, professional attack.
-
-### Total Recall (VCA-Style Snapshots)
-
-The system supports **Total Recall** using a VCA (Voltage-Controlled Amplifier) multiplication model.
-
-- Mix states can be safely layered (e.g., a "Combat Layer" atop an "Explore Layer").
-- The `MixerTransitionEngine` calculates final values, automatically handling "cold starts" with zero-latency protection to prevent audio bursts.
-
-### Deterministic Parameter Control (RTPC)
-
-A virtual patchbay connecting game data to audio parameters, driven by a centralized `EngineTicker` to protect the main rendering thread from high-frequency `AudioParam` spamming.
-
-- **Global Slew Rates:** Designers define FPS-independent inertia (`attackMs` / `releaseMs`) ensuring predictable transitions regardless of frame drops.
-- **Advanced Math Kernels:** Built-in evaluators for `s-curve`, `logarithmic`, and custom Piecewise Linear mappings.
-
-### Predictable Parallel Routing (Auxiliary Sends)
-
-Parallel routing allows for shared effects without breaking graph observability. Tapping occurs strictly **Post-Filter** to ensure processed audio is sent to the FX chain, significantly reducing CPU overhead while maintaining a clear, acyclic signal path.
-
----
-
-## 3. Deterministic Orchestration
-
-### Horizontal Sequencing
-
-Instead of chaotic, scattered trigger calls across your game code, SceneGrid uses a strict, dedicated `Sequencer` for horizontal music transitions.
-
-- **Audio Sprites & Quantization:** Seamlessly loops regions within a single file and syncs transitions to a musical grid (BPM/Bar).
-- **Separation of Concerns:** Horizontal sequencing (when a section plays) is entirely decoupled from vertical intensity (volume/layers driven by Snapshots and RTPC). This strict separation allows DevTools to accurately predict, trace, and visualize the mix state without hidden side effects.
-
----
-
-## 🎛️ Audio Debugger & Visualizer (DevTools MVP)
-
-Because SceneGrid separates Domain Logic from Web Audio Infrastructure, the visual tools are provided as a completely independent package: **`@scene-grid/inspector`**.
-
-Act as a true audio engineer: monitor Bus levels, RMS envelopes, and Spectrum Analysis to ensure your mix stays out of the red, and trace exactly why a specific snapshot or RTPC curve is affecting your audio—all without adding a single byte to your production runtime bundle.
 
 ---
 
@@ -154,81 +191,6 @@ _Note: Core stability and Parameter Resolution Pipeline are part of the v1.0 mil
 - **SceneGrid Studio (Standalone Web App):** A fully decoupled, visual authoring and simulation tool. Build routing graphs, draw RTPC curves, and simulate mix states offline. Changes are pushed instantly to your running game via the Live Bridge.
 - **Environment System:** Logic-based Reverb Zones and Acoustic States utilizing the existing Aux Sends.
 - **Dattorro Reverb Integration:** Implementing high-quality, algorithmic plate reverb natively as the standard FX Bus plugin for acoustic environments.
-
----
-
-## 🏗️ Architecture: The Hexagonal Approach
-
-The system is built using **Hexagonal Architecture (Ports & Adapters)**, ensuring that the core reasoning logic remains independent of the Web Audio API. This decoupling lays the foundation for future offline simulation, allowing the core domain to mathematically evaluate mixer states without requiring active audio playback.
-
-| Layer              | Responsibility      | Content                                                           |
-| ------------------ | ------------------- | ----------------------------------------------------------------- |
-| **Domain**         | Pure Business Logic | Mixer state, Routing logic, Culling rules, Port definitions.      |
-| **Infrastructure** | Technical Adapters  | Web Audio Node implementations, Worklet processors, File loading. |
-| **Application**    | Orchestration       | System bootstrapping, high-level API Facades (`AudioEngine`).     |
-| **Kernel**         | Math & Performance  | RTPC modulation engine, curve evaluation, high-speed math.        |
-| **Shared**         | Cross-cutting       | Mathematical constants, shared types, and universal guards.       |
-
----
-
-## Quick Start: System Initialization
-
-The system follows a **Data-Driven** pattern. Defining assets and routing upfront is what enables SceneGrid to validate the signal graph, trace errors, and prevent routing loops before any sound is even triggered.
-
-```typescript
-import { AudioEngine, BankId } from '@scene-grid/engine';
-// Import the decoupled debugger in development mode
-import { AudioDebugger } from '@scene-grid/inspector';
-
-// Configuration manifests (Data-Driven Graph)
-import { Buses, Snapshots, SoundMap, RTPCManifest, Events, BankManifest } from './audio-config';
-import soundManifest from './soundManifest';
-
-async function bootstrap() {
-    // 1. Instantiate the Engine with a centralized configuration
-    const audio = new AudioEngine({
-        manifest: soundManifest,
-        buses: Buses,
-        snapshots: Snapshots,
-        soundMap: SoundMap,
-        rtpcManifest: RTPCManifest,
-        events: Events,
-        banks: BankManifest,
-        globalVoiceLimit: 32 // Critical for Culling & GC Safety
-    });
-
-    // 2. Optional: Attach the Inspector (automatically excluded in Prod builds)
-    if (process.env.NODE_ENV !== 'production') {
-        const inspector = new AudioDebugger(audio);
-        inspector.mount(document.body);
-    }
-
-    // 3. Subscribe to Lifecycle Events (Decoupled from UI)
-    audio.events.on('load:progress', ({ progress, lastLoadedResource }) => {
-        console.log(`[Demo UI] Loading Audio: ${Math.round(progress * 100)}%`);
-    });
-
-    // 4. Initialize Engine
-    await audio.init({ isStrictValidation: false });
-
-    // 5. Download assets with auto codec-laddering
-    await audio.banks.load('music' as BankId);
-
-    // 6. Browser Security: Unlock AudioContext via User Interaction
-    globalThis.addEventListener(
-        'pointerup',
-        async () => {
-            await audio.unlock();
-            await audio.mixer.setState('idle');
-
-            audio.play('backgroundMusic', { isLoop: true });
-        },
-        { once: true }
-    );
-}
-
-bootstrap().catch(console.error);
-```
 
 ---
 
