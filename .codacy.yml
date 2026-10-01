@@ -1,0 +1,14 @@
+---
+exclude_paths:
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.spec.ts'
+  - '**/*.spec.tsx'
+  - '**/*.bench.ts'
+  - '**/*.bench.tsx'
+  - '**/__tests__/**'
+  - '**/__mocks__/**'
+  - 'examples/**'
+  - 'vitest.config.ts'
+  - 'vitest.workspace.ts'
+  - 'vitest.setup.ts'
