@@ -3,7 +3,6 @@
 > Real-time telemetry and visual inspector interface for SceneGrid
 
 [![npm version](https://badge.fury.io/js/@scene-grid%2Finspector.svg)](https://badge.fury.io/js/@scene-grid%2Finspector)
-[![Socket Badge](https://socket.dev/api/badge/npm/package/@scene-grid/inspector)](https://socket.dev/npm/package/@scene-grid/inspector)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `@scene-grid/inspector` is a comprehensive, standalone React application for deep telemetry analysis of the `@scene-grid/engine`. It transforms opaque audio behavior into a highly observable, transparent graph, allowing developers to debug memory leaks, phase coherence issues, and routing visually.

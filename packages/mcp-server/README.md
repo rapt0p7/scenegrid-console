@@ -3,7 +3,6 @@
 > Model Context Protocol (MCP) server for the SceneGrid virtual mixing console
 
 [![npm version](https://badge.fury.io/js/@scene-grid%2Fmcp-server.svg)](https://badge.fury.io/js/@scene-grid%2Fmcp-server)
-[![Socket Badge](https://socket.dev/api/badge/npm/package/@scene-grid/mcp-server)](https://socket.dev/npm/package/@scene-grid/mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 The SceneGrid MCP Server provides diagnostic and orchestration tools for the SceneGrid audio engine. It acts as a bridge, allowing AI Agents (like Claude Desktop or Cursor) to query the engine's internal telemetry, trigger dynamic changes, and utilize guided Prompts through standard MCP (Model Context Protocol).

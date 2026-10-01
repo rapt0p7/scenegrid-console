@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import path from 'node:path';
-import { defineConfig } from 'vitest/config';
+import { defineConfig, configDefaults } from 'vitest/config';
 
 // oxlint-disable-next-line no-underscore-dangle
 const __filename = import.meta.filename;
@@ -15,9 +15,13 @@ export default defineConfig({
         include: ['packages/*/src/**/*.test.ts', 'packages/*/src/**/*.spec.ts'],
         pool: 'forks',
         maxWorkers: 1,
+        reporters: ['junit', ...configDefaults.reporters],
+        outputFile: {
+            junit: './.vitest/junit/test-report.junit.xml'
+        },
         coverage: {
             provider: 'v8',
-            reporter: ['text', 'html', 'lcov'],
+            reporter: ['text', 'html', 'lcov', 'json'],
             exclude: [
                 'node_modules/',
                 '**/dist/**',

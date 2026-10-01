@@ -7,6 +7,7 @@
 [![Tested with Vitest](https://img.shields.io/badge/tested_with-Vitest-729B1B.svg?style=flat-square&logo=vitest)](https://vitest.dev/)
 [![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg?style=flat-square)](https://github.com/rapt0p7/scenegrid-console)
 [![Mutation Score](https://img.shields.io/badge/Mutation_Score-92%25-brightgreen)](https://stryker-mutator.io)
+[![codecov](https://codecov.io/gh/rapt0p7/scenegrid-console/graph/badge.svg?token=3KQ9G3APV4)](https://codecov.io/gh/rapt0p7/scenegrid-console)
 ![specs](https://raw.githubusercontent.com/rapt0p7/scenegrid-console/gh-pages/badges/number_of_specs.svg)
 ![requirements](https://raw.githubusercontent.com/rapt0p7/scenegrid-console/gh-pages/badges/number_of_requirements.svg)
 [![Code health](https://api.repowise.dev/badge/health/rapt0p7/scenegrid-console.svg)](https://repowise.dev/repo/rapt0p7/scenegrid-console)

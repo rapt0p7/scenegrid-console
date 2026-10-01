@@ -1,3 +1,0 @@
-echo "Updating project documentation..."
-npm run notebooklm:update
-echo "Documentation updated."

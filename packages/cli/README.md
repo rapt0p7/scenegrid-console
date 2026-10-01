@@ -3,7 +3,6 @@
 > Command-line asset pipeline and AOT audio processing for SceneGrid
 
 [![npm version](https://badge.fury.io/js/@scene-grid%2Fcli.svg)](https://badge.fury.io/js/@scene-grid%2Fcli)
-[![Socket Badge](https://socket.dev/api/badge/npm/package/@scene-grid/cli)](https://socket.dev/npm/package/@scene-grid/cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `@scene-grid/cli` bridges the gap between raw audio authoring and the strict runtime requirements of the SceneGrid engine. It serves as an automated, Ahead-Of-Time (AOT) pipeline that manages memory quotas, routes assets into streaming or preloaded buckets, and generates strict aliases for runtime type safety.
