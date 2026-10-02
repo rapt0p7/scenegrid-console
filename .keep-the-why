@@ -10,4 +10,5 @@ README, for what Keep the Why actually is.
 - capture-confirmation: confirm-when-unsure
 - source-reference: never
 - dashboard-state: https://rapt0p7.github.io/scenegrid-console/dashboard/live/state.json
+- canonical: https://github.com/rapt0p7/scenegrid-console
 <!-- /keep-the-why:config -->
