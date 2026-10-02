@@ -1,0 +1,495 @@
+{
+ "state-json": 2,
+ "generated": "2026-10-02T16:08:40Z",
+ "dashboard": "0.6.10",
+ "linter": "0.19.0.0",
+ "project": {
+  "id": "rapt0p7---scenegrid-console",
+  "name": "scenegrid-console",
+  "context": "context/",
+  "schema": "0.11.0",
+  "config": {
+   "id": "rapt0p7---scenegrid-console",
+   "context": "context/",
+   "init": "complete",
+   "context-schema": "0.11.0",
+   "capture-confirmation": "confirm-when-unsure",
+   "source-reference": "never",
+   "dashboard-state": "https://rapt0p7.github.io/scenegrid-console/dashboard/live/state.json"
+  },
+  "personal_defaults": {},
+  "config_file": ".keep-the-why",
+  "canonical": "",
+  "root": "",
+  "parent": "",
+  "dashboard_state": "https://rapt0p7.github.io/scenegrid-console/dashboard/live/state.json",
+  "children": [],
+  "git": {
+   "available": true,
+   "head": "1f9c0fe",
+   "head_full": "1f9c0feb51846133e11bbb1e01bdec3075e0e53b",
+   "branch": "main",
+   "remote": "github.com/rapt0p7/scenegrid-console",
+   "upstream": "",
+   "fork": null,
+   "project_subdir": "",
+   "shallow": false
+  }
+ },
+ "topics": [
+  {
+   "file": "chunked-audio-streaming.md",
+   "title": "Chunked Audio Streaming",
+   "index_line": "",
+   "entries": 5,
+   "refs_out": [],
+   "refs_in": [],
+   "status": {
+    "active": 5
+   },
+   "evidence": {
+    "confirmed": 5
+   }
+  },
+  {
+   "file": "data-plane-mutations.md",
+   "title": "data-plane-mutations",
+   "index_line": "",
+   "entries": 1,
+   "refs_out": [],
+   "refs_in": [],
+   "status": {
+    "active": 1
+   },
+   "evidence": {
+    "confirmed": 1
+   }
+  },
+  {
+   "file": "multiplicative-veto.md",
+   "title": "multiplicative-veto",
+   "index_line": "",
+   "entries": 1,
+   "refs_out": [],
+   "refs_in": [],
+   "status": {
+    "active": 1
+   },
+   "evidence": {
+    "confirmed": 1
+   }
+  },
+  {
+   "file": "resource-management.md",
+   "title": "resource-management",
+   "index_line": "",
+   "entries": 1,
+   "refs_out": [],
+   "refs_in": [],
+   "status": {
+    "active": 1
+   },
+   "evidence": {
+    "inferred": 1
+   }
+  },
+  {
+   "file": "worklet-efficiency.md",
+   "title": "worklet-efficiency",
+   "index_line": "",
+   "entries": 1,
+   "refs_out": [],
+   "refs_in": [],
+   "status": {
+    "active": 1
+   },
+   "evidence": {
+    "inferred": 1
+   }
+  }
+ ],
+ "entries": [
+  {
+   "id": "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture-codec-padding",
+   "uuid": null,
+   "file": "chunked-audio-streaming.md",
+   "line": 3,
+   "end_line": 15,
+   "title": "The StreamNode Flip-Flop Architecture & Codec Padding",
+   "type": [
+    "decision"
+   ],
+   "status": "active",
+   "evidence": "confirmed",
+   "source": "design.md (chunked-audio-streamer)",
+   "verification": null,
+   "revisit_when": null,
+   "see": [],
+   "superseded_by": null,
+   "refs": [],
+   "git": {
+    "created": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "last_touched": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "status_history": [
+     {
+      "status": "active",
+      "author": "Igor Zabrodin",
+      "date": "2026-09-06",
+      "commit": "3beeaac"
+     }
+    ]
+   },
+   "findings": []
+  },
+  {
+   "id": "chunked-audio-streaming.md#pause-resume-mechanics-composite-math",
+   "uuid": null,
+   "file": "chunked-audio-streaming.md",
+   "line": 16,
+   "end_line": 26,
+   "title": "Pause & Resume Mechanics (Composite Math)",
+   "type": [
+    "decision"
+   ],
+   "status": "active",
+   "evidence": "confirmed",
+   "source": "design.md (chunked-audio-streamer)",
+   "verification": null,
+   "revisit_when": null,
+   "see": [],
+   "superseded_by": null,
+   "refs": [],
+   "git": {
+    "created": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "last_touched": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "status_history": [
+     {
+      "status": "active",
+      "author": "Igor Zabrodin",
+      "date": "2026-09-06",
+      "commit": "3beeaac"
+     }
+    ]
+   },
+   "findings": []
+  },
+  {
+   "id": "chunked-audio-streaming.md#cache-eviction-policy-os-context-death",
+   "uuid": null,
+   "file": "chunked-audio-streaming.md",
+   "line": 27,
+   "end_line": 37,
+   "title": "Cache Eviction Policy & OS Context Death",
+   "type": [
+    "decision"
+   ],
+   "status": "active",
+   "evidence": "confirmed",
+   "source": "design.md (chunked-audio-streamer)",
+   "verification": null,
+   "revisit_when": null,
+   "see": [],
+   "superseded_by": null,
+   "refs": [],
+   "git": {
+    "created": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "last_touched": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "status_history": [
+     {
+      "status": "active",
+      "author": "Igor Zabrodin",
+      "date": "2026-09-06",
+      "commit": "3beeaac"
+     }
+    ]
+   },
+   "findings": []
+  },
+  {
+   "id": "chunked-audio-streaming.md#gc-pressure-zero-allocation-exceptions",
+   "uuid": null,
+   "file": "chunked-audio-streaming.md",
+   "line": 38,
+   "end_line": 48,
+   "title": "GC Pressure & Zero-Allocation Exceptions",
+   "type": [
+    "decision"
+   ],
+   "status": "active",
+   "evidence": "confirmed",
+   "source": "design.md (chunked-audio-streamer)",
+   "verification": null,
+   "revisit_when": null,
+   "see": [],
+   "superseded_by": null,
+   "refs": [],
+   "git": {
+    "created": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "last_touched": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "status_history": [
+     {
+      "status": "active",
+      "author": "Igor Zabrodin",
+      "date": "2026-09-06",
+      "commit": "3beeaac"
+     }
+    ]
+   },
+   "findings": []
+  },
+  {
+   "id": "chunked-audio-streaming.md#strict-timeline-during-deadline-underruns",
+   "uuid": null,
+   "file": "chunked-audio-streaming.md",
+   "line": 49,
+   "end_line": 60,
+   "title": "Strict Timeline during Deadline Underruns",
+   "type": [
+    "decision"
+   ],
+   "status": "active",
+   "evidence": "confirmed",
+   "source": "design.md (chunked-audio-streamer)",
+   "verification": null,
+   "revisit_when": null,
+   "see": [],
+   "superseded_by": null,
+   "refs": [],
+   "git": {
+    "created": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "last_touched": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-06",
+     "commit": "3beeaac"
+    },
+    "status_history": [
+     {
+      "status": "active",
+      "author": "Igor Zabrodin",
+      "date": "2026-09-06",
+      "commit": "3beeaac"
+     }
+    ]
+   },
+   "findings": []
+  },
+  {
+   "id": "data-plane-mutations.md#data-oriented-polling-for-parameter-updates",
+   "uuid": null,
+   "file": "data-plane-mutations.md",
+   "line": 1,
+   "end_line": 13,
+   "title": "Data-oriented polling for parameter updates",
+   "type": [
+    "decision"
+   ],
+   "status": "active",
+   "evidence": "confirmed",
+   "source": "CHANGELOG.md Phase 18; `InstanceRTPCBinder.ts`",
+   "verification": null,
+   "revisit_when": "the audio engine's parameter binding architecture changes",
+   "see": [],
+   "superseded_by": null,
+   "refs": [],
+   "git": {
+    "created": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-03",
+     "commit": "117354a"
+    },
+    "last_touched": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-03",
+     "commit": "117354a"
+    },
+    "status_history": [
+     {
+      "status": "active",
+      "author": "Igor Zabrodin",
+      "date": "2026-09-03",
+      "commit": "117354a"
+     }
+    ]
+   },
+   "findings": []
+  },
+  {
+   "id": "multiplicative-veto.md#multiplicative-veto-validation-rule",
+   "uuid": null,
+   "file": "multiplicative-veto.md",
+   "line": 1,
+   "end_line": 13,
+   "title": "Multiplicative Veto validation rule",
+   "type": [
+    "decision"
+   ],
+   "status": "active",
+   "evidence": "confirmed",
+   "source": "`MultiplicativeVetoesRule.ts`, docs/architecture commits",
+   "verification": null,
+   "revisit_when": "the engine's gain staging or validation logic changes",
+   "see": [],
+   "superseded_by": null,
+   "refs": [],
+   "git": {
+    "created": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-03",
+     "commit": "117354a"
+    },
+    "last_touched": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-03",
+     "commit": "117354a"
+    },
+    "status_history": [
+     {
+      "status": "active",
+      "author": "Igor Zabrodin",
+      "date": "2026-09-03",
+      "commit": "117354a"
+     }
+    ]
+   },
+   "findings": []
+  },
+  {
+   "id": "resource-management.md#explicit-degradation-over-exceptions-for-voice-exhaustion",
+   "uuid": null,
+   "file": "resource-management.md",
+   "line": 1,
+   "end_line": 13,
+   "title": "Explicit degradation over exceptions for voice exhaustion",
+   "type": [
+    "decision"
+   ],
+   "status": "active",
+   "evidence": "inferred",
+   "source": "`SoundPoolManager.ts`",
+   "verification": null,
+   "revisit_when": "the voice allocation or polyphony system is overhauled",
+   "see": [],
+   "superseded_by": null,
+   "refs": [],
+   "git": {
+    "created": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-03",
+     "commit": "117354a"
+    },
+    "last_touched": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-03",
+     "commit": "117354a"
+    },
+    "status_history": [
+     {
+      "status": "active",
+      "author": "Igor Zabrodin",
+      "date": "2026-09-03",
+      "commit": "117354a"
+     }
+    ]
+   },
+   "findings": []
+  },
+  {
+   "id": "worklet-efficiency.md#pre-calculation-of-audioworklet-coefficients",
+   "uuid": null,
+   "file": "worklet-efficiency.md",
+   "line": 1,
+   "end_line": 13,
+   "title": "Pre-calculation of AudioWorklet coefficients",
+   "type": [
+    "decision"
+   ],
+   "status": "active",
+   "evidence": "inferred",
+   "source": "`ducker.processor.ts`, `lookahead-brickwall-limiter.processor.ts`",
+   "verification": null,
+   "revisit_when": "the `AudioWorkletProcessor` implementations are rewritten",
+   "see": [],
+   "superseded_by": null,
+   "refs": [],
+   "git": {
+    "created": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-03",
+     "commit": "117354a"
+    },
+    "last_touched": {
+     "author": "Igor Zabrodin",
+     "date": "2026-09-03",
+     "commit": "117354a"
+    },
+    "status_history": [
+     {
+      "status": "active",
+      "author": "Igor Zabrodin",
+      "date": "2026-09-03",
+      "commit": "117354a"
+     }
+    ]
+   },
+   "findings": []
+  }
+ ],
+ "authors": [
+  {
+   "name": "Igor Zabrodin",
+   "created": 9,
+   "touched": 9,
+   "superseded": 0,
+   "first": "2026-09-03",
+   "last": "2026-09-06",
+   "evidence": {
+    "confirmed": 7,
+    "inferred": 2
+   }
+  }
+ ],
+ "anonymized": false,
+ "findings": {
+  "errors": 0,
+  "warnings": 0,
+  "items": []
+ },
+ "exported": true,
+ "bodies": "state.body.json"
+}
