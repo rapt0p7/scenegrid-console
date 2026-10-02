@@ -1,6 +1,6 @@
 # Specification
 
-The normative definition of everything Keep the Why reads and writes: the two config files, the machine-wide policy file, the `context/` directory, and the entry format. This file defines *what is valid*, with an example under each artifact; `SKILL.md` and `setup.md` define *what the skill does with it*; `repository-structure.md` says where things go — layout, routing, adoption. Where prose elsewhere and this file disagree, this file wins.
+The normative definition of everything Keep the Why reads and writes: the project config file, the personal file, the machine-wide policy file, a context cache's settings file, the `context/` directory, and the entry format. This file defines *what is valid*, with an example under each artifact; `SKILL.md` and `setup.md` define *what the skill does with it*; `repository-structure.md` says where things go — layout, routing, adoption. Where prose elsewhere and this file disagree, this file wins.
 
 The specification is versioned with the skill: its version is the `metadata.version` in `SKILL.md`'s frontmatter, a project records the version it was last checked against in `context-schema`, and every change that affects an existing project is listed in `migrations.md`. `keep-the-why-lint` is the reference implementation of the mechanically checkable part; its finding codes are named below where they apply.
 
@@ -18,14 +18,19 @@ The specification is versioned with the skill: its version is the `metadata.vers
 | `<context>/<topic>.md` | inside `<context>/`, flat | yes | entries, one file per topic |
 | `~/.keep-the-why/<id>.md` | the developer's home | never | personal settings for one project on one machine |
 | `~/.keep-the-why/config` | the developer's home | never | machine-wide policy, all projects |
+| `~/.keep-the-why/projects.json` | the developer's home | never | the mapping: where each project has been seen on this machine, with a timestamp per path; written by the skill's setup check and by `keep-the-why-dashboard`, read by both (§5.2) |
+| `~/.keep-the-why/cache/<id>/` | the developer's home | never | a read-only context cache of a family member that is not checked out here: a sparse partial clone holding its `.keep-the-why` and its context directory, nothing else (§5.2) |
+| `~/.keep-the-why/cache/<id>.md` | the developer's home | never | that cache's own settings and refresh timestamp, next to the directory, not inside it (§5.1) |
 
 All of these are written and kept current by the skill — the config files by the two wizards and the setup check, `<context>/` by capture and maintenance. A person answers the setup once per project and the occasional question; editing a file by hand is for changing a setting, not part of using it.
 
-Two boundaries hold for every path a config file names. `context` and `pinned-path` are relative to the project root and resolve inside it: no absolute path, no `..` out of the tree, no symlink that leaves it (`E009`). `id` is a plain file name, because it becomes `~/.keep-the-why/<id>.md` (`E010`). A value outside its boundary is not read, written or followed.
+**The project** is the tree under the nearest `.keep-the-why` walking up from the working directory, minus the trees under any deeper `.keep-the-why`. Discovery walks up the way Git walks up to `.git`; the nearest file wins and cuts off everything above it, whether or not a Git boundary lies in between. A directory above several projects and below none is not a project. The four layouts this admits — one repository with one instance, one repository with several, several repositories, one — are in `repository-structure.md`, "Layouts".
+
+Three boundaries hold for every path a config file names. `context` and `pinned-path` are relative to the project root and resolve inside it: no absolute path, no `..` out of the tree, no symlink that leaves it (`E009`). `root`, a path-form `parent` and a path-form child location are relative and resolve inside the Git toplevel — the same rule one level up, since a family member may be a sibling directory in the same repository and nothing else (`E009`). `id` is a plain file name, because it becomes `~/.keep-the-why/<id>.md` (`E010`). A value outside its boundary is not read, written or followed. `canonical`, a URL-form `parent` and a URL-form child location are URLs and never filesystem paths.
 
 ## 2. Config blocks
 
-All three config files share one block syntax:
+All four config files share one block syntax:
 
 ```markdown
 <!-- keep-the-why:<kind> -->
@@ -39,17 +44,21 @@ All three config files share one block syntax:
 - Text outside the markers is prose for humans. The skill neither reads nor depends on it.
 - Multi-part values use ` — ` (space, em dash, space) as the separator, e.g. `every 14 days — last: 2026-07-21`.
 
-Kinds: `config` and `personal-defaults` in `.keep-the-why`; `personal` in `~/.keep-the-why/<id>.md`; `global` in `~/.keep-the-why/config`.
+Kinds: `config`, `personal-defaults` and `children` in `.keep-the-why`; `personal` in `~/.keep-the-why/<id>.md`; `global` in `~/.keep-the-why/config`; `cache` in `~/.keep-the-why/cache/<id>.md`.
 
 ## 3. `.keep-the-why`
 
 ### 3.1 `keep-the-why:config`
 
-Every field but the two pin fields is required in the file (`E002` when missing, except `context-schema`, which is a warning). The "default" column is what the skill backfills — and writes into the file — when it meets a file from before the field existed; a present field with a value outside its set is an error (`E003`) and, for the skill, a question, never a guess.
+Required in the file: `id`, `context`, `init`, `capture-confirmation`, `source-reference` (`E002` when missing) and `context-schema` (a warning, `W001`). The rest — `canonical`, `parent`, `dashboard-state`, `root` and the two pin fields — are optional. The "default" column is what the skill backfills — and writes into the file — when it meets a file from before the field existed; a present field with a value outside its set is an error (`E003`) and, for the skill, a question, never a guess.
 
 | Key | Values | Default | Meaning |
 |---|---|---|---|
-| `id` | file-name token: `[A-Za-z0-9._-]+`, not all dots | — (required, `E002`) | the project's identity across clones, machines and worktrees; keys the personal file. Written once at init: `<owner>---<repo>` from the `origin` remote, or `<uuid>---<folder-name>` without one; `/` and every other filesystem-unsafe character normalized to `-`. Never re-derived. |
+| `id` | file-name token: `[A-Za-z0-9._-]+`, not all dots | — (required, `E002`) | the project's identity across clones, machines and worktrees; keys the personal file. Written once at init: `<owner>---<repo>` from the published remote (`upstream` in a fork checkout, else `origin`) of the nearest `.git` above the file, or `<uuid>---<folder-name>` without one; `/` and every other filesystem-unsafe character normalized to `-`. A `.keep-the-why` below the Git toplevel (an isolated-context mono repo) appends its `root` as a slug: `<owner>---<repo>---<sub-path>`. Never re-derived. |
+| `canonical` | `https://<host>/<path>`, no trailing slash, no `.git` suffix, no query or fragment | absent when the project has no remote; backfilled from the published remote otherwise (`upstream` in a fork checkout, else `origin`) | the repository's stored locator: the normalized URL of the published remote, SSH forms rewritten to `https`. Written once at init and changed only deliberately, when the repository is renamed, transferred or moved; not re-derived (`E003` when malformed). |
+| `parent` | `https://<host>/<path>` (another repository) or a relative directory path inside the Git toplevel | absent (no parent) | the project this one belongs to, when it is part of a larger one: the parent's `canonical`, or its path relative to this `.keep-the-why` in an isolated-context mono repo (`..` for a sub-project whose parent is the repository root). At most one. The parent lists this project back in its `children` block (§3.3); when both sides are in the checkout the linter checks the link both ways (`E015`); a URL is checked for shape only (`E003`), a path for its boundary (`E009`). |
+| `dashboard-state` | `https://<site>/<path>.json`, normally `…/state.json` | absent (no published export) | where this project's dashboard export is published — the `state.json` that `ktw-dashboard --export` writes next to `index.html` and the live badges. Read by another dashboard in *public* mode to browse this project's family member without a checkout; `E003` when malformed. |
+| `root` | relative directory path inside the Git toplevel | absent (the file is at the toplevel) | the path of this `.keep-the-why` relative to the Git toplevel, for a project below it (an isolated-context mono repo). Tooling keys such a project by `(canonical, root)`. Not set on a toplevel (`E003`); never `..` or absolute (`E009`). |
 | `context` | relative directory path inside the project | — (required) | where the why-knowledge lives; `context/` is what the wizard proposes |
 | `init` | `complete` | — (required) | the project has been set up. A file carrying any other value is a leftover to fix; `init: declined` was retired in 0.12.0. |
 | `context-schema` | `X.Y.Z` | `0.2.0` when missing (`W001`) | the newest skill version this project's `context/` has been checked and migrated against; see §7 |
@@ -67,9 +76,10 @@ README, for what Keep the Why actually is.
 
 <!-- keep-the-why:config -->
 - id: acme---widget-service
+- canonical: https://github.com/acme/widget-service
 - context: `context/`
 - init: complete
-- context-schema: 0.17.1
+- context-schema: 0.18.2
 - capture-confirmation: confirm-when-unsure
 - source-reference: never
 <!-- /keep-the-why:config -->
@@ -77,7 +87,7 @@ README, for what Keep the Why actually is.
 
 ### 3.2 `keep-the-why:personal-defaults` (optional)
 
-The values a project offers to a developer who has no personal file for it yet. Same keys as §4 with two exclusions: no `last:` timestamps (`E008`) and no `session`. What happens when a developer meets an offered block is governed by `personal-defaults-policy` (§5).
+The values a project offers to a developer who has no personal file for it yet. The six keys below — §4 without `session`, `migration-prompt` and `source`, and without `last:` timestamps (`E008`). What happens when a developer meets an offered block is governed by `personal-defaults-policy` (§5).
 
 | Key | Values |
 |---|---|
@@ -87,6 +97,33 @@ The values a project offers to a developer who has no personal file for it yet. 
 | `consistency-check` | `every <N> days` \| `no` |
 | `pending-confirmation-check` | `on-start` \| `no` |
 | `local-lint` | `auto` \| `ask` \| `no` |
+
+### 3.3 `keep-the-why:children` (optional)
+
+The parent of a family lists its children here, one line each — and this is the *routing*: where an entry about something belongs when it is not the project the agent happens to be working in. `setup.md`, "Family: routing and writing across projects", says what the skill does with it.
+
+```markdown
+<!-- keep-the-why:children -->
+- <name>: <location> — <scope>
+<!-- /keep-the-why:children -->
+```
+
+- `<name>`: a token in the block grammar's key alphabet, for prose and findings (`unicorn-binance-rest-api`, `widget`); listed once (`E004`).
+- `<location>`: the child's `canonical` (another repository), or a relative directory path inside the Git toplevel (an isolated-context mono repo: `packages/widget`). A path must exist and carry a `.keep-the-why` (`E016`) whose `parent` points back here (`E015`); a URL is checked for shape only. Any other form is `E014`; a path leaving the repository is `E009`.
+- `<scope>`: **required** (`E014`) — one line saying what belongs in that project. It is written once, here; the child does not repeat it, its own `index.md` already lists what it holds.
+
+The parent's own scope is not written: it holds what is family-wide, or clearly its own. The block is not a dependency graph and not a list of every related repository — a family member is a project whose `context/` is organized together with this one, one parent, any number of children. A project with a `children` block may itself carry a `parent`: a family can nest (a cluster with its dashboard as a child, the cluster itself a child of a suite), and the family is then the whole tree — its root, the one ancestor without a `parent`, and everything below it. Each level's block routes among its own children only; routing and writing follow the parent chain (`setup.md`, "Family: routing and writing across projects").
+
+Example, the parent of a suite:
+
+```markdown
+<!-- keep-the-why:children -->
+- unicorn-binance-rest-api: https://github.com/oliver-zehentleitner/unicorn-binance-rest-api — REST client, endpoint coverage, rate limits
+- unicorn-binance-websocket-api: https://github.com/oliver-zehentleitner/unicorn-binance-websocket-api — stream client, websocket libraries, reconnect behaviour
+<!-- /keep-the-why:children -->
+```
+
+and a child's config line: `- parent: https://github.com/oliver-zehentleitner/unicorn-binance-suite`.
 
 ## 4. `~/.keep-the-why/<id>.md` — `keep-the-why:personal`
 
@@ -125,6 +162,8 @@ One file per machine, all projects.
 |---|---|---|---|
 | `personal-defaults-policy` | `always-ask` \| `auto-accept` | asked the first time it matters | what to do when a project offers `personal-defaults` and this developer has no personal file for it yet |
 | `session` | `attended` \| `unattended` | `attended` | whether sessions on this machine have someone present to answer; a personal file's own `session` line wins for its project |
+| `cache-refresh` | `every <N> days` \| `no` | `every 1 day`, asked once when the first cache is created | how often a context cache is pulled before it is read; a cache file's own `refresh` line wins for that cache (`W002` when malformed) |
+| `cache-offline` | `ask` \| `read-stale` \| `stop` | `ask` | what to do when a cache cannot be pulled: ask, read it and say its date, or stop; a cache file's own `offline` line wins (`E003` when malformed) |
 
 Example:
 
@@ -134,6 +173,47 @@ Example:
 - session: unattended
 <!-- /keep-the-why:global -->
 ```
+
+### 5.1 `~/.keep-the-why/cache/<id>.md` — `keep-the-why:cache`
+
+One file per cache, next to the cache directory `~/.keep-the-why/cache/<id>/`, never inside it (the clone stays untouched and its `git status` clean). Written when the cache is created.
+
+| Key | Values | Default | Meaning |
+|---|---|---|---|
+| `canonical` | the cached project's `canonical` | written at creation | which repository this cache holds |
+| `refresh` | `every <N> days — last: <YYYY-MM-DD>` \| `no` | the machine-wide `cache-refresh` | this cache's own interval and when it was last pulled; overrides §5 |
+| `offline` | `ask` \| `read-stale` \| `stop` | the machine-wide `cache-offline` | this cache's own answer for a failed pull; overrides §5 |
+
+```markdown
+<!-- keep-the-why:cache -->
+- canonical: https://github.com/oliver-zehentleitner/unicorn-binance-suite
+- refresh: every 1 day — last: 2026-09-27
+- offline: read-stale
+<!-- /keep-the-why:cache -->
+```
+
+### 5.2 `~/.keep-the-why/projects.json` and the cache directory
+
+`projects.json` is JSON, not a Markdown block, because it is cache data rather than a setting: many rows, timestamps, written by tools and read by tools.
+
+```json
+{
+ "projects-json": 1,
+ "projects": [
+  {
+   "id": "oliver-zehentleitner---unicorn-binance-suite",
+   "canonical": "https://github.com/oliver-zehentleitner/unicorn-binance-suite",
+   "root": "",
+   "paths": [{"path": "/home/me/projects/unicorn-binance-suite", "last_seen": "2026-09-27T10:12:03"}],
+   "cache": "/home/me/.keep-the-why/cache/oliver-zehentleitner---unicorn-binance-suite"
+  }
+ ]
+}
+```
+
+- One row per project (`id`; `canonical` and `root` when the project has them), `paths` most recently seen first with `last_seen`, and `cache` when a context cache exists. Rows and paths are ordered most recent first; a reader may rely on the order and on the timestamps, and must tolerate unknown keys.
+- The skill's setup check records the current project's path on every session; the dashboard records a project when it is opened. Both write the whole file; neither writes anything else there.
+- `~/.keep-the-why/cache/<id>/` is a sparse partial clone (`git clone --filter=blob:none --sparse`) checked out to the member's `.keep-the-why` and its context directory only — no agent instruction files, nothing else of the repository. **It is read-only for every tool:** the skill reads from it and never writes into it, the dashboard reads it; deleting it loses nothing, because nothing lives only there.
 
 ## 6. Resolution order
 
@@ -163,11 +243,12 @@ Every convention below that says "since <version>" is enforced by the linter onl
 | 0.9.0 | more than one `Type` line per entry |
 | 0.10.0 | dedicated `.keep-the-why` with `id`; `index.md` sorted; guard files |
 | 0.13.0 | `Status: pending-confirmation`; `index.md` heading skeleton; `pending-confirmation-check` |
+| 0.18.0 | `Id` per entry, mandatory and unique; `See` and `Superseded by` (`E114`–`E121`) |
 
 ## 8. The context directory
 
 - **Flat.** Topic files sit directly in `<context>/`; no subdirectories. A large project namespaces filenames (`auth-tokens.md`, `auth-oauth.md`) instead of nesting.
-- **Topic files** are `<name>.md`, one per recurring theme, named for the theme. Lowercase kebab-case is the convention; the first character decides the index heading (§8.1).
+- **Topic files** are `<name>.md`, one per recurring theme, named for the theme. Lowercase kebab-case is the convention; the first character decides the index heading (§8.1). A topic file carries no `Id`: its file name is its address, in the index and in `See` locators. A file that grows unwieldy is split into narrower topics (`SKILL.md`, rule 6).
 - **`README.md`** explains, for a reader landing cold, what the directory is and how to read an entry. Not a topic file; not listed in the index.
 - **`AGENTS.md`** contains the guard instruction; **`CLAUDE.md`** contains `@AGENTS.md`. Neither carries a config block. Both are warnings when missing (`W201`), since an equivalent doing the same job is fine. The two files in full:
 
@@ -205,6 +286,7 @@ Every convention below that says "since <version>" is enforced by the linter onl
 ```
 
 - One `#` title, optionally one intro paragraph, then exactly the thirty-six level-2 headings `## 0` … `## 9`, `## A` … `## Z`, in that order, all present, empty ones included (`E205`). Since 0.13.0.
+- Those thirty-six headings together are the *index skeleton* — the name this specification uses for them; "deterministic write areas" names what they do for concurrent branches (two topics added on two branches land under their own headings, not in one conflicting hunk), not the skeleton itself.
 - One entry per topic file (`E203`), of the form `- [<file>](<file>) — <one line>`; the link target is the bare filename (`E202` if it does not exist). The one line describes what the file covers, not what was last added to it.
 - An entry sits under the heading of its filename's first character, uppercased; a name starting with neither a digit nor a letter goes under `## 0` (`E206`). Within a heading, entries are sorted by filename, so the whole list reads in ascending order (`E204`, since 0.10.0).
 - Nothing else: the index is for deciding what to load, not for holding content.
@@ -218,11 +300,13 @@ A topic file is a `# Title`, then entries. An entry is a level-2 heading followe
 
 ## Snapshot-before-buffer ordering
 
+**Id:** 2f1c5b7e-8a3d-4c6e-9b0f-1d2e3f4a5b6c
 **Type:** decision
 **Status:** active
 **Evidence:** confirmed
 **Source:** maintainer interview, 2026-03-14; incident postmortem 2025-11, `incidents.md`
 **Revisit when:** the sync protocol or snapshot mechanism changes
+**See:** incidents.md#duplicate-state-after-cold-start-2025-11 — 9b2d4f60-7c1e-4a8b-b3d5-6e7f8a9b0c1d — as of 2026-03-14
 
 The sync step always waits for a full snapshot before applying any
 buffered events, even though this adds latency on cold start.
@@ -241,16 +325,19 @@ was enforced instead.
 
 ### 9.1 Header fields
 
-Header fields are lines of the form `**<Field>:** <value>` directly after the heading (blank lines allowed). Order: `Type`, then `Status`, then `Evidence`, then the optional three. `Type` placed after `Status` is a warning (`W103`).
+Header fields are lines of the form `**<Field>:** <value>` directly after the heading (blank lines allowed). Order: `Id` first, then `Type`, `Status`, `Evidence`, then the optional ones in the order of the table. `Type` placed after `Status` is a warning (`W103`).
 
 | Field | Required | Values |
 |---|---|---|
+| `Id` | yes, exactly one line, since 0.18.0 (`E114`, `E112`) | a UUID version 4, lowercase, `8-4-4-4-12` hex (`E115` checks the shape); unique in the project (`E116`). Assigned when the entry is written, by an OS command — `uuidgen`, `cat /proc/sys/kernel/random/uuid`, PowerShell's `[guid]::NewGuid()` — never composed by hand or from memory; never changed afterwards. Lowercase whatever the command prints: macOS's `uuidgen` prints capitals, its output goes through `tr 'A-F' 'a-f'`. An Id found in capitals is lowercased in place, together with the `See` and `Superseded by` lines citing it — a spelling correction, the same Id (`E115` and `E117` name the case) |
 | `Type` | no — fill in when a value fits, at the latest when the entry is next touched (`W101`) | `decision` \| `workaround` \| `incident` \| `constraint` — one line per value that applies (since 0.9.0), no value twice (`E109`); or a single `undefined — <short reason>` line (since 0.8.0), which combines with nothing (`E107`, `E108`) |
 | `Status` | yes, exactly one line (`E101`, `E112`) | `active` \| `superseded` \| `open` \| `needs-review` \| `pending-confirmation` (since 0.13.0, `E113` below it) |
 | `Evidence` | yes, exactly one line (`E102`, `E112`) | `confirmed` \| `inferred` \| `unknown` |
 | `Source` | no | free text: where the rationale came from (interview, issue, commit, post-mortem, "none — no tracked issue") — a kind of source, never a person's name, handle or e-mail address (rule 7) |
 | `Verification` | no | `corroborated` \| `uncorroborated` \| `contradicted`, optionally followed by an explanation after any separator; `contradicted` must carry one (`E111`) |
 | `Revisit when` | no | free text, non-empty (`W105`): a concrete trigger that makes the entry worth re-checking |
+| `See` | no; one line per cited entry, since 0.18.0 | `<locator> — <uuid> — as of <YYYY-MM-DD>` (`E117`). Inside the project the locator is `<file>.md` or `<file>.md#<anchor>`, the anchor being the target heading as the host renders it (lowercase, punctuation dropped, spaces to `-`); the `<uuid>` must name an entry here (`E118`) and the locator must still point at it (`E119`). In another project the locator is that project's `canonical` and nothing more — no path, no anchor — and is checked for shape only: the form of a `canonical` value (§3.1), no query, no fragment (`E117`) |
+| `Superseded by` | yes when `Status` is `superseded` (`E120`), forbidden otherwise (`E121`); exactly one line (`E112`); since 0.18.0 | the successor: an `<uuid>` of an entry here (`E118`), a `<canonical> — <uuid> — as of <YYYY-MM-DD>` reference to one in another project (the locator checked as for `See`), or `none — <why nothing replaced it>` (`E117`) |
 
 Meanings:
 
@@ -259,10 +346,13 @@ Meanings:
 - **`Type`** is what kind of thing the entry is, for selecting entries without opening files: `^\*\*Type:\*\* incident` finds every incident.
 - **`Verification`** is whether something concrete was checked against the claim, and what came of it.
 - **`Revisit when`** is the condition under which the entry should be re-checked. Age alone is not a condition.
+- **`Id`** is the entry's address. Headings are reworded and topic files are split (§8, §9.4), and a link built on a heading breaks silently when they are; the UUID does not move. It is the truth behind every `See` and `Superseded by` line: a tool that finds the Id somewhere else than the locator says reports the locator, not the Id.
+- **`See`** names the place of a related entry — the decision this one follows from, the incident it answers, the entry in the parent project that constrains it. The date is a historical hint, the day the link was written; it narrows the target's history to a day and does not name a revision. The locator is what a person clicks; the Id is what a tool resolves. `Source` still names the *kind* of evidence; an entry that exists because another project decided something carries both.
+- **`Superseded by`** makes the replacement checkable: a superseded entry points at what replaced it, and a chain of them (the successor itself superseded) is the history a reader follows. `none — <reason>` is for a supersession that was an event, not a decision — an upstream fix removed a workaround's reason, a constraint vanished — and the reason says so; it is not for a successor that simply was not written yet.
 
 ### 9.2 Body
 
-Free prose, with these bold-labelled paragraphs where they apply: `**Reason:**` (why the chosen path won), `**Rejected alternative:**` (one per alternative that was genuinely in contention, with why it lost), `**Consequence:**` (what follows from the decision), `**Considered:**` (for a change that was started and dropped: what was tried), `**Why this needs an answer:**` (for an `open` entry). A body may cite other entries and files; it never contains instructions to an agent, and it never quotes a directive verbatim (see `trust-model.md`).
+Free prose, with these bold-labelled paragraphs where they apply: `**Reason:**` (why the chosen path won), `**Rejected alternative:**` (one per alternative that was genuinely in contention, with why it lost), `**Consequence:**` (what follows from the decision), `**Considered:**` (for a change that was started and dropped: what was tried), `**Why this needs an answer:**` (for an `open` entry). A body may cite other entries and files in prose; a citation a tool should follow goes in a `See` line (§9.1). It never contains instructions to an agent, and it never quotes a directive verbatim (see `trust-model.md`).
 
 ### 9.3 Examples
 
@@ -306,7 +396,8 @@ not silently corrected either way.
 | a `Revisit when` condition is observed to hold | `Status` → `needs-review`, in the same turn, nothing else changes |
 | a `needs-review` entry is re-checked | `Status` → `active` (re-confirmed), `superseded`, or `open`; `Evidence` and `Verification` updated from the re-check |
 | a `pending-confirmation` entry gets its first confirmation | `Status` → `active`, `superseded`, or `open` |
-| a decision is replaced | the old entry → `superseded`, a new entry records the replacement; the old one is not deleted |
+| a decision is replaced | the old entry → `superseded` with `Superseded by` naming the new entry's Id, a new entry records the replacement; the old one is not deleted |
+| a heading is reworded or an entry moves to another file | its `Id` stays; `See` locators that named the old place are repaired to the new one (the linter reports them, `E119`) |
 | a `Verification` check contradicts the claim | `Verification: contradicted — <what>`; `Evidence` and `Status` are not changed silently |
 
 ### 9.5 What parsers ignore
@@ -317,8 +408,18 @@ Fenced code blocks (```` ``` ```` or `~~~`) in topic files and in `index.md` are
 
 No credentials, no personal data, no session narrative (who said what), no verbatim commands or instructions copied from a source, no invisible or directional Unicode (`E301`), no base64-looking blobs (`W301`), and the file must be valid UTF-8 (`E302`). An entry describes; it does not direct.
 
+### 9.7 Relations between entries and projects (informative)
+
+This section defines no field and no check; it names what `See` and `Superseded by` (§9.1) add up to, so that tools reading them agree.
+
+- **Direction.** A `See` runs from the entry that cites to the entry cited — the cited one came first. A `Superseded by` runs from the replaced entry to its successor — the successor came later. Read either way, one entry precedes the other.
+- **Family and friends.** A `See` or `Superseded by` whose locator is another project's `canonical` links two projects. When that project is in the citing project's family (§3.3), it is a family member; otherwise tools call it a *friend* of the citing project. Nothing about routing or writing (a family's `children` block) applies to a friend; the link is a citation and nothing more.
+- **Thoughts.** A chain of such links, read from the entry that came first to the one that came last, is a *thought*: a chain of linked entries, possibly across projects. A link records that two entries are related — often that the later one follows from the earlier, but not always — so a thought shows how entries connect, not that each step depends on the one before. A thought is derived, never written; tools may list only chains of a minimum length. A chain made only of `Superseded by` is an *evolution*. Tools may point out a thought whose first entry has `Evidence` `inferred` or `unknown`, and a step that is `open`, `needs-review` or `pending-confirmation`, or `superseded` yet still cited by a `See`, together with the later steps linked after it — as entries to check, since the link alone does not say whether they depend on it.
+
+The linter checks each line (`E117`–`E121`), not chains; a chain has no findings of its own.
+
 ## 10. Conformance
 
 - A **project** conforms when `.keep-the-why` and `<context>/` satisfy §1–§3 and §7–§9 for its `context-schema`; `keep-the-why-lint --strict` passing is the mechanical half of that.
-- An **agent or tool writing entries** conforms when it writes only the fields and values above, places new topic files under their index heading, never deletes a superseded entry, and never upgrades `Evidence` or clears a `Status` flag without the re-check the lifecycle names.
+- An **agent or tool writing entries** conforms when it writes only the fields and values above, gives every new entry an `Id` made by an OS command, places new topic files under their index heading, never deletes a superseded entry, never changes an `Id`, and never upgrades `Evidence` or clears a `Status` flag without the re-check the lifecycle names.
 - A **tool reading `context/`** may rely on the header-field grammar, the index grammar and the fenced-block rule, and on nothing about prose layout beyond them.

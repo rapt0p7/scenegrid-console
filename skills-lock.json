@@ -6,7 +6,7 @@
             "ref": "latest",
             "sourceType": "github",
             "skillPath": "skills/keep-the-why/SKILL.md",
-            "computedHash": "07d739ced875a148bc028a61bda6ed07eeacbc77c5e80ba4e4ff936ae6c0d022"
+            "computedHash": "1acf23f74b33430b39cb7783e29aa3ded45feccc5820dc3e1174e4aca2b47f42"
         },
         "mcp-apps-builder": {
             "source": "mcp-use/mcp-use",

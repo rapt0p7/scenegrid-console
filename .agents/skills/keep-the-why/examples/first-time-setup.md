@@ -71,8 +71,9 @@ This names the skill and its purpose directly — not a task that happens to mat
     Each entry separates:
 
     - **Type** — what kind of thing it is: decision, workaround, incident, or constraint (or undefined, with a reason, if none fit)
-    - **Status** — whether a decision is active, superseded, open, or needs review
+    - **Status** — whether a decision is active, superseded, open, needs review, or still waits for a first confirmation
     - **Evidence** — whether its rationale is confirmed, inferred, or unknown
+    - **Id** — the entry's permanent address; **See** and **Superseded by** point at other entries by it
 
     Old reasoning is retained when it remains useful for understanding how the
     project evolved.
@@ -109,9 +110,10 @@ This names the skill and its purpose directly — not a task that happens to mat
 
     <!-- keep-the-why:config -->
     - id: acme---widget-service
+    - canonical: https://github.com/acme/widget-service
     - context: `context/`
     - init: complete
-    - context-schema: 0.17.1
+    - context-schema: 0.18.2
     - capture-confirmation: confirm-when-unsure
     - source-reference: never
     <!-- /keep-the-why:config -->

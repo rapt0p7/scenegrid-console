@@ -19,7 +19,7 @@ Before writing anything, check that nothing equivalent already exists (a workflo
 
 ## What gets written
 
-- **GitHub Actions:** `.github/workflows/ktw-lint.yml`, the snippet below verbatim. The root of the `keep-the-why` repository is a composite action that installs the latest linter from PyPI, referenced via the moving `lint-latest` tag — which follows linter publishes, not skill releases (the skill's own `latest` tag doesn't carry the action until the next skill release) — so the consumer never pins anything. A project that wants a fixed action revision uses the matching `lint-v<version>` tag (or its commit SHA) instead — that pins the wrapper only; the linter it installs is pinned separately via the `version` input, since the wrapper installs from PyPI at job time.
+- **GitHub Actions:** `.github/workflows/ktw-lint.yml`, the snippet below verbatim. The root of the `keep-the-why` repository is a composite action that installs the linter its own ref belongs to, referenced via the moving `lint-latest` tag — which follows linter publishes, not skill releases (the skill's own `latest` tag doesn't carry the action until the next skill release) — so the consumer never pins anything and gets the newest linter. A project that wants a fixed version uses the matching `lint-v<version>` tag (or its commit SHA) instead, which pins action and linter together; the `version` input is only for mixing the two (a pinned ref with a rolling linter, or the reverse).
 - **GitLab CI:** the `ktw-lint` job below, appended to `.gitlab-ci.yml`. If the file defines `stages:`, give the job a `stage:` from that list (`test` if present, otherwise ask which) — a job without a stage falls back to `test`, which fails the pipeline when custom stages don't include it. If there's no `.gitlab-ci.yml` at all but the remote is GitLab, creating one with only this job makes it the project's first pipeline — say that plainly before doing it.
 - **pre-commit:** the hook below, added under an existing `repo: local` entry if there is one, otherwise as a new one. The keep-the-why repository root is not a Python package, so the hook pulls the linter from PyPI via `additional_dependencies` rather than pointing `repo:` at the skill repository.
 - `strict: "false"` / no `--strict` by default: warnings (a missing `Type` on an old entry, a missing guard file) are "next time touched" material per the skill's own rules and shouldn't block a fresh project's CI. Mention that `--strict` exists.
@@ -82,6 +82,28 @@ ktw-lint . --strict   # warnings fail too
 ktw-lint . --setup    # locally only: also ~/.keep-the-why/<id>.md and ~/.keep-the-why/config
 ```
 <!-- snippets:end -->
+
+## The dashboard export
+
+Offered by the project wizard when a docs build exists (a GitHub Pages workflow, `mkdocs.yml`, a `docs/` deploy job), never invented where none does. One step in that build, after the site is generated and before it is uploaded — `keep-the-why-dashboard` reads the checkout and writes three static files, no server, no external request:
+
+```yaml
+      # Keep the Why: the project's own dashboard on /dashboard/live/ — index.html,
+      # state.json and the live badges (badge-entries.svg, badge-entries-flat.svg),
+      # exported from this checkout. Needs the full
+      # history (fetch-depth: 0 on the checkout step) to date entries by commit.
+      - run: |
+          pip install --quiet keep-the-why-dashboard
+          ktw-dashboard --export site/dashboard/live .
+```
+
+`site/` is whatever directory the build uploads (`site/` for MkDocs, `_site/` for Jekyll, `build/` for Sphinx — match the project's own). `--anonymize` replaces Git author names with `author-1`, `author-2`, … for a repository whose contributors did not ask to be listed on a web page. The live badge in the README then points at the project's own export:
+
+```markdown
+[![Keep the Why · live](https://example.org/dashboard/live/badge-entries.svg)](https://example.org/dashboard/live/)
+```
+
+with the site's real URL, and `dashboard-state: https://example.org/dashboard/live/state.json` in `.keep-the-why` — the line another dashboard reads, in its *public* mode, to show this project's export in place of a checkout (the family web across repositories, `docs/dashboard.md`). `badge-entries.svg` is rendered at export time with the project's numbers (and `badge-entries-flat.svg` shows the same in the flat style badge services draw) ("42 entries · 3 open" — open, needs-review and pending-confirmation count as open), so README → the project's own SVG → the project's own dashboard, and no badge service in between. Staged, not committed, like everything else setup writes.
 
 ## The local run is a different setting
 

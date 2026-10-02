@@ -13,6 +13,7 @@
 ![specs](https://raw.githubusercontent.com/rapt0p7/scenegrid-console/gh-pages/badges/number_of_specs.svg)
 ![requirements](https://raw.githubusercontent.com/rapt0p7/scenegrid-console/gh-pages/badges/number_of_requirements.svg)
 [![Keep the Why](https://keepthewhy.com/assets/badge.svg)](https://keepthewhy.com)
+[![Keep the Why · live](https://rapt0p7.github.io/scenegrid-console/dashboard/live/badge-entries.svg)](https://rapt0p7.github.io/scenegrid-console/dashboard/live/)
 [![Ask DeepWiki](https://img.shields.io/badge/Ask%20DeepWiki-4B6BFB?logo=bookstack&logoColor=white)](https://deepwiki.com/rapt0p7/scenegrid-console)
 [![Powered by Oxlint](https://img.shields.io/badge/powered%20by-Oxlint-blue)](https://oxc.rs)
 [![Formatted with Oxfmt](https://img.shields.io/badge/formatted%20with-Oxfmt-blue)](https://oxc.rs)
