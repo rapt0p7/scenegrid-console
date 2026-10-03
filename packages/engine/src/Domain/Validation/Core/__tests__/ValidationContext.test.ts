@@ -97,7 +97,8 @@ describe('ValidationContext', () => {
 
         it('should delegate to assertArray and early return for non-arrays and undefined', () => {
             const context1 = createContext();
-            context1.validateTuple('range');
+            // oxlint-disable-next-line unicorn/no-useless-undefined
+            context1.validateTuple('range', undefined);
             expect(context1.getErrors()).toContain('Missing required array at "range"');
 
             const context2 = createContext();
