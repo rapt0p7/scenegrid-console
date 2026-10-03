@@ -20,8 +20,42 @@ describe('CLI Configuration Merging', () => {
         const argv = ['node', 'cli.js', '--input', './cli-input'];
         const config = await resolveConfig(argv);
 
+        expect(cosmiconfig).toHaveBeenCalledWith('scenegrid');
         expect(config.input).toBe('./cli-input');
         expect(config.output).toBe('./rc-output');
+    });
+
+    it('sets up the expected CLI help descriptions', async () => {
+        const mockCosmiconfig = {
+            search: vi.fn().mockResolvedValue(null)
+        };
+        (cosmiconfig as any).mockReturnValue(mockCosmiconfig);
+
+        const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+            throw new Error('process.exit called');
+        });
+        const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+        await expect(resolveConfig(['node', 'cli.js', '--help'])).rejects.toThrow('process.exit called');
+
+        const helpOutput = stdoutSpy.mock.calls
+            .map(call => call[0])
+            .join('')
+            .replaceAll(/\s+/g, ' ');
+
+        expect(helpOutput).toContain('Input directory for raw audio files');
+        expect(helpOutput).toContain('Output directory for processed assets');
+        expect(helpOutput).toContain('Output directory for JSON manifests');
+        expect(helpOutput).toContain('Base URL prefix used in the generated manifests');
+        expect(helpOutput).toContain('RAM quota in MB before triggering stream chunking');
+        expect(helpOutput).toContain('Regex patterns to force stream routing');
+        expect(helpOutput).toContain('Regex patterns to exclude from stream routing');
+        expect(helpOutput).toContain('Priority for streams ("high" or "low")');
+        expect(helpOutput).toContain('Append MD5 hash to generated file names');
+        expect(helpOutput).toContain('Path to JSON file mapping physical basenames to logical SoundIds');
+
+        exitSpy.mockRestore();
+        stdoutSpy.mockRestore();
     });
 
     it('throws expected errors on invalid inputs (zod validation)', async () => {

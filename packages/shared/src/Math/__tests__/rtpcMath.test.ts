@@ -21,7 +21,6 @@ describe('evaluateRTPCCurve', () => {
             maxY: validFloat
         })
         .map(preset => {
-            // Гарантируем, что minX всегда <= maxX
             if (preset.minX > preset.maxX) {
                 const temp = preset.minX;
                 preset.minX = preset.maxX;

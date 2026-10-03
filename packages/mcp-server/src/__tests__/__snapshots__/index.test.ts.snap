@@ -1,0 +1,277 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MCP Server Index > should invoke all registered prompt callbacks > debug-audio-issue 1`] = `
+{
+  "messages": [
+    {
+      "content": {
+        "text": {},
+        "type": "text",
+      },
+      "role": "user",
+    },
+  ],
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered resource callbacks > scenegrid://context/conventions 1`] = `
+{
+  "contents": [
+    {
+      "mimeType": "text/markdown",
+      "text": {},
+      "uri": "scenegrid://context/conventions",
+    },
+  ],
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered resource callbacks > scenegrid://manifest/current 1`] = `
+{
+  "contents": [
+    {
+      "mimeType": "application/json",
+      "text": "{}",
+      "uri": "scenegrid://manifest/current",
+    },
+  ],
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered resource callbacks > scenegrid://ram/budget 1`] = `
+{
+  "contents": [
+    {
+      "mimeType": "application/json",
+      "text": "{}",
+      "uri": "scenegrid://ram/budget",
+    },
+  ],
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered resource callbacks > scenegrid://telemetry/live 1`] = `
+{
+  "contents": [
+    {
+      "mimeType": "application/json",
+      "text": "{}",
+      "uri": "scenegrid://telemetry/live",
+    },
+  ],
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered resource callbacks > scenegrid://validation/latest 1`] = `
+{
+  "contents": [
+    {
+      "mimeType": "application/json",
+      "text": "{}",
+      "uri": "scenegrid://validation/latest",
+    },
+  ],
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > apply_mixer_snapshot 1`] = `
+{
+  "content": [
+    {
+      "text": "Snapshot undefined applied.",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {
+    "success": true,
+  },
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > generate_aliases 1`] = `
+{
+  "content": [
+    {
+      "text": "Aliases generated at undefined",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {
+    "success": true,
+  },
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > get_quota_preview 1`] = `
+{
+  "content": [
+    {
+      "text": "{}",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {},
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > get_schema 1`] = `
+{
+  "content": [
+    {
+      "text": "{}",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {},
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > inspect_pcm_weight 1`] = `
+{
+  "content": [
+    {
+      "text": "{}",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {},
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > pause_engine 1`] = `
+{
+  "content": [
+    {
+      "text": "Engine paused.",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {
+    "success": true,
+  },
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > process_assets 1`] = `
+{
+  "content": [
+    {
+      "text": "Audio assets processed successfully.",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {
+    "success": true,
+  },
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > query_graph 1`] = `
+{
+  "content": [
+    {
+      "text": "{}",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {},
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > record_session_telemetry 1`] = `
+{
+  "content": [
+    {
+      "text": "{}",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {},
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > resume_engine 1`] = `
+{
+  "content": [
+    {
+      "text": "Engine resumed.",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {
+    "success": true,
+  },
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > set_rtpc_value 1`] = `
+{
+  "content": [
+    {
+      "text": "RTPC undefined set to undefined.",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {
+    "success": true,
+  },
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > stop_all_sounds 1`] = `
+{
+  "content": [
+    {
+      "text": "All sounds stopped.",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {
+    "success": true,
+  },
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > trace_event 1`] = `
+{
+  "content": [
+    {
+      "text": "{}",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {},
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > trigger_event 1`] = `
+{
+  "content": [
+    {
+      "text": "Event undefined triggered.",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {
+    "success": true,
+  },
+}
+`;
+
+exports[`MCP Server Index > should invoke all registered tool callbacks > validate_configurations 1`] = `
+{
+  "content": [
+    {
+      "text": "{
+  "errors": [],
+  "warnings": []
+}",
+      "type": "text",
+    },
+  ],
+  "structuredContent": {
+    "errors": [],
+    "warnings": [],
+  },
+}
+`;

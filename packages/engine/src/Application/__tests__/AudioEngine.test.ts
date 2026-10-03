@@ -301,6 +301,34 @@ describe('AudioEngine', () => {
             configSpy.mockRestore();
             setSpy.mockRestore();
         });
+
+        it('should correctly register required systems with the EngineTicker', async () => {
+            const infra = await import('@infrastructure');
+            const addSpy = vi.spyOn(infra.EngineTicker.prototype, 'add');
+
+            const testEngine = new AudioEngine({
+                manifest: {},
+                banks: {},
+                buses: {},
+                soundMap: {},
+                snapshots: {},
+                events: {}
+            });
+            await testEngine.init();
+
+            const registeredTaskIds = addSpy.mock.calls.map(call => call[0]);
+            expect(registeredTaskIds).toContain('telemetry');
+            expect(registeredTaskIds).toContain('snapshotter');
+            expect(registeredTaskIds).toContain('rtpc-manager');
+            expect(registeredTaskIds).toContain('bus-system');
+            expect(registeredTaskIds).toContain('instance-rtpc');
+            expect(registeredTaskIds).toContain('sound-controller');
+            expect(registeredTaskIds).toContain('culling-runner');
+            expect(registeredTaskIds).toContain('mixer-state-manager');
+            expect(registeredTaskIds).toContain('audio-event-orchestrator');
+
+            addSpy.mockRestore();
+        });
     });
 
     describe('Event Dispatcher & Lifecycle Events', () => {
@@ -363,6 +391,9 @@ describe('AudioEngine', () => {
 
             await freshEngine.init();
 
+            const TelemetryDispatcherClass = (await import('@infrastructure')).TelemetryDispatcher;
+            const dispatchSpy = vi.spyOn(TelemetryDispatcherClass.prototype, 'dispatch').mockImplementation(() => {});
+
             const startSpy = vi.fn();
             const progressSpy = vi.fn();
             const completeSpy = vi.fn();
@@ -377,6 +408,9 @@ describe('AudioEngine', () => {
             expect(progressSpy).toHaveBeenCalledTimes(2);
             expect(progressSpy).toHaveBeenLastCalledWith(expect.objectContaining({ progress: 1, loadedItems: 2 }));
             expect(completeSpy).toHaveBeenCalledWith(expect.objectContaining({ failedItems: [] }));
+
+            expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'RAM_REPORT' }));
+            dispatchSpy.mockRestore();
         });
 
         it('should emit load:complete immediately if bank is empty', async () => {
@@ -545,27 +579,36 @@ describe('AudioEngine', () => {
         });
 
         it('should delegate mixer.addModifier and mixer.pop to SnapshotManager', () => {
-            expect(() => {
-                engine.mixer.addModifier('pauseMenu', 'layer1', 100);
-            }).not.toThrow();
-            expect(() => {
-                engine.mixer.removeModifier('layer1');
-            }).not.toThrow();
+            const addSpy = vi.spyOn(engine._debug.snapshotManager, 'activateSnapshot').mockImplementation(() => {});
+            const popSpy = vi.spyOn(engine._debug.snapshotManager, 'clearLayer').mockImplementation(() => {});
+
+            engine.mixer.addModifier('pauseMenu', 'layer1', 100);
+            expect(addSpy).toHaveBeenCalledWith('pauseMenu', 'layer1', 100);
+
+            engine.mixer.removeModifier('layer1');
+            expect(popSpy).toHaveBeenCalledWith('layer1');
         });
 
-        it('should delegate music loops and transitions to Sequencer', () => {
-            expect(() => {
-                engine.music.playLoop('bgm', 'verse1');
-            }).not.toThrow();
-            expect(() => {
-                engine.music.stopLoop('bgm');
-            }).not.toThrow();
-            expect(() => {
-                engine.music.playStinger('bgm', 'NextBeat');
-            }).not.toThrow();
-            expect(() => {
-                engine.music.transitionTo({ soundId: 'bgm' as SoundId, targetRegion: 'chorus' as RegionId });
-            }).not.toThrow();
+        it('should delegate music loops and transitions to Sequencer', async () => {
+            const sequencerClass = (await import('@domain/Orchestration/Sequencer.js')).default;
+            const playLoopSpy = vi.spyOn(sequencerClass.prototype, 'playLoop').mockImplementation(() => {});
+            const stopLoopSpy = vi.spyOn(sequencerClass.prototype, 'stopLoop').mockImplementation(() => {});
+            const playStingerSpy = vi.spyOn(sequencerClass.prototype, 'playStinger').mockImplementation(() => {});
+            const transitionToSpy = vi.spyOn(sequencerClass.prototype, 'transitionTo').mockImplementation(() => {});
+
+            engine.music.playLoop('bgm', 'verse1');
+            expect(playLoopSpy).toHaveBeenCalledWith('bgm', 'verse1');
+
+            engine.music.stopLoop('bgm');
+            expect(stopLoopSpy).toHaveBeenCalledWith('bgm');
+
+            engine.music.playStinger('bgm', 'NextBeat');
+            expect(playStingerSpy).toHaveBeenCalledWith('bgm', 'NextBeat', undefined);
+
+            engine.music.transitionTo({ soundId: 'bgm' as SoundId, targetRegion: 'chorus' as RegionId });
+            expect(transitionToSpy).toHaveBeenCalledWith({ soundId: 'bgm', targetRegion: 'chorus' });
+
+            vi.restoreAllMocks();
         });
 
         it('should call resume on unlock()', async () => {
@@ -1090,18 +1133,62 @@ describe('AudioEngine', () => {
         await testEngine.init();
 
         expect(capturedDebugPort).not.toBeNull();
-        expect(capturedDebugPort.stopAll).toBeDefined();
 
-        expect(() => capturedDebugPort.stopAll()).not.toThrow();
-        expect(() => capturedDebugPort.pauseAll()).not.toThrow();
-        expect(() => capturedDebugPort.resumeAll()).not.toThrow();
-        expect(() => capturedDebugPort.clearAllOverrides()).not.toThrow();
-        expect(() => capturedDebugPort.fireEvent('test' as any)).not.toThrow();
-        expect(() => capturedDebugPort.applySnapshot('test' as any, 500)).not.toThrow();
-        expect(() => capturedDebugPort.setRtpcOverride('test' as any, 1, true)).not.toThrow();
-        expect(() => capturedDebugPort.playLoop('test' as any, 'region')).not.toThrow();
-        expect(() => capturedDebugPort.stopLoop('test' as any)).not.toThrow();
-        expect(() => capturedDebugPort.transitionMusicTo('test' as any, 'region', 'trans', {})).not.toThrow();
+        const SoundControllerClass = (await import('@infrastructure')).SoundController;
+        const stopAllSpy = vi.spyOn(SoundControllerClass.prototype, 'stopAll').mockImplementation(() => {});
+        capturedDebugPort.stopAll();
+        expect(stopAllSpy).toHaveBeenCalledTimes(1);
+
+        const pauseAllSpy = vi.spyOn(SoundControllerClass.prototype, 'pauseAll').mockImplementation(() => {});
+        capturedDebugPort.pauseAll();
+        expect(pauseAllSpy).toHaveBeenCalledTimes(1);
+
+        const resumeAllSpy = vi.spyOn(SoundControllerClass.prototype, 'resumeAll').mockImplementation(() => {});
+        capturedDebugPort.resumeAll();
+        expect(resumeAllSpy).toHaveBeenCalledTimes(1);
+
+        const resetOverridesSpy = vi
+            .spyOn(testEngine._debug.rtpcManager, 'resetOverrides')
+            .mockImplementation(() => {});
+        capturedDebugPort.clearAllOverrides();
+        expect(resetOverridesSpy).toHaveBeenCalledTimes(1);
+
+        const fireEventSpy = vi.spyOn(testEngine._debug.eventOrchestrator, 'postEvent').mockImplementation(() => {});
+        capturedDebugPort.fireEvent('test');
+        expect(fireEventSpy).toHaveBeenCalledWith('test');
+
+        const applySnapshotSpy = vi
+            .spyOn(testEngine._debug.snapshotManager, 'activateSnapshot')
+            .mockImplementation(() => {});
+        capturedDebugPort.applySnapshot('test', 500);
+        expect(applySnapshotSpy).toHaveBeenCalledWith('test', 'scene_main', PRIORITY.BASE, 500);
+
+        const setOverrideSpy = vi.spyOn(testEngine._debug.rtpcManager, 'setOverride').mockImplementation(() => {});
+        capturedDebugPort.setRtpcOverride('test', 1, true);
+        expect(setOverrideSpy).toHaveBeenCalledWith('test', 1, true);
+
+        const playLoopSpy = vi
+            .spyOn((await import('@domain/Orchestration/Sequencer.js')).default.prototype, 'playLoop')
+            .mockImplementation(() => {});
+        capturedDebugPort.playLoop('test', 'region');
+        expect(playLoopSpy).toHaveBeenCalledWith('test', 'region');
+
+        const stopLoopSpy = vi
+            .spyOn((await import('@domain/Orchestration/Sequencer.js')).default.prototype, 'stopLoop')
+            .mockImplementation(() => {});
+        capturedDebugPort.stopLoop('test');
+        expect(stopLoopSpy).toHaveBeenCalledWith('test');
+
+        const transitionSpy = vi
+            .spyOn((await import('@domain/Orchestration/Sequencer.js')).default.prototype, 'transitionTo')
+            .mockImplementation(() => {});
+        capturedDebugPort.transitionMusicTo('test', 'region', 'trans', {});
+        expect(transitionSpy).toHaveBeenCalledWith({
+            soundId: 'test',
+            targetRegion: 'region',
+            transitionRegionName: 'trans',
+            options: {}
+        });
 
         (infra as any).CommandReceiver = origReceiver;
     });

@@ -13,6 +13,7 @@ class MockMessagePort {
 class MockWebSocket {
     static instances: MockWebSocket[] = [];
     public url: string;
+    public readyState: number = 0;
     public onopen: (() => void) | null = null;
     public onclose: ((ev: any) => void) | null = null;
     public onmessage: ((ev: any) => void) | null = null;
@@ -32,6 +33,10 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
     beforeEach(async () => {
         vi.resetModules();
         MockWebSocket.instances = [];
+        (MockWebSocket as any).CONNECTING = 0;
+        (MockWebSocket as any).OPEN = 1;
+        (MockWebSocket as any).CLOSING = 2;
+        (MockWebSocket as any).CLOSED = 3;
         (globalThis as any).WebSocket = MockWebSocket;
 
         mockSelf = { onconnect: null };
@@ -71,7 +76,7 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
             sendMessage(enginePort, manifestPayload);
 
             const logs = Array.from({ length: 205 }).map((_, i) => ({
-                type: 'LIFECYCLE',
+                type: i % 2 === 0 ? 'LIFECYCLE' : 'CAUSE_CHAIN',
                 id: i
             }));
 
@@ -94,7 +99,9 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
 
             expect(replayCall.packets.length).toBe(203);
 
-            const receivedLogs = replayCall.packets.filter((p: any) => p.type === 'LIFECYCLE');
+            const receivedLogs = replayCall.packets.filter(
+                (p: any) => p.type === 'LIFECYCLE' || p.type === 'CAUSE_CHAIN'
+            );
             expect(receivedLogs.length).toBe(200);
             expect(receivedLogs[0].id).toBe(5);
             expect(receivedLogs[199].id).toBe(204);
@@ -134,6 +141,49 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
 
             expect(inspectorPort.postMessage).toHaveBeenCalledWith(newBatch);
             expect(enginePort.postMessage).not.toHaveBeenCalledWith(newBatch);
+        });
+    });
+
+    describe('Requirement: Port Lifecycle Management', () => {
+        it('calls start on connected ports', () => {
+            const port = connectPort();
+            expect(port.start).toHaveBeenCalled();
+        });
+
+        it('removes port from connectedPorts when onmessageerror fires', () => {
+            const port1 = connectPort();
+            const port2 = connectPort();
+
+            port1.postMessage.mockClear();
+
+            if (port1.onmessageerror) {
+                port1.onmessageerror();
+            }
+
+            sendMessage(port2, { type: 'LIFECYCLE' });
+
+            expect(port1.postMessage).not.toHaveBeenCalledWith({ type: 'LIFECYCLE' });
+        });
+
+        it('safely handles non-object payloads and forwards them', () => {
+            const enginePort = connectPort();
+            const inspectorPort = connectPort();
+
+            inspectorPort.postMessage.mockClear();
+
+            sendMessage(enginePort, null);
+            sendMessage(enginePort, 'string-payload');
+
+            expect(inspectorPort.postMessage).toHaveBeenCalledWith(null);
+            expect(inspectorPort.postMessage).toHaveBeenCalledWith('string-payload');
+        });
+
+        it('ignores malformed batch payloads without throwing', () => {
+            const enginePort = connectPort();
+
+            expect(() => {
+                sendMessage(enginePort, { size: 1, type: 'WEIRD' });
+            }).not.toThrow();
         });
     });
 
@@ -179,6 +229,9 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
 
         it('Should implement an exponential backoff reconnection loop if the connection closes', () => {
             vi.useFakeTimers();
+            const spySetTimeout = vi.spyOn(global, 'setTimeout');
+            const spyClearTimeout = vi.spyOn(global, 'clearTimeout');
+
             const enginePort = connectPort();
 
             sendMessage(enginePort, {
@@ -192,10 +245,21 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
                 wsInstance1.onclose({ code: 1006 } as any);
             }
 
-            vi.advanceTimersByTime(1500);
+            expect(spySetTimeout).toHaveBeenLastCalledWith(expect.any(Function), 1000);
+
+            vi.advanceTimersByTime(1000);
 
             expect(MockWebSocket.instances.length).toBe(2);
             expect(MockWebSocket.instances[1].url).toBe('ws://localhost:8080');
+
+            const wsInstance2 = MockWebSocket.instances[1];
+            if (wsInstance2.onclose) {
+                wsInstance2.onclose({ code: 1006 } as any);
+            }
+
+            expect(spyClearTimeout).toHaveBeenCalled();
+            expect(spyClearTimeout).not.toHaveBeenCalledWith(undefined);
+            expect(spySetTimeout).toHaveBeenLastCalledWith(expect.any(Function), 2000);
 
             vi.useRealTimers();
         });
@@ -207,8 +271,14 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
 
             sendMessage(enginePort, { type: 'MANIFEST', payload: 'sync-test' });
             sendMessage(enginePort, {
-                size: 1,
-                packets: [{ type: 'SNAPSHOT', data: 'snap-data' }]
+                size: 5,
+                packets: [
+                    { type: 'SNAPSHOT', data: 'snap-data' },
+                    { type: 'VALIDATION_REPORT', data: 'val1' },
+                    { type: 'CONSISTENCY_REPORT', data: 'cons1' },
+                    { type: 'RAM_REPORT', data: 'ram1' },
+                    { type: 'CAUSE_CHAIN', id: 'cause1' }
+                ]
             });
 
             sendMessage(enginePort, {
@@ -227,8 +297,80 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
             const sentMessage = JSON.parse(wsInstance.send.mock.calls[0][0]);
             expect(sentMessage.type).toBe('FULL_SYNC');
             expect(sentMessage.payload.batchId).toBe(-1);
+            expect(sentMessage.payload.size).toBe(5);
             expect(sentMessage.payload.packets).toContainEqual({ type: 'MANIFEST', payload: 'sync-test' });
             expect(sentMessage.payload.packets).toContainEqual({ type: 'SNAPSHOT', data: 'snap-data' });
+            expect(sentMessage.payload.packets).toContainEqual({ type: 'CONSISTENCY_REPORT', data: 'cons1' });
+            expect(sentMessage.payload.packets).toContainEqual({ type: 'RAM_REPORT', data: 'ram1' });
+            expect(sentMessage.payload.packets).toContainEqual({ type: 'CAUSE_CHAIN', id: 'cause1' });
+        });
+
+        it('Should not push nulls or send FULL_SYNC if all buffers are empty when ws connects', () => {
+            const enginePort = connectPort();
+            sendMessage(enginePort, { type: 'INIT_CONFIG', remoteSyncUri: 'ws://localhost:8080' });
+
+            const wsInstance = MockWebSocket.instances[0];
+            if (wsInstance.onopen) {
+                wsInstance.onopen();
+            }
+
+            expect(wsInstance.send).not.toHaveBeenCalled();
+        });
+
+        it('Should safely ignore scalar inputs or non-object payloads', () => {
+            const enginePort = connectPort();
+            sendMessage(enginePort, 'not an object' as any);
+            sendMessage(enginePort, null as any);
+
+            const inspectorPort = connectPort();
+            expect(inspectorPort.postMessage).not.toHaveBeenCalled();
+        });
+
+        it('Should ignore valid objects that are not batches (e.g. unknown types)', () => {
+            const enginePort = connectPort();
+            sendMessage(enginePort, { type: 'UNKNOWN_MSG', value: 123 });
+
+            const inspectorPort = connectPort();
+            expect(inspectorPort.postMessage).not.toHaveBeenCalled();
+        });
+
+        it('Should ignore malformed JSON from WebSocket', () => {
+            const enginePort = connectPort();
+            sendMessage(enginePort, { type: 'INIT_CONFIG', remoteSyncUri: 'ws://localhost:8080' });
+            const wsInstance = MockWebSocket.instances[0];
+
+            expect(() => {
+                if (wsInstance.onmessage) {
+                    wsInstance.onmessage({ data: 'invalid json {' } as any);
+                }
+            }).not.toThrow();
+        });
+
+        it('Should not establish multiple connections when one is already OPEN or CONNECTING', () => {
+            const enginePort = connectPort();
+            sendMessage(enginePort, { type: 'INIT_CONFIG', remoteSyncUri: 'ws://localhost:8080' });
+
+            const ws = MockWebSocket.instances[0];
+            (ws as any).readyState = 1;
+
+            // Send again, should abort early
+            sendMessage(enginePort, { type: 'INIT_CONFIG', remoteSyncUri: 'ws://localhost:8080' });
+
+            (ws as any).readyState = 0;
+            sendMessage(enginePort, { type: 'INIT_CONFIG', remoteSyncUri: 'ws://localhost:8080' });
+
+            expect(MockWebSocket.instances.length).toBe(1);
+        });
+
+        it('Should close socket on error', () => {
+            const enginePort = connectPort();
+            sendMessage(enginePort, { type: 'INIT_CONFIG', remoteSyncUri: 'ws://localhost:8080' });
+
+            const ws = MockWebSocket.instances[0];
+            if (ws.onerror) {
+                ws.onerror({} as any);
+            }
+            expect(ws.close).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -242,6 +384,7 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
             });
 
             const wsInstance = MockWebSocket.instances[0];
+            wsInstance.readyState = 1;
             if (wsInstance.onopen) {
                 wsInstance.onopen();
             }
@@ -261,6 +404,19 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
             const sentMessage = JSON.parse(wsInstance.send.mock.calls[0][0]);
             expect(sentMessage.batchId).toBe(42);
             expect(sentMessage.packets[0].data).toBe('live-data');
+        });
+
+        it('does not forward updates if WebSocket is not OPEN', () => {
+            const enginePort = connectPort();
+            sendMessage(enginePort, { type: 'INIT_CONFIG', remoteSyncUri: 'ws://localhost:8080' });
+
+            const wsInstance = MockWebSocket.instances[0];
+            wsInstance.readyState = 0;
+            wsInstance.send.mockClear();
+
+            sendMessage(enginePort, { batchId: 43, size: 0, packets: [] });
+
+            expect(wsInstance.send).not.toHaveBeenCalled();
         });
     });
 

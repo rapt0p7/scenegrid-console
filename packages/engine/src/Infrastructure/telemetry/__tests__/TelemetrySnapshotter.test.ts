@@ -211,10 +211,24 @@ describe('TelemetrySnapshotter', () => {
         mockBusSystem.getBusFinalGain.mockImplementation((busId: string) => (busId === 'main' ? 0.72 : undefined));
         mockBusSystem.getSidechainGain.mockImplementation((busId: string) => (busId === 'main' ? 0.5 : undefined));
 
+        mockBusSystem.fillActiveModifiers = vi.fn().mockImplementation((busId: string, out: any[]) => {
+            if (busId === 'main') {
+                out[0].type = 'EQ';
+                out[0].value = 2.5;
+                out[0].source = 'Mixer';
+                out[1].type = 'Compressor';
+                out[1].value = -12.0;
+                out[1].source = 'Master';
+                return 2;
+            }
+            return 0;
+        });
+
         snapshotter.tick(0.1, 100 as Milliseconds);
 
         const dispatchCall = mockDispatcher.dispatch.mock.calls[0][0] as ITelemetrySnapshot;
 
+        expect(dispatchCall.type).toBe('SNAPSHOT');
         expect(dispatchCall.buses).toHaveLength(2);
 
         expect(dispatchCall.buses[0]).toEqual(
@@ -224,9 +238,16 @@ describe('TelemetrySnapshotter', () => {
                 rtpcGain: 0.9,
                 finalGain: 0.72,
                 sidechainGain: 0.5,
-                modifiersCount: 0
+                modifiersCount: 2
             })
         );
+
+        expect(dispatchCall.buses[0].activeModifiers[0]).toEqual({ type: 'EQ', value: 2.5, source: 'Mixer' });
+        expect(dispatchCall.buses[0].activeModifiers[1]).toEqual({
+            type: 'Compressor',
+            value: -12.0,
+            source: 'Master'
+        });
 
         expect(dispatchCall.buses[1]).toEqual(
             expect.objectContaining({

@@ -103,7 +103,7 @@ describe('AudioDebugger', () => {
         expect(wrapperElement.querySelectorAll('.meter-box').length).toBe(2);
     });
 
-    it('should initialize custom visualizers', async () => {
+    it('should initialize custom visualizers with exact widths', async () => {
         const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
 
         void debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
@@ -112,6 +112,37 @@ describe('AudioDebugger', () => {
 
         expect(createFrequencyCurveWithRMS).toHaveBeenCalledTimes(2);
         expect(createMeters).toHaveBeenCalledTimes(2);
+
+        const expectedWidth = 496;
+
+        expect(createFrequencyCurveWithRMS).toHaveBeenCalledWith(
+            expect.any(HTMLDivElement),
+            mockMasterNode,
+            mockWorkletLoader,
+            expectedWidth
+        );
+        expect(createMeters).toHaveBeenCalledWith(
+            expect.any(HTMLDivElement),
+            mockMasterNode,
+            mockWorkletLoader,
+            expectedWidth
+        );
+    });
+
+    it('should use default wrapper selector if not provided and clear innerHTML exactly', async () => {
+        wrapperElement.innerHTML = '<span>Old Content</span>';
+
+        const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
+        void debuggerInstance.init({ workletLoader: mockWorkletLoader });
+
+        await new Promise(r => setTimeout(r, 0));
+
+        const columns = wrapperElement.querySelectorAll('.bus-column');
+        expect(columns.length).toBe(2);
+
+        expect(wrapperElement.childNodes.length).toBe(2);
+        expect(wrapperElement.innerHTML).not.toContain('Old Content');
+        expect(wrapperElement.innerHTML).not.toContain('Stryker was here');
     });
 
     it('should gracefully handle buses with missing postFilterGain nodes', async () => {

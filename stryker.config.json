@@ -2,18 +2,24 @@
     "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
     "_comment": "This config was generated using 'stryker init'. Please take a look at: https://stryker-mutator.io/docs/stryker-js/configuration/ for more information.",
     "packageManager": "npm",
-    "reporters": ["html", "clear-text", "progress", "json"],
+    "reporters": ["html", "clear-text", "progress", "json", "dashboard"],
+    "dashboard": {
+        "project": "github.com/rapt0p7/scenegrid-console",
+        "version": "main"
+    },
     "testRunner": "vitest",
     "testRunner_comment": "Take a look at https://stryker-mutator.io/docs/stryker-js/vitest-runner for information about the vitest plugin.",
     "coverageAnalysis": "perTest",
     "ignoreStatic": true,
+    "ignorePatterns": [".claude/**", ".agents/**", ".gemini/**"],
     "mutate": [
         "packages/**/*.ts",
         "!packages/**/*.{test,spec,bench}.ts",
         "!vitest.config.ts",
         "!packages/engine/src/Domain/**/Ports/**/*.ts",
         "!packages/*/vite.config.ts",
-        "!packages/inspector/**/*.ts"
+        "!packages/inspector/**/*.ts",
+        "!packages/debugger/**/*.ts"
     ],
     "timeoutMS": 5000,
     "thresholds": {

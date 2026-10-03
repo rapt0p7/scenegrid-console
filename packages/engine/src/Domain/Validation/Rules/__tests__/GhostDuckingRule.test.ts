@@ -242,5 +242,62 @@ describe('GhostDuckingRule', () => {
                     'This will cause silent ducking.'
             ]);
         });
+
+        describe('missing configurations (Line 11)', () => {
+            it('should return early if snapshots are missing', () => {
+                const rule = new GhostDuckingRule();
+                const context = createStubContext({});
+                (context.config as any).snapshots = undefined;
+                rule.validate(context);
+                expect(context.getWarnings()).toHaveLength(0);
+            });
+
+            it('should return early if soundMap is missing', () => {
+                const rule = new GhostDuckingRule();
+                const context = createStubContext({});
+                (context.config as any).soundMap = undefined;
+                rule.validate(context);
+                expect(context.getWarnings()).toHaveLength(0);
+            });
+
+            it('should return early if buses are missing', () => {
+                const rule = new GhostDuckingRule();
+                const context = createStubContext({});
+                (context.config as any).buses = undefined;
+                rule.validate(context);
+                expect(context.getWarnings()).toHaveLength(0);
+            });
+        });
+
+        describe('missing snapshot buses (Line 26)', () => {
+            it('should skip snapshot if snapshotCfg.buses is absent', () => {
+                const rule = new GhostDuckingRule();
+                const context = createStubContext({
+                    buses: { voice: { gain: 1 } },
+                    snapshots: { snap_no_buses: {} as any },
+                    soundMap: { sfx_1: { busId: 'voice', ducking: { target: 'music' } } as any }
+                } as unknown as Partial<IConsistencyCheckerPayload>);
+
+                rule.validate(context);
+                expect(context.getWarnings()).toHaveLength(0);
+            });
+        });
+
+        describe('missing default bus gain (Line 35)', () => {
+            it('should fallback to logicalGain 1 when defaultBus.gain is absent', () => {
+                const rule = new GhostDuckingRule();
+                const context = createStubContext({
+                    // defaultBus has no gain
+                    buses: { voice: {} as any },
+                    // snapshot does not specify voice bus gain
+                    snapshots: { snap_default: { buses: { voice: {} as any } } },
+                    soundMap: { sfx_1: { busId: 'voice', ducking: { target: 'music' } } as any }
+                } as unknown as Partial<IConsistencyCheckerPayload>);
+
+                rule.validate(context);
+                // Logical gain falls back to 1, so no warning of silent ducking
+                expect(context.getWarnings()).toHaveLength(0);
+            });
+        });
     });
 });

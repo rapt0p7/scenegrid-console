@@ -32,6 +32,9 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
     let mockTelemetry: ITelemetryDispatcher;
     let fetchSpy: ReturnType<typeof vi.spyOn>;
 
+    // oxlint-disable-next-line unicorn/consistent-function-scoping
+    const flushPromises = () => new Promise(resolve => setImmediate(resolve));
+
     beforeEach(() => {
         mockContext = {
             currentTime: 0,
@@ -58,29 +61,56 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
         vi.restoreAllMocks();
     });
 
-    describe('2.1: Look-ahead Fetch Queue & Margin Math', () => {
-        // oxlint-disable-next-line unicorn/consistent-function-scoping
-        const flushPromises = () => new Promise(resolve => setImmediate(resolve));
+    describe('2.0: Initialization and State', () => {
+        it('should correctly initialize with default states', () => {
+            const newLoader = new ChunkedLoader(mockContext, mockTelemetry);
+            expect(newLoader.isZombieStateDetected()).toBe(false);
+            expect(newLoader.getRetryCount()).toBe(0);
+            expect(newLoader.getDecodedQueueSize()).toBe(0);
 
+            newLoader.loadManifest(mockStreamManifest);
+            newLoader.tick(0, 16);
+            expect(fetchSpy).not.toHaveBeenCalled();
+
+            newLoader.start();
+            newLoader.tick(1, 16);
+            newLoader.tick(1, 16);
+            newLoader.tick(1, 16);
+            expect(newLoader.isZombieStateDetected()).toBe(false);
+            newLoader.tick(1, 16);
+            expect(newLoader.isZombieStateDetected()).toBe(true);
+        });
+    });
+
+    describe('2.1: Look-ahead Fetch Queue & Margin Math', () => {
         it('should trigger fetch using max(50% of chunkDuration, absoluteFloorSeconds) and wrap to Chunk 0', async () => {
             loader.start();
+
             expect(fetchSpy).toHaveBeenCalledWith('https://cdn.scenegrid.io/audio/ambient_chunk_0.aac');
             fetchSpy.mockClear();
 
             await flushPromises();
 
             mockContext.currentTime = 2.0;
+            loader.syncTimeline(0, 2.0);
             loader.tick(mockContext.currentTime, 16);
 
             expect(fetchSpy).toHaveBeenCalledWith('https://cdn.scenegrid.io/audio/ambient_chunk_1.aac');
             fetchSpy.mockClear();
+        });
 
+        it('should completely reset state when loadManifest is called again', async () => {
+            loader.start();
             await flushPromises();
+            expect(loader.getDecodedQueueSize()).toBeGreaterThan(0);
 
-            mockContext.currentTime = 4.0;
-            loader.tick(mockContext.currentTime, 16);
+            loader.loadManifest(mockStreamManifest);
 
-            expect(fetchSpy).toHaveBeenCalledWith('https://cdn.scenegrid.io/audio/ambient_chunk_2.aac');
+            expect(loader.getDecodedQueueSize()).toBe(0);
+
+            fetchSpy.mockClear();
+            loader.tick(0, 16);
+            expect(fetchSpy).not.toHaveBeenCalled();
         });
     });
 
@@ -97,15 +127,27 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
             expect(fetchSpy).not.toHaveBeenCalled();
         });
 
-        it('should flush decoded queue if paused beyond TTL (5 minutes)', () => {
+        it('should flush decoded queue if paused beyond TTL (5 minutes)', async () => {
             loader.start();
+            await flushPromises();
+
+            loader.tick(0, 16);
+
+            expect(loader.getDecodedQueueSize()).toBe(1);
+
             loader.pause(mockContext.currentTime);
 
             const TTL_MS = 5 * 60 * 1000;
 
-            loader.tick(mockContext.currentTime, TTL_MS + 1000);
+            loader.tick(mockContext.currentTime, TTL_MS - 100);
+
+            loader.tick(mockContext.currentTime, 200);
 
             expect(loader.getDecodedQueueSize()).toBe(0);
+
+            fetchSpy.mockClear();
+            loader.resume(mockContext.currentTime);
+            expect(fetchSpy).toHaveBeenCalledWith('https://cdn.scenegrid.io/audio/ambient_chunk_0.aac');
         });
 
         it('should fully re-initialize if resuming from a Zombie context (iOS watchdog)', () => {
@@ -126,25 +168,47 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
     });
 
     describe('2.3: Underrun Deadline, Backoff Strategy & Telemetry', () => {
-        // oxlint-disable-next-line unicorn/consistent-function-scoping
-        const flushPromises = () => new Promise(resolve => setImmediate(resolve));
-
         it('should retry up to 3 times with backoff, then emit fatal telemetry', async () => {
             global.fetch = vi.fn().mockRejectedValue(new Error('Network offline'));
 
             loader.start();
-
             await flushPromises();
+
+            mockContext.currentTime += 0.1;
             loader.tick(mockContext.currentTime, 1000);
             await flushPromises();
+            expect(loader.getRetryCount()).toBe(1);
+
+            mockContext.currentTime += 0.1;
+            loader.tick(mockContext.currentTime, 1000);
+            await flushPromises();
+            expect(loader.getRetryCount()).toBe(1);
+
+            mockContext.currentTime += 0.1;
+            loader.tick(mockContext.currentTime, 1000);
+            await flushPromises();
+            expect(loader.getRetryCount()).toBe(2);
+
+            mockContext.currentTime += 0.1;
             loader.tick(mockContext.currentTime, 2000);
             await flushPromises();
-            loader.tick(mockContext.currentTime, 4000);
+            expect(loader.getRetryCount()).toBe(2);
+
+            mockContext.currentTime += 0.1;
+            loader.tick(mockContext.currentTime, 2000);
+            await flushPromises();
 
             expect(mockTelemetry.dispatch).toHaveBeenCalledWith(
                 expect.objectContaining({
                     type: 'CAUSE_CHAIN',
-                    initiator: expect.objectContaining({ reason: 'audio_stream_underrun_fatal' })
+                    initiator: expect.objectContaining({
+                        type: 'STREAM_LOADER',
+                        reason: 'audio_stream_underrun_fatal'
+                    }),
+                    result: expect.objectContaining({
+                        type: 'FATAL_UNDERRUN',
+                        target: 'chunk_underrun'
+                    })
                 })
             );
         });
@@ -179,6 +243,18 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
             expect(loader.getRetryCount()).toBe(0);
         });
 
+        it('should trigger fetch if active chunk is missing and not in flight (e.g. fast forward)', () => {
+            loader.start();
+
+            fetchSpy.mockClear();
+
+            loader.syncTimeline(1, 10.0);
+
+            loader.tick(10.0, 1000);
+
+            expect(fetchSpy).toHaveBeenCalledWith('https://cdn.scenegrid.io/audio/ambient_chunk_1.aac');
+        });
+
         it('should early return from handleUnderrunDeadline if max retries reached', async () => {
             global.fetch = vi.fn().mockRejectedValue(new Error('Network offline'));
             loader.start();
@@ -196,12 +272,20 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
             loader.tick(mockContext.currentTime, 8000);
             expect(loader.getRetryCount()).toBe(3);
         });
+
+        it('should not double-fetch or trigger underrun backoff while a chunk is already in flight', () => {
+            fetchSpy.mockClear();
+            loader.start();
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+            loader.tick(0, 1000);
+
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+            expect(loader.getRetryCount()).toBe(0);
+        });
     });
 
     describe('2.4: Edge Cases and Coverage', () => {
-        // oxlint-disable-next-line unicorn/consistent-function-scoping
-        const flushPromises = () => new Promise(resolve => setImmediate(resolve));
-
         it('should not start if manifest is missing or empty', () => {
             const emptyLoader = new ChunkedLoader(mockContext, mockTelemetry);
             emptyLoader.start();
@@ -231,10 +315,17 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
             expect(fetchSpy).not.toHaveBeenCalled();
         });
 
-        it('should handle context closed in resume()', () => {
+        it('should handle context closed in resume()', async () => {
             loader.start();
+            await flushPromises();
+            expect(loader.getDecodedQueueSize()).toBeGreaterThan(0);
+
             mockContext.state = 'closed';
             loader.resume(1.0);
+
+            expect(loader.getDecodedQueueSize()).toBe(0);
+
+            fetchSpy.mockClear();
             loader.tick(1.0, 16);
         });
 
@@ -247,16 +338,30 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
             loader.start();
             await flushPromises();
             loader.tick(0, 16);
+
             expect(fetchSpy).toHaveBeenCalledTimes(1);
 
             const loopManifest = {
                 isLooping: true,
-                chunks: [{ url: 'chunk_0.aac', trimStartSamples: 0, durationSamples: 44100 }]
+                chunks: [
+                    { url: 'chunk_0.aac', trimStartSamples: 0, durationSamples: 44100 },
+                    { url: 'chunk_1.aac', trimStartSamples: 0, durationSamples: 44100 }
+                ]
             };
+            fetchSpy.mockClear();
             loader.loadManifest(loopManifest);
             loader.start();
             await flushPromises();
+
             loader.tick(0, 16);
+            await flushPromises();
+
+            loader.syncTimeline(1, 2.0);
+
+            loader.tick(2.0, 16);
+            await flushPromises();
+
+            expect(loader.hasChunk(0)).toBe(true);
         });
 
         it('should sync timeline correctly and evict old chunks', async () => {
@@ -324,15 +429,21 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
             expect(loader.getChunk(99)).toBeUndefined();
         });
 
-        it('should resume correctly without passing currentTime, and when buffers already exist', async () => {
+        it('should resume correctly and initialize lastSeenAudioTime to detect immediate stalls', async () => {
             loader.start();
             await flushPromises();
 
             loader.pause();
 
-            loader.resume();
+            loader.resume(2.0);
 
-            expect(loader.getRetryCount()).toBe(0);
+            loader.tick(2.0, 16);
+            loader.tick(2.0, 16);
+            expect(loader.isZombieStateDetected()).toBe(false);
+            loader.tick(2.0, 16);
+            expect(loader.isZombieStateDetected()).toBe(true);
+
+            expect(loader.getDecodedQueueSize()).toBe(0);
         });
 
         it('should handle backoff timer > 0 (no retry triggered yet)', async () => {

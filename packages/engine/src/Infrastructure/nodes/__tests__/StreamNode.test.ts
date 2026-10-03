@@ -115,6 +115,27 @@ describe('StreamNode (Infrastructure Layer)', () => {
             expect(startCall[0]).toBeCloseTo(10.0, 4);
             expect(startCall[1]).toBeCloseTo(expectedOffset, 4);
             expect(startCall[2]).toBeCloseTo(expectedDuration, 4);
+
+            expect((streamNode as any).nextChunkScheduledTime).toBeCloseTo(10.0 + 1.5, 4);
+            expect((streamNode as any).isPaused).toBe(false);
+        });
+
+        it('should recreate nodes on resume() with partial chunk elapsed', () => {
+            streamNode.start(mockContext.currentTime);
+            mockContext.currentTime = 0.5;
+            streamNode.tick(mockContext.currentTime, 16.66);
+            streamNode.pause();
+
+            mockContext.currentTime = 10.0;
+            createdNodes.forEach(n => n.start.mockClear());
+            streamNode.resume();
+
+            const expectedDuration = 1.5;
+
+            const resumedNode = createdNodes[createdNodes.length - 1];
+            const startCall = resumedNode.start.mock.calls[0];
+            expect(startCall[2]).toBeCloseTo(expectedDuration, 4);
+            expect((streamNode as any).nextChunkScheduledTime).toBeCloseTo(10.0 + 1.5, 4);
         });
 
         it('should snap to chunk boundary using EPSILON if paused exactly at transition', () => {
@@ -196,8 +217,18 @@ describe('StreamNode (Infrastructure Layer)', () => {
             streamNode.start(0);
             expect(streamNode.isPlaying).toBe(true);
             streamNode.stop();
+            expect(mockLoader.pause).toHaveBeenCalled();
             expect(streamNode.isPlaying).toBe(false);
             expect((streamNode as any).isPaused).toBe(false);
+        });
+
+        it('should compute getLogicalCurrentTime correctly with non-zero currentChunkStartTime', () => {
+            streamNode.start(0);
+            (streamNode as any).currentChunkStartTime = 2.0;
+            mockContext.currentTime = 5.0;
+            expect(streamNode.getLogicalCurrentTime()).toBe(3.0);
+            streamNode.pause();
+            expect(streamNode.getLogicalCurrentTime()).toBe(3.0);
         });
     });
 
@@ -215,15 +246,22 @@ describe('StreamNode (Infrastructure Layer)', () => {
             expect((streamNode as any).scheduledNodes.length).toBe(0);
         });
 
-        it('should handle pause when no future node matches', () => {
+        it('should handle pause when no future node matches and stop all scheduled nodes', () => {
             streamNode.start(0);
+            const mockSource1 = new MockAudioBufferSourceNode();
+            const mockSource2 = new MockAudioBufferSourceNode();
             (streamNode as any).scheduledNodes = [
-                { source: new MockAudioBufferSourceNode(), index: 1, logicalStartTime: 2.0, absoluteEndTime: 4.0 }
+                { source: mockSource1, index: 1, logicalStartTime: 2.0, absoluteEndTime: 4.0 },
+                { source: mockSource2, index: 2, logicalStartTime: 5.0, absoluteEndTime: 7.0 }
             ];
             mockContext.currentTime = 10.0;
             streamNode.pause();
 
             expect((streamNode as any).scheduledNodes.length).toBe(0);
+            expect(mockSource1.stop).toHaveBeenCalled();
+            expect(mockSource1.disconnect).toHaveBeenCalled();
+            expect(mockSource2.stop).toHaveBeenCalled();
+            expect(mockSource2.disconnect).toHaveBeenCalled();
         });
 
         it('should handle end of manifest during resume (Looping)', () => {
@@ -266,25 +304,38 @@ describe('StreamNode (Infrastructure Layer)', () => {
             streamNode.onEnded = endedSpy;
 
             (streamNode as any).activeChunkIndex = 2;
-            (streamNode as any).pauseSnapshotTime = 0.5;
+            (streamNode as any).pauseSnapshotTime = 1.5;
             (streamNode as any).currentChunkStartTime = 0.0;
+
+            createdNodes.length = 0;
 
             streamNode.resume();
 
             expect(streamNode.isPlaying).toBe(false);
             expect(endedSpy).toHaveBeenCalled();
+            expect(createdNodes.length).toBe(0);
         });
     });
 
     describe('3.6: Buffer Watermark and Scheduling logic', () => {
-        it('should not advance if initial buffer is not met', () => {
+        it('should not advance if initial buffer is not met and properly hit watermark', () => {
             mockLoader.hasChunk.mockReturnValue(false);
             streamNode.start(mockContext.currentTime);
 
             mockContext.currentTime = 5.0;
+            (streamNode as any).nextChunkScheduledTime = 5.0;
             streamNode.tick(5.0, 16.66);
 
-            expect((streamNode as any).nextChunkScheduledTime).toBeCloseTo(0 + 16.66 / 1000, 5);
+            expect((streamNode as any).nextChunkScheduledTime).toBeCloseTo(5.0 + 16.66 / 1000, 5);
+            expect((streamNode as any).initialBufferMet).toBe(false);
+
+            mockLoader.hasChunk.mockImplementation((idx: number) => idx === 0);
+            streamNode.tick(5.0, 16.66);
+            expect((streamNode as any).initialBufferMet).toBe(false);
+
+            mockLoader.hasChunk.mockImplementation((idx: number) => idx === 0 || idx === 1);
+            streamNode.tick(5.0, 16.66);
+            expect((streamNode as any).initialBufferMet).toBe(true);
         });
 
         it('should increment loadedCount when chunk index is >= length and not looping', () => {
@@ -321,18 +372,18 @@ describe('StreamNode (Infrastructure Layer)', () => {
             expect(endedSpy).toHaveBeenCalled();
         });
 
-        it('should clean up finished nodes', () => {
+        it('should strictly observe absoluteEndTime + 1.0 in cleanupFinishedNodes', () => {
             streamNode.start(0);
             const mockSource = new MockAudioBufferSourceNode();
-            (streamNode as any).scheduledNodes = [
-                { source: mockSource, absoluteEndTime: 1.0 },
-                { source: new MockAudioBufferSourceNode(), absoluteEndTime: 10.0 }
-            ];
+            (streamNode as any).scheduledNodes = [{ source: mockSource, absoluteEndTime: 10.0 }];
 
-            (streamNode as any).cleanupFinishedNodes(3.0);
-
-            expect(mockSource.disconnect).toHaveBeenCalled();
+            (streamNode as any).cleanupFinishedNodes(11.0);
+            expect(mockSource.disconnect).not.toHaveBeenCalled();
             expect((streamNode as any).scheduledNodes.length).toBe(1);
+
+            (streamNode as any).cleanupFinishedNodes(11.01);
+            expect(mockSource.disconnect).toHaveBeenCalled();
+            expect((streamNode as any).scheduledNodes.length).toBe(0);
         });
     });
 
@@ -417,12 +468,21 @@ describe('StreamNode (Infrastructure Layer)', () => {
             expect(createdNodes.length).toBe(0);
         });
 
-        it('should return from scheduleChunk if actualDuration <= 0', () => {
+        it('should return from scheduleChunk if actualDuration <= 0 and call connect', () => {
             streamNode.start(0);
             mockLoader.getChunk.mockReturnValue({ length: 1000 });
             mockContext.currentTime = 100.0;
             (streamNode as any).scheduleChunk(0, 0, 0);
             expect(createdNodes.length).toBe(1);
+
+            createdNodes.length = 0; // reset
+            mockContext.currentTime = 0.0;
+            (streamNode as any).scheduleChunk(0, 0, 2.0);
+            expect(createdNodes.length).toBe(0);
+
+            (streamNode as any).scheduleChunk(0, 0, 1.0);
+            expect(createdNodes.length).toBe(1);
+            expect(createdNodes[0].connect).toHaveBeenCalledWith(streamNode.output);
         });
 
         it('should handle falsy node in cleanupFinishedNodes', () => {

@@ -60,4 +60,32 @@ describe('createTelemetryWorker path resolution', () => {
         worker.port.close();
         workerSpy.mockRestore();
     });
+
+    it('should post INIT_CONFIG message if remoteSyncUri is provided in config', () => {
+        const workerSpy = vi.spyOn(global, 'SharedWorker');
+        mockMessagePort.postMessage.mockClear();
+
+        const worker = createTelemetryWorker({}, { remoteSyncUri: 'ws://localhost:8080' });
+
+        expect(mockMessagePort.postMessage).toHaveBeenCalledTimes(1);
+        expect(mockMessagePort.postMessage).toHaveBeenCalledWith({
+            type: 'INIT_CONFIG',
+            remoteSyncUri: 'ws://localhost:8080'
+        });
+
+        worker.port.close();
+        workerSpy.mockRestore();
+    });
+
+    it('should not post INIT_CONFIG message if remoteSyncUri is missing in config', () => {
+        const workerSpy = vi.spyOn(global, 'SharedWorker');
+        mockMessagePort.postMessage.mockClear();
+
+        const worker = createTelemetryWorker({}, {});
+
+        expect(mockMessagePort.postMessage).not.toHaveBeenCalled();
+
+        worker.port.close();
+        workerSpy.mockRestore();
+    });
 });

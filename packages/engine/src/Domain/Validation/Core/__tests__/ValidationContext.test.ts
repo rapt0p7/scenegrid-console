@@ -33,9 +33,11 @@ describe('ValidationContext', () => {
 
             const isStringValid = context.assertRequiredType('sound.name', 'footstep_wood', 'string');
             const isNumberValid = context.assertRequiredType('sound.volume', 0.8, 'number');
+            const isObjectValid = context.assertRequiredType('sound.rtpc', { pitch: 1 }, 'object');
 
             expect(isStringValid).toBe(true);
             expect(isNumberValid).toBe(true);
+            expect(isObjectValid).toBe(true);
             expect(context.getErrors()).toHaveLength(0);
         });
 
@@ -93,13 +95,28 @@ describe('ValidationContext', () => {
             );
         });
 
+        it('should delegate to assertArray and early return for non-arrays and undefined', () => {
+            const context1 = createContext();
+            context1.validateTuple('range');
+            expect(context1.getErrors()).toContain('Missing required array at "range"');
+
+            const context2 = createContext();
+            context2.validateTuple('range', 'not-an-array');
+            expect(context2.getErrors()).toContain('Type Error at "range": expected array, got string');
+        });
+
         it('should record an error when tuple elements are not numeric', () => {
-            const context = createContext();
-            const invalidTuple = ['0.5', '1.0'];
+            const context1 = createContext();
+            context1.validateTuple('range', ['0.5', '1.0']);
+            expect(context1.getErrors()).toContain('Elements in tuple "range" must be numbers.');
 
-            context.validateTuple('voice.pitchRange', invalidTuple);
+            const context2 = createContext();
+            context2.validateTuple('range', [0.5, '1.0']);
+            expect(context2.getErrors()).toContain('Elements in tuple "range" must be numbers.');
 
-            expect(context.getErrors()).toContain('Elements in tuple "voice.pitchRange" must be numbers.');
+            const context3 = createContext();
+            context3.validateTuple('range', ['0.5', 1.0]);
+            expect(context3.getErrors()).toContain('Elements in tuple "range" must be numbers.');
         });
 
         itProp.prop([fc.double({ noNaN: true }), fc.double({ noNaN: true })])(
@@ -277,6 +294,39 @@ describe('ValidationContext', () => {
 
                 expect(context.isContainer(null as any)).toBe(false);
                 expect(context.isContainer(123 as any)).toBe(false);
+            });
+        });
+
+        describe('isScatterer', () => {
+            it('should return false when isScatterer is false or missing', () => {
+                const context = createContext();
+
+                expect(context.isScatterer({ isScatterer: false } as any)).toBe(false);
+                expect(context.isScatterer({} as any)).toBe(false);
+            });
+
+            it('should return false when input is null or a primitive', () => {
+                const context = createContext();
+
+                expect(context.isScatterer(null as any)).toBe(false);
+                expect(context.isScatterer('primitive' as any)).toBe(false);
+            });
+        });
+
+        describe('isSwitch', () => {
+            it('should return false when isSwitch is false or missing', () => {
+                const context = createContext();
+
+                expect(context.isSwitch({ isSwitch: false } as any)).toBe(false);
+                expect(context.isSwitch({} as any)).toBe(false);
+            });
+
+            it('should return falsy when input is null or undefined or a primitive', () => {
+                const context = createContext();
+
+                expect(context.isSwitch(null as any)).toBeFalsy();
+                expect(context.isSwitch(undefined as any)).toBeFalsy();
+                expect(context.isSwitch(123 as any)).toBeFalsy();
             });
         });
 

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as execaModule from 'execa';
+import path from 'node:path';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { generateCodecLadder } from '../ladder.js';
@@ -27,14 +28,134 @@ describe('FFmpeg Pipeline', () => {
     it('generates codec ladder paths and calls ffmpeg', async () => {
         const result = await generateCodecLadder('dummy.wav', 'out', '/assets');
         expect(result.url.webm).toBe('/assets/dummy.webm');
+        expect(result.url.mp3).toBe('/assets/dummy.mp3');
+        expect(result.url.m4a).toBe('/assets/dummy.m4a');
+
         expect(execaModule.execa).toHaveBeenCalledTimes(3);
+
+        expect(execaModule.execa).toHaveBeenCalledWith('ffmpeg', [
+            '-v',
+            'error',
+            '-y',
+            '-i',
+            'dummy.wav',
+            '-vn',
+            '-c:a',
+            'libopus',
+            '-b:a',
+            '96k',
+            expect.stringContaining('.webm')
+        ]);
+        expect(execaModule.execa).toHaveBeenCalledWith('ffmpeg', [
+            '-v',
+            'error',
+            '-y',
+            '-i',
+            'dummy.wav',
+            '-vn',
+            '-c:a',
+            'libmp3lame',
+            '-q:a',
+            '2',
+            expect.stringContaining('.mp3')
+        ]);
+        expect(execaModule.execa).toHaveBeenCalledWith('ffmpeg', [
+            '-v',
+            'error',
+            '-y',
+            '-i',
+            'dummy.wav',
+            '-vn',
+            '-c:a',
+            'aac',
+            '-b:a',
+            '128k',
+            expect.stringContaining('.m4a')
+        ]);
+
+        expect(mockFs.mkdirSync).not.toHaveBeenCalled();
     });
 
     it('generates chunked stream manifest and calls ffmpeg', async () => {
         const result = await generateChunkedStream('dummy.wav', 'out', '/assets', 12.0);
+
         expect(result.chunks.length).toBe(3);
+
         expect(result.chunks[0].url).toBe('/assets/dummy_000.ogg');
+        expect(result.chunks[0].durationSamples).toBe(5 * 44100);
+        expect(result.chunks[0].trimStartSamples).toBe(0);
+
+        expect(result.chunks[1].url).toBe('/assets/dummy_001.ogg');
+        expect(result.chunks[1].durationSamples).toBe(5 * 44100);
+        expect(result.chunks[1].trimStartSamples).toBe(Math.round(0.25 * 44100));
+
+        expect(result.chunks[2].url).toBe('/assets/dummy_002.ogg');
+        expect(result.chunks[2].durationSamples).toBe(2 * 44100);
+        expect(result.chunks[2].trimStartSamples).toBe(Math.round(0.25 * 44100));
+
         expect(execaModule.execa).toHaveBeenCalledTimes(3);
+
+        expect(execaModule.execa).toHaveBeenCalledWith('ffmpeg', [
+            '-v',
+            'error',
+            '-y',
+            '-ss',
+            '0.000',
+            '-t',
+            '5.250',
+            '-i',
+            'dummy.wav',
+            '-vn',
+            '-c:a',
+            'libvorbis',
+            '-q:a',
+            '4',
+            '-ar',
+            '44100',
+            'out\\dummy_000.ogg'.replaceAll(/\\/g, path.sep)
+        ]);
+
+        expect(execaModule.execa).toHaveBeenCalledWith('ffmpeg', [
+            '-v',
+            'error',
+            '-y',
+            '-ss',
+            '4.750',
+            '-t',
+            '5.500',
+            '-i',
+            'dummy.wav',
+            '-vn',
+            '-c:a',
+            'libvorbis',
+            '-q:a',
+            '4',
+            '-ar',
+            '44100',
+            'out\\dummy_001.ogg'.replaceAll(/\\/g, path.sep)
+        ]);
+
+        expect(execaModule.execa).toHaveBeenCalledWith('ffmpeg', [
+            '-v',
+            'error',
+            '-y',
+            '-ss',
+            '9.750',
+            '-t',
+            '2.500',
+            '-i',
+            'dummy.wav',
+            '-vn',
+            '-c:a',
+            'libvorbis',
+            '-q:a',
+            '4',
+            '-ar',
+            '44100',
+            'out\\dummy_002.ogg'.replaceAll(/\\/g, path.sep)
+        ]);
+
+        expect(mockFs.mkdirSync).not.toHaveBeenCalled();
     });
 
     it('creates output dir if it does not exist (ladder)', async () => {

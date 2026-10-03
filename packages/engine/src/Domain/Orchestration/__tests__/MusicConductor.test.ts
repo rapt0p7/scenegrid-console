@@ -1,16 +1,17 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
-import { MusicConductor } from '../MusicConductor.js';
-
-import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
-import type MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { IMusicFSMConfig } from '@domain/Configuration/Ports/IMusicFSMConfig.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
+import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { ContextTime, GameParamId, MusicStateId, RegionId, SnapshotId, SoundId } from '@scene-grid/shared';
-import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
+
 import * as MusicFsmEvaluator from '@domain/Orchestration/MusicFsmEvaluator.js';
+import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
+import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
+
+import { MusicConductor } from '../MusicConductor.js';
 
 vi.mock('@domain/Shared/Evaluators/ConditionEvaluator.js', () => ({
     ConditionEvaluator: {
@@ -202,6 +203,7 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
                     interruptable: false
                 }
             });
+            expect(sequencer.playStinger).not.toHaveBeenCalled();
         });
 
         it('should trigger Stinger playback via sequencer if configured', () => {
@@ -321,6 +323,106 @@ describe('MusicConductor (Exhaustive Architectural Test Suite)', () => {
             expect(state.isTransitioning).toBe(false);
 
             expect(evalSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('should commit Mixer when currentTime is exactly equal to executionTime (boundary)', () => {
+            const edge = { targetState: 'combat', syncRule: 'NextBar', crossfadeDuration: 500 } as any;
+            const evalSpy = vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue(edge);
+            mockGrid.getNextBarTime.mockReturnValue(15.0);
+
+            conductor.tick(10.0 as ContextTime);
+            evalSpy.mockReturnValue(null);
+            mixer.activateSnapshot.mockClear();
+
+            conductor.tick(15.0 as ContextTime);
+
+            expect(mixer.activateSnapshot).toHaveBeenCalledTimes(1);
+            expect(mixer.activateSnapshot).toHaveBeenCalledWith('snap_combat', 'music_fsm', 100, 500);
+            expect((conductor as any).state.isTransitioning).toBe(false);
+        });
+    });
+
+    describe('5b. Resilience & Rule Branches (mutation gaps)', () => {
+        it('should stop safely without calling stopLoop when current state is missing from config', () => {
+            const brokenConfig = { ...mockConfig, initialState: 'ghost' as MusicStateId };
+            conductor.init(brokenConfig);
+            conductor.start();
+
+            expect(() => {
+                conductor.stop();
+            }).not.toThrow();
+            expect(sequencer.stopLoop).not.toHaveBeenCalled();
+            expect((conductor as any).isRunning).toBe(false);
+        });
+
+        it('should ignore an edge whose targetState does not exist in config', () => {
+            conductor.init(mockConfig);
+            conductor.start();
+            vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue({
+                targetState: 'ghost',
+                syncRule: 'NextBar',
+                stingerId: 'cymbal'
+            } as any);
+
+            expect(() => {
+                conductor.tick(10.0 as ContextTime);
+            }).not.toThrow();
+
+            expect(sequencer.transitionTo).not.toHaveBeenCalled();
+            expect(sequencer.playStinger).not.toHaveBeenCalled();
+            expect((conductor as any).state.currentStateId).toBe('idle');
+            expect((conductor as any).state.isTransitioning).toBe(false);
+        });
+
+        it('should fallback to currentTime when sequencer has no playback info for the current sound', () => {
+            conductor.init(mockConfig);
+            conductor.start();
+            sequencer.getPlaybackInfo.mockReturnValue(undefined as any);
+            vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue({
+                targetState: 'combat',
+                syncRule: 'NextBar'
+            } as any);
+
+            expect(() => {
+                conductor.tick(10.25 as ContextTime);
+            }).not.toThrow();
+
+            expect(sequencer.getPlaybackInfo).toHaveBeenCalledWith('sys_music');
+            expect((conductor as any).state.pendingMixer.executionTime).toBe(10.25);
+        });
+
+        it('should calculate targetTime for NextBeat using getNextBeatTime (not getNextBarTime)', () => {
+            conductor.init(mockConfig);
+            conductor.start();
+            mockGrid.getNextBeatTime.mockReturnValue(10.5);
+            mockGrid.getNextBarTime.mockReturnValue(99);
+            vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue({
+                targetState: 'combat',
+                syncRule: 'NextBeat'
+            } as any);
+
+            conductor.tick(10.0 as ContextTime);
+
+            expect(mockGrid.getNextBeatTime).toHaveBeenCalledWith(10.0);
+            expect(mockGrid.getNextBarTime).not.toHaveBeenCalled();
+            expect((conductor as any).state.pendingMixer.executionTime).toBe(10.5);
+        });
+
+        it('should keep currentTime for an object rule with an unknown type', () => {
+            conductor.init(mockConfig);
+            conductor.start();
+            mockGrid.getPulseAtTime.mockReturnValue(1000);
+            mockGrid.getTimeAtPulse.mockReturnValue(99);
+            vi.spyOn(MusicFsmEvaluator, 'evaluateEdges').mockReturnValue({
+                targetState: 'combat',
+                syncRule: { type: 'Unknown' }
+            } as any);
+
+            conductor.tick(10.75 as ContextTime);
+
+            expect(mockGrid.getPulseAtTime).not.toHaveBeenCalled();
+            expect(mockGrid.getTimeAtPulse).not.toHaveBeenCalled();
+            expect((conductor as any).state.pendingMixer.executionTime).toBe(10.75);
         });
     });
 

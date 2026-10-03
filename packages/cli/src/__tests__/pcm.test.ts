@@ -46,7 +46,16 @@ describe('extractMetadata', () => {
         expect(meta.durationSec).toBe(10.5);
         expect(meta.channels).toBe(2);
         expect(meta.sampleRate).toBe(44100);
-        expect(mockExeca).toHaveBeenCalledWith('ffprobe', expect.arrayContaining(['/path/to/audio.wav']));
+
+        expect(mockExeca).toHaveBeenCalledWith('ffprobe', [
+            '-v',
+            'error',
+            '-show_entries',
+            'format=duration:stream=channels,sample_rate',
+            '-of',
+            'json',
+            '/path/to/audio.wav'
+        ]);
     });
 
     it('defaults channels to 0 when not present in stream', async () => {
@@ -80,11 +89,22 @@ describe('extractMetadata', () => {
         mockExeca.mockResolvedValueOnce({ stdout: JSON.stringify(ffprobeOutput) });
 
         await expect(extractMetadata('/path/to/bad.wav')).rejects.toThrow(
-            'Failed to parse valid metadata from ffprobe output'
+            'Failed to parse valid metadata from ffprobe output for /path/to/bad.wav'
         );
     });
 
-    it('throws when streams array is empty/missing', async () => {
+    it('throws when format object is completely missing', async () => {
+        const ffprobeOutput = {
+            streams: [{ channels: 2, sample_rate: '44100' }]
+        };
+        mockExeca.mockResolvedValueOnce({ stdout: JSON.stringify(ffprobeOutput) });
+
+        await expect(extractMetadata('/path/to/bad.wav')).rejects.toThrow(
+            'Failed to parse valid metadata from ffprobe output for /path/to/bad.wav'
+        );
+    });
+
+    it('throws when streams array is empty', async () => {
         const ffprobeOutput = {
             format: { duration: '10.0' },
             streams: []
@@ -92,7 +112,18 @@ describe('extractMetadata', () => {
         mockExeca.mockResolvedValueOnce({ stdout: JSON.stringify(ffprobeOutput) });
 
         await expect(extractMetadata('/path/to/bad.wav')).rejects.toThrow(
-            'Failed to parse valid metadata from ffprobe output'
+            'Failed to parse valid metadata from ffprobe output for /path/to/bad.wav'
+        );
+    });
+
+    it('throws when streams array is completely missing', async () => {
+        const ffprobeOutput = {
+            format: { duration: '10.0' }
+        };
+        mockExeca.mockResolvedValueOnce({ stdout: JSON.stringify(ffprobeOutput) });
+
+        await expect(extractMetadata('/path/to/bad.wav')).rejects.toThrow(
+            'Failed to parse valid metadata from ffprobe output for /path/to/bad.wav'
         );
     });
 });

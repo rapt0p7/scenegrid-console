@@ -107,6 +107,11 @@ describe('main() — normal pipeline flow', () => {
         await main();
 
         expect(console.log).toHaveBeenCalledWith('Starting SceneGrid CLI Asset Pipeline');
+        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Input: '));
+        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Audio Output: '));
+        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Manifests Output: '));
+        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Base URL: '));
+        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('RAM Quota: '));
         expect(console.log).toHaveBeenCalledWith('Pipeline finished successfully!');
     });
 
@@ -148,11 +153,18 @@ describe('main() — init-aliases sub-command', () => {
     });
 
     it('calls prepareAliases with custom paths when --input and --output are provided', async () => {
-        process.argv = ['node', 'index.js', 'init-aliases', '--input', './my-sounds', '--output', './my-aliases.json'];
-
+        process.argv = ['init-aliases', '--output', './my-aliases.json', '--input', './my-sounds'];
         await main();
-
         expect(mockPrepareAliases).toHaveBeenCalledWith(path.resolve('./my-sounds'), path.resolve('./my-aliases.json'));
+
+        mockPrepareAliases.mockClear();
+
+        process.argv = ['init-aliases', '--input', './my-sounds2', '--output', './my-aliases2.json'];
+        await main();
+        expect(mockPrepareAliases).toHaveBeenCalledWith(
+            path.resolve('./my-sounds2'),
+            path.resolve('./my-aliases2.json')
+        );
     });
 
     describe('generate-schemas command', () => {
@@ -161,10 +173,135 @@ describe('main() — init-aliases sub-command', () => {
 
             await main();
 
-            expect(mockExecSync).toHaveBeenCalledWith(
-                expect.stringContaining('npm run generate-schema'),
-                expect.any(Object)
-            );
+            expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('npm run generate-schema'), {
+                stdio: 'inherit'
+            });
+            expect(console.log).toHaveBeenCalledWith('Generating JSON schemas...');
         });
+    });
+});
+
+describe('isMain execution', () => {
+    let originalArgv: string[];
+
+    beforeEach(() => {
+        originalArgv = [...process.argv];
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        process.argv = originalArgv;
+        vi.restoreAllMocks();
+    });
+
+    it('executes main when isMain is true (top-level execution) and handles errors', async () => {
+        vi.resetModules();
+        const indexPath = require('node:fs').realpathSync(path.resolve(__dirname, '../index.ts'));
+        process.argv = ['node', indexPath, 'invalid-command-to-cause-error'];
+
+        vi.doMock('../config.js', () => ({
+            resolveConfig: vi.fn().mockRejectedValue(new Error('config error'))
+        }));
+        vi.doMock('../pipeline.js', () => ({
+            processAssets: vi.fn(),
+            prepareAliases: vi.fn()
+        }));
+
+        const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        await import('../index.js');
+
+        await new Promise(r => setTimeout(r, 50));
+
+        expect(exitSpy).toHaveBeenCalledWith(1);
+        expect(errorSpy).toHaveBeenCalled();
+    });
+
+    it('executes main when isMain is true and exits normally on success', async () => {
+        vi.resetModules();
+        const indexPath = require('node:fs').realpathSync(path.resolve(__dirname, '../index.ts'));
+        process.argv = ['node', indexPath, 'init-aliases'];
+
+        vi.doMock('../pipeline.js', () => ({
+            processAssets: vi.fn(),
+            prepareAliases: vi.fn().mockResolvedValue(null)
+        }));
+        vi.doMock('../config.js', () => ({
+            resolveConfig: vi.fn().mockResolvedValue({})
+        }));
+
+        const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+
+        await import('../index.js');
+        await new Promise(r => setTimeout(r, 50));
+
+        expect(exitSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe('isMain execution - edge cases', () => {
+    let originalArgv: string[];
+
+    beforeEach(() => {
+        originalArgv = [...process.argv];
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        process.argv = originalArgv;
+        vi.restoreAllMocks();
+    });
+
+    it('does not execute main if process.argv[1] is missing', async () => {
+        vi.resetModules();
+        process.argv = ['node'];
+
+        vi.doMock('../pipeline.js', () => ({
+            processAssets: vi.fn(),
+            prepareAliases: vi.fn()
+        }));
+
+        const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+        await import('../index.js');
+        await new Promise(r => setTimeout(r, 50));
+
+        expect(exitSpy).not.toHaveBeenCalled();
+        expect(logSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe('isMain execution - mismatch path', () => {
+    let originalArgv: string[];
+
+    beforeEach(() => {
+        originalArgv = [...process.argv];
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        process.argv = originalArgv;
+        vi.restoreAllMocks();
+    });
+
+    it('does not execute main if path does not match', async () => {
+        vi.resetModules();
+        process.argv = ['node', '/some/random/path.js'];
+
+        vi.doMock('../pipeline.js', () => ({
+            processAssets: vi.fn(),
+            prepareAliases: vi.fn()
+        }));
+
+        const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+        await import('../index.js');
+        await new Promise(r => setTimeout(r, 50));
+
+        expect(exitSpy).not.toHaveBeenCalled();
+        expect(logSpy).not.toHaveBeenCalled();
     });
 });

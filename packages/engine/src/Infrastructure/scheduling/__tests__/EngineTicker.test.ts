@@ -66,6 +66,20 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
             ticker.stop();
             expect(workerTimers.clearInterval).not.toHaveBeenCalled();
         });
+
+        it('should update lastRunTime for all tasks when started', () => {
+            const tickable: ITickable = { tick: vi.fn() };
+            vi.spyOn(performance, 'now').mockReturnValue(100);
+            ticker.add('task1' as TickerTaskId, 1, tickable);
+
+            vi.spyOn(performance, 'now').mockReturnValue(500);
+            ticker.start();
+
+            vi.spyOn(performance, 'now').mockReturnValue(510);
+            capturedTick!();
+
+            expect(tickable.tick).toHaveBeenCalledWith(0, 10);
+        });
     });
 
     describe('Task Management (Flat Arrays & Swap and Pop)', () => {
@@ -128,6 +142,15 @@ describe('EngineTicker (Data-Oriented Pipeline)', () => {
     });
 
     describe('Tick Logic and Batching (Dividers)', () => {
+        it('should early return and not evaluate time if there are no tasks', () => {
+            ticker.start();
+            mockGetContextTime.mockClear();
+
+            capturedTick!();
+
+            expect(mockGetContextTime).not.toHaveBeenCalled();
+        });
+
         it('should NOT fire target if currentTick is not a multiple of task divider', () => {
             const tickable: ITickable = { tick: vi.fn() };
             ticker.add('task1' as TickerTaskId, 3, tickable);

@@ -75,6 +75,13 @@ describe('CullingContextProvider (Infrastructure Adapter)', () => {
         expect(provider.getBusVolume('missing_bus' as BusId)).toBe(1);
     });
 
+    it('should delegate isGhostVoice to SoundController', () => {
+        mockController.isGhostVoice = vi.fn().mockImplementation(id => id === 101);
+        expect(provider.isGhostVoice(101 as PlaybackId)).toBe(true);
+        expect(provider.isGhostVoice(102 as PlaybackId)).toBe(false);
+        expect(mockController.isGhostVoice).toHaveBeenCalledWith(101);
+    });
+
     it('should calculate correct bus volume using Math.max(realGain, logicalTargetGain)', () => {
         expect(provider.getBusVolume('music_bus' as BusId)).toBe(0.8);
 

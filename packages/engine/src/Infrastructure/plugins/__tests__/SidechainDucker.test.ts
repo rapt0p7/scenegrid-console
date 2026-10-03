@@ -131,7 +131,9 @@ describe('SidechainDucker', () => {
             ducker.insertLookahead(nextNode as any);
 
             expect(safeDisconnect).toHaveBeenCalledWith(mockTargetGain, nextNode);
-            expect(mockTargetGain.connect).toHaveBeenCalled();
+            expect(mockTargetGain.connect).toHaveBeenCalledWith((ducker as any).delay);
+            expect((ducker as any).delay.connect).toHaveBeenCalledWith((ducker as any).duckingGain);
+            expect((ducker as any).duckingGain.connect).toHaveBeenCalledWith(nextNode);
             expect((ducker as any).nextNode).toBe(nextNode);
         });
     });
@@ -156,8 +158,12 @@ describe('SidechainDucker', () => {
             const source = createMockNode();
             ducker.addSource(source as any, 0.5);
 
+            const createdGain = mockContext.createGain.mock.results[2].value;
+
             expect(mockContext.createGain).toHaveBeenCalledTimes(3);
-            expect(source.connect).toHaveBeenCalled();
+            expect(source.connect).toHaveBeenCalledWith(createdGain);
+            expect(createdGain.connect).toHaveBeenCalledWith((ducker as any).mergeGain);
+            expect((ducker as any).intensityMap.get(source)).toBe(0.5);
         });
 
         it('should update intensity if source already exists', () => {
@@ -170,6 +176,7 @@ describe('SidechainDucker', () => {
 
             expect(mockContext.createGain).toHaveBeenCalledTimes(3);
             expect(createdGain.gain.setTargetAtTime).toHaveBeenCalledWith(0.8, 100, 0.01);
+            expect((ducker as any).intensityMap.get(source)).toBe(0.8);
         });
 
         it('should early return when removing invalid or non-existent source', () => {
@@ -181,12 +188,18 @@ describe('SidechainDucker', () => {
         it('should remove an existing source and disconnect its nodes', () => {
             const source = createMockNode();
             ducker.addSource(source as any, 0.5);
+            const createdGain = mockContext.createGain.mock.results[2].value;
 
             vi.mocked(safeDisconnect).mockClear();
 
             ducker.removeSource(source as any);
 
-            expect(safeDisconnect).toHaveBeenCalled();
+            expect(safeDisconnect).toHaveBeenCalledWith(source, createdGain);
+            expect(safeDisconnect).toHaveBeenCalledWith(createdGain, (ducker as any).mergeGain);
+
+            expect((ducker as any).sources.has(source)).toBe(false);
+            expect((ducker as any).sourceGainMap.has(source)).toBe(false);
+            expect((ducker as any).intensityMap.has(source)).toBe(false);
         });
     });
 
@@ -212,11 +225,18 @@ describe('SidechainDucker', () => {
 
             ducker.dispose();
 
+            expect(safeDisconnect).toHaveBeenCalledWith((ducker as any).target, (ducker as any).delay);
+            expect(safeDisconnect).toHaveBeenCalledWith((ducker as any).duckingGain, nextNode);
+
+            expect(safeDisconnect).toHaveBeenCalledWith((ducker as any).duckingGain);
+            expect(safeDisconnect).toHaveBeenCalledWith((ducker as any).delay);
+            expect(safeDisconnect).toHaveBeenCalledWith((ducker as any).mergeGain);
             expect(safeDisconnect).toHaveBeenCalledWith((ducker as any).clipper);
 
             expect(mockTargetGain.connect).toHaveBeenCalledWith(nextNode);
             expect((ducker as any).nextNode).toBeNull();
             expect((ducker as any).sources.size).toBe(0);
+            expect((ducker as any).running).toBe(false);
         });
 
         it('should start successfully, create AudioWorkletNode, and route through clipper', async () => {
@@ -233,8 +253,13 @@ describe('SidechainDucker', () => {
 
             expect(mergeGainInstance.connect).toHaveBeenCalledWith(clipperInstance);
             expect(clipperInstance.connect).toHaveBeenCalledWith(processorInstance);
+            expect(processorInstance.connect).toHaveBeenCalledWith((ducker as any).duckingGain.gain);
 
             processorInstance.port.onmessage({ data: { envelope: 0.85 } });
+            expect(ducker.activeEnvelope).toBe(0.85);
+
+            // Should ignore undefined envelope
+            processorInstance.port.onmessage({ data: { envelope: undefined } });
             expect(ducker.activeEnvelope).toBe(0.85);
 
             vi.mocked(WorkletLoader.loadModule).mockClear();
@@ -269,7 +294,10 @@ describe('SidechainDucker', () => {
         });
 
         it('should safely call stop when processor is not initialized', () => {
+            vi.mocked(safeDisconnect).mockClear();
             ducker.stop();
+
+            expect(safeDisconnect).not.toHaveBeenCalled();
             expect((ducker as any).duckingGain.gain.setTargetAtTime).toHaveBeenCalledWith(1, 100, 0.05);
         });
     });

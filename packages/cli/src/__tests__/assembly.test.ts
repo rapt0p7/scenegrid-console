@@ -18,11 +18,32 @@ vi.mock('../pcm.js', () => ({
 }));
 
 vi.mock('../ladder.js', () => ({
-    generateCodecLadder: vi.fn().mockResolvedValue({ url: { webm: '/assets/dummy.webm' } })
+    generateCodecLadder: vi
+        .fn()
+        .mockImplementation(
+            async (inputPath: string, _dir: string, baseUrl: string, _c: number, hashSuffix: string = '') => {
+                const basename = require('node:path').basename(inputPath, require('node:path').extname(inputPath));
+                return { url: { webm: `${baseUrl}/${basename}${hashSuffix}.webm` } };
+            }
+        )
 }));
 
 vi.mock('../stream.js', () => ({
-    generateChunkedStream: vi.fn().mockResolvedValue({ chunks: [{ url: '/assets/dummy_000.ogg' }] })
+    generateChunkedStream: vi
+        .fn()
+        .mockImplementation(
+            async (
+                inputPath: string,
+                _dir: string,
+                baseUrl: string,
+                _dur: number,
+                _sr: number,
+                hashSuffix: string = ''
+            ) => {
+                const basename = require('node:path').basename(inputPath, require('node:path').extname(inputPath));
+                return { chunks: [{ url: `${baseUrl}/${basename}${hashSuffix}_000.ogg` }] };
+            }
+        )
 }));
 
 vi.mock('node:fs', () => ({
@@ -66,11 +87,66 @@ describe('Pipeline Assembly', () => {
     });
 
     it('processes assets and writes audio-sizes.json and sound-manifest.json', async () => {
+        mockFs.readdirSync.mockReturnValue([
+            'dummy2.mp3',
+            'dummy3.ogg',
+            'dummy6.m4a',
+            'dummy4.flac',
+            'dummy1.wav',
+            'dummy5.aiff'
+        ]);
+
         await processAssets(DEFAULT_PROCESS_OPTS);
 
         expect(mockFs.writeFileSync).toHaveBeenCalledTimes(2);
-        expect(mockFs.writeFileSync.mock.calls[0][0]).toContain('audio-sizes.json');
-        expect(mockFs.writeFileSync.mock.calls[1][0]).toContain('sound-manifest.json');
+
+        // Assert sorting, contents, and newline at EOF
+        const sizesJsonStr = mockFs.writeFileSync.mock.calls[0][1];
+        expect(sizesJsonStr).toMatch(/\n$/);
+        // Keys must be alphabetically sorted
+        expect(sizesJsonStr.indexOf('dummy1')).toBeLessThan(sizesJsonStr.indexOf('dummy2'));
+        expect(sizesJsonStr.indexOf('dummy2')).toBeLessThan(sizesJsonStr.indexOf('dummy3'));
+
+        const sizesJson = JSON.parse(sizesJsonStr);
+        expect(sizesJson).toEqual({
+            dummy1: 20,
+            dummy2: 20,
+            dummy3: 20,
+            dummy4: 20,
+            dummy5: 20,
+            dummy6: 20
+        });
+
+        const manifestJsonStr = mockFs.writeFileSync.mock.calls[1][1];
+        expect(manifestJsonStr).toMatch(/\n$/);
+
+        const payload = mockValidate.mock.calls[0][0];
+        expect(payload.manifest.dummy1.priority).toBe('high');
+
+        expect(mockValidate).toHaveBeenCalledWith(
+            expect.objectContaining({
+                precalculatedSizes: {
+                    '/assets/dummy1.webm': 20,
+                    '/assets/dummy2.webm': 20,
+                    '/assets/dummy3.webm': 20,
+                    '/assets/dummy4.webm': 20,
+                    '/assets/dummy5.webm': 20,
+                    '/assets/dummy6.webm': 20
+                },
+                ramQuotaMb: 50.0,
+                buses: { master: { volume: 1, routing: [] } },
+                banks: {
+                    main: {
+                        isPreloaded: true,
+                        type: 'Memory',
+                        sounds: ['dummy1', 'dummy2', 'dummy3', 'dummy4', 'dummy5', 'dummy6']
+                    }
+                }
+            }),
+            { isReturnWithReport: true }
+        );
+
+        expect(mockFs.mkdirSync).not.toHaveBeenCalled();
     });
 
     it('warns when ConsistencyChecker reports errors', async () => {
@@ -107,24 +183,36 @@ describe('Pipeline Assembly', () => {
     it('loads aliases file and maps physical names to logical IDs when file exists', async () => {
         const aliasMap = { placeholder1: 'dummy' };
         mockFs.readFileSync.mockReturnValue(JSON.stringify(aliasMap));
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
 
         await processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' });
 
+        expect(mockFs.readFileSync).toHaveBeenCalledWith('aliases.json', 'utf-8');
+
         const manifestContent = JSON.parse(mockFs.writeFileSync.mock.calls[1][1]);
         expect(Object.keys(manifestContent)).toContain('placeholder1');
-        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Loading aliases from'));
+        expect(manifestContent['placeholder1'].url).toEqual(['/assets/dummy.webm']);
+
+        expect(mockValidate).toHaveBeenCalledWith(
+            expect.objectContaining({
+                soundMap: {
+                    placeholder1: { busId: 'master', bankId: 'main', manifestId: 'placeholder1' }
+                }
+            }),
+            expect.anything()
+        );
     });
 
     it('supports multiple logical IDs mapped to the same physical file', async () => {
         const aliasMap = { sound_a: 'dummy', sound_b: 'dummy' };
         mockFs.readFileSync.mockReturnValue(JSON.stringify(aliasMap));
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
 
         await processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' });
 
         const soundManifestCall = mockFs.writeFileSync.mock.calls.find((c: any[]) =>
             String(c[0]).includes('sound-manifest')
         );
-        expect(soundManifestCall).toBeDefined();
         const manifestContent = JSON.parse(soundManifestCall![1] as string);
         expect(Object.keys(manifestContent)).toContain('sound_a');
         expect(Object.keys(manifestContent)).toContain('sound_b');
@@ -132,6 +220,7 @@ describe('Pipeline Assembly', () => {
 
     it('logs warning when aliases file is specified but not found', async () => {
         mockFs.existsSync.mockImplementation((p: string) => !p.includes('aliases'));
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
 
         await processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'missing-aliases.json' });
 
@@ -141,15 +230,26 @@ describe('Pipeline Assembly', () => {
     it('routes to chunk strategy when PCM size exceeds quota', async () => {
         (pcmModule.calculatePCMSize as ReturnType<typeof vi.fn>).mockReturnValue(20.0);
         const { generateChunkedStream } = await import('../stream.js');
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
 
         await processAssets({ ...DEFAULT_PROCESS_OPTS, quotaMb: 10.0 });
 
         expect(generateChunkedStream).toHaveBeenCalled();
+
+        const payload = mockValidate.mock.calls[0][0];
+        expect(payload.precalculatedSizes).toEqual({});
+        expect(payload.manifest.dummy.url).toEqual('/assets/dummy.json');
+
+        expect(mockFs.writeFileSync).toHaveBeenCalledWith(
+            expect.stringMatching(/dummy\.json$/),
+            expect.stringMatching(/\n$/)
+        );
     });
 
     it('routes to ladder strategy when PCM size is below quota', async () => {
         (pcmModule.calculatePCMSize as ReturnType<typeof vi.fn>).mockReturnValue(5.0);
         const { generateCodecLadder } = await import('../ladder.js');
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
 
         await processAssets({ ...DEFAULT_PROCESS_OPTS, quotaMb: 10.0 });
 
@@ -157,15 +257,22 @@ describe('Pipeline Assembly', () => {
     });
 
     it('strips trailing slash from baseUrl when constructing sound map entries', async () => {
-        (pcmModule.calculatePCMSize as ReturnType<typeof vi.fn>).mockReturnValue(5.0);
+        (pcmModule.calculatePCMSize as ReturnType<typeof vi.fn>).mockReturnValue(20.0);
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
 
         await processAssets({ ...DEFAULT_PROCESS_OPTS, baseUrl: '/assets/', quotaMb: 10.0 });
 
-        expect(mockFs.writeFileSync).toHaveBeenCalled();
+        const soundManifestCall = mockFs.writeFileSync.mock.calls.find((c: any[]) =>
+            String(c[0]).includes('sound-manifest')
+        );
+        const manifestContent = JSON.parse(soundManifestCall![1] as string);
+        const firstEntry = Object.values(manifestContent)[0] as any;
+        expect(firstEntry.url).toEqual('/assets/dummy.json');
     });
 
     it('uses streamPriority low for chunk-routed assets', async () => {
         (pcmModule.calculatePCMSize as ReturnType<typeof vi.fn>).mockReturnValue(20.0);
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
 
         await processAssets({ ...DEFAULT_PROCESS_OPTS, quotaMb: 10.0, streamPriority: 'low' });
 
@@ -173,6 +280,8 @@ describe('Pipeline Assembly', () => {
             String(c[0]).includes('sound-manifest')
         );
         expect(soundManifestCall).toBeDefined();
+        expect(soundManifestCall![1]).toMatch(/\n$/);
+
         const manifestContent = JSON.parse(soundManifestCall![1] as string);
         const firstEntry = Object.values(manifestContent)[0] as any;
         expect(firstEntry.priority).toBe('low');
@@ -180,31 +289,43 @@ describe('Pipeline Assembly', () => {
 
     it('appends hash suffix when hash: true', async () => {
         const { EventEmitter } = await import('node:events');
-        const fakeStream = new EventEmitter() as any;
-        mockFs.createReadStream.mockReturnValue(fakeStream);
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
 
-        const promise = processAssets({ ...DEFAULT_PROCESS_OPTS, hash: true });
-
-        setImmediate(() => {
-            fakeStream.emit('data', Buffer.from('audio-data'));
-            fakeStream.emit('end');
+        mockFs.createReadStream.mockImplementation(() => {
+            const fakeStream = new EventEmitter() as any;
+            setImmediate(() => {
+                fakeStream.emit('data', Buffer.from('audio-data'));
+                fakeStream.emit('end');
+            });
+            return fakeStream;
         });
 
-        await promise;
+        await processAssets({ ...DEFAULT_PROCESS_OPTS, hash: true });
 
-        expect(mockFs.writeFileSync.mock.calls.length).toBeGreaterThan(0);
+        const expectedHash = require('crypto').createHash('md5').update('audio-data').digest('hex').slice(0, 6);
+        expect(mockValidate).toHaveBeenCalledWith(
+            expect.objectContaining({
+                precalculatedSizes: {
+                    [`/assets/dummy.${expectedHash}.webm`]: 20
+                }
+            }),
+            expect.anything()
+        );
     });
 
     it('rejects when createReadStream emits an error', async () => {
         const { EventEmitter } = await import('node:events');
-        const fakeStream = new EventEmitter() as any;
-        mockFs.createReadStream.mockReturnValue(fakeStream);
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
+
+        mockFs.createReadStream.mockImplementation(() => {
+            const fakeStream = new EventEmitter() as any;
+            setImmediate(() => {
+                fakeStream.emit('error', new Error('disk read failure'));
+            });
+            return fakeStream;
+        });
 
         const promise = processAssets({ ...DEFAULT_PROCESS_OPTS, hash: true });
-
-        setImmediate(() => {
-            fakeStream.emit('error', new Error('disk read failure'));
-        });
 
         await expect(promise).rejects.toThrow('disk read failure');
     });
@@ -225,13 +346,29 @@ describe('prepareAliases', () => {
     });
 
     it('writes alias template with placeholders only for audio files (not .txt)', async () => {
+        mockFs.readdirSync.mockReturnValue([
+            'sound1.wav',
+            'sound2.mp3',
+            'sound3.ogg',
+            'sound4.flac',
+            'sound5.aiff',
+            'sound6.m4a',
+            'notes.txt'
+        ]);
         await prepareAliases('input', 'aliases.json');
 
         expect(mockFs.writeFileSync).toHaveBeenCalledTimes(1);
-        const written = JSON.parse(mockFs.writeFileSync.mock.calls[0][1] as string);
-        expect(Object.keys(written)).toHaveLength(2);
+        const writtenStr = mockFs.writeFileSync.mock.calls[0][1] as string;
+        expect(writtenStr).toMatch(/\n$/);
+
+        const written = JSON.parse(writtenStr);
+        expect(Object.keys(written)).toHaveLength(6);
         expect(written['placeholder1']).toBe('sound1');
         expect(written['placeholder2']).toBe('sound2');
+        expect(written['placeholder3']).toBe('sound3');
+        expect(written['placeholder4']).toBe('sound4');
+        expect(written['placeholder5']).toBe('sound5');
+        expect(written['placeholder6']).toBe('sound6');
     });
 
     it('creates output directory when it does not exist', async () => {

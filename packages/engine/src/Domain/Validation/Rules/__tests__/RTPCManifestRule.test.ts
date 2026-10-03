@@ -31,22 +31,8 @@ describe('RTPCManifestRule', () => {
 
             rule.validate(context);
 
+            expect(assertOptionalTypeSpy).toHaveBeenCalledTimes(1);
             expect(assertOptionalTypeSpy).toHaveBeenCalledWith('rtpcManifest', expect.anything(), 'object');
-            expect(assertOptionalTypeSpy).not.toHaveBeenCalledWith(
-                'rtpcManifest.rpm.attack',
-                expect.anything(),
-                expect.anything()
-            );
-            expect(assertOptionalTypeSpy).not.toHaveBeenCalledWith(
-                'rtpcManifest.rpm.release',
-                expect.anything(),
-                expect.anything()
-            );
-            expect(assertOptionalTypeSpy).not.toHaveBeenCalledWith(
-                'rtpcManifest.rpm.defaultValue',
-                expect.anything(),
-                expect.anything()
-            );
         });
 
         it('should validate exact schema paths for attack, release, and defaultValue when defined (Lines 16, 20, 24)', () => {
