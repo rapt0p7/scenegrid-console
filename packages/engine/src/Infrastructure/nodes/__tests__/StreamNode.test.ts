@@ -1,8 +1,6 @@
-// oxlint-disable unicorn/no-useless-undefined
 import type { IStreamManifest } from '@domain/Configuration/Ports/IStreamManifest.js';
 
 // oxlint-disable unicorn/prefer-at
-/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { StreamNode } from '../StreamNode.js';

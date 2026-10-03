@@ -1,6 +1,5 @@
 import { AudioNodeFactory } from '@infrastructure/nodes/AudioNodeFactory.js';
 import fc from 'fast-check';
-// oxlint-disable import/no-named-as-default-member
 // noinspection D
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 

@@ -1,7 +1,5 @@
-// oxlint-disable unicorn/no-useless-undefined
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import ListenerManager from '@infrastructure/context/ListenerManager.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import AudioContextFactory from '../AudioContextFactory.js';
 import AudioContextManager from '../AudioContextManager.js';

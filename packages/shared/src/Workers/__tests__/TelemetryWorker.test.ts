@@ -61,7 +61,6 @@ describe('Inspector-Engine-Sync SharedWorker Business Logic', () => {
         return port;
     };
 
-    // oxlint-disable-next-line unicorn/consistent-function-scoping
     const sendMessage = (port: MockMessagePort, data: any) => {
         if (port.onmessage) {
             port.onmessage({ data } as any);

@@ -1,4 +1,3 @@
-// oxlint-disable unicorn/no-useless-undefined
 // noinspection D
 
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';

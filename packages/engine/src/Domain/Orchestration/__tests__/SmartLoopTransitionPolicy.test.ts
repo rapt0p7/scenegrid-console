@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import type { ISmartLoopSoundConfig, IMagnetConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
@@ -21,7 +20,6 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
         policy = new SmartLoopTransitionPolicy(mockRtpcAdapter);
     });
 
-    // oxlint-disable-next-line unicorn/consistent-function-scoping
     const createConfig = (magnets?: IMagnetConfig[]): ISmartLoopSoundConfig => ({
         busId: 'master' as BusId,
         smartLoop: {

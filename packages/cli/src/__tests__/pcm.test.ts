@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import * as execaModule from 'execa';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 

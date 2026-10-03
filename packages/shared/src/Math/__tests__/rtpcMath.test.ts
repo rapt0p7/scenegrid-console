@@ -1,4 +1,3 @@
-// oxlint-disable import/no-named-as-default-member
 // noinspection D
 
 import { test } from '@fast-check/vitest';

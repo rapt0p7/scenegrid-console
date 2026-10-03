@@ -9,7 +9,6 @@ import type { PlaybackId, SoundId, IPRNG, Milliseconds, ContextTime } from '@sce
 import type { Mocked } from 'vitest';
 
 import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -64,7 +63,6 @@ describe('ScattererOrchestrator', () => {
 
         it('should remove session (Swap and Pop) if logicalState is undefined (stopped/destroyed)', () => {
             orchestrator.start(99 as PlaybackId, dummyConfig, 0 as ContextTime);
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             mockController.getLogicalState.mockReturnValue(undefined);
 
             orchestrator.tick(100 as ContextTime, 16 as Milliseconds);

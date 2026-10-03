@@ -1,5 +1,4 @@
 // oxlint-disable no-underscore-dangle
-/* eslint-disable @typescript-eslint/naming-convention */
 import type { IStreamManifest } from '@domain/Configuration/Ports/IStreamManifest.js';
 
 import { ContextTime, Milliseconds, Seconds } from '@scene-grid/shared';

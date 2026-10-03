@@ -1,6 +1,5 @@
 import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload';
 
-/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, expect, it, vi } from 'vitest';
 
 import EventsRule from '../EventsRule.js';

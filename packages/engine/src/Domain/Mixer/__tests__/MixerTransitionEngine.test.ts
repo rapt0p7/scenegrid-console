@@ -32,7 +32,6 @@ describe('MixerTransitionEngine', () => {
     describe('Value Objects: isFilterEqual', () => {
         it('should return true for identical references or both null', () => {
             expect(isFilterEqual(null, null)).toBe(true);
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             expect(isFilterEqual(undefined, undefined)).toBe(true);
 
             const filter = { type: 'lowpass', frequency: 1000, Q: 1 } as IFilter;

@@ -3,7 +3,6 @@ import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispat
 import type { ContextTime, LayerId, Milliseconds, SnapshotId } from '@scene-grid/shared';
 
 import MixerSnapshotManager from '@domain/Mixer/MixerSnapshotManager.js';
-// oxlint-disable unicorn/no-useless-undefined
 import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 
 describe('MixerSnapshotManager', () => {

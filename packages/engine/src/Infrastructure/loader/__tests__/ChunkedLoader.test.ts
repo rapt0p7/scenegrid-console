@@ -2,7 +2,6 @@ import type { IStreamManifest } from '@domain/Configuration/Ports/IStreamManifes
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 import { ChunkedLoader } from '@infrastructure/loader/ChunkedLoader.js';
-/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 export const mockStreamManifest: IStreamManifest = {
@@ -32,7 +31,6 @@ describe('ChunkedLoader (Infrastructure Layer)', () => {
     let mockTelemetry: ITelemetryDispatcher;
     let fetchSpy: ReturnType<typeof vi.spyOn>;
 
-    // oxlint-disable-next-line unicorn/consistent-function-scoping
     const flushPromises = () => new Promise(resolve => setImmediate(resolve));
 
     beforeEach(() => {

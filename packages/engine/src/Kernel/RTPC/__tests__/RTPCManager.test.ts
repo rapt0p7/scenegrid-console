@@ -1,7 +1,6 @@
 import type { GameParamId, Milliseconds } from '@scene-grid/shared';
 
 import RTPCManager from '@kernel/RTPC/RTPCManager.js';
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 

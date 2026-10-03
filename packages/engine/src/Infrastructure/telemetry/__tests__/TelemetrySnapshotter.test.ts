@@ -94,7 +94,6 @@ describe('TelemetrySnapshotter', () => {
     it('should collect RTPCs correctly and fallback to 0 if undefined', () => {
         mockRtpcAdapter.getValue.mockImplementation((param: string) => {
             if (param === 'speed') return 120;
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             return undefined;
         });
 
@@ -112,7 +111,6 @@ describe('TelemetrySnapshotter', () => {
         mockSwitchRegistry.getHistory.mockImplementation((switchId: string) => {
             if (switchId === 'material') return { currentSwitchKey: 'wood' };
             if (switchId === 'weather') return { currentSwitchKey: undefined };
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             return undefined;
         });
 
@@ -164,7 +162,6 @@ describe('TelemetrySnapshotter', () => {
 
     it('should skip playbacks if soundId is missing (Voice destroyed mid-tick)', () => {
         mockSoundController.getActivePlaybacks.mockReturnValue([1] as PlaybackId[]);
-        // oxlint-disable-next-line unicorn/no-useless-undefined
         mockSoundController.getSoundId.mockReturnValue(undefined);
 
         snapshotter.tick(0.1, 100 as Milliseconds);

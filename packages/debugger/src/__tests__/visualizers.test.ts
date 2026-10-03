@@ -1,5 +1,3 @@
-// oxlint-disable unicorn/no-useless-undefined
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import { describe, it, expect, vi, beforeEach, afterEach, Mocked } from 'vitest';

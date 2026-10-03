@@ -2,7 +2,6 @@ import type { IBankManifest } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { ISpriteSoundManifest } from '@domain/Configuration/Ports/ISpriteSoundManifest.js';
 
 import { BankId, SoundId } from '@scene-grid/shared';
-// oxlint-disable require-await
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { BankManagerAdapter } from '../BankManagerAdapter.js';
@@ -27,7 +26,6 @@ describe('BankManagerAdapter', () => {
 
     beforeEach(() => {
         mockLoader = {
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             loadBatch: vi.fn().mockResolvedValue(undefined),
             purgeUrls: vi.fn()
         };

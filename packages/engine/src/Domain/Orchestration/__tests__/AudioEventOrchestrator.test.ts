@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
@@ -234,7 +233,6 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
 
         mockBankManager = {
             getBankState: vi.fn(),
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             loadBank: vi.fn().mockResolvedValue(undefined),
             unloadBank: vi.fn()
         };
@@ -348,7 +346,6 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
         mockSequencer.getPlaybackInfo.mockImplementation((id: string) => {
             // oxlint-disable-next-line typescript/no-unsafe-return
             if (id === 'bgm_finished') return { soundId: 'bgm_finished' as SoundId } as any;
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             return undefined;
         });
 
@@ -380,7 +377,6 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
         expect((dispatcher as any).trackedPlaybacks).toHaveLength(0);
 
         // @ts-expect-error Mocking for test
-        // oxlint-disable-next-line unicorn/no-useless-undefined
         mockRouter.play.mockReturnValue(undefined);
         dispatcher.postEvent('Tagged_Play' as EventId);
 

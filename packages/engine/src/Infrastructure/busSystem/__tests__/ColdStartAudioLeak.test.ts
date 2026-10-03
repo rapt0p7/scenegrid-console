@@ -27,12 +27,10 @@ describe('Integration: Cold Start Audio Leak', () => {
     beforeEach(async () => {
         vi.clearAllMocks();
 
-        // oxlint-disable-next-line unicorn/consistent-function-scoping
         const createMockNode = (name: string) => {
             const state = { currentGain: 1 };
 
             const node = {
-                // eslint-disable-next-line @typescript-eslint/naming-convention
                 _name: name,
                 connect: vi.fn().mockReturnThis(),
                 disconnect: vi.fn().mockReturnThis(),

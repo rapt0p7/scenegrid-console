@@ -32,7 +32,6 @@ describe('BusesRule', () => {
         const rule = new BusesRule();
         const context = createStubContext({
             buses: {
-                // eslint-disable-next-line @typescript-eslint/naming-convention
                 sfx: { sends: { non_existent_bus: 0.5 } }
             }
         } as unknown as Partial<IConsistencyCheckerPayload>);

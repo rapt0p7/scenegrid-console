@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 // oxlint-disable typescript/no-unnecessary-type-parameters
 // noinspection D
 

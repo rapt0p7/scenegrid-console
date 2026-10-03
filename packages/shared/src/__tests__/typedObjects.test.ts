@@ -127,9 +127,7 @@ describe('typedFromEntries', () => {
         ];
 
         expect(typedFromEntries(entries)).toEqual({
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             1: 'one',
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             2: 'two'
         });
     });

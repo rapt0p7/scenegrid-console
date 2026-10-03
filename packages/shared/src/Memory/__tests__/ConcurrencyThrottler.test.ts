@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+
 import { ConcurrencyThrottler } from '../ConcurrencyThrottler.js';
 
 function createDeferred<T = void>() {
@@ -66,7 +67,6 @@ describe('ConcurrencyThrottler', () => {
         it('should accurately propagate resolved values to the caller', async () => {
             const throttler = new ConcurrencyThrottler<number>(1, 1024);
 
-            // oxlint-disable-next-line require-await
             const result = await throttler.enqueue(async () => {
                 return 42;
             });
@@ -98,9 +98,7 @@ describe('ConcurrencyThrottler', () => {
 
             let completedCount = 0;
 
-            // oxlint-disable-next-line require-await
             const runBatch = async (startOffset: number, count: number) => {
-                // oxlint-disable-next-line require-await
                 const tasks = Array.from({ length: count }).map(async (_, index) => {
                     return throttler.enqueue(async () => {
                         // oxlint-disable-next-line no-promise-executor-return typescript/strict-void-return
@@ -129,16 +127,11 @@ describe('ConcurrencyThrottler', () => {
             // oxlint-disable-next-line no-promise-executor-return require-await typescript/strict-void-return
             void throttler.enqueue(async () => new Promise(res => setTimeout(res, 50)));
 
-            // oxlint-disable-next-line require-await
             void throttler.enqueue(async () => 3);
-            // oxlint-disable-next-line require-await
             void throttler.enqueue(async () => 4);
-            // oxlint-disable-next-line require-await
             void throttler.enqueue(async () => 5);
-            // oxlint-disable-next-line require-await
             void throttler.enqueue(async () => 6);
 
-            // oxlint-disable-next-line require-await
             await expect(throttler.enqueue(async () => 7)).rejects.toThrow(
                 'ConcurrencyThrottler queue capacity exceeded'
             );

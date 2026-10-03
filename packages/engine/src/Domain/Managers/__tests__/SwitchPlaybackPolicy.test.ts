@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 import type { ISwitchSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { GameParamId, SoundId } from '@scene-grid/shared';

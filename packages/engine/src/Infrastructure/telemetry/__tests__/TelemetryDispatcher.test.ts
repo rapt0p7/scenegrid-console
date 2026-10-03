@@ -18,7 +18,6 @@ describe('Telemetry Observability Pipeline', () => {
         });
 
         it('should call start() on the port upon instantiation', () => {
-            // oxlint-disable-next-line no-new
             new WorkerTelemetryTransport(mockPort);
             expect(mockPort.start).toHaveBeenCalledTimes(1);
         });

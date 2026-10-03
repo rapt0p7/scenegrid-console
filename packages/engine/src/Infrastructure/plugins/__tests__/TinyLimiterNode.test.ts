@@ -1,5 +1,4 @@
 import WorkletLoader from '@infrastructure/context/WorkletLoader.js';
-// oxlint-disable unicorn/no-useless-undefined
 import { AudioWorkletNode } from 'standardized-audio-context';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -11,7 +10,6 @@ vi.mock('standardized-audio-context', () => {
             return {
                 connect: vi.fn(),
                 disconnect: vi.fn(),
-                // eslint-disable-next-line @typescript-eslint/naming-convention
                 _mockOptions: options
             };
         })

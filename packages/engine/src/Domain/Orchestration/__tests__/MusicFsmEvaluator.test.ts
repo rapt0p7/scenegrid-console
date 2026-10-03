@@ -1,4 +1,3 @@
-// oxlint-disable import/no-named-as-default-member
 // noinspection D
 
 import type { IMusicFSMConfig } from '@domain/Configuration/Ports/IMusicFSMConfig';
@@ -77,7 +76,6 @@ describe('MusicFsmEvaluator: evaluateEdges', () => {
         test.prop([edgeArb, edgeArb])(
             'should always prioritize GLOBAL edges over LOCAL edges if both match',
             (globalEdge, localEdge) => {
-                // oxlint-disable-next-line unicorn/consistent-function-scoping
                 const alwaysTrueChecker = () => true;
 
                 const config: IMusicFSMConfig = {

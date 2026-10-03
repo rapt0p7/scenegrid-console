@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-// noinspection D
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { SwitchHistoryRegistry } from '@infrastructure/state/SwitchHistoryRegistry.js';
-
 import type { ISwitchPlaybackState } from '@domain/Managers/Ports/ISwitchPlaybackState.js';
 import type { SoundId } from '@scene-grid/shared';
+
+import { SwitchHistoryRegistry } from '@infrastructure/state/SwitchHistoryRegistry.js';
+// noinspection D
+import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('SwitchHistoryRegistry', () => {
     let registry: SwitchHistoryRegistry;

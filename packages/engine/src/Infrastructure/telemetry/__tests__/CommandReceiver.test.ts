@@ -1,7 +1,6 @@
 import type { IInspectorDebugPort } from '@domain/Shared/Ports/IInspectorDebugPort.js';
 import type { InspectorCommand } from '@scene-grid/shared';
 
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 import { describe, it, expect, beforeEach, vi, type Mocked } from 'vitest';
 

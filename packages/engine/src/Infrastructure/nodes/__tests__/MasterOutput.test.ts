@@ -1,6 +1,5 @@
 import type { Milliseconds } from '@scene-grid/shared';
 
-/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import MasterOutput from '../MasterOutput.js';

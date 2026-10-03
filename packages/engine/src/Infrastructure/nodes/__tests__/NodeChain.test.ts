@@ -66,7 +66,6 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
         });
 
         it('should connect nodes sequentially (Input -> Filter 1 -> Filter 2 -> Output)', () => {
-            // oxlint-disable-next-line no-new
             new NodeChain(mockFactory, {
                 initialFilters: [
                     { type: 'lowpass', frequency: 1000 },
@@ -170,7 +169,6 @@ describe('NodeChain (Deep Module & Zero-Allocation)', () => {
         });
 
         it('should build graph WITH StereoPannerNode if hasPanner is true and spatial is undefined', () => {
-            // oxlint-disable-next-line no-new
             new NodeChain(mockFactory, { hasPanner: true });
 
             expect(mockFactory.createStereoPanner).toHaveBeenCalledWith(0);

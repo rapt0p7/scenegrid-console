@@ -3,7 +3,6 @@ import type { BusId, GameParamId, Milliseconds, Seconds } from '@scene-grid/shar
 
 import AudioBus from '@infrastructure/busSystem/AudioBus.js';
 // noinspection D
-/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 function createMockContext() {

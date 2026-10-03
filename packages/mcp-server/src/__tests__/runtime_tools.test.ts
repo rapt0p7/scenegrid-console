@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import { describe, it, expect, vi } from 'vitest';

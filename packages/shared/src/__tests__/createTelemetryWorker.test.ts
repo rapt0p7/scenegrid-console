@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { createTelemetryWorker } from '../index.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const mockMessagePort = {
     start: vi.fn(),
     postMessage: vi.fn(),

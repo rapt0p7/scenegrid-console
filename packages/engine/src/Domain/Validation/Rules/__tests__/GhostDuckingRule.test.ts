@@ -1,6 +1,5 @@
 import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload';
 
-/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, expect, it } from 'vitest';
 
 import GhostDuckingRule from '../GhostDuckingRule.js';

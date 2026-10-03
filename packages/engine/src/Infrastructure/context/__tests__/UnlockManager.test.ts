@@ -1,6 +1,5 @@
 import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 
-// oxlint-disable unicorn/no-useless-undefined
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import UnlockManager from '../UnlockManager.js';

@@ -1,4 +1,3 @@
-// oxlint-disable unicorn/no-useless-undefined
 // noinspection D
 
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
@@ -810,7 +809,6 @@ describe('AudioBusSystem', () => {
     });
 
     describe('AudioBusSystem - Getters & Gain Inspection', () => {
-        // oxlint-disable-next-line require-await
         it('should return configured default gain when bus config exists', async () => {
             const busSystem = new AudioBusSystem({
                 context: mockContext,
@@ -825,7 +823,6 @@ describe('AudioBusSystem', () => {
             expect(gain).toBe(0.8);
         });
 
-        // oxlint-disable-next-line require-await
         it('should return raw bus config for an existing bus and undefined for non-existent bus or missing config', async () => {
             const busSystem = new AudioBusSystem({
                 context: mockContext,

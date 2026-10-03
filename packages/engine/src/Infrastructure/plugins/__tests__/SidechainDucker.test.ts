@@ -1,6 +1,5 @@
 import WorkletLoader from '@infrastructure/context/WorkletLoader.js';
 import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
-// oxlint-disable unicorn/no-useless-undefined
 import { AudioWorkletNode } from 'standardized-audio-context';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 

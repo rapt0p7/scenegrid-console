@@ -1,8 +1,5 @@
 import type { AudioFilterType, IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 
-// oxlint-disable unicorn/no-useless-undefined
-/* eslint-disable @typescript-eslint/naming-convention */
-// oxlint-disable import/no-named-as-default-member
 import { test } from '@fast-check/vitest';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';

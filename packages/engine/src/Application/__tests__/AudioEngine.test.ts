@@ -66,7 +66,6 @@ vi.mock('@infrastructure', async importOriginal => {
                 purgeUrls: vi.fn(),
                 getCurrentRam: vi.fn(),
                 load: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
-                // oxlint-disable-next-line require-await
                 loadBatch: vi.fn().mockImplementation(async (urls, onProgress, onError) => {
                     const results: any = {};
                     let loaded = 0;
@@ -118,7 +117,6 @@ vi.mock('@infrastructure', async importOriginal => {
         }),
         TelemetrySnapshotter: vi.fn().mockImplementation(function (...args: unknown[]) {
             (globalThis as any).__mockSnapshotterArgs = args;
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             return { TICK_DIVIDER: 1 as any, tick: vi.fn() };
         })
     };
@@ -133,7 +131,6 @@ vi.mock('@domain/Validation/ConsistencyChecker.js', () => ({
     }
 }));
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const mockMessagePort = {
     start: vi.fn(),
     postMessage: vi.fn(),

@@ -1,7 +1,6 @@
 import type { ITelemetryBatch } from '@scene-grid/shared';
 
 import fc from 'fast-check';
-// oxlint-disable import/no-named-as-default-member
 import { describe, it, expect } from 'vitest';
 
 import { BrowserTelemetryTransport } from '../BrowserTelemetryTransport.js';

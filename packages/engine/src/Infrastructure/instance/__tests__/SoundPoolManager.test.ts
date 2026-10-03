@@ -3,8 +3,6 @@ import type { IVoiceConfig } from '@infrastructure/types/IVoiceConfig.js';
 import type { SoundId } from '@scene-grid/shared';
 
 import { AudioContext as MockAudioContext, registrar } from 'standardized-audio-context-mock';
-/* eslint-disable @typescript-eslint/naming-convention */
-// oxlint-disable unicorn/no-useless-undefined
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import SoundPoolManager from '../SoundPoolManager.js';
@@ -101,7 +99,6 @@ describe('SoundPoolManager (Global Voice Arbiter)', () => {
 
     it('should pre-allocate instances in constructor', () => {
         const factory = vi.fn(id => createMockInstance(id));
-        // oxlint-disable-next-line no-new
         new SoundPoolManager(factory, {
             globalVoiceLimit: 5,
             maxPolyphony: 32,

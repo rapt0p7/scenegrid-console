@@ -11,7 +11,14 @@
     "options": {
         "typeAware": true
     },
-    "ignorePatterns": ["node_modules/", "**/build/**", "**/dist/**", "**/*.js", "coverage/", "packages/mcp-server/mcp-env.d.ts"],
+    "ignorePatterns": [
+        "node_modules/",
+        "**/build/**",
+        "**/dist/**",
+        "**/*.js",
+        "coverage/",
+        "packages/mcp-server/mcp-env.d.ts"
+    ],
     "settings": {
         "boundaries/root-path": "./",
         "boundaries/elements": [
@@ -30,6 +37,12 @@
         }
     },
     "rules": {
+        "no-underscore-dangle": ["error", { "allowAfterThis": true, "allow": ["_id"] }],
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }
+        ],
         "import/no-cycle": "error",
         "unicorn/prefer-structured-clone": "warn",
         "@typescript-eslint/no-unsafe-type-assertion": "warn",
@@ -164,11 +177,18 @@
             "rules": {
                 "max-lines": "off",
                 "max-lines-per-function": "off",
+                "no-underscore-dangle": "off",
+                "unicorn/no-useless-undefined": "off",
+                "import/no-named-as-default-member": "off",
+                "require-await": "off",
+                "unicorn/consistent-function-scoping": "off",
+                "no-new": "off",
                 "@typescript-eslint/no-unsafe-type-assertion": "off",
                 "@typescript-eslint/no-unsafe-assignment": "off",
                 "@typescript-eslint/no-unsafe-member-access": "off",
                 "@typescript-eslint/no-unsafe-call": "off",
                 "@typescript-eslint/no-unsafe-argument": "off",
+                "@typescript-eslint/no-unsafe-return": "off",
                 "@typescript-eslint/unbound-method": "off"
             }
         }

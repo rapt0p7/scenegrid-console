@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload';
 import type { BankId, BusId, SoundId } from '@scene-grid/shared';
 
@@ -1024,7 +1023,6 @@ describe('ConsistencyChecker', () => {
             // oxlint-disable-next-line no-unused-vars
             let consoleGroupEndSpy: any;
 
-            // oxlint-disable-next-line unicorn/consistent-function-scoping
             const getBaseConfig = () => ({
                 buses: { master: {} },
                 soundMap: { sfx_test: { busId: 'master' }, bgm_test: { busId: 'master' } },

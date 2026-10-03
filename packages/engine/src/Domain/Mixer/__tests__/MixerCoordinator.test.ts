@@ -15,7 +15,6 @@ describe('MixerCoordinator', () => {
         };
 
         mockTransitionEngine = {
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             applyState: vi.fn().mockResolvedValue(undefined),
             getState: vi.fn()
         };

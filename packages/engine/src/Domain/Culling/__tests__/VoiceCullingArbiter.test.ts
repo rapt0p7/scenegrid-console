@@ -19,7 +19,6 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
     let busVolumes: Record<string, number>;
     let ghostStates: Record<number, boolean>;
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const HYSTERESIS_MS: Milliseconds = 1000 as Milliseconds;
 
     beforeEach(() => {
@@ -46,12 +45,10 @@ describe('VoiceCullingArbiter (Pure Domain Logic & Hysteresis)', () => {
         };
     });
 
-    // oxlint-disable-next-line unicorn/consistent-function-scoping
     function getActiveVirtIds(decisions: CullingDecisions): PlaybackId[] {
         return decisions.toVirtualize.slice(0, decisions.virtualizeCount).map(d => d.playbackId);
     }
 
-    // oxlint-disable-next-line unicorn/consistent-function-scoping
     function getActiveDevirtIds(decisions: CullingDecisions): PlaybackId[] {
         return decisions.toDevirtualize.slice(0, decisions.devirtualizeCount);
     }

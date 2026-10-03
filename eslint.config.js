@@ -49,6 +49,12 @@ export default tseslint.config(
             }
         },
         rules: {
+            'no-underscore-dangle': ['error', { allowAfterThis: true, allow: ['_id'] }],
+            'no-unused-vars': 'off',
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }
+            ],
             'no-restricted-imports': [
                 'error',
                 {
@@ -207,6 +213,13 @@ export default tseslint.config(
             ...vitest.configs.recommended.rules,
             'max-lines': 'off',
             'max-lines-per-function': 'off',
+            'no-underscore-dangle': 'off',
+            'unicorn/no-useless-undefined': 'off',
+            'import/no-named-as-default-member': 'off',
+            'require-await': 'off',
+            'unicorn/consistent-function-scoping': 'off',
+            'no-new': 'off',
+            '@typescript-eslint/naming-convention': 'off',
             '@typescript-eslint/no-unsafe-assignment': 'off',
             '@typescript-eslint/no-unsafe-member-access': 'off',
             '@typescript-eslint/no-unsafe-call': 'off',

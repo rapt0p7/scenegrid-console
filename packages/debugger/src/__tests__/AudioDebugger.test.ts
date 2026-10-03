@@ -1,4 +1,3 @@
-// oxlint-disable unicorn/no-useless-undefined
 import { describe, it, expect, vi, beforeEach, afterEach, Mocked } from 'vitest';
 
 import AudioDebugger from '../AudioDebugger.js';

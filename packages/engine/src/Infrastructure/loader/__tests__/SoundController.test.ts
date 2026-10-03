@@ -1,11 +1,9 @@
-// oxlint-disable unicorn/no-useless-undefined
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 import type { BusId, ContextTime, Milliseconds, PlaybackId, Seconds, SoundId } from '@scene-grid/shared';
 
 import { VirtualReason } from '@domain/Shared/Ports/ISoundController';
 import { SoundInstance } from '@infrastructure';
 import { SoundController } from '@infrastructure/loader/SoundController.js';
-/* eslint-disable @typescript-eslint/naming-convention */
 // oxlint-disable no-underscore-dangle
 // noinspection D
 import { describe, it, expect, vi, beforeEach, afterEach, Mocked } from 'vitest';
@@ -143,7 +141,6 @@ describe('SoundController', () => {
         it('should return null if buffer resolver returns undefined (bank is unloaded)', () => {
             controller.register('unloaded_sound' as SoundId, { url: 'unloaded.wav' });
 
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             mockBufferResolver.mockReturnValueOnce(undefined);
 
             const result = controller.play('unloaded_sound' as SoundId, {});
@@ -452,7 +449,6 @@ describe('SoundController', () => {
         });
 
         it('should safely ignore routeToBus if voice or bus is missing', () => {
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             mockBusSystem.getBus.mockReturnValueOnce(undefined);
             expect(() => {
                 controller.routeToBus(playbackId, 'missing_bus' as BusId);

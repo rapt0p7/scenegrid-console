@@ -8,46 +8,42 @@ import { TimeMath } from '../TimeMath.js';
 
 describe('TimeMath (Property-Based Tests)', () => {
     describe('Time Conversions', () => {
-        test.prop([
-            // oxlint-disable-next-line import/no-named-as-default-member
-            fc.float({ min: 0, max: 1000000, noNaN: true, noDefaultInfinity: true })
-        ])('msToSeconds and secondsToMilliseconds form a perfect round-trip', ms => {
-            const seconds = TimeMath.msToSeconds(ms as Milliseconds);
-            const backToMs = TimeMath.secondsToMilliseconds(seconds);
+        test.prop([fc.float({ min: 0, max: 1000000, noNaN: true, noDefaultInfinity: true })])(
+            'msToSeconds and secondsToMilliseconds form a perfect round-trip',
+            ms => {
+                const seconds = TimeMath.msToSeconds(ms as Milliseconds);
+                const backToMs = TimeMath.secondsToMilliseconds(seconds);
 
-            expect(backToMs).toBeCloseTo(ms);
-        });
+                expect(backToMs).toBeCloseTo(ms);
+            }
+        );
     });
 
     describe('Sample Conversions', () => {
-        // oxlint-disable-next-line import/no-named-as-default-member
         const sampleRateArb = fc.constantFrom(44100, 48000, 88200, 96000, 192000);
 
-        test.prop([
-            // oxlint-disable-next-line import/no-named-as-default-member
-            fc.integer({ min: 0, max: 100_000_000 }),
-            sampleRateArb
-        ])('samplesToSeconds -> secondsToSamples returns the exact integer', (samples, sampleRate) => {
-            const seconds = TimeMath.samplesToSeconds(samples as Samples, sampleRate);
-            const backToSamples = TimeMath.secondsToSamples(seconds, sampleRate);
+        test.prop([fc.integer({ min: 0, max: 100_000_000 }), sampleRateArb])(
+            'samplesToSeconds -> secondsToSamples returns the exact integer',
+            (samples, sampleRate) => {
+                const seconds = TimeMath.samplesToSeconds(samples as Samples, sampleRate);
+                const backToSamples = TimeMath.secondsToSamples(seconds, sampleRate);
 
-            expect(backToSamples).toBe(samples);
-        });
+                expect(backToSamples).toBe(samples);
+            }
+        );
 
-        test.prop([
-            // oxlint-disable-next-line import/no-named-as-default-member
-            fc.integer({ min: 0, max: 100_000_000 }),
-            sampleRateArb
-        ])('samplesToMs -> msToSamples returns the exact integer', (samples, sampleRate) => {
-            const ms = TimeMath.samplesToMs(samples as Samples, sampleRate);
-            const backToSamples = TimeMath.msToSamples(ms, sampleRate);
+        test.prop([fc.integer({ min: 0, max: 100_000_000 }), sampleRateArb])(
+            'samplesToMs -> msToSamples returns the exact integer',
+            (samples, sampleRate) => {
+                const ms = TimeMath.samplesToMs(samples as Samples, sampleRate);
+                const backToSamples = TimeMath.msToSamples(ms, sampleRate);
 
-            expect(backToSamples).toBe(samples);
-        });
+                expect(backToSamples).toBe(samples);
+            }
+        );
     });
 
     describe('Musical Time (BPM & Beats)', () => {
-        // oxlint-disable-next-line import/no-named-as-default-member
         const bpmArb = fc.float({ min: 10, max: 300, noNaN: true, noDefaultInfinity: true });
 
         test.prop([bpmArb])('bpmToSecondsPerBeat correctly derives from BPM', bpm => {
@@ -62,20 +58,18 @@ describe('TimeMath (Property-Based Tests)', () => {
             expect(msPerBeat).toBeCloseTo(secPerBeat * 1000);
         });
 
-        test.prop([
-            // oxlint-disable-next-line import/no-named-as-default-member
-            fc.float({ min: 0, max: 1000, noNaN: true, noDefaultInfinity: true }),
-            bpmArb
-        ])('beatsToSeconds and secondsToBeats form a perfect round-trip', (beats, bpm) => {
-            const seconds = TimeMath.beatsToSeconds(beats as Beats, bpm as BPM);
-            const backToBeats = TimeMath.secondsToBeats(seconds, bpm as BPM);
+        test.prop([fc.float({ min: 0, max: 1000, noNaN: true, noDefaultInfinity: true }), bpmArb])(
+            'beatsToSeconds and secondsToBeats form a perfect round-trip',
+            (beats, bpm) => {
+                const seconds = TimeMath.beatsToSeconds(beats as Beats, bpm as BPM);
+                const backToBeats = TimeMath.secondsToBeats(seconds, bpm as BPM);
 
-            expect(backToBeats).toBeCloseTo(beats);
-        });
+                expect(backToBeats).toBeCloseTo(beats);
+            }
+        );
     });
 
     describe('ContextTime Arithmetic', () => {
-        // oxlint-disable-next-line import/no-named-as-default-member
         const timeArb = fc.float({ min: 0, max: 1e6, noNaN: true, noDefaultInfinity: true });
 
         test.prop([timeArb, timeArb])('addTime correctly sums values', (time, offset) => {
@@ -107,12 +101,10 @@ describe('TimeMath (Property-Based Tests)', () => {
     });
 
     describe('Type Casting', () => {
-        // oxlint-disable-next-line import/no-named-as-default-member
         test.prop([fc.float()])('castToSeconds returns the exact same numeric value', val => {
             expect(TimeMath.castToSeconds(val as ContextTime)).toBe(val);
         });
 
-        // oxlint-disable-next-line import/no-named-as-default-member
         test.prop([fc.float()])('castToContextTime returns the exact same numeric value', val => {
             expect(TimeMath.castToContextTime(val as Seconds)).toBe(val);
         });

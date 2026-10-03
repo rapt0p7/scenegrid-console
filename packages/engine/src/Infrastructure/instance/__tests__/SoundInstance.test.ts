@@ -1,5 +1,4 @@
 // oxlint-disable no-underscore-dangle import/no-named-as-default-member
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';

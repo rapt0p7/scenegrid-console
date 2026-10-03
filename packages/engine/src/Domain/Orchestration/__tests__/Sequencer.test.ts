@@ -1,5 +1,4 @@
 // oxlint-disable no-underscore-dangle
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';

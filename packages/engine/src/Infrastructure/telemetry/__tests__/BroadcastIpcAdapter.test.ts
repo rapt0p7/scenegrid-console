@@ -1,5 +1,4 @@
 import fc from 'fast-check';
-// oxlint-disable import/no-named-as-default-member
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { BroadcastIpcAdapter } from '../BroadcastIpcAdapter.js';

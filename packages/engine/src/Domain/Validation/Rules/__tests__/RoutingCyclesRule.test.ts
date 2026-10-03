@@ -1,6 +1,5 @@
 import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload';
 
-/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, expect, it, vi } from 'vitest';
 
 import RoutingCyclesRule from '../RoutingCyclesRule.js';
@@ -53,7 +52,6 @@ describe('RoutingCyclesRule', () => {
 
         it('should memoize visited nodes and avoid re-traversing shared bus subgraphs (Line 24)', () => {
             const rule = new RoutingCyclesRule();
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             const sharedBusGetter = vi.fn().mockReturnValue(undefined);
 
             const context = createStubContext({
@@ -102,7 +100,6 @@ describe('RoutingCyclesRule', () => {
 
         it('should skip invoking dfs from the outer loop for already visited buses (Line 44)', () => {
             const rule = new RoutingCyclesRule();
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             const busBGetter = vi.fn().mockReturnValue(undefined);
 
             const context = createStubContext({

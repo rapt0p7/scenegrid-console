@@ -1,4 +1,3 @@
-// oxlint-disable import/no-named-as-default-member
 // noinspection D
 
 import { describe, expect, vi, it } from 'vitest';
@@ -26,7 +25,6 @@ describe('CyclePool (Property-Based Mutant Assassins)', () => {
         const factorySpy = vi.fn(() => ({}));
         const requestedCapacity = 4;
 
-        // oxlint-disable-next-line no-new
         new CyclePool(requestedCapacity, factorySpy);
 
         const actualCapacity = getExpectedCapacity(requestedCapacity);
@@ -53,7 +51,6 @@ describe('CyclePool (Property-Based Mutant Assassins)', () => {
         const requestedCapacity = 4;
 
         try {
-            // oxlint-disable-next-line no-new
             new CyclePool(requestedCapacity, () => ({}));
 
             const actualCapacity = getExpectedCapacity(requestedCapacity);

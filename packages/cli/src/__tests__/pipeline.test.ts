@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import * as execaModule from 'execa';
 import path from 'node:path';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -112,7 +111,7 @@ describe('FFmpeg Pipeline', () => {
             '4',
             '-ar',
             '44100',
-            'out\\dummy_000.ogg'.replaceAll(/\\/g, path.sep)
+            'out\\dummy_000.ogg'.replaceAll('\\', path.sep)
         ]);
 
         expect(execaModule.execa).toHaveBeenCalledWith('ffmpeg', [
@@ -132,7 +131,7 @@ describe('FFmpeg Pipeline', () => {
             '4',
             '-ar',
             '44100',
-            'out\\dummy_001.ogg'.replaceAll(/\\/g, path.sep)
+            'out\\dummy_001.ogg'.replaceAll('\\', path.sep)
         ]);
 
         expect(execaModule.execa).toHaveBeenCalledWith('ffmpeg', [
@@ -152,7 +151,7 @@ describe('FFmpeg Pipeline', () => {
             '4',
             '-ar',
             '44100',
-            'out\\dummy_002.ogg'.replaceAll(/\\/g, path.sep)
+            'out\\dummy_002.ogg'.replaceAll('\\', path.sep)
         ]);
 
         expect(mockFs.mkdirSync).not.toHaveBeenCalled();

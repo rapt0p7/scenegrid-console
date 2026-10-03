@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import type { BusId, PlaybackId, SoundId } from '@scene-grid/shared';
@@ -23,7 +22,6 @@ describe('CullingContextProvider (Infrastructure Adapter)', () => {
             getLogicalState: vi.fn().mockImplementation(id => {
                 if (id === 101) return 'playing';
                 if (id === 102) return 'paused';
-                // oxlint-disable-next-line unicorn/no-useless-undefined
                 return undefined;
             })
         };

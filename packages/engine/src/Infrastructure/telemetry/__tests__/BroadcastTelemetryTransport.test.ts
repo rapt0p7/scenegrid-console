@@ -1,14 +1,12 @@
 import type { ITelemetryBatch } from '@scene-grid/shared';
 
 import fc from 'fast-check';
-// oxlint-disable import/no-named-as-default-member
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import { BroadcastIpcAdapter } from '../BroadcastIpcAdapter.js';
 import { BroadcastTelemetryTransport } from '../BroadcastTelemetryTransport.js';
 
 describe('BroadcastTelemetryTransport', () => {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const TELEMETRY_CHANNEL_NAME = 'scenegrid_audio_telemetry';
 
     let transport: BroadcastTelemetryTransport;

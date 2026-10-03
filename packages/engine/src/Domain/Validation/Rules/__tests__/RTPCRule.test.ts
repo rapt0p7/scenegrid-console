@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 // oxlint-disable unicorn/no-useless-undefined typescript/no-confusing-void-expression
 import { describe, expect, it, vi } from 'vitest';
 

@@ -1,5 +1,3 @@
-// oxlint-disable unicorn/no-useless-undefined
-/* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D
 
 import type { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
@@ -130,7 +128,6 @@ describe('AudioRouter (Command Dispatcher)', () => {
         };
 
         mockSwitchRegistry = {
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             getHistory: vi.fn().mockReturnValue(undefined),
             updateHistory: vi.fn(),
             clear: vi.fn(),
@@ -333,10 +330,8 @@ describe('AudioRouter (Command Dispatcher)', () => {
         });
 
         it('should fall back to RTPC adapter when switch registry returns undefined for override', () => {
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             mockSwitchRegistry.getOverride.mockReturnValue(undefined);
             mockRtpcAdapter.getValue.mockReturnValue(1);
-            // oxlint-disable-next-line unicorn/no-useless-undefined
             mockSwitchRegistry.getHistory.mockReturnValue(undefined);
             mockSwitchPolicy.evaluateNext.mockReturnValue({
                 soundId: 'step_grass_asset',
@@ -393,7 +388,6 @@ describe('AudioRouter (Command Dispatcher)', () => {
             mockController.getActivePlaybacks.mockReturnValue([10 as PlaybackId, 20 as PlaybackId]);
             mockController.getSoundId.mockImplementation(id => {
                 if (id === 10 || id === 20) return 'loop_sound' as SoundId;
-                // oxlint-disable-next-line unicorn/no-useless-undefined
                 return undefined;
             });
 
@@ -426,7 +420,6 @@ describe('AudioRouter (Command Dispatcher)', () => {
 
             mockController.getSoundId.mockImplementation(id => {
                 if (id === 99) return 'loop_with_tail' as SoundId;
-                // oxlint-disable-next-line unicorn/no-useless-undefined
                 return undefined;
             });
 
