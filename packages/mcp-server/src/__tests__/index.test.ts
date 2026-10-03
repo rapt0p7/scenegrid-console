@@ -109,6 +109,8 @@ describe('MCP Server Index', () => {
     });
 
     it('should execute process shutdown handlers', async () => {
+        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
         const sigint = mockProcessEvents.get('SIGINT');
         expect(sigint).toBeDefined();
         await sigint!();
@@ -123,5 +125,7 @@ describe('MCP Server Index', () => {
         expect(sigterm).toBeDefined();
         await sigterm!();
         expect(process.exit).toHaveBeenCalledWith(0);
+
+        consoleLogSpy.mockRestore();
     });
 });
