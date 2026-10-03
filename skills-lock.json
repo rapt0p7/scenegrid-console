@@ -14,6 +14,12 @@
             "sourceType": "github",
             "skillPath": "skills/mcp-apps-builder/SKILL.md",
             "computedHash": "71f46ec803da473a1dd80993628810392178191c77c3581ed9a55f10a67502b2"
+        },
+        "mutant-survival-triage": {
+            "source": "testland/qa",
+            "sourceType": "github",
+            "skillPath": "plugins/qa-mutation-testing/skills/mutant-survival-triage/SKILL.md",
+            "computedHash": "a9f76dc1597758f70662de8e7a9c78dd6f9a4417c317d075cb3276a9ff1745a5"
         }
     }
 }
