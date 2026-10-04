@@ -1,5 +1,6 @@
 ## Multiplicative Veto validation rule
 
+**Id:** 5208238f-5959-498a-819e-f19b42462d28
 **Type:** decision
 **Status:** active
 **Evidence:** confirmed
