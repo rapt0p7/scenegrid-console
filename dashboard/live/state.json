@@ -1,18 +1,18 @@
 {
  "state-json": 2,
- "generated": "2026-10-05T06:53:16Z",
+ "generated": "2026-10-05T07:19:54Z",
  "dashboard": "0.6.10",
  "linter": "0.19.0.0",
  "project": {
   "id": "rapt0p7---scenegrid-console",
   "name": "scenegrid-console",
   "context": "context/",
-  "schema": "0.11.0",
+  "schema": "0.19.0",
   "config": {
    "id": "rapt0p7---scenegrid-console",
    "context": "context/",
    "init": "complete",
-   "context-schema": "0.11.0",
+   "context-schema": "0.19.0",
    "capture-confirmation": "confirm-when-unsure",
    "source-reference": "never",
    "dashboard-state": "https://rapt0p7.github.io/scenegrid-console/dashboard/live/state.json",
@@ -27,8 +27,8 @@
   "children": [],
   "git": {
    "available": true,
-   "head": "16df4d4",
-   "head_full": "16df4d40123597df47ae2ab8998229a858499ac6",
+   "head": "26f1089",
+   "head_full": "26f1089a1585388eb371b8a582202be7aa96a145",
    "branch": "main",
    "remote": "github.com/rapt0p7/scenegrid-console",
    "upstream": "",
@@ -112,10 +112,10 @@
  "entries": [
   {
    "id": "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture-codec-padding",
-   "uuid": null,
+   "uuid": "b2096d38-e415-486c-8631-e22612afe05d",
    "file": "chunked-audio-streaming.md",
    "line": 3,
-   "end_line": 15,
+   "end_line": 16,
    "title": "The StreamNode Flip-Flop Architecture & Codec Padding",
    "type": [
     "decision"
@@ -135,9 +135,9 @@
      "commit": "3beeaac"
     },
     "last_touched": {
-     "author": "Igor Zabrodin",
-     "date": "2026-09-06",
-     "commit": "3beeaac"
+     "author": "Oliver Zehentleitner AIgent",
+     "date": "2026-10-04",
+     "commit": "26f1089"
     },
     "status_history": [
      {
@@ -152,10 +152,10 @@
   },
   {
    "id": "chunked-audio-streaming.md#pause-resume-mechanics-composite-math",
-   "uuid": null,
+   "uuid": "68db2236-b8de-4c00-b897-f2aabb3cca24",
    "file": "chunked-audio-streaming.md",
-   "line": 16,
-   "end_line": 26,
+   "line": 17,
+   "end_line": 28,
    "title": "Pause & Resume Mechanics (Composite Math)",
    "type": [
     "decision"
@@ -175,9 +175,9 @@
      "commit": "3beeaac"
     },
     "last_touched": {
-     "author": "Igor Zabrodin",
-     "date": "2026-09-06",
-     "commit": "3beeaac"
+     "author": "Oliver Zehentleitner AIgent",
+     "date": "2026-10-04",
+     "commit": "26f1089"
     },
     "status_history": [
      {
@@ -192,10 +192,10 @@
   },
   {
    "id": "chunked-audio-streaming.md#cache-eviction-policy-os-context-death",
-   "uuid": null,
+   "uuid": "dec9173e-732d-4714-bacb-edc28066ac74",
    "file": "chunked-audio-streaming.md",
-   "line": 27,
-   "end_line": 37,
+   "line": 29,
+   "end_line": 40,
    "title": "Cache Eviction Policy & OS Context Death",
    "type": [
     "decision"
@@ -215,9 +215,9 @@
      "commit": "3beeaac"
     },
     "last_touched": {
-     "author": "Igor Zabrodin",
-     "date": "2026-09-06",
-     "commit": "3beeaac"
+     "author": "Oliver Zehentleitner AIgent",
+     "date": "2026-10-04",
+     "commit": "26f1089"
     },
     "status_history": [
      {
@@ -232,10 +232,10 @@
   },
   {
    "id": "chunked-audio-streaming.md#gc-pressure-zero-allocation-exceptions",
-   "uuid": null,
+   "uuid": "6c26540b-d512-43b9-99a2-527f7a2a3ce9",
    "file": "chunked-audio-streaming.md",
-   "line": 38,
-   "end_line": 48,
+   "line": 41,
+   "end_line": 52,
    "title": "GC Pressure & Zero-Allocation Exceptions",
    "type": [
     "decision"
@@ -255,9 +255,9 @@
      "commit": "3beeaac"
     },
     "last_touched": {
-     "author": "Igor Zabrodin",
-     "date": "2026-09-06",
-     "commit": "3beeaac"
+     "author": "Oliver Zehentleitner AIgent",
+     "date": "2026-10-04",
+     "commit": "26f1089"
     },
     "status_history": [
      {
@@ -272,10 +272,10 @@
   },
   {
    "id": "chunked-audio-streaming.md#strict-timeline-during-deadline-underruns",
-   "uuid": null,
+   "uuid": "3283b474-b188-4f64-bd3e-ed960fb1306d",
    "file": "chunked-audio-streaming.md",
-   "line": 49,
-   "end_line": 60,
+   "line": 53,
+   "end_line": 65,
    "title": "Strict Timeline during Deadline Underruns",
    "type": [
     "decision"
@@ -295,9 +295,9 @@
      "commit": "3beeaac"
     },
     "last_touched": {
-     "author": "Igor Zabrodin",
-     "date": "2026-09-06",
-     "commit": "3beeaac"
+     "author": "Oliver Zehentleitner AIgent",
+     "date": "2026-10-04",
+     "commit": "26f1089"
     },
     "status_history": [
      {
@@ -312,10 +312,10 @@
   },
   {
    "id": "data-plane-mutations.md#data-oriented-polling-for-parameter-updates",
-   "uuid": null,
+   "uuid": "99038614-eaca-4c68-8266-d49f4e96fccf",
    "file": "data-plane-mutations.md",
    "line": 1,
-   "end_line": 13,
+   "end_line": 14,
    "title": "Data-oriented polling for parameter updates",
    "type": [
     "decision"
@@ -335,9 +335,9 @@
      "commit": "117354a"
     },
     "last_touched": {
-     "author": "Igor Zabrodin",
-     "date": "2026-09-03",
-     "commit": "117354a"
+     "author": "Oliver Zehentleitner AIgent",
+     "date": "2026-10-04",
+     "commit": "26f1089"
     },
     "status_history": [
      {
@@ -352,10 +352,10 @@
   },
   {
    "id": "multiplicative-veto.md#multiplicative-veto-validation-rule",
-   "uuid": null,
+   "uuid": "5208238f-5959-498a-819e-f19b42462d28",
    "file": "multiplicative-veto.md",
    "line": 1,
-   "end_line": 13,
+   "end_line": 14,
    "title": "Multiplicative Veto validation rule",
    "type": [
     "decision"
@@ -375,9 +375,9 @@
      "commit": "117354a"
     },
     "last_touched": {
-     "author": "Igor Zabrodin",
-     "date": "2026-09-03",
-     "commit": "117354a"
+     "author": "Oliver Zehentleitner AIgent",
+     "date": "2026-10-04",
+     "commit": "26f1089"
     },
     "status_history": [
      {
@@ -392,10 +392,10 @@
   },
   {
    "id": "resource-management.md#explicit-degradation-over-exceptions-for-voice-exhaustion",
-   "uuid": null,
+   "uuid": "f5552c96-9a89-4c5f-8ae2-ac8a72a92e08",
    "file": "resource-management.md",
    "line": 1,
-   "end_line": 13,
+   "end_line": 14,
    "title": "Explicit degradation over exceptions for voice exhaustion",
    "type": [
     "decision"
@@ -415,9 +415,9 @@
      "commit": "117354a"
     },
     "last_touched": {
-     "author": "Igor Zabrodin",
-     "date": "2026-09-03",
-     "commit": "117354a"
+     "author": "Oliver Zehentleitner AIgent",
+     "date": "2026-10-04",
+     "commit": "26f1089"
     },
     "status_history": [
      {
@@ -432,10 +432,10 @@
   },
   {
    "id": "worklet-efficiency.md#pre-calculation-of-audioworklet-coefficients",
-   "uuid": null,
+   "uuid": "546d7359-943f-4e16-a1d8-26f361ad623e",
    "file": "worklet-efficiency.md",
    "line": 1,
-   "end_line": 13,
+   "end_line": 14,
    "title": "Pre-calculation of AudioWorklet coefficients",
    "type": [
     "decision"
@@ -455,9 +455,9 @@
      "commit": "117354a"
     },
     "last_touched": {
-     "author": "Igor Zabrodin",
-     "date": "2026-09-03",
-     "commit": "117354a"
+     "author": "Oliver Zehentleitner AIgent",
+     "date": "2026-10-04",
+     "commit": "26f1089"
     },
     "status_history": [
      {
@@ -475,7 +475,7 @@
   {
    "name": "Igor Zabrodin",
    "created": 9,
-   "touched": 9,
+   "touched": 0,
    "superseded": 0,
    "first": "2026-09-03",
    "last": "2026-09-06",
@@ -483,6 +483,15 @@
     "confirmed": 7,
     "inferred": 2
    }
+  },
+  {
+   "name": "Oliver Zehentleitner AIgent",
+   "created": 0,
+   "touched": 9,
+   "superseded": 0,
+   "first": "2026-10-04",
+   "last": "2026-10-04",
+   "evidence": {}
   }
  ],
  "anonymized": false,
