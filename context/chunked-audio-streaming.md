@@ -2,6 +2,7 @@
 
 ## The StreamNode Flip-Flop Architecture & Codec Padding
 
+**Id:** b2096d38-e415-486c-8631-e22612afe05d
 **Type:** decision
 **Status:** active
 **Evidence:** confirmed
@@ -15,6 +16,7 @@ We wrap at least two `AudioBufferSourceNode`s in a "flip-flop" scheduling patter
 
 ## Pause & Resume Mechanics (Composite Math)
 
+**Id:** 68db2236-b8de-4c00-b897-f2aabb3cca24
 **Type:** decision
 **Status:** active
 **Evidence:** confirmed
@@ -26,6 +28,7 @@ On `pause()`, the `StreamNode` records the exact physical elapsed time. On `resu
 
 ## Cache Eviction Policy & OS Context Death
 
+**Id:** dec9173e-732d-4714-bacb-edc28066ac74
 **Type:** decision
 **Status:** active
 **Evidence:** confirmed
@@ -37,6 +40,7 @@ When the `ChunkedLoader` is paused, it preserves the decoded queue up to a stric
 
 ## GC Pressure & Zero-Allocation Exceptions
 
+**Id:** 6c26540b-d512-43b9-99a2-527f7a2a3ce9
 **Type:** decision
 **Status:** active
 **Evidence:** confirmed
@@ -48,6 +52,7 @@ We accept "macro-allocations" (allocating one large `Float32Array` via `decodeAu
 
 ## Strict Timeline during Deadline Underruns
 
+**Id:** 3283b474-b188-4f64-bd3e-ed960fb1306d
 **Type:** decision
 **Status:** active
 **Evidence:** confirmed
