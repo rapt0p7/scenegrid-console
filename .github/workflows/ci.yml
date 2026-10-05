@@ -71,19 +71,20 @@ jobs:
       - run: npm run test:coverage
 
       - name: Upload coverage to Codecov
+        if: github.ref == 'refs/heads/main'
         uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac #v5.5.5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
+        if: github.ref == 'refs/heads/main' && !cancelled()
         uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac #v5.5.5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           report_type: test_results
 
       - name: Run Codacy Coverage Reporter
-        if: ${{ !cancelled() }}
+        if: github.ref == 'refs/heads/main' && !cancelled()
         uses: codacy/codacy-coverage-reporter-action@6904bd01e29ada115135b5eca20125758ccae53b
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
