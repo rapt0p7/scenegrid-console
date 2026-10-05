@@ -1,6 +1,5 @@
 ## Data-oriented polling for parameter updates
 
-**Id:** 99038614-eaca-4c68-8266-d49f4e96fccf
 **Type:** decision
 **Status:** active
 **Evidence:** confirmed
