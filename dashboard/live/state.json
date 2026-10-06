@@ -1,8 +1,8 @@
 {
  "state-json": 2,
- "generated": "2026-10-05T07:37:24Z",
- "dashboard": "0.6.13",
- "linter": "0.19.0.0",
+ "generated": "2026-10-06T15:46:30Z",
+ "dashboard": "0.7.2",
+ "linter": "0.20.0.0",
  "project": {
   "id": "rapt0p7---scenegrid-console",
   "name": "scenegrid-console",
@@ -27,8 +27,8 @@
   "children": [],
   "git": {
    "available": true,
-   "head": "aad5c09",
-   "head_full": "aad5c0934658bb7f4f92aee5992ef77cd4e9ed38",
+   "head": "7afce61",
+   "head_full": "7afce61448f6b31594f229c0d1f36dfd22150eba",
    "branch": "main",
    "remote": "github.com/rapt0p7/scenegrid-console",
    "upstream": "",
