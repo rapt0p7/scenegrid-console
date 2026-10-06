@@ -1595,7 +1595,7 @@ describe('Sequencer (Interactive Music)', () => {
 
             manager.getMusicSnapshot();
 
-            const poolPushSpy = vi.spyOn((manager as any).snapshotPool, 'push');
+            const poolPushSpy = vi.spyOn((manager as any).snapshotManager.snapshotPool, 'push');
 
             const snapshotsCall2 = manager.getMusicSnapshot();
 
@@ -1715,6 +1715,142 @@ describe('Sequencer (Interactive Music)', () => {
             });
 
             expect(track.nextScheduleTime).not.toBe(1.3);
+        });
+        describe('Refactoring Coverage Recovery', () => {
+            it('should execute stopLoop properly and clear properties', () => {
+                manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+                manager.stopLoop('battle_music' as SoundId);
+                const track = (manager as any).tracks.get('battle_music');
+                expect(track.nextScheduleTime).toBe(0);
+            });
+
+            it('should catch and log error when cancelScheduled throws during transition', () => {
+                const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+                manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+                simulatedTime = 0 as ContextTime;
+
+                const track = (manager as any).tracks.get('battle_music');
+                track.activeRegions.forEach((r: any) => {
+                    r.scheduledStartTime = 10;
+                });
+
+                mockController.cancelScheduled.mockImplementation(() => {
+                    throw new Error('cancel error');
+                });
+
+                manager.transitionTo({
+                    soundId: 'battle_music' as SoundId,
+                    targetRegion: 'main' as RegionId,
+                    options: { quantize: 'Immediate' }
+                });
+
+                expect(warnSpy).toHaveBeenCalledWith(
+                    '[Sequencer] Failed to cancel scheduled region during transition',
+                    expect.any(Error)
+                );
+                warnSpy.mockRestore();
+            });
+
+            it('should catch and log error when unsubscribe throws on voice ended', () => {
+                const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+                manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+
+                const track = (manager as any).tracks.get('battle_music');
+                const activeRegion = [...track.activeRegions][0];
+                activeRegion.unsubscribe = () => {
+                    throw new Error('unsubscribe error');
+                };
+
+                capturedOnVoiceEnded!();
+
+                expect(warnSpy).toHaveBeenCalledWith(
+                    '[Sequencer] Failed to unsubscribe voice end handler',
+                    expect.any(Error)
+                );
+                warnSpy.mockRestore();
+            });
+
+            it('should fallback to returning now when stinger quantize type is unknown', () => {
+                manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+                simulatedTime = 1.0 as ContextTime;
+
+                manager.playStinger('victory_chord' as SoundId, { type: 'Unknown' } as any);
+
+                expect(mockRouter.play).toHaveBeenCalledWith('victory_chord', { when: 1.0 });
+            });
+        });
+        it('should catch and log error when unsubscribe throws during stopLoop', () => {
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+
+            const track = (manager as any).tracks.get('battle_music');
+            const activeRegion = [...track.activeRegions][0];
+            activeRegion.unsubscribe = () => {
+                throw new Error('stopLoop unsubscribe error');
+            };
+
+            manager.stopLoop('battle_music' as SoundId);
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                '[Sequencer] Failed to unsubscribe during stopLoop',
+                expect.any(Error)
+            );
+            warnSpy.mockRestore();
+        });
+
+        it('should catch and log error when cancelScheduled throws during stopLoop', () => {
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+
+            mockController.cancelScheduled.mockImplementation(() => {
+                throw new Error('stopLoop cancel error');
+            });
+
+            manager.stopLoop('battle_music' as SoundId);
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                '[Sequencer] Failed to cancel scheduled region during stopLoop',
+                expect.any(Error)
+            );
+            warnSpy.mockRestore();
+        });
+
+        it('should catch and log error when unsubscribe throws during transition', () => {
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            simulatedTime = 0.5 as ContextTime;
+
+            const track = (manager as any).tracks.get('battle_music');
+            const activeRegion = [...track.activeRegions][0];
+            activeRegion.unsubscribe = () => {
+                throw new Error('transition unsubscribe error');
+            };
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main' as RegionId,
+                options: { quantize: 'Immediate' }
+            });
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                '[Sequencer] Failed to unsubscribe during transition',
+                expect.any(Error)
+            );
+            warnSpy.mockRestore();
+        });
+
+        it('should fallback to returning now when transition quantize type is unknown', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            simulatedTime = 0.5 as ContextTime;
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main' as RegionId,
+                options: { quantize: { type: 'UnknownType' } as any }
+            });
+
+            const track = (manager as any).tracks.get('battle_music');
+            expect(track.nextScheduleTime).toBeCloseTo(2.5);
         });
     });
 });

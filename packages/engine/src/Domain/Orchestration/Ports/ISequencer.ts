@@ -1,5 +1,14 @@
 import type { IAudioGrid } from '@domain/Orchestration/Ports/IAudioGrid.js';
-import type { RegionId, SoundId, QuantizeType, IMusicTrackSnapshot, Milliseconds, Beats } from '@scene-grid/shared';
+import type {
+    RegionId,
+    SoundId,
+    PlaybackId,
+    QuantizeType,
+    IMusicTrackSnapshot,
+    Milliseconds,
+    Beats,
+    Seconds
+} from '@scene-grid/shared';
 
 export enum LoopState {
     IDLE = 'IDLE',
@@ -31,6 +40,31 @@ export interface IPlaybackInfo {
     readonly grid: IAudioGrid;
     readonly soundId: SoundId;
     readonly state: LoopState;
+}
+
+export interface ActiveRegion {
+    playbackId: PlaybackId;
+    scheduledStartTime: Seconds;
+    unsubscribe: () => void;
+}
+
+export interface QueuedRegion {
+    name: RegionId;
+    fadeInDuration: Milliseconds;
+    startOffset?: Seconds;
+}
+
+export interface TrackContext {
+    soundId: SoundId;
+    state: LoopState;
+    playId: number;
+    nextScheduleTime: Seconds;
+    activeRegions: Set<ActiveRegion>;
+    gridStartTime: Seconds | null;
+    regionQueue: QueuedRegion[];
+    loopRegion: RegionId | null;
+    currentRegion: RegionId | null;
+    magnetStates: boolean[];
 }
 
 export interface ISequencer {
