@@ -1,0 +1,121 @@
+"pkg:inspector":
+  - changed-files:
+    - any-glob-to-any-file: 'packages/inspector/**'
+
+"pkg:shared":
+  - changed-files:
+    - any-glob-to-any-file: 'packages/shared/**'
+
+"pkg:mcp-server":
+  - changed-files:
+    - any-glob-to-any-file: 'packages/mcp-server/**'
+
+"pkg:cli":
+  - changed-files:
+    - any-glob-to-any-file: 'packages/cli/**'
+
+"pkg:debugger":
+  - changed-files:
+    - any-glob-to-any-file: 'packages/debugger/**'
+
+"layer:engine-infra":
+  - changed-files:
+    - any-glob-to-any-file: 'packages/engine/src/Infrastructure/**'
+
+"layer:engine-domain":
+  - changed-files:
+    - any-glob-to-any-file: 'packages/engine/src/Domain/**'
+
+"area:kernel-rtpc":
+  - changed-files:
+    - any-glob-to-any-file: 'packages/engine/src/Kernel/**'
+
+"area:telemetry":
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'packages/engine/src/Infrastructure/telemetry/**'
+      - 'packages/shared/src/Telemetry/**'
+
+"area:polyphony-pool":
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'packages/engine/src/Infrastructure/instance/**'
+      - 'packages/engine/src/Infrastructure/scheduling/CullingRunner.ts'
+
+"area:validation":
+  - changed-files:
+    - any-glob-to-any-file: 'packages/engine/src/Domain/Validation/**'
+
+"area:mixer-routing":
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'packages/engine/src/Domain/Mixer/**'
+      - 'packages/engine/src/Domain/Router/**'
+      - 'packages/engine/src/Infrastructure/busSystem/**'
+
+"area:orchestration":
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'packages/engine/src/Domain/Orchestration/**'
+
+"tooling:docs":
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'docs/**'
+      - 'openwiki/**'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'CHANGELOG.md'
+
+"tooling:ai":
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'context/**'
+      - '.agents/**'
+      - '.agent/**'
+      - '.ai/**'
+      - '.claude/**'
+      - '.gemini/**'
+      - '.opencode/**'
+      - '.repowise/**'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - '.keep-the-why'
+      - 'mcp.json'
+
+"tooling:ci":
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/workflows/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+"tooling:tests":
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/__tests__/**'
+      - '**/*.test.ts'
+      - '**/*.test.tsx'
+      - 'vitest.config.ts'
+      - 'stryker.conf.*'
+
+"tooling:lint":
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'oxlint.json'
+      - 'eslint.config.*'
+      - '.prettierrc*'
+
+"tooling:specs":
+  - changed-files:
+    - any-glob-to-any-file: 'openspec/**'
+
+"type:enhancement":
+  - head-branch: ['^feature/', '^feat/']
+
+"type:bug":
+  - head-branch: ['^bug/', '^fix/', '^bugfix/', '^hotfix/']
+
+"type:task":
+  - head-branch: ['^chore/', '^refactor/', '^test/', '^task/']
+
