@@ -1,13 +1,19 @@
 // oxlint-disable max-depth
 // noinspection D
 
-import type { ITransitionToParameters, ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
+import type {
+    ITransitionToParameters,
+    ISequencer,
+    TrackContext,
+    ActiveRegion
+} from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
 
 import AudioGrid from '@domain/Orchestration/AudioGrid.js';
+import MusicSnapshotManager from '@domain/Orchestration/MusicSnapshotManager.js';
 import { type IPlaybackInfo, LoopState } from '@domain/Orchestration/Ports/ISequencer.js';
 import SmartLoopTransitionPolicy from '@domain/Orchestration/SmartLoopTransitionPolicy.js';
 import {
@@ -24,45 +30,16 @@ import {
     Samples,
     Pulses,
     BPM,
-    Beats
+    Beats,
+    ContextTime
 } from '@scene-grid/shared';
 import { isDefined, isAbsent } from '@scene-grid/shared';
-
-interface ActiveRegion {
-    playbackId: PlaybackId;
-    scheduledStartTime: Seconds;
-    unsubscribe: () => void;
-}
-
-interface QueuedRegion {
-    name: RegionId;
-    fadeInDuration: Milliseconds;
-    startOffset?: Seconds;
-}
-
-interface TrackContext {
-    soundId: SoundId;
-    state: LoopState;
-    playId: number;
-    nextScheduleTime: Seconds;
-    activeRegions: Set<ActiveRegion>;
-    gridStartTime: Seconds | null;
-    regionQueue: QueuedRegion[];
-    loopRegion: RegionId | null;
-    currentRegion: RegionId | null;
-    magnetStates: boolean[];
-}
-
-type MutableMusicSnapshot = {
-    -readonly [K in keyof IMusicTrackSnapshot]: IMusicTrackSnapshot[K];
-};
 
 export default class Sequencer implements ISequencer {
     private static readonly TICK_DIVIDER: number = 2;
     private tracks: Map<SoundId, TrackContext> = new Map();
-    private readonly snapshotPool: MutableMusicSnapshot[] = [];
-    private readonly activeSnapshots: IMusicTrackSnapshot[] = [];
     private readonly lookaheadWindowSec = 0.1 as Seconds;
+    private readonly snapshotManager = new MusicSnapshotManager();
 
     constructor(
         private readonly controller: ISoundController,
@@ -103,10 +80,14 @@ export default class Sequencer implements ISequencer {
         for (const active of track.activeRegions) {
             try {
                 active.unsubscribe();
-            } catch {}
+            } catch (e) {
+                console.warn('[Sequencer] Failed to unsubscribe during stopLoop', e);
+            }
             try {
                 this.controller.cancelScheduled(active.playbackId);
-            } catch {}
+            } catch (e) {
+                console.warn('[Sequencer] Failed to cancel scheduled region during stopLoop', e);
+            }
         }
         track.activeRegions.clear();
     }
@@ -115,7 +96,6 @@ export default class Sequencer implements ISequencer {
         this.ticker.remove('sequencer');
     }
 
-    // oxlint-disable-next-line max-lines-per-function
     public transitionTo({
         soundId,
         targetRegion,
@@ -133,115 +113,28 @@ export default class Sequencer implements ISequencer {
         track.state = LoopState.TRANSITIONING;
 
         const now = this.controller.getCurrentTime();
-        let targetTime = now;
+        const targetTime = this.calculateTransitionTargetTime(now, track, config, options);
 
-        if (isDefined(options.quantize) && options.quantize !== 'Immediate') {
-            const interval = options.quantizeInterval ?? (1 as Beats);
-            let currentAnchorTime = track.gridStartTime ?? (0 as Seconds);
+        this.handleActiveRegionsTransition(now, targetTime, track, config, options);
 
-            for (const active of track.activeRegions) {
-                if (active.scheduledStartTime <= now) {
-                    currentAnchorTime = active.scheduledStartTime;
-                }
-            }
+        const targetStartOffsetSec = this.calculateTargetStartOffset(
+            now,
+            targetTime,
+            track,
+            config,
+            options,
+            targetRegion
+        );
 
-            const grid =
-                options.grid ??
-                new AudioGrid(
-                    config.smartLoop.bpm ?? (60 as BPM),
-                    config.smartLoop.beatsPerBar ?? (4 as Beats),
-                    TimeMath.castToContextTime(currentAnchorTime),
-                    this.ppqn ?? (960 as Pulses)
-                );
-
-            if (typeof options.quantize === 'string') {
-                targetTime =
-                    options.quantize === 'NextBeat'
-                        ? grid.getNextBeatTime(now, interval)
-                        : grid.getNextBarTime(now, interval);
-            } else if (options.quantize.type === 'ExactPulse') {
-                const currentPulse = grid.getPulseAtTime(now);
-                const targetPulse = (currentPulse + options.quantize.pulseOffset) as Pulses;
-                targetTime = grid.getTimeAtPulse(targetPulse);
-            } else if (options.quantize.type === 'NextGridDivision') {
-                targetTime = grid.getNextDivisionTime(now, options.quantize.division);
-            }
-        }
-
-        const crossfade =
-            options.quantize === 'Immediate'
-                ? (options.crossfadeDuration ?? (0 as Milliseconds))
-                : (options.crossfadeDuration ?? config.smartLoop.crossfade ?? (0 as Milliseconds));
-
-        const crossfadeSec = TimeMath.msToSeconds(crossfade);
-        const isMusicalOverlap = isDefined(options.tailDuration);
-        const overrideTailSec = TimeMath.msToSeconds(options.tailDuration ?? (0 as Milliseconds));
-
-        for (const active of track.activeRegions) {
-            try {
-                active.unsubscribe();
-            } catch {}
-
-            if (active.scheduledStartTime >= targetTime) {
-                try {
-                    this.controller.cancelScheduled(active.playbackId);
-                } catch {}
-                continue;
-            }
-
-            if (isMusicalOverlap) {
-                if (overrideTailSec > 0) {
-                    this.controller.stopById(active.playbackId, TimeMath.addTime(targetTime, overrideTailSec));
-                } else {
-                    this.controller.stopById(active.playbackId, targetTime);
-                }
-            } else if (crossfade > 0) {
-                const delayMsToFade = TimeMath.secondsToMilliseconds(TimeMath.timeUntil(now, targetTime));
-                this.controller.fadeVolume(active.playbackId, 0, crossfade, 'equal-power', delayMsToFade);
-                this.controller.stopById(active.playbackId, TimeMath.addTime(targetTime, crossfadeSec));
-            } else {
-                this.controller.stopById(active.playbackId, targetTime);
-            }
-        }
-
-        track.activeRegions.clear();
-        track.regionQueue = [];
-        track.nextScheduleTime = TimeMath.castToSeconds(targetTime);
-
-        let targetStartOffsetSec = 0 as Seconds;
-        if (options.offsetMode && options.offsetMode !== 'None' && track.currentRegion) {
-            const sourceRegion = config.smartLoop.regions[track.currentRegion];
-            const targetRegionData = config.smartLoop.regions[targetRegion];
-
-            if (sourceRegion && targetRegionData) {
-                const sr = this.controller.getSampleRate();
-                const sourceLenSec = (sourceRegion[1] - sourceRegion[0]) / sr;
-                const targetLenSec = (targetRegionData[1] - targetRegionData[0]) / sr;
-
-                if (sourceLenSec > 0) {
-                    const elapsedAtTarget = Math.max(0, targetTime - (track.gridStartTime ?? now));
-                    let phase = (elapsedAtTarget % sourceLenSec) / sourceLenSec;
-
-                    if (options.offsetMode === 'Inverted') {
-                        phase = 1.0 - phase;
-                    }
-                    targetStartOffsetSec = (phase * targetLenSec) as Seconds;
-                }
-            }
-        }
-
-        if (isDefined(transitionRegionName) && transitionRegionName !== '') {
-            track.regionQueue.push(
-                { name: transitionRegionName, fadeInDuration: crossfade },
-                { name: targetRegion, fadeInDuration: 0 as Milliseconds, startOffset: targetStartOffsetSec }
-            );
-        } else {
-            track.regionQueue.push({
-                name: targetRegion,
-                fadeInDuration: crossfade,
-                startOffset: targetStartOffsetSec
-            });
-        }
+        this.queueTransitionRegions(
+            track,
+            targetRegion,
+            transitionRegionName,
+            options,
+            config,
+            targetStartOffsetSec,
+            targetTime
+        );
 
         track.loopRegion = targetRegion;
         track.currentRegion = targetRegion;
@@ -268,17 +161,7 @@ export default class Sequencer implements ISequencer {
             return;
         }
 
-        const { grid } = playbackInfo;
-        let targetTime = now;
-
-        if (typeof quantize === 'string') {
-            targetTime = quantize === 'NextBar' ? grid.getNextBarTime(now) : grid.getNextBeatTime(now);
-        } else if (quantize.type === 'ExactPulse') {
-            const currentPulse = grid.getPulseAtTime(now);
-            targetTime = grid.getTimeAtPulse((currentPulse + quantize.pulseOffset) as Pulses);
-        } else if (quantize.type === 'NextGridDivision') {
-            targetTime = grid.getNextDivisionTime(now, quantize.division);
-        }
+        const targetTime = this.calculateStingerTargetTime(now, playbackInfo.grid, quantize);
 
         this.router.play(stingerId, { when: targetTime });
     }
@@ -306,138 +189,297 @@ export default class Sequencer implements ISequencer {
     }
 
     public getMusicSnapshot(): readonly IMusicTrackSnapshot[] {
-        let count = 0;
-
-        this.tracks.forEach((track, soundId) => {
-            if (track.state === LoopState.IDLE) return;
-            if (count >= this.snapshotPool.length) {
-                this.snapshotPool.push({
-                    soundId: '' as SoundId,
-                    state: 'IDLE',
-                    currentRegion: null,
-                    targetRegion: null,
-                    queueLength: 0
-                });
-            }
-
-            const snap = this.snapshotPool[count];
-            snap.soundId = soundId;
-            snap.state = track.state;
-            snap.currentRegion = track.currentRegion;
-            snap.targetRegion = track.regionQueue.length > 0 ? track.regionQueue[0].name : null;
-            snap.queueLength = track.regionQueue.length;
-
-            this.activeSnapshots[count] = snap;
-            count++;
-        });
-
-        this.activeSnapshots.length = count;
-
-        return this.activeSnapshots;
+        return this.snapshotManager.getMusicSnapshot(this.tracks);
     }
 
-    // oxlint-disable-next-line max-lines-per-function
     public tick(): void {
         for (const [soundId, track] of this.tracks.entries()) {
             if (track.state === LoopState.IDLE) continue;
 
-            if (track.state === LoopState.LOOPING && isDefined(track.currentRegion)) {
-                const config = this.router.getSoundConfig(soundId);
-                if (isDefined(config) && 'smartLoop' in config) {
-                    const decision = this.transitionPolicy.evaluate(config, track.currentRegion, track.magnetStates);
-
-                    if (decision) {
-                        this.telemetry?.dispatch({
-                            type: 'CAUSE_CHAIN',
-                            timestampMs: TimeMath.secondsToMilliseconds(
-                                TimeMath.castToSeconds(this.controller.getCurrentTime())
-                            ),
-                            initiator: {
-                                type: 'MAGNET',
-                                sourceRegion: track.currentRegion,
-                                targetRegion: decision.targetRegion
-                            },
-                            result: { type: 'TRANSITION', target: track.soundId, toRegion: decision.targetRegion },
-                            conditionTrace: decision.trace
-                        });
-                        this.transitionTo({
-                            soundId,
-                            targetRegion: decision.targetRegion,
-                            transitionRegionName: decision.transitionRegionName,
-                            options: decision.options
-                        });
-                        continue;
-                    }
-                }
-            }
+            this.evaluateMagnets(soundId, track);
 
             const now = this.controller.getCurrentTime();
             const scheduleHorizon = now + this.lookaheadWindowSec;
 
             while (track.nextScheduleTime < scheduleHorizon) {
-                let nextRegionName: RegionId | null = null;
-                let fadeInMs = 0 as Milliseconds;
-                let startOffsetSec = 0 as Seconds;
-
-                if (track.regionQueue.length > 0) {
-                    const queued = track.regionQueue.shift()!;
-                    nextRegionName = queued.name;
-                    fadeInMs = queued.fadeInDuration;
-                    startOffsetSec = queued.startOffset ?? (0 as Seconds);
-                } else if (isDefined(track.loopRegion)) {
-                    nextRegionName = track.loopRegion;
+                if (!this.scheduleNextRegionInTick(soundId, track, now)) {
+                    break;
                 }
+            }
+        }
+    }
 
-                if (isAbsent(nextRegionName)) break;
+    private calculateTransitionTargetTime(
+        now: ContextTime,
+        track: TrackContext,
+        config: any,
+        options: any
+    ): ContextTime {
+        if (isAbsent(options.quantize) || options.quantize === 'Immediate') {
+            return now;
+        }
 
-                const regionStartTime = track.nextScheduleTime;
-                const playbackId = this.scheduleRegion({
-                    soundId,
-                    regionName: nextRegionName,
-                    targetTime: regionStartTime,
-                    track,
-                    startOffsetSec
-                });
+        const interval = options.quantizeInterval ?? (1 as Beats);
+        let currentAnchorTime = track.gridStartTime ?? (0 as Seconds);
 
-                if (isDefined(playbackId)) {
-                    if (track.state === LoopState.TRANSITIONING) {
-                        const otherActiveRegions = [...track.activeRegions].filter(r => r.playbackId !== playbackId);
+        for (const active of track.activeRegions) {
+            if (active.scheduledStartTime <= now) {
+                currentAnchorTime = active.scheduledStartTime;
+            }
+        }
 
-                        if (otherActiveRegions.length > 0) {
-                            for (const active of otherActiveRegions) {
-                                this.router.performCrossfade(active.playbackId, playbackId, fadeInMs);
-                            }
-                        } else if (fadeInMs > 0) {
-                            const delaySec = TimeMath.timeUntil(now, TimeMath.castToContextTime(regionStartTime));
-                            this.controller.setVolume(playbackId, 0);
-                            this.controller.fadeVolume(
-                                playbackId,
-                                1,
-                                fadeInMs,
-                                'equal-power',
-                                TimeMath.secondsToMilliseconds(delaySec)
-                            );
-                        } else {
-                            this.controller.setVolume(playbackId, 1);
-                        }
+        const grid =
+            options.grid ??
+            new AudioGrid(
+                config.smartLoop.bpm ?? (60 as BPM),
+                config.smartLoop.beatsPerBar ?? (4 as Beats),
+                TimeMath.castToContextTime(currentAnchorTime),
+                this.ppqn ?? (960 as Pulses)
+            );
 
-                        track.state = LoopState.LOOPING;
-                    } else if (fadeInMs > 0) {
-                        const delaySec = TimeMath.timeUntil(now, TimeMath.castToContextTime(regionStartTime));
-                        this.controller.setVolume(playbackId, 0);
-                        this.controller.fadeVolume(
-                            playbackId,
-                            1,
-                            fadeInMs,
-                            'equal-power',
-                            TimeMath.secondsToMilliseconds(delaySec)
-                        );
-                    } else {
-                        this.controller.setVolume(playbackId, 1);
+        if (typeof options.quantize === 'string') {
+            return options.quantize === 'NextBeat'
+                ? grid.getNextBeatTime(now, interval)
+                : grid.getNextBarTime(now, interval);
+        } else if (options.quantize.type === 'ExactPulse') {
+            const currentPulse = grid.getPulseAtTime(now);
+            const targetPulse = (currentPulse + options.quantize.pulseOffset) as Pulses;
+            return grid.getTimeAtPulse(targetPulse);
+        } else if (options.quantize.type === 'NextGridDivision') {
+            return grid.getNextDivisionTime(now, options.quantize.division);
+        }
+
+        return now;
+    }
+
+    private handleActiveRegionsTransition(
+        now: ContextTime,
+        targetTime: ContextTime,
+        track: TrackContext,
+        config: any,
+        options: any
+    ): void {
+        const crossfade =
+            options.quantize === 'Immediate'
+                ? (options.crossfadeDuration ?? (0 as Milliseconds))
+                : (options.crossfadeDuration ?? config.smartLoop.crossfade ?? (0 as Milliseconds));
+
+        const crossfadeSec = TimeMath.msToSeconds(crossfade);
+        const isMusicalOverlap = isDefined(options.tailDuration);
+        const overrideTailSec = TimeMath.msToSeconds(options.tailDuration ?? (0 as Milliseconds));
+
+        for (const active of track.activeRegions) {
+            try {
+                active.unsubscribe();
+            } catch (e) {
+                console.warn('[Sequencer] Failed to unsubscribe during transition', e);
+            }
+
+            if (active.scheduledStartTime >= targetTime) {
+                try {
+                    this.controller.cancelScheduled(active.playbackId);
+                } catch (e) {
+                    console.warn('[Sequencer] Failed to cancel scheduled region during transition', e);
+                }
+                continue;
+            }
+
+            if (isMusicalOverlap) {
+                if (overrideTailSec > 0) {
+                    this.controller.stopById(active.playbackId, TimeMath.addTime(targetTime, overrideTailSec));
+                } else {
+                    this.controller.stopById(active.playbackId, targetTime);
+                }
+            } else if (crossfade > 0) {
+                const delayMsToFade = TimeMath.secondsToMilliseconds(TimeMath.timeUntil(now, targetTime));
+                this.controller.fadeVolume(active.playbackId, 0, crossfade, 'equal-power', delayMsToFade);
+                this.controller.stopById(active.playbackId, TimeMath.addTime(targetTime, crossfadeSec));
+            } else {
+                this.controller.stopById(active.playbackId, targetTime);
+            }
+        }
+
+        track.activeRegions.clear();
+    }
+
+    private calculateStingerTargetTime(
+        now: ContextTime,
+        grid: IPlaybackInfo['grid'],
+        quantize: Exclude<QuantizeType, 'Immediate'>
+    ): ContextTime {
+        if (typeof quantize === 'string') {
+            return quantize === 'NextBar' ? grid.getNextBarTime(now) : grid.getNextBeatTime(now);
+        }
+        if (quantize.type === 'ExactPulse') {
+            const currentPulse = grid.getPulseAtTime(now);
+            return grid.getTimeAtPulse((currentPulse + quantize.pulseOffset) as Pulses);
+        }
+        if (quantize.type === 'NextGridDivision') {
+            return grid.getNextDivisionTime(now, quantize.division);
+        }
+        return now;
+    }
+
+    private calculateTargetStartOffset(
+        now: ContextTime,
+        targetTime: ContextTime,
+        track: TrackContext,
+        config: any,
+        options: any,
+        targetRegion: RegionId
+    ): Seconds {
+        let targetStartOffsetSec = 0 as Seconds;
+        if (options.offsetMode && options.offsetMode !== 'None' && track.currentRegion) {
+            const sourceRegion = config.smartLoop.regions[track.currentRegion];
+            const targetRegionData = config.smartLoop.regions[targetRegion];
+
+            if (sourceRegion && targetRegionData) {
+                const sr = this.controller.getSampleRate();
+                const sourceLenSec = (sourceRegion[1] - sourceRegion[0]) / sr;
+                const targetLenSec = (targetRegionData[1] - targetRegionData[0]) / sr;
+
+                if (sourceLenSec > 0) {
+                    const elapsedAtTarget = Math.max(0, targetTime - (track.gridStartTime ?? now));
+                    let phase = (elapsedAtTarget % sourceLenSec) / sourceLenSec;
+
+                    if (options.offsetMode === 'Inverted') {
+                        phase = 1.0 - phase;
                     }
+                    targetStartOffsetSec = (phase * targetLenSec) as Seconds;
                 }
+            }
+        }
+        return targetStartOffsetSec;
+    }
 
-                if (track.nextScheduleTime <= regionStartTime) break;
+    private queueTransitionRegions(
+        track: TrackContext,
+        targetRegion: RegionId,
+        transitionRegionName: RegionId | undefined,
+        options: any,
+        config: any,
+        targetStartOffsetSec: Seconds,
+        targetTime: ContextTime
+    ): void {
+        const crossfade =
+            options.quantize === 'Immediate'
+                ? (options.crossfadeDuration ?? (0 as Milliseconds))
+                : (options.crossfadeDuration ?? config.smartLoop.crossfade ?? (0 as Milliseconds));
+
+        track.regionQueue = [];
+        track.nextScheduleTime = TimeMath.castToSeconds(targetTime);
+
+        if (isDefined(transitionRegionName) && transitionRegionName !== '') {
+            track.regionQueue.push(
+                { name: transitionRegionName, fadeInDuration: crossfade },
+                { name: targetRegion, fadeInDuration: 0 as Milliseconds, startOffset: targetStartOffsetSec }
+            );
+        } else {
+            track.regionQueue.push({
+                name: targetRegion,
+                fadeInDuration: crossfade,
+                startOffset: targetStartOffsetSec
+            });
+        }
+    }
+
+    private evaluateMagnets(soundId: SoundId, track: TrackContext): void {
+        if (track.state === LoopState.LOOPING && isDefined(track.currentRegion)) {
+            const config = this.router.getSoundConfig(soundId);
+            if (isDefined(config) && 'smartLoop' in config) {
+                const decision = this.transitionPolicy.evaluate(config, track.currentRegion, track.magnetStates);
+
+                if (decision) {
+                    this.telemetry?.dispatch({
+                        type: 'CAUSE_CHAIN',
+                        timestampMs: TimeMath.secondsToMilliseconds(
+                            TimeMath.castToSeconds(this.controller.getCurrentTime())
+                        ),
+                        initiator: {
+                            type: 'MAGNET',
+                            sourceRegion: track.currentRegion,
+                            targetRegion: decision.targetRegion
+                        },
+                        result: { type: 'TRANSITION', target: track.soundId, toRegion: decision.targetRegion },
+                        conditionTrace: decision.trace
+                    });
+                    this.transitionTo({
+                        soundId,
+                        targetRegion: decision.targetRegion,
+                        transitionRegionName: decision.transitionRegionName,
+                        options: decision.options
+                    });
+                }
+            }
+        }
+    }
+
+    private scheduleNextRegionInTick(soundId: SoundId, track: TrackContext, now: ContextTime): boolean {
+        let nextRegionName: RegionId | null = null;
+        let fadeInMs = 0 as Milliseconds;
+        let startOffsetSec = 0 as Seconds;
+
+        if (track.regionQueue.length > 0) {
+            const queued = track.regionQueue.shift()!;
+            nextRegionName = queued.name;
+            fadeInMs = queued.fadeInDuration;
+            startOffsetSec = queued.startOffset ?? (0 as Seconds);
+        } else if (isDefined(track.loopRegion)) {
+            nextRegionName = track.loopRegion;
+        }
+
+        if (isAbsent(nextRegionName)) return false;
+
+        const regionStartTime = track.nextScheduleTime;
+        const playbackId = this.scheduleRegion({
+            soundId,
+            regionName: nextRegionName,
+            targetTime: regionStartTime,
+            track,
+            startOffsetSec
+        });
+
+        if (isDefined(playbackId)) {
+            this.applyFadeIn(track, playbackId, fadeInMs, now, regionStartTime);
+        }
+
+        return track.nextScheduleTime > regionStartTime;
+    }
+
+    private applyFadeIn(
+        track: TrackContext,
+        playbackId: PlaybackId,
+        fadeInMs: Milliseconds,
+        now: ContextTime,
+        regionStartTime: Seconds
+    ): void {
+        let crossfaded = false;
+
+        if (track.state === LoopState.TRANSITIONING) {
+            const otherActiveRegions = [...track.activeRegions].filter(r => r.playbackId !== playbackId);
+
+            if (otherActiveRegions.length > 0) {
+                for (const active of otherActiveRegions) {
+                    this.router.performCrossfade(active.playbackId, playbackId, fadeInMs);
+                }
+                crossfaded = true;
+            }
+            track.state = LoopState.LOOPING;
+        }
+
+        if (!crossfaded) {
+            if (fadeInMs > 0) {
+                const delaySec = TimeMath.timeUntil(now, TimeMath.castToContextTime(regionStartTime));
+                this.controller.setVolume(playbackId, 0);
+                this.controller.fadeVolume(
+                    playbackId,
+                    1,
+                    fadeInMs,
+                    'equal-power',
+                    TimeMath.secondsToMilliseconds(delaySec)
+                );
+            } else {
+                this.controller.setVolume(playbackId, 1);
             }
         }
     }
@@ -502,21 +544,23 @@ export default class Sequencer implements ISequencer {
         const now = TimeMath.castToSeconds(this.controller.getCurrentTime());
 
         if (actualTargetTime < now) {
-            if (isAbsent(track.gridStartTime) && targetTime === 0) {
-                actualTargetTime = now;
-                logicalScheduledTime = (now + preEntrySec) as Seconds;
-            } else {
-                const missedSec = (now - actualTargetTime) as Seconds;
-                if (now >= targetTime) {
-                    actualOffsetSec = (logicalOffsetSec + (now - targetTime)) as Seconds;
-                    actualDurationSec = Math.max(0, logicalDurationSec - (now - targetTime) + tailSec) as Seconds;
-                    actualTargetTime = now;
-                } else {
-                    actualOffsetSec = (actualOffsetSec + missedSec) as Seconds;
-                    actualDurationSec = (actualDurationSec - missedSec) as Seconds;
-                    actualTargetTime = now;
-                }
-            }
+            const adjusted = this.adjustForLateScheduling(
+                now,
+                targetTime,
+                actualTargetTime,
+                logicalScheduledTime,
+                actualOffsetSec,
+                actualDurationSec,
+                logicalDurationSec,
+                logicalOffsetSec,
+                tailSec,
+                preEntrySec,
+                track
+            );
+            actualTargetTime = adjusted.actualTargetTime;
+            logicalScheduledTime = adjusted.logicalScheduledTime;
+            actualOffsetSec = adjusted.actualOffsetSec;
+            actualDurationSec = adjusted.actualDurationSec;
         }
 
         const playbackId = this.controller.play(soundId, {
@@ -546,11 +590,44 @@ export default class Sequencer implements ISequencer {
             track.activeRegions.delete(activeRegion);
             try {
                 activeRegion.unsubscribe();
-            } catch {}
+            } catch (e) {
+                console.warn('[Sequencer] Failed to unsubscribe voice end handler', e);
+            }
         });
 
         track.activeRegions.add(activeRegion);
         return playbackId;
+    }
+
+    private adjustForLateScheduling(
+        now: Seconds,
+        targetTime: Seconds,
+        actualTargetTime: Seconds,
+        logicalScheduledTime: Seconds,
+        actualOffsetSec: Seconds,
+        actualDurationSec: Seconds,
+        logicalDurationSec: Seconds,
+        logicalOffsetSec: Seconds,
+        tailSec: Seconds,
+        preEntrySec: Seconds,
+        track: TrackContext
+    ) {
+        if (isAbsent(track.gridStartTime) && targetTime === 0) {
+            actualTargetTime = now;
+            logicalScheduledTime = (now + preEntrySec) as Seconds;
+        } else {
+            const missedSec = (now - actualTargetTime) as Seconds;
+            if (now >= targetTime) {
+                actualOffsetSec = (logicalOffsetSec + (now - targetTime)) as Seconds;
+                actualDurationSec = Math.max(0, logicalDurationSec - (now - targetTime) + tailSec) as Seconds;
+                actualTargetTime = now;
+            } else {
+                actualOffsetSec = (actualOffsetSec + missedSec) as Seconds;
+                actualDurationSec = (actualDurationSec - missedSec) as Seconds;
+                actualTargetTime = now;
+            }
+        }
+        return { actualTargetTime, logicalScheduledTime, actualOffsetSec, actualDurationSec };
     }
 
     private startScheduler(): void {
