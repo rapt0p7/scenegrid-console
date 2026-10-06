@@ -1,11 +1,13 @@
 // oxlint-disable max-depth
 // noinspection D
 
+import type { ISmartLoopSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type {
     ITransitionToParameters,
     ISequencer,
     TrackContext,
-    ActiveRegion
+    ActiveRegion,
+    TransitionOptions
 } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { IEngineTicker } from '@domain/Shared/Ports/IEngineTicker.js';
@@ -161,7 +163,7 @@ export default class Sequencer implements ISequencer {
             return;
         }
 
-        const targetTime = this.calculateStingerTargetTime(now, playbackInfo.grid, quantize);
+        const targetTime = this.calculateTargetTimeWithQuantize(now, playbackInfo.grid, quantize);
 
         this.router.play(stingerId, { when: targetTime });
     }
@@ -212,8 +214,8 @@ export default class Sequencer implements ISequencer {
     private calculateTransitionTargetTime(
         now: ContextTime,
         track: TrackContext,
-        config: any,
-        options: any
+        config: ISmartLoopSoundConfig,
+        options: TransitionOptions
     ): ContextTime {
         if (isAbsent(options.quantize) || options.quantize === 'Immediate') {
             return now;
@@ -236,28 +238,15 @@ export default class Sequencer implements ISequencer {
                 TimeMath.castToContextTime(currentAnchorTime),
                 this.ppqn ?? (960 as Pulses)
             );
-
-        if (typeof options.quantize === 'string') {
-            return options.quantize === 'NextBeat'
-                ? grid.getNextBeatTime(now, interval)
-                : grid.getNextBarTime(now, interval);
-        } else if (options.quantize.type === 'ExactPulse') {
-            const currentPulse = grid.getPulseAtTime(now);
-            const targetPulse = (currentPulse + options.quantize.pulseOffset) as Pulses;
-            return grid.getTimeAtPulse(targetPulse);
-        } else if (options.quantize.type === 'NextGridDivision') {
-            return grid.getNextDivisionTime(now, options.quantize.division);
-        }
-
-        return now;
+        return this.calculateTargetTimeWithQuantize(now, grid, options.quantize, interval);
     }
 
     private handleActiveRegionsTransition(
         now: ContextTime,
         targetTime: ContextTime,
         track: TrackContext,
-        config: any,
-        options: any
+        config: ISmartLoopSoundConfig,
+        options: TransitionOptions
     ): void {
         const crossfade =
             options.quantize === 'Immediate'
@@ -302,13 +291,14 @@ export default class Sequencer implements ISequencer {
         track.activeRegions.clear();
     }
 
-    private calculateStingerTargetTime(
+    private calculateTargetTimeWithQuantize(
         now: ContextTime,
         grid: IPlaybackInfo['grid'],
-        quantize: Exclude<QuantizeType, 'Immediate'>
+        quantize: Exclude<QuantizeType, 'Immediate'>,
+        interval?: Beats
     ): ContextTime {
         if (typeof quantize === 'string') {
-            return quantize === 'NextBar' ? grid.getNextBarTime(now) : grid.getNextBeatTime(now);
+            return quantize === 'NextBar' ? grid.getNextBarTime(now, interval) : grid.getNextBeatTime(now, interval);
         }
         if (quantize.type === 'ExactPulse') {
             const currentPulse = grid.getPulseAtTime(now);
@@ -324,8 +314,8 @@ export default class Sequencer implements ISequencer {
         now: ContextTime,
         targetTime: ContextTime,
         track: TrackContext,
-        config: any,
-        options: any,
+        config: ISmartLoopSoundConfig,
+        options: TransitionOptions,
         targetRegion: RegionId
     ): Seconds {
         let targetStartOffsetSec = 0 as Seconds;
@@ -356,8 +346,8 @@ export default class Sequencer implements ISequencer {
         track: TrackContext,
         targetRegion: RegionId,
         transitionRegionName: RegionId | undefined,
-        options: any,
-        config: any,
+        options: TransitionOptions,
+        config: ISmartLoopSoundConfig,
         targetStartOffsetSec: Seconds,
         targetTime: ContextTime
     ): void {
