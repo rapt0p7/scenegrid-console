@@ -226,7 +226,9 @@ table.t tr.clickable { cursor: pointer; }
 .details .fill { flex: 1; min-height: 0; }
 .details .mini { position: relative; min-height: 220px; height: 100%; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); overflow: hidden; }
 .details .mini canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; }
-.details .mini.tall { height: 320px; flex: none; }
+/* the small graph at the end of a long pane stays at the pane's bottom edge while the rest scrolls under it — always in view */
+.details .mini.tall { height: 320px; flex: none; position: sticky; bottom: 0; margin-top: auto; margin-bottom: -16px; box-shadow: 0 -10px 24px -6px color-mix(in srgb, var(--bg2) 85%, transparent), 0 0 0 16px var(--bg2); z-index: 2; }
+/* its resting place at the end of the pane is flush with the edge too (the pane's padding is swallowed), so reaching the end moves nothing */
 .details .mini .mini-hint { position: absolute; bottom: 6px; right: 8px; font-size: 10px; color: var(--fg3); pointer-events: none; }
 .details .mini .mini-title { position: absolute; top: 6px; left: 8px; font-size: 10px; color: var(--fg3); text-transform: uppercase; letter-spacing: .06em; pointer-events: none; }
 .details .legend-list { display: grid; gap: 6px; font-size: 12px; color: var(--fg2); }
@@ -254,7 +256,7 @@ table.t.findings td { font-size: 12.5px; } table.t.findings .mono { white-space:
 .graph-hint { position: absolute; bottom: 14px; right: 18px; font-size: 11px; color: var(--fg3); text-align: right; max-width: 40%; }
 .graph-toggle, .graph-hint-touch { display: none; } /* phones only, see the 900px block */
 
-.timeline svg { width: 100%; height: 260px; display: block; }
+.timeline svg { width: 100%; height: 130px; display: block; }
 .timeline .axis text { fill: var(--fg3); font-size: 10px; }
 .timeline .axis line { stroke: var(--line); }
 .timeline rect.b { cursor: pointer; }
@@ -324,7 +326,7 @@ kbd { font-family: var(--mono); font-size: 11px; background: var(--bg3); border:
   .main { padding: 16px 14px 32px; }
   .details { border-left: 0; border-top: 1px solid var(--line); padding: 14px; }
   .details .mini { min-height: 240px; height: 240px; }
-  .details .mini.tall { height: 280px; }
+  .details .mini.tall { height: 280px; position: static; box-shadow: none; margin-top: 0; margin-bottom: 0; }
   /* the graph gets the screen: switches and legend behind two buttons, opened one at a time, closed by touching the graph */
   .graph-wrap { height: 80vh; height: 80svh; min-height: 380px; margin: -16px -14px -32px; }
   .graph-ui { top: 46px; left: 10px; right: 10px; font-size: 12px; gap: 8px; padding: 8px 10px; max-height: calc(100% - 100px); overflow: auto; background: var(--bg2); box-shadow: 0 8px 28px rgba(0,0,0,.35); z-index: 3; }
@@ -335,12 +337,16 @@ kbd { font-family: var(--mono); font-size: 11px; background: var(--bg3); border:
   .graph-toggle { display: inline-block; position: absolute; left: 10px; z-index: 4; font: inherit; font-size: 12px; color: var(--fg); background: color-mix(in srgb, var(--bg2) 92%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; }
   .graph-toggle[aria-expanded="true"] { border-color: var(--accent); color: var(--accent2); }
   .ui-toggle { top: 10px; }
+  .graph-wrap .graph-corner { bottom: 40px; right: 10px; }
+  .graph-wrap .graph-corner-fit { right: 64px; }
   .legend-toggle { bottom: 10px; }
   .graph-wrap.ui-open .path-bar { display: none; }
   .graph-hint { display: none; }
   .graph-hint-touch { display: block; position: absolute; bottom: 16px; right: 12px; font-size: 11px; color: var(--fg3); pointer-events: none; }
   .statusbar { height: auto; flex-wrap: wrap; padding: 6px 10px; gap: 4px 12px; line-height: 1.4; }
   .statusbar .grow { margin-left: 0; flex-basis: 100%; }
+  /* the state monitor on a phone: a sheet across the screen above the status bar, not a box hanging off its link to the right, out of the screen */
+  .loaded-pop { position: fixed; left: 10px; right: 10px; bottom: 96px; min-width: 0; max-width: none; max-height: 55vh; }
   .reader h1 { font-size: 20px; }
   .reader .body p, .reader .body ul, .reader .body ol { font-size: 14.5px; }
   .reader .pager { flex-wrap: wrap; gap: 8px; }
@@ -500,6 +506,9 @@ a.author:hover { color: var(--accent2); }
 .details .mini .mini-open { position: absolute; bottom: 5px; right: 6px; background: color-mix(in srgb, var(--bg2) 85%, transparent); border: 1px solid var(--line); border-radius: 5px; color: var(--fg2); font-size: 10.5px; padding: 2px 7px; cursor: pointer; }
 .details .mini .mini-open:hover { color: var(--fg); border-color: var(--accent); }
 .details .mini .mini-hint { right: auto; left: 8px; }
+.details .mini .mini-corner { position: absolute; bottom: 5px; right: 96px; display: inline-flex; gap: 4px; }
+.details .mini .mini-corner-btn { font: inherit; font-size: 10px; padding: 2px 7px; background: color-mix(in srgb, var(--bg2) 85%, transparent); border: 1px solid var(--line); border-radius: 5px; color: var(--fg2); cursor: pointer; }
+.details .mini .mini-corner-btn:hover { color: var(--fg); border-color: var(--accent); }
 
 /* the globe: the graph alone, full width; waves asked for in a dialog */
 /* desktop only: the phone layout is one column already, and these rules, more specific than
@@ -562,6 +571,98 @@ a.author:hover { color: var(--accent2); }
 .nojs .nojs-meta { color: var(--fg3); font-size: 13px; }
 .nojs-about { margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--fg2); }
 
+/* ---- timeline: the playhead and the stage */
+.timeline .now { stroke: var(--accent2); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.timeline .now-label { fill: var(--accent2); font-size: 10px; font-family: var(--mono); }
+.playhead { display: flex; align-items: center; gap: 10px; margin: 4px 0 16px; font-size: 12px; color: var(--fg2); flex-wrap: wrap; }
+.playhead .play-btn, .playhead .play-jump { font: inherit; font-size: 13px; line-height: 1; width: 30px; height: 28px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg2); color: var(--fg); cursor: pointer; }
+.playhead .play-btn { width: 36px; }
+.playhead .play-btn.on, .playhead .play-btn:hover, .playhead .play-jump:hover { border-color: var(--accent); color: var(--accent2); }
+.playhead .playhead-range { flex: 1 1 200px; min-width: 120px; accent-color: var(--accent); margin: 0; }
+.playhead .playhead-day { font-family: var(--mono); font-size: 13px; color: var(--fg); min-width: 84px; }
+.playhead .play-speed { font: inherit; font-size: 11px; background: var(--bg2); color: var(--fg); border: 1px solid var(--line); border-radius: 5px; padding: 3px 4px; }
+/* the counts on a line of their own, in tabular figures: as the days play their width changes, and nothing else may move with it */
+.playhead .playhead-counts { color: var(--fg3); white-space: nowrap; flex-basis: 100%; font-variant-numeric: tabular-nums; min-height: 1.4em; }
+.playhead .playhead-day { font-variant-numeric: tabular-nums; }
+.stage-wrap { position: relative; height: 480px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); overflow: hidden; margin: 14px 0 18px; }
+.stage-wrap canvas.stage { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.stage-wrap canvas.stage.grabbing { cursor: grabbing; }
+.stage-wrap .stage-seg { position: absolute; top: 8px; right: 8px; display: inline-flex; gap: 2px; background: color-mix(in srgb, var(--bg2) 85%, transparent); border: 1px solid var(--line); border-radius: 5px; padding: 1px; z-index: 5; }
+.stage-wrap .stage-seg button { font: inherit; font-size: 10.5px; padding: 2px 7px; border: 0; border-radius: 4px; background: transparent; color: var(--fg2); cursor: pointer; white-space: nowrap; }
+.stage-wrap .stage-seg button.on { background: var(--accent); color: #fff; }
+.stage-wrap .stage-arrange { right: auto; left: 118px; }
+.stage-wrap .stage-foreign { right: auto; left: 290px; }
+.graph-wrap .graph-corner { position: absolute; bottom: 40px; right: 18px; z-index: 3; font: inherit; font-size: 10.5px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 5px; background: color-mix(in srgb, var(--bg2) 85%, transparent); color: var(--fg2); cursor: pointer; }
+.graph-wrap .graph-corner:hover { border-color: var(--accent); color: var(--accent2); }
+.graph-wrap .graph-corner-fit { right: 72px; }
+.stage-wrap .stage-reset { position: absolute; top: 8px; right: 8px; z-index: 5; font: inherit; font-size: 10.5px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 5px; background: color-mix(in srgb, var(--bg2) 85%, transparent); color: var(--fg2); cursor: pointer; }
+.stage-wrap .stage-reset:hover { border-color: var(--accent); color: var(--accent2); }
+.stage-wrap .stage-seg .seg-label { padding: 2px 4px 2px 7px; font-size: 10.5px; color: var(--fg3); }
+.stage-note { font-size: 11.5px; }
+.stage-note .stage-hint-touch { display: none; }
+.stage-tip { position: absolute; z-index: 3; pointer-events: none; max-width: 280px; background: color-mix(in srgb, var(--bg2) 94%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; font-size: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.3); }
+.stage-tip b { display: block; color: var(--fg); margin-bottom: 2px; }
+.stage-tip .note, .stage-card .note { color: var(--fg3); font-size: 11px; }
+.stage-tip .pills, .stage-card .pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.timeline-head { display: grid; grid-template-columns: minmax(0, 1fr) clamp(280px, 42%, 420px); gap: 18px; align-items: stretch; margin-bottom: 0; }
+.timeline-head-text { min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+.timeline-head-text .sub { margin-top: 0; }
+.timeline-head-text .timeline { margin: 6px 0 4px; }
+.timeline-head-text .legend { margin: 0 0 10px; font-size: 11.5px; }
+.timeline-head-text .playhead { margin-bottom: 0; }
+/* the card fills its slot and never sets the row's height — the column beside it does — so a short entry and a long one leave the stage where it is */
+.stage-card-slot { min-width: 0; position: relative; }
+/* head, title and pills at the top, the foot (who recorded it · let go · open) always at the bottom; only the text scrolls */
+.stage-card { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 10px; font-size: 13px; }
+.stage-card .stage-card-body { flex: 1 1 auto; min-height: 2.6em; overflow: auto; margin: 8px 0 0; color: var(--fg2); line-height: 1.45; font-size: 12.5px; }
+.stage-card .stage-card-body p { margin: 0 0 8px; }
+.stage-card .stage-card-body p:last-child { margin-bottom: 0; }
+.stage-card .stage-card-body b { color: var(--fg); }
+.stage-card .stage-card-body code { font-size: 11px; }
+.stage-card .stage-card-foot { flex: none; }
+.stage-card .stage-card-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.stage-card .stage-card-head .pill { flex: none; }
+.stage-card .stage-card-held { font: inherit; font-size: 11px; cursor: pointer; border-color: var(--accent); color: var(--accent2); }
+.stage-card .stage-card-held b { font-weight: 700; margin-left: 2px; }
+.stage-card .stage-card-held:hover { background: var(--accent); color: #fff; }
+.stage-card h3 { margin: 6px 0 0; font-size: 15px; line-height: 1.3; text-transform: none; letter-spacing: 0; color: var(--fg); }
+.stage-card h3 a { color: var(--fg); }
+.stage-card .stage-card-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.stage-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11.5px; color: var(--fg2); margin: -10px 0 6px; align-items: center; }
+.stage-legend .type-glyph { vertical-align: -1px; margin-right: 2px; }
+.stage-legend .sw { display: inline-block; width: 11px; height: 11px; vertical-align: -1px; margin-right: 4px; border: 1.2px solid currentColor; box-sizing: border-box; }
+.stage-legend .sw.solid { background: currentColor; }
+.stage-legend .sw.hatch { background: repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 3.5px); }
+.stage-legend .sw.dashed { border-style: dashed; }
+.stage-legend .sw.ring { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.2px var(--open); }
+.stage-legend .grp { display: inline-flex; gap: 10px; align-items: center; }
+.stage-legend .grp + .grp { padding-left: 12px; border-left: 1px solid var(--line); }
+.stage-note { margin: 0 0 16px; }
+@media (max-width: 900px) {
+  .stage-wrap { min-height: 0; } /* the stage sets its own height from its width */
+  .stage-note .stage-hint { display: none; }
+  .stage-note .stage-hint-touch { display: inline; }
+  .timeline-head { grid-template-columns: 1fr; }
+  .stage-card-slot { height: 320px; }
+  /* the stage's switches on a phone: the day and reset on the first line, the two switches on a second */
+  .stage-wrap .stage-arrange { top: 36px; left: 8px; }
+  .stage-wrap .stage-foreign { top: 36px; left: 150px; }
+  .playhead .playhead-counts { white-space: normal; }
+}
+
+/* ---- authors across the loaded projects */
+.proj-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.proj-pills .proj-pill { font-size: 10.5px; }
+a.proj-pill:hover { border-color: var(--accent); color: var(--accent2); text-decoration: none; }
+.authors-project { margin: 10px 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg2); }
+.authors-project > summary { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; list-style: none; font-weight: 600; }
+.authors-project > summary::-webkit-details-marker { display: none; }
+.authors-project > summary::before { content: "▸"; color: var(--fg3); font-size: 11px; }
+.authors-project[open] > summary::before { content: "▾"; }
+.authors-project > summary .count { color: var(--fg3); font-weight: 400; font-size: 12px; }
+.authors-project > summary .backlink { margin-left: auto; font-weight: 400; font-size: 12px; }
+.authors-project > .table-wrap { padding: 0 12px 10px; }
+
 </style>
 <noscript><style>#app { display: none; }</style></noscript>
 </head>
@@ -571,7 +672,7 @@ a.author:hover { color: var(--accent2); }
   <a class="nojs-brand" href="https://keepthewhy.com"><img src="data:image/png;base64,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" alt="Keep the Why" height="29"></a>
   <p class="nojs-need">This dashboard needs JavaScript for its graph, search, timeline and the projects it links to. What it shows is plain Markdown in the repository's <code>context/</code>, readable without it.</p>
   <h1>rapt0p7---scenegrid-console</h1>
-<p class="nojs-meta">9 entries across 5 topics · exported 2026-10-08T12:08:05Z</p>
+<p class="nojs-meta">9 entries across 5 topics · exported 2026-10-09T15:57:09Z</p>
 <p><a href="https://github.com/rapt0p7/scenegrid-console/tree/HEAD/context/">context/ on the host</a> · <a href="https://github.com/rapt0p7/scenegrid-console">https://github.com/rapt0p7/scenegrid-console</a></p>
 <h2><a href="https://github.com/rapt0p7/scenegrid-console/blob/HEAD/context/chunked-audio-streaming.md">Chunked Audio Streaming</a></h2>
 <ul><li><a href="https://github.com/rapt0p7/scenegrid-console/blob/HEAD/context/chunked-audio-streaming.md#the-streamnode-flip-flop-architecture--codec-padding">The StreamNode Flip-Flop Architecture &amp; Codec Padding</a> <span class="nojs-meta">active · confirmed</span></li><li><a href="https://github.com/rapt0p7/scenegrid-console/blob/HEAD/context/chunked-audio-streaming.md#pause--resume-mechanics-composite-math">Pause &amp; Resume Mechanics (Composite Math)</a> <span class="nojs-meta">active · confirmed</span></li><li><a href="https://github.com/rapt0p7/scenegrid-console/blob/HEAD/context/chunked-audio-streaming.md#cache-eviction-policy--os-context-death">Cache Eviction Policy &amp; OS Context Death</a> <span class="nojs-meta">active · confirmed</span></li><li><a href="https://github.com/rapt0p7/scenegrid-console/blob/HEAD/context/chunked-audio-streaming.md#gc-pressure--zero-allocation-exceptions">GC Pressure &amp; Zero-Allocation Exceptions</a> <span class="nojs-meta">active · confirmed</span></li><li><a href="https://github.com/rapt0p7/scenegrid-console/blob/HEAD/context/chunked-audio-streaming.md#strict-timeline-during-deadline-underruns">Strict Timeline during Deadline Underruns</a> <span class="nojs-meta">active · confirmed</span></li></ul>
@@ -611,13 +712,13 @@ a.author:hover { color: var(--accent2); }
   <nav class="sidebar" id="sidebar">
     <div class="nav">
       <a href="#overview" data-route="overview">Overview</a>
-      <a href="#graph" data-route="graph">Graph</a>
       <a href="#queues" data-route="queues">Queues <span id="queue-count" class="count"></span></a>
-      <a href="#family" data-route="family">Family</a>
-      <a href="#friends" data-route="friends">Friends</a>
+      <a href="#graph" data-route="graph">Graph</a>
       <a href="#thoughts" data-route="thoughts">Thoughts</a>
       <a href="#timeline" data-route="timeline">Timeline</a>
       <a href="#authors" data-route="authors">Authors</a>
+      <a href="#family" data-route="family">Family</a>
+      <a href="#friends" data-route="friends">Friends</a>
       <a href="#projects" data-route="projects" id="nav-projects" hidden>Projects</a>
       <button id="side-toggle" class="nav-toggle" type="button" aria-expanded="false">Topics ▾</button>
     </div>
@@ -634,7 +735,7 @@ a.author:hover { color: var(--accent2); }
   <aside class="details" id="details"></aside>
   <footer class="statusbar" id="statusbar"></footer>
 </div>
-<script>window.__KTW_STATE__ = {"state-json": 2, "generated": "2026-10-08T12:08:05Z", "dashboard": "0.7.3", "linter": "0.20.0.0", "project": {"id": "rapt0p7---scenegrid-console", "name": "scenegrid-console", "context": "context/", "schema": "0.19.0", "config": {"id": "rapt0p7---scenegrid-console", "context": "context/", "init": "complete", "context-schema": "0.19.0", "capture-confirmation": "confirm-when-unsure", "source-reference": "never", "dashboard-state": "https://rapt0p7.github.io/scenegrid-console/dashboard/live/state.json", "canonical": "https://github.com/rapt0p7/scenegrid-console"}, "personal_defaults": {}, "config_file": ".keep-the-why", "canonical": "https://github.com/rapt0p7/scenegrid-console", "root": "", "parent": "", "dashboard_state": "https://rapt0p7.github.io/scenegrid-console/dashboard/live/state.json", "children": [], "git": {"available": true, "head": "26e95a3", "head_full": "26e95a39702922aa739e21320a3de1c78c6fd6c2", "branch": "main", "remote": "github.com/rapt0p7/scenegrid-console", "upstream": "", "fork": null, "project_subdir": "", "shallow": false}}, "topics": [{"file": "chunked-audio-streaming.md", "title": "Chunked Audio Streaming", "index_line": "", "entries": 5, "refs_out": [], "refs_in": [], "status": {"active": 5}, "evidence": {"confirmed": 5}}, {"file": "data-plane-mutations.md", "title": "data-plane-mutations", "index_line": "", "entries": 1, "refs_out": [], "refs_in": [], "status": {"active": 1}, "evidence": {"confirmed": 1}}, {"file": "multiplicative-veto.md", "title": "multiplicative-veto", "index_line": "", "entries": 1, "refs_out": [], "refs_in": [], "status": {"active": 1}, "evidence": {"confirmed": 1}}, {"file": "resource-management.md", "title": "resource-management", "index_line": "", "entries": 1, "refs_out": [], "refs_in": [], "status": {"active": 1}, "evidence": {"inferred": 1}}, {"file": "worklet-efficiency.md", "title": "worklet-efficiency", "index_line": "", "entries": 1, "refs_out": [], "refs_in": [], "status": {"active": 1}, "evidence": {"inferred": 1}}], "entries": [{"id": "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture-codec-padding", "uuid": "b2096d38-e415-486c-8631-e22612afe05d", "file": "chunked-audio-streaming.md", "line": 3, "end_line": 16, "title": "The StreamNode Flip-Flop Architecture & Codec Padding", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "We wrap at least two `AudioBufferSourceNode`s in a \"flip-flop\" scheduling pattern (overlapping lifecycles, NOT signal crossfade) using `AudioBufferSourceNode.start(when, offset, duration)`.\n\n**Reason:** Calling `start` with explicit `offset` and `duration` bypasses browser-injected decoder padding (priming samples) making gapless playback possible. However, this doesn't fix MDCT windowing ringing, which strictly mandates that the asset pipeline slices chunks from a single continuously-encoded bitstream.\n\n**Rejected alternative:** Using a standard HTML5 `<audio>` element. Rejected because the streaming pipeline must fit into the existing Web Audio DSP graph natively so that all routing, buses, VCAs, and limiters continue to work exactly as they do for fully-loaded tracks.", "reason": "Calling `start` with explicit `offset` and `duration` bypasses browser-injected decoder padding (priming samples) making gapless playback possible. However, this doesn't fix MDCT windowing ringing, which strictly mandates that the asset pipeline slices chunks from a single continuously-encoded bitstream.", "rejected": ["Using a standard HTML5 `<audio>` element. Rejected because the streaming pipeline must fit into the existing Web Audio DSP graph natively so that all routing, buses, VCAs, and limiters continue to work exactly as they do for fully-loaded tracks."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "chunked-audio-streaming.md#pause-resume-mechanics-composite-math", "uuid": "68db2236-b8de-4c00-b897-f2aabb3cca24", "file": "chunked-audio-streaming.md", "line": 17, "end_line": 28, "title": "Pause & Resume Mechanics (Composite Math)", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "On `pause()`, the `StreamNode` records the exact physical elapsed time. On `resume()`, it calculates the required inner-chunk `offset` using the composite formula: `resumeOffset = trimStartSamples + logicalElapsedSincePauseWithinChunk`.\n\n**Reason:** `AudioBufferSourceNode` does not support resuming once `stop()` is called. Tracking the absolute physical time ensures we can seamlessly reconstruct the flip-flop queue. Double-precision floating-point math makes strict equality (`===`) unsafe for boundary checks, necessitating the EPSILON tolerance.", "reason": "`AudioBufferSourceNode` does not support resuming once `stop()` is called. Tracking the absolute physical time ensures we can seamlessly reconstruct the flip-flop queue. Double-precision floating-point math makes strict equality (`===`) unsafe for boundary checks, necessitating the EPSILON tolerance.", "rejected": [], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "chunked-audio-streaming.md#cache-eviction-policy-os-context-death", "uuid": "dec9173e-732d-4714-bacb-edc28066ac74", "file": "chunked-audio-streaming.md", "line": 29, "end_line": 40, "title": "Cache Eviction Policy & OS Context Death", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "When the `ChunkedLoader` is paused, it preserves the decoded queue up to a strict TTL (e.g., 5 minutes). If the TTL is exceeded, or if the OS reclaims hardware (`AudioContext.state === 'closed'`), or if a watchdog detects a \"zombie\" state (`state === 'running'` but `currentTime` fails to progress), the queue is flushed and must be re-fetched upon resume.\n\n**Reason:** Short pauses preserve the ready-state queue for gapless resumes, but indefinitely holding decoded PCM contradicts our \"near-zero RAM\" goal. Furthermore, hardware reclamation (common in iOS Safari backgrounding) invalidates decoded buffers. Relying solely on `state === 'closed'` is unsafe because iOS often leaves the context in a \"zombie\" `running` state without advancing the hardware clock. The watchdog heuristic ensures a clean re-initialization rather than blindly reusing dead memory.", "reason": "Short pauses preserve the ready-state queue for gapless resumes, but indefinitely holding decoded PCM contradicts our \"near-zero RAM\" goal. Furthermore, hardware reclamation (common in iOS Safari backgrounding) invalidates decoded buffers. Relying solely on `state === 'closed'` is unsafe because iOS often leaves the context in a \"zombie\" `running` state without advancing the hardware clock. The watchdog heuristic ensures a clean re-initialization rather than blindly reusing dead memory.", "rejected": [], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "chunked-audio-streaming.md#gc-pressure-zero-allocation-exceptions", "uuid": "6c26540b-d512-43b9-99a2-527f7a2a3ce9", "file": "chunked-audio-streaming.md", "line": 41, "end_line": 52, "title": "GC Pressure & Zero-Allocation Exceptions", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "We accept \"macro-allocations\" (allocating one large `Float32Array` via `decodeAudioData` every N seconds when a new chunk is fetched).\n\n**Reason:** While the engine enforces strict frame-by-frame zero-allocation constraints in the data plane (DOD), decoding compressed audio inherently requires buffer allocation. This macro-allocation happens infrequently in the background and is an acceptable trade-off for stream decoding.", "reason": "While the engine enforces strict frame-by-frame zero-allocation constraints in the data plane (DOD), decoding compressed audio inherently requires buffer allocation. This macro-allocation happens infrequently in the background and is an acceptable trade-off for stream decoding.", "rejected": [], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "chunked-audio-streaming.md#strict-timeline-during-deadline-underruns", "uuid": "3283b474-b188-4f64-bd3e-ed960fb1306d", "file": "chunked-audio-streaming.md", "line": 53, "end_line": 65, "title": "Strict Timeline during Deadline Underruns", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "If a chunk is not ready by its scheduled boundary (network stall, decode latency, GC block), the timeline MUST NOT shift. The engine outputs silence and resumes the next chunk at its strictly scheduled absolute time.\n\n**Reason:** Shifting the timeline breaks sync with the rest of the engine's sequencer and scheduling layer.\n\n**Rejected alternative:** Shifting the timeline to wait for the chunk. Rejected because it would desync the background track from all other interactive elements on the AudioContext timeline.", "reason": "Shifting the timeline breaks sync with the rest of the engine's sequencer and scheduling layer.", "rejected": ["Shifting the timeline to wait for the chunk. Rejected because it would desync the background track from all other interactive elements on the AudioContext timeline."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "data-plane-mutations.md#data-oriented-polling-for-parameter-updates", "uuid": "99038614-eaca-4c68-8266-d49f4e96fccf", "file": "data-plane-mutations.md", "line": 1, "end_line": 14, "title": "Data-oriented polling for parameter updates", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "CHANGELOG.md Phase 18; `InstanceRTPCBinder.ts`", "verification": null, "revisit_when": "the audio engine's parameter binding architecture changes", "see": [], "superseded_by": null, "body": {"text": "In the Infrastructure and Orchestration layers (the data plane), the engine uses a zero-allocation pull model (`tickRTPC` in `InstanceRTPCBinder`) for parameter updates instead of event-driven push notifications. In-place mutations are mandatory, and `DeepReadonly` does not apply to this plane.\n\n**Reason:** High-frequency audio parameter updates via event-driven callbacks lead to excessive object allocation. In a high-performance audio loop, this creates garbage collection pressure and GC spikes, causing audio dropouts and thread starvation. By iterating over a flat array of bindings during the engine's tick cycle, it avoids creating new closures or objects per frame.\n\n**Rejected alternative:** Event-driven push notifications (event listeners per parameter change). Rejected because it causes GC spikes and overwhelms the audio thread with rapid-fire parameter changes.", "reason": "High-frequency audio parameter updates via event-driven callbacks lead to excessive object allocation. In a high-performance audio loop, this creates garbage collection pressure and GC spikes, causing audio dropouts and thread starvation. By iterating over a flat array of bindings during the engine's tick cycle, it avoids creating new closures or objects per frame.", "rejected": ["Event-driven push notifications (event listeners per parameter change). Rejected because it causes GC spikes and overwhelms the audio thread with rapid-fire parameter changes."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}]}, "findings": []}, {"id": "multiplicative-veto.md#multiplicative-veto-validation-rule", "uuid": "5208238f-5959-498a-819e-f19b42462d28", "file": "multiplicative-veto.md", "line": 1, "end_line": 14, "title": "Multiplicative Veto validation rule", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "`MultiplicativeVetoesRule.ts`, docs/architecture commits", "verification": null, "revisit_when": "the engine's gain staging or validation logic changes", "see": [], "superseded_by": null, "body": {"text": "The `ConsistencyChecker` enforces a \"Multiplicative Veto\" rule that warns developers if a snapshot explicitly modifies the gain of a bus that is already driven by an RTPC curve. \n\n**Reason:** Because the final bus gain is a product of these values (`Final = snapshot.gain * RTPC`), a manual override in a snapshot can unpredictably scale down or completely mute (zero out) the resulting gain, leading to \"ghost ducking\" or silent buses that are difficult to debug.\n\n**Rejected alternative:** Allowing unrestricted, silent multiplicative gain combinations. Rejected because it led to unpredictable audio routing bugs where snapshot overrides and RTPCs conflicted.", "reason": "Because the final bus gain is a product of these values (`Final = snapshot.gain * RTPC`), a manual override in a snapshot can unpredictably scale down or completely mute (zero out) the resulting gain, leading to \"ghost ducking\" or silent buses that are difficult to debug.", "rejected": ["Allowing unrestricted, silent multiplicative gain combinations. Rejected because it led to unpredictable audio routing bugs where snapshot overrides and RTPCs conflicted."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}]}, "findings": []}, {"id": "resource-management.md#explicit-degradation-over-exceptions-for-voice-exhaustion", "uuid": "f5552c96-9a89-4c5f-8ae2-ac8a72a92e08", "file": "resource-management.md", "line": 1, "end_line": 14, "title": "Explicit degradation over exceptions for voice exhaustion", "type": ["decision"], "status": "active", "evidence": "inferred", "source": "`SoundPoolManager.ts`", "verification": null, "revisit_when": "the voice allocation or polyphony system is overhauled", "see": [], "superseded_by": null, "body": {"text": "When the engine reaches its polyphony limit and fails to find a suitable voice to steal, the `SoundPoolManager` returns explicit `RejectReason` values (`MAX_POLYPHONY`, `GLOBAL_LIMIT`, `PRIORITY_STEAL_FAILED`) instead of throwing errors.\n\n**Reason:** Throwing exceptions during high-throughput, real-time audio orchestration risks unhandled promise rejections or engine crashes. Returning explicit failure states forces the calling code to handle resource degradation gracefully and predictably. *(Note: This rationale is inferred from the explicit `RejectReason` types defined in the manager, rather than recovered from a specific postmortem.)*\n\n**Rejected alternative:** Throwing errors when a voice cannot be acquired. Rejected because implicit error handling in a real-time system is dangerous and degrades stability.", "reason": "Throwing exceptions during high-throughput, real-time audio orchestration risks unhandled promise rejections or engine crashes. Returning explicit failure states forces the calling code to handle resource degradation gracefully and predictably. *(Note: This rationale is inferred from the explicit `RejectReason` types defined in the manager, rather than recovered from a specific postmortem.)*", "rejected": ["Throwing errors when a voice cannot be acquired. Rejected because implicit error handling in a real-time system is dangerous and degrades stability."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}]}, "findings": []}, {"id": "worklet-efficiency.md#pre-calculation-of-audioworklet-coefficients", "uuid": "546d7359-943f-4e16-a1d8-26f361ad623e", "file": "worklet-efficiency.md", "line": 1, "end_line": 14, "title": "Pre-calculation of AudioWorklet coefficients", "type": ["decision"], "status": "active", "evidence": "inferred", "source": "`ducker.processor.ts`, `lookahead-brickwall-limiter.processor.ts`", "verification": null, "revisit_when": "the `AudioWorkletProcessor` implementations are rewritten", "see": [], "superseded_by": null, "body": {"text": "The `DuckerProcessor` and `TinyLimiter` processors pre-calculate their exponential coefficients (e.g., `Math.exp`) in their constructors, and use pre-allocated `Float32Array` buffers for delay lines, rather than calculating them dynamically inside the `process` loop.\n\n**Reason:** Real-time audio processing within an `AudioWorklet` has an extremely strict time budget. Expensive mathematical operations or dynamic memory allocations during the `process` loop introduce computational overhead that can cause buffer underruns (audio glitches). *(Note: This reason and the rejected alternative are inferred from standard audio programming constraints and the pre-calculation pattern in the code, as explicit historical documentation was not found.)*\n\n**Rejected alternative:** Calculating coefficients on-the-fly and allocating memory dynamically during the audio loop. Rejected due to the risk of audio thread starvation.", "reason": "Real-time audio processing within an `AudioWorklet` has an extremely strict time budget. Expensive mathematical operations or dynamic memory allocations during the `process` loop introduce computational overhead that can cause buffer underruns (audio glitches). *(Note: This reason and the rejected alternative are inferred from standard audio programming constraints and the pre-calculation pattern in the code, as explicit historical documentation was not found.)*", "rejected": ["Calculating coefficients on-the-fly and allocating memory dynamically during the audio loop. Rejected due to the risk of audio thread starvation."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}]}, "findings": []}], "authors": [{"name": "Igor Zabrodin", "created": 9, "touched": 9, "superseded": 0, "first": "2026-09-03", "last": "2026-10-05", "evidence": {"confirmed": 7, "inferred": 2}}], "anonymized": false, "findings": {"errors": 0, "warnings": 0, "items": []}, "exported": true};</script>
+<script>window.__KTW_STATE__ = {"state-json": 2, "generated": "2026-10-09T15:57:09Z", "dashboard": "0.9.2", "linter": "0.20.0.0", "project": {"id": "rapt0p7---scenegrid-console", "name": "scenegrid-console", "context": "context/", "schema": "0.19.0", "config": {"id": "rapt0p7---scenegrid-console", "context": "context/", "init": "complete", "context-schema": "0.19.0", "capture-confirmation": "confirm-when-unsure", "source-reference": "never", "dashboard-state": "https://rapt0p7.github.io/scenegrid-console/dashboard/live/state.json", "canonical": "https://github.com/rapt0p7/scenegrid-console"}, "personal_defaults": {}, "config_file": ".keep-the-why", "canonical": "https://github.com/rapt0p7/scenegrid-console", "root": "", "parent": "", "dashboard_state": "https://rapt0p7.github.io/scenegrid-console/dashboard/live/state.json", "children": [], "git": {"available": true, "head": "c0fa917", "head_full": "c0fa9179104fbf972cbf6c88d52f53db4ed102c9", "branch": "main", "remote": "github.com/rapt0p7/scenegrid-console", "upstream": "", "fork": null, "project_subdir": "", "shallow": false}}, "topics": [{"file": "chunked-audio-streaming.md", "title": "Chunked Audio Streaming", "index_line": "", "entries": 5, "refs_out": [], "refs_in": [], "status": {"active": 5}, "evidence": {"confirmed": 5}}, {"file": "data-plane-mutations.md", "title": "data-plane-mutations", "index_line": "", "entries": 1, "refs_out": [], "refs_in": [], "status": {"active": 1}, "evidence": {"confirmed": 1}}, {"file": "multiplicative-veto.md", "title": "multiplicative-veto", "index_line": "", "entries": 1, "refs_out": [], "refs_in": [], "status": {"active": 1}, "evidence": {"confirmed": 1}}, {"file": "resource-management.md", "title": "resource-management", "index_line": "", "entries": 1, "refs_out": [], "refs_in": [], "status": {"active": 1}, "evidence": {"inferred": 1}}, {"file": "worklet-efficiency.md", "title": "worklet-efficiency", "index_line": "", "entries": 1, "refs_out": [], "refs_in": [], "status": {"active": 1}, "evidence": {"inferred": 1}}], "entries": [{"id": "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture-codec-padding", "uuid": "b2096d38-e415-486c-8631-e22612afe05d", "file": "chunked-audio-streaming.md", "line": 3, "end_line": 16, "title": "The StreamNode Flip-Flop Architecture & Codec Padding", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "We wrap at least two `AudioBufferSourceNode`s in a \"flip-flop\" scheduling pattern (overlapping lifecycles, NOT signal crossfade) using `AudioBufferSourceNode.start(when, offset, duration)`.\n\n**Reason:** Calling `start` with explicit `offset` and `duration` bypasses browser-injected decoder padding (priming samples) making gapless playback possible. However, this doesn't fix MDCT windowing ringing, which strictly mandates that the asset pipeline slices chunks from a single continuously-encoded bitstream.\n\n**Rejected alternative:** Using a standard HTML5 `<audio>` element. Rejected because the streaming pipeline must fit into the existing Web Audio DSP graph natively so that all routing, buses, VCAs, and limiters continue to work exactly as they do for fully-loaded tracks.", "reason": "Calling `start` with explicit `offset` and `duration` bypasses browser-injected decoder padding (priming samples) making gapless playback possible. However, this doesn't fix MDCT windowing ringing, which strictly mandates that the asset pipeline slices chunks from a single continuously-encoded bitstream.", "rejected": ["Using a standard HTML5 `<audio>` element. Rejected because the streaming pipeline must fit into the existing Web Audio DSP graph natively so that all routing, buses, VCAs, and limiters continue to work exactly as they do for fully-loaded tracks."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "chunked-audio-streaming.md#pause-resume-mechanics-composite-math", "uuid": "68db2236-b8de-4c00-b897-f2aabb3cca24", "file": "chunked-audio-streaming.md", "line": 17, "end_line": 28, "title": "Pause & Resume Mechanics (Composite Math)", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "On `pause()`, the `StreamNode` records the exact physical elapsed time. On `resume()`, it calculates the required inner-chunk `offset` using the composite formula: `resumeOffset = trimStartSamples + logicalElapsedSincePauseWithinChunk`.\n\n**Reason:** `AudioBufferSourceNode` does not support resuming once `stop()` is called. Tracking the absolute physical time ensures we can seamlessly reconstruct the flip-flop queue. Double-precision floating-point math makes strict equality (`===`) unsafe for boundary checks, necessitating the EPSILON tolerance.", "reason": "`AudioBufferSourceNode` does not support resuming once `stop()` is called. Tracking the absolute physical time ensures we can seamlessly reconstruct the flip-flop queue. Double-precision floating-point math makes strict equality (`===`) unsafe for boundary checks, necessitating the EPSILON tolerance.", "rejected": [], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "chunked-audio-streaming.md#cache-eviction-policy-os-context-death", "uuid": "dec9173e-732d-4714-bacb-edc28066ac74", "file": "chunked-audio-streaming.md", "line": 29, "end_line": 40, "title": "Cache Eviction Policy & OS Context Death", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "When the `ChunkedLoader` is paused, it preserves the decoded queue up to a strict TTL (e.g., 5 minutes). If the TTL is exceeded, or if the OS reclaims hardware (`AudioContext.state === 'closed'`), or if a watchdog detects a \"zombie\" state (`state === 'running'` but `currentTime` fails to progress), the queue is flushed and must be re-fetched upon resume.\n\n**Reason:** Short pauses preserve the ready-state queue for gapless resumes, but indefinitely holding decoded PCM contradicts our \"near-zero RAM\" goal. Furthermore, hardware reclamation (common in iOS Safari backgrounding) invalidates decoded buffers. Relying solely on `state === 'closed'` is unsafe because iOS often leaves the context in a \"zombie\" `running` state without advancing the hardware clock. The watchdog heuristic ensures a clean re-initialization rather than blindly reusing dead memory.", "reason": "Short pauses preserve the ready-state queue for gapless resumes, but indefinitely holding decoded PCM contradicts our \"near-zero RAM\" goal. Furthermore, hardware reclamation (common in iOS Safari backgrounding) invalidates decoded buffers. Relying solely on `state === 'closed'` is unsafe because iOS often leaves the context in a \"zombie\" `running` state without advancing the hardware clock. The watchdog heuristic ensures a clean re-initialization rather than blindly reusing dead memory.", "rejected": [], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "chunked-audio-streaming.md#gc-pressure-zero-allocation-exceptions", "uuid": "6c26540b-d512-43b9-99a2-527f7a2a3ce9", "file": "chunked-audio-streaming.md", "line": 41, "end_line": 52, "title": "GC Pressure & Zero-Allocation Exceptions", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "We accept \"macro-allocations\" (allocating one large `Float32Array` via `decodeAudioData` every N seconds when a new chunk is fetched).\n\n**Reason:** While the engine enforces strict frame-by-frame zero-allocation constraints in the data plane (DOD), decoding compressed audio inherently requires buffer allocation. This macro-allocation happens infrequently in the background and is an acceptable trade-off for stream decoding.", "reason": "While the engine enforces strict frame-by-frame zero-allocation constraints in the data plane (DOD), decoding compressed audio inherently requires buffer allocation. This macro-allocation happens infrequently in the background and is an acceptable trade-off for stream decoding.", "rejected": [], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "chunked-audio-streaming.md#strict-timeline-during-deadline-underruns", "uuid": "3283b474-b188-4f64-bd3e-ed960fb1306d", "file": "chunked-audio-streaming.md", "line": 53, "end_line": 65, "title": "Strict Timeline during Deadline Underruns", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "design.md (chunked-audio-streamer)", "verification": null, "revisit_when": null, "see": [], "superseded_by": null, "body": {"text": "If a chunk is not ready by its scheduled boundary (network stall, decode latency, GC block), the timeline MUST NOT shift. The engine outputs silence and resumes the next chunk at its strictly scheduled absolute time.\n\n**Reason:** Shifting the timeline breaks sync with the rest of the engine's sequencer and scheduling layer.\n\n**Rejected alternative:** Shifting the timeline to wait for the chunk. Rejected because it would desync the background track from all other interactive elements on the AudioContext timeline.", "reason": "Shifting the timeline breaks sync with the rest of the engine's sequencer and scheduling layer.", "rejected": ["Shifting the timeline to wait for the chunk. Rejected because it would desync the background track from all other interactive elements on the AudioContext timeline."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-06", "commit": "3beeaac"}]}, "findings": []}, {"id": "data-plane-mutations.md#data-oriented-polling-for-parameter-updates", "uuid": "99038614-eaca-4c68-8266-d49f4e96fccf", "file": "data-plane-mutations.md", "line": 1, "end_line": 14, "title": "Data-oriented polling for parameter updates", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "CHANGELOG.md Phase 18; `InstanceRTPCBinder.ts`", "verification": null, "revisit_when": "the audio engine's parameter binding architecture changes", "see": [], "superseded_by": null, "body": {"text": "In the Infrastructure and Orchestration layers (the data plane), the engine uses a zero-allocation pull model (`tickRTPC` in `InstanceRTPCBinder`) for parameter updates instead of event-driven push notifications. In-place mutations are mandatory, and `DeepReadonly` does not apply to this plane.\n\n**Reason:** High-frequency audio parameter updates via event-driven callbacks lead to excessive object allocation. In a high-performance audio loop, this creates garbage collection pressure and GC spikes, causing audio dropouts and thread starvation. By iterating over a flat array of bindings during the engine's tick cycle, it avoids creating new closures or objects per frame.\n\n**Rejected alternative:** Event-driven push notifications (event listeners per parameter change). Rejected because it causes GC spikes and overwhelms the audio thread with rapid-fire parameter changes.", "reason": "High-frequency audio parameter updates via event-driven callbacks lead to excessive object allocation. In a high-performance audio loop, this creates garbage collection pressure and GC spikes, causing audio dropouts and thread starvation. By iterating over a flat array of bindings during the engine's tick cycle, it avoids creating new closures or objects per frame.", "rejected": ["Event-driven push notifications (event listeners per parameter change). Rejected because it causes GC spikes and overwhelms the audio thread with rapid-fire parameter changes."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}]}, "findings": []}, {"id": "multiplicative-veto.md#multiplicative-veto-validation-rule", "uuid": "5208238f-5959-498a-819e-f19b42462d28", "file": "multiplicative-veto.md", "line": 1, "end_line": 14, "title": "Multiplicative Veto validation rule", "type": ["decision"], "status": "active", "evidence": "confirmed", "source": "`MultiplicativeVetoesRule.ts`, docs/architecture commits", "verification": null, "revisit_when": "the engine's gain staging or validation logic changes", "see": [], "superseded_by": null, "body": {"text": "The `ConsistencyChecker` enforces a \"Multiplicative Veto\" rule that warns developers if a snapshot explicitly modifies the gain of a bus that is already driven by an RTPC curve. \n\n**Reason:** Because the final bus gain is a product of these values (`Final = snapshot.gain * RTPC`), a manual override in a snapshot can unpredictably scale down or completely mute (zero out) the resulting gain, leading to \"ghost ducking\" or silent buses that are difficult to debug.\n\n**Rejected alternative:** Allowing unrestricted, silent multiplicative gain combinations. Rejected because it led to unpredictable audio routing bugs where snapshot overrides and RTPCs conflicted.", "reason": "Because the final bus gain is a product of these values (`Final = snapshot.gain * RTPC`), a manual override in a snapshot can unpredictably scale down or completely mute (zero out) the resulting gain, leading to \"ghost ducking\" or silent buses that are difficult to debug.", "rejected": ["Allowing unrestricted, silent multiplicative gain combinations. Rejected because it led to unpredictable audio routing bugs where snapshot overrides and RTPCs conflicted."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}]}, "findings": []}, {"id": "resource-management.md#explicit-degradation-over-exceptions-for-voice-exhaustion", "uuid": "f5552c96-9a89-4c5f-8ae2-ac8a72a92e08", "file": "resource-management.md", "line": 1, "end_line": 14, "title": "Explicit degradation over exceptions for voice exhaustion", "type": ["decision"], "status": "active", "evidence": "inferred", "source": "`SoundPoolManager.ts`", "verification": null, "revisit_when": "the voice allocation or polyphony system is overhauled", "see": [], "superseded_by": null, "body": {"text": "When the engine reaches its polyphony limit and fails to find a suitable voice to steal, the `SoundPoolManager` returns explicit `RejectReason` values (`MAX_POLYPHONY`, `GLOBAL_LIMIT`, `PRIORITY_STEAL_FAILED`) instead of throwing errors.\n\n**Reason:** Throwing exceptions during high-throughput, real-time audio orchestration risks unhandled promise rejections or engine crashes. Returning explicit failure states forces the calling code to handle resource degradation gracefully and predictably. *(Note: This rationale is inferred from the explicit `RejectReason` types defined in the manager, rather than recovered from a specific postmortem.)*\n\n**Rejected alternative:** Throwing errors when a voice cannot be acquired. Rejected because implicit error handling in a real-time system is dangerous and degrades stability.", "reason": "Throwing exceptions during high-throughput, real-time audio orchestration risks unhandled promise rejections or engine crashes. Returning explicit failure states forces the calling code to handle resource degradation gracefully and predictably. *(Note: This rationale is inferred from the explicit `RejectReason` types defined in the manager, rather than recovered from a specific postmortem.)*", "rejected": ["Throwing errors when a voice cannot be acquired. Rejected because implicit error handling in a real-time system is dangerous and degrades stability."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}]}, "findings": []}, {"id": "worklet-efficiency.md#pre-calculation-of-audioworklet-coefficients", "uuid": "546d7359-943f-4e16-a1d8-26f361ad623e", "file": "worklet-efficiency.md", "line": 1, "end_line": 14, "title": "Pre-calculation of AudioWorklet coefficients", "type": ["decision"], "status": "active", "evidence": "inferred", "source": "`ducker.processor.ts`, `lookahead-brickwall-limiter.processor.ts`", "verification": null, "revisit_when": "the `AudioWorkletProcessor` implementations are rewritten", "see": [], "superseded_by": null, "body": {"text": "The `DuckerProcessor` and `TinyLimiter` processors pre-calculate their exponential coefficients (e.g., `Math.exp`) in their constructors, and use pre-allocated `Float32Array` buffers for delay lines, rather than calculating them dynamically inside the `process` loop.\n\n**Reason:** Real-time audio processing within an `AudioWorklet` has an extremely strict time budget. Expensive mathematical operations or dynamic memory allocations during the `process` loop introduce computational overhead that can cause buffer underruns (audio glitches). *(Note: This reason and the rejected alternative are inferred from standard audio programming constraints and the pre-calculation pattern in the code, as explicit historical documentation was not found.)*\n\n**Rejected alternative:** Calculating coefficients on-the-fly and allocating memory dynamically during the audio loop. Rejected due to the risk of audio thread starvation.", "reason": "Real-time audio processing within an `AudioWorklet` has an extremely strict time budget. Expensive mathematical operations or dynamic memory allocations during the `process` loop introduce computational overhead that can cause buffer underruns (audio glitches). *(Note: This reason and the rejected alternative are inferred from standard audio programming constraints and the pre-calculation pattern in the code, as explicit historical documentation was not found.)*", "rejected": ["Calculating coefficients on-the-fly and allocating memory dynamically during the audio loop. Rejected due to the risk of audio thread starvation."], "consequence": null, "considered": null, "why_open": null}, "refs": [], "git": {"created": {"author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}, "last_touched": {"author": "Igor Zabrodin", "date": "2026-10-05", "commit": "aad5c09"}, "status_history": [{"status": "active", "author": "Igor Zabrodin", "date": "2026-09-03", "commit": "117354a"}]}, "findings": []}], "authors": [{"name": "Igor Zabrodin", "created": 9, "touched": 9, "superseded": 0, "first": "2026-09-03", "last": "2026-10-05", "evidence": {"confirmed": 7, "inferred": 2}}], "anonymized": false, "findings": {"errors": 0, "warnings": 0, "items": []}, "exported": true};</script>
 <script type="module">
 /* Keep the Why dashboard — the pure part of the page: no DOM, no fetch,
    no state. Imported by app.js, inlined into an export, unit-tested with
@@ -1013,6 +1114,182 @@ function mergeStates(groups) {
   return out;
 }
 
+// The clock: what the project looked like on a day. Every date is a Git
+// date, `YYYY-MM-DD`; comparing the strings compares the days. An entry
+// exists from the day its heading first appeared in Git; its status on a day
+// is the last status change up to that day; a See exists from its `as of`
+// day (never before the citing entry), a Superseded by from the day the old
+// entry's status became superseded. An entry not yet committed has no
+// date — whether Git knows the file and not the entry, or not the file at
+// all — it exists today only; `repo` false (a project without a repository)
+// means there are no days to go by and everything simply is. Without a
+// clock (null) everything is as it is.
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const addDays = (iso, n) => { const d = new Date(`${iso}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const dayDiff = (a, b) => Math.round((new Date(`${b}T00:00:00Z`) - new Date(`${a}T00:00:00Z`)) / 86400000);
+const createdOn = (e) => e?.git?.created?.date || "";
+function existsAt(e, day, repo = true) {
+  if (!day || !repo) return true;
+  const c = createdOn(e);
+  return c ? c <= day : day >= todayISO();
+}
+function statusAt(e, day, repo = true) {
+  if (!day || !e?.git) return e?.status;
+  const h = (e.git.status_history || []).filter((x) => x.date && x.date <= day);
+  if (h.length) return h[h.length - 1].status;
+  return existsAt(e, day, repo) ? e.status : null;
+}
+// the day a link came to be: a See from `from`'s reference `ref`, a Superseded by from the old entry `from`
+function seeDay(from, ref) { const c = createdOn(from); const d = ref?.date || ""; return d && c ? (d > c ? d : c) : d || c; }
+function supersededDay(from) {
+  const h = (from?.git?.status_history || []).find((x) => x.status === "superseded" && x.date);
+  return h?.date || from?.git?.last_touched?.date || createdOn(from);
+}
+const linkExistsAt = (day, linkDay) => !day || !linkDay || linkDay <= day;
+// the first and last day the entries span: the earliest creation, today
+function daySpan(entries) {
+  const days = entries.map(createdOn).filter(Boolean).sort();
+  return days.length ? { from: days[0], to: todayISO() } : null;
+}
+
+// ---------------------------------------------------------------- the stage (timeline)
+// The scene the stage draws, built from the graph's entry nodes: a card per entry, the links between cards by Id,
+// which foreign cards a chain of links joins to this project's, and the lanes by topic. Pure — nodes in, a scene
+// out — so it can be tested without a canvas. A node is { id, entry, ext?, fam?, proj?, href?, state? } as the
+// graph builds it; `ext` marks a friend's or the path's entry, `fam` a family member's.
+const TYPE_KINDS = ["decision", "constraint", "workaround", "incident"];
+const TYPE_COLORS = { decision: "#835bec", constraint: "#4aa3df", workaround: "#e0a83a", incident: "#e0574f" };
+// the first of the four kinds an entry's Type names; null when none
+const typeKind = (e) => (e.type || []).map((t) => typeName(t)).find((t) => TYPE_KINDS.includes(t)) || null;
+// the Monday that starts the week of a day
+const weekStart = (day) => { const d = new Date(`${day}T00:00:00Z`); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); };
+const SHELF = [-0.3, 1.0]; // the rows' base height on the lower and the upper shelf, in plane units
+
+// a card per entry node; a foreign card (a friend's, a family member's) knows its repository and its export's state
+function stageCards(entryNodes, { today, selfState = null }) {
+  const cards = []; const byId = {};
+  for (const n of entryNodes) {
+    const e = n.entry; if (!e) continue;
+    const foreign = !!(n.ext || n.fam); const proj = foreign ? (n.proj || "") : (e.project || "");
+    const c = { e, nid: n.id, ext: foreign, href: n.href, state: foreign ? n.state : selfState, proj, laneKey: `${proj}|${e.file}`, day: createdOn(e) || today, x: 0, y: 0, dz: 0, ox: 0, oy: 0, lane: null, linked: !foreign };
+    cards.push(c); if (!foreign) byId[e.id] = c; if (e.uuid) byId[e.uuid] = c;
+  }
+  return { cards, byId };
+}
+// the links between cards: a See from its as-of day, a Superseded by from the day the old entry's status changed
+function stageLinks(cards, byId) {
+  const links = [];
+  for (const c of cards) {
+    for (const r of c.e.see || []) { const t = r?.uuid && byId[r.uuid]; if (t && t !== c) links.push({ a: c, b: t, kind: "see", day: seeDay(c.e, r) }); }
+    const sb = c.e.superseded_by ? parseSupersededBy(c.e.superseded_by)?.uuid : null; const t = sb && byId[sb]; if (t && t !== c) links.push({ a: c, b: t, kind: "superseded", day: supersededDay(c.e) });
+  }
+  return links;
+}
+// `linked` on every card: this project's always; a foreign one when a chain of links, in either direction, joins it to ours
+function markLinked(cards, links) {
+  const adj = new Map(); const add = (a, b) => { (adj.get(a) || adj.set(a, []).get(a)).push(b); };
+  for (const l of links) { add(l.a, l.b); add(l.b, l.a); }
+  const seen = new Set(cards.filter((c) => !c.ext)); const queue = [...seen];
+  while (queue.length) { const c = queue.pop(); for (const d of adj.get(c) || []) if (!seen.has(d)) { seen.add(d); queue.push(d); } }
+  for (const c of cards) c.linked = !c.ext || seen.has(c);
+  return cards;
+}
+// the lanes by topic among the cards that show: one per topic per repository, the oldest on the left, alternating
+// between two shelves; within a lane the entries of one calendar week take three rows and two columns in turn, and
+// the entries of one day a step of depth each, so a busy week stacks up instead of on top of itself
+function stageLanes(cards, { show = () => true, topicTitle = (file) => file } = {}) {
+  const byLane = new Map();
+  for (const c of cards) {
+    if (!show(c)) continue;
+    if (!byLane.has(c.laneKey)) byLane.set(c.laneKey, { key: c.laneKey, file: c.e.file, project: c.proj, title: (c.proj ? `${c.proj} · ` : "") + ((c.ext ? null : topicTitle(c.e.file)) || c.e.file).replace(/`/g, ""), items: [], first: "" });
+    byLane.get(c.laneKey).items.push(c);
+  }
+  const lanes = [...byLane.values()];
+  for (const L of lanes) { L.items.sort((a, b) => (a.day < b.day ? -1 : 1)); L.first = L.items[0]?.day || "9"; }
+  lanes.sort((a, b) => (a.first < b.first ? -1 : a.first > b.first ? 1 : a.title.localeCompare(b.title)));
+  const cols = Math.ceil((lanes.length || 1) / 2);
+  lanes.forEach((L, li) => {
+    L.x = Math.floor(li / 2) - (cols - 1) / 2; L.shelf = li % 2;
+    const sameWeek = {}, sameDay = {};
+    for (const c of L.items) {
+      const w = (sameWeek[weekStart(c.day)] = (sameWeek[weekStart(c.day)] || 0) + 1) - 1; const k = (sameDay[c.day] = (sameDay[c.day] || 0) + 1) - 1;
+      Object.assign(c, { lane: L, x: L.x + ((Math.floor(w / 3) % 2) - 0.5) * 0.34, y: SHELF[L.shelf] + ((w % 3) - 1) * 0.44, dz: (k % 4) * 0.1 });
+    }
+  });
+  return { lanes, cols };
+}
+// depth is logarithmic in days and scaled to the span: `days` back is `far` deep at the span's end, so the last days
+// spread out where the eye is and the oldest entry stands at the same depth whether the span is months or years
+const logDepth = (days, spanDays, far) => far * Math.log1p(Math.max(0, days) / 10) / Math.log1p(Math.max(14, spanDays) / 10);
+// the box from the `lo` to the `hi` percentile of the points, so a few outliers do not squeeze the rest; null below two points
+function percentileBox(xs, ys, lo = 0.04, hi = 0.96) {
+  if (xs.length < 2) return null;
+  const sx = [...xs].sort((a, b) => a - b), sy = [...ys].sort((a, b) => a - b); const at = (arr, q) => arr[Math.round(q * (arr.length - 1))];
+  const box = { x0: at(sx, lo), x1: at(sx, hi), y0: at(sy, lo), y1: at(sy, hi) };
+  return box.x0 < box.x1 && box.y0 < box.y1 ? box : null;
+}
+// Cards keep apart: two items at about one depth whose boxes overlap push each other off, half the overlap each, along
+// the axis of the smaller overlap; a card at its bound gives its half to the other, both at theirs stay. `items` come
+// far to near, each { c, z, box: { x0, y0, x1, y1, cx, cy, s } }; the push lands on c.ox / c.oy in plane units
+// (px, py: pixels per unit for the card across and up) and on the box in pixels; `room(c)` bounds the offsets.
+// Returns whether anything was pushed. Screen y grows downward: a push "down" lowers oy.
+function pushApart(items, { px, py, room, slice = 1.4 }) {
+  let pushed = false;
+  for (let i = 0; i < items.length; i++) {
+    const A = items[i], a = A.box;
+    for (let j = i + 1; j < items.length; j++) {
+      const B = items[j]; if (A.z - B.z > slice) break; // the rest are nearer still
+      const b = B.box;
+      const dx = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), dy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
+      if (dx <= 2 || dy <= 2) continue;
+      const sx = Math.sign(a.cx - b.cx) || (i & 1 ? 1 : -1), sy = Math.sign(a.cy - b.cy) || (j & 1 ? 1 : -1);
+      const ra = room(A.c), rb = room(B.c);
+      if (dx < dy) {
+        const u = dx * 0.5, pa0 = px(A.c), pb0 = px(B.c); let ua = u / pa0, ub = u / pb0;
+        const fa = sx > 0 ? Math.max(0, ra.xhi - A.c.ox) : Math.max(0, A.c.ox - ra.xlo), fb = sx > 0 ? Math.max(0, B.c.ox - rb.xlo) : Math.max(0, rb.xhi - B.c.ox);
+        if (fa < ua) { ub = Math.min(ub + (ua - fa) * (pa0 / pb0), fb); ua = fa; } else if (fb < ub) { ua = Math.min(ua + (ub - fb) * (pb0 / pa0), fa); ub = fb; }
+        if (ua + ub <= 1e-4) continue;
+        pushed = true; const pa = ua * pa0, pb = ub * pb0;
+        A.c.ox += sx * ua; B.c.ox -= sx * ub; a.x0 += sx * pa; a.x1 += sx * pa; a.cx += sx * pa; b.x0 -= sx * pb; b.x1 -= sx * pb; b.cx -= sx * pb;
+      } else {
+        const u = dy * 0.5, pa0 = py(A.c), pb0 = py(B.c); let ua = u / pa0, ub = u / pb0;
+        const fa = sy > 0 ? Math.max(0, A.c.oy - ra.ylo) : Math.max(0, ra.yhi - A.c.oy), fb = sy > 0 ? Math.max(0, rb.yhi - B.c.oy) : Math.max(0, B.c.oy - rb.ylo);
+        if (fa < ua) { ub = Math.min(ub + (ua - fa) * (pa0 / pb0), fb); ua = fa; } else if (fb < ub) { ua = Math.min(ua + (ub - fb) * (pb0 / pa0), fa); ub = fb; }
+        if (ua + ub <= 1e-4) continue;
+        pushed = true; const pa = ua * pa0, pb = ub * pb0;
+        A.c.oy -= sy * ua; B.c.oy += sy * ub; a.y0 += sy * pa; a.y1 += sy * pa; a.cy += sy * pa; b.y0 -= sy * pb; b.y1 -= sy * pb; b.cy -= sy * pb;
+      }
+    }
+  }
+  return pushed;
+}
+// the stage's box: as tall as the plane needs (`base`), up to twice that where the window has the room, never less
+const stageHeight = (base, roomLeft) => Math.round(Math.max(220, Math.min(1400, Math.max(base, Math.min(2 * base, roomLeft)))));
+
+// ---------------------------------------------------------------- authors across the loaded projects
+// The Authors view over every project the page holds: this one, the family, the friends, the path. `groups` are
+// [{ name, canonical, anonymized, authors }] — a project's name, its address, whether its export anonymized the
+// names, and its authors as the state carries them. A Git author's name that recurs across projects is one row
+// with the sums, its projects listed with their own numbers; an anonymized name (author-1) is a stand-in that says
+// nothing across projects, so it stays one row per project, labelled with the project. Sorted by entries created.
+function mergeAuthors(groups) {
+  const rows = new Map();
+  for (const G of groups) {
+    for (const a of G.authors || []) {
+      const key = G.anonymized ? `${a.name}\u0000${G.name}` : a.name;
+      const per = { project: G.name, canonical: G.canonical || "", created: a.created || 0, touched: a.touched || 0, superseded: a.superseded || 0, first: a.first || "", last: a.last || "" };
+      const cur = rows.get(key);
+      if (!cur) { rows.set(key, { name: a.name, label: G.anonymized ? `${a.name} (${G.name})` : a.name, anonymized: !!G.anonymized, created: per.created, touched: per.touched, superseded: per.superseded, first: per.first, last: per.last, evidence: { ...(a.evidence || {}) }, per: [per] }); continue; }
+      cur.created += per.created; cur.touched += per.touched; cur.superseded += per.superseded;
+      for (const [k, v] of Object.entries(a.evidence || {})) cur.evidence[k] = (cur.evidence[k] || 0) + v;
+      if (per.first && (!cur.first || per.first < cur.first)) cur.first = per.first;
+      if (per.last && (!cur.last || per.last > cur.last)) cur.last = per.last;
+      cur.per.push(per);
+    }
+  }
+  return [...rows.values()].sort((a, b) => b.created - a.created || a.label.localeCompare(b.label));
+}
+
 /* Keep the Why dashboard — plain modules (this and lib.js), no dependencies.
    The page knows only the state (see state.py): live from /api/events, or
    embedded as window.__KTW_STATE__ in an export. It renders; it never writes. */
@@ -1264,6 +1541,23 @@ let PROJECT = new URLSearchParams(location.search).get("project"); // null: the 
 const api = (path) => PROJECT ? `${path}?project=${encodeURIComponent(PROJECT)}` : path;
 let filter = { status: "", evidence: "", author: "" };
 let selected = null; // entry id shown in the details pane
+// The clock: the day the page shows — the timeline's playhead. Set while the timeline is open, null
+// everywhere else. Every graph on the page follows it: only what existed on that day, with the status it
+// had then, and the See and Superseded by lines that had been written by then (lib.js, existsAt and friends).
+let CLOCK = null; let CLOCK_N = -1;
+// an entry of this project goes by this project's repository: with one, an entry without a Git date is not committed
+// yet and exists today only; without one there are no days to go by. A foreign entry's export came from a repository.
+const hasRepo = (e) => (e?.origin || e?.project ? true : !!S?.project?.git?.available);
+const atClock = (e, ext = false) => existsAt(e, CLOCK, ext || hasRepo(e));
+const statusNow = (e) => (CLOCK ? statusAt(e, CLOCK, hasRepo(e)) || e.status : e.status);
+function setClock(day) {
+  if (day === CLOCK) return;
+  CLOCK = day;
+  // the layout settles again only when the set of nodes changed, not on every day the playhead passes
+  const n = S ? S.entries.filter(atClock).length : 0; const grew = n !== CLOCK_N; CLOCK_N = n;
+  for (const g of ACTIVE_GRAPHS) { if (grew && g.alpha < 0.2) g.alpha = 0.2; g.wake?.(); }
+  if (grew) STAGE?.relax?.(); STAGE?.wake?.();
+}
 const byId = () => Object.fromEntries(S.entries.map((e) => [e.id, e]));
 const byUuid = () => Object.fromEntries(S.entries.filter((e) => e.uuid).map((e) => [e.uuid, e]));
 // an entry's address is its Id, so a copied link survives a renamed heading or a moved entry; file#anchor only without one
@@ -1838,15 +2132,59 @@ function viewQueues(main) {
     section("Revisit-when triggers", "The conditions on record. Whether one has fired is a human judgement; the dashboard cannot tell.", q.revisit),
   );
 }
+// The projects the page holds, each with its state and a link to its dashboard: this one, the family members
+// (the family scope's merge, or the family loaded beside the graph), the friends loaded into the graph with the
+// members their families brought, the projects of the path. One per canonical; this project first.
+function authorProjects() {
+  const out = []; const seen = new Set();
+  const add = (name, canonical, state, open, role) => { const k = fkey(canonical || name); if (!state || seen.has(k)) return; seen.add(k); out.push({ name, canonical: canonical || "", state, open, role, anonymized: !!state.anonymized }); };
+  add(SELF?.project?.id || SELF?.project?.name || "this project", canonicalOf(SELF?.project), SELF, "#authors", "self");
+  for (const G of (LAST_POOL?.groups || []).slice(1)) add(G.member?.name, G.member?.canonical || canonicalOf(G.state?.project), G.state, memberLink(G.member, "#authors"), "family");
+  for (const m of familyMembers()) add(m.name, m.canonical, m.state, m.open?.replace("#graph", "#authors") || "#graph", "family");
+  for (const r of Object.values(FRIENDS.loaded)) { if (!r?.state) continue; for (const m of r.members || [r]) add(m.name || repoLabel(m.canonical), m.canonical, m.state, (m.open || r.open || "").replace("#graph", "#authors") || null, "friend"); }
+  for (const t of TRAIL) add(t.name || repoLabel(t.canonical), t.canonical, t.state, t.url?.replace(/#.*$/, "#authors") || null, "path");
+  return out;
+}
+// the newest commit of an author among a state's entries, for the profile link on that project's host
+function authorCommitIn(name, state) {
+  let best = null;
+  for (const e of state?.entries || []) for (const c of [e.git?.created, e.git?.last_touched, ...(e.git?.status_history || [])]) if (c?.author === name && c.commit && (!best || (c.date || "") > (best.date || ""))) best = c;
+  return best?.commit || null;
+}
+// The Authors view: every Git author of every project the page holds — this one, the family, the friends, the
+// path — in one table with the sums and a pill per project, and a table per project under it. Names are Git
+// authors as the projects' .mailmap files map them; one name across projects is one row, an anonymized name
+// (author-1) a row per project. A click on a row filters every view to that author.
 function viewAuthors(main) {
-  const rows = S.authors;
-  main.append(el("h1", {}, "Authors"), el("p", { class: "sub" }, "Git authors of the entries — who created, touched, or superseded what. Git knows names, not who was driving."));
+  main.append(el("h1", {}, "Authors"), el("p", { class: "sub" }, "Git authors of the entries — who created, touched, or superseded what, in every project this page holds: this one, its family, the friends in the graph, the path. Git knows names, not who was driving."));
   if (!S.project.git?.available) return main.append(el("p", { class: "center" }, "No Git repository — nothing to attribute."));
-  const tbl = el("table", { class: "t" }, el("thead", {}, el("tr", {}, ["Author", "Created", "Touched", "Superseded", "Evidence of created entries", "First", "Last"].map((h) => el("th", {}, h)))),
-    el("tbody", {}, rows.map((a) => el("tr", { class: `clickable ${filter.author === a.name ? "sel" : ""}`, onclick: () => { filter.author = filter.author === a.name ? "" : a.name; rerender(); } },
-      el("td", {}, authorLink(a.name, ...authorCommit(a.name))), el("td", {}, a.created), el("td", {}, a.touched), el("td", {}, a.superseded),
-      el("td", {}, el("div", { style: "min-width:160px" }, stack(a.evidence, EV_ORDER))), el("td", { class: "mono" }, fmtDate(a.first)), el("td", { class: "mono" }, fmtDate(a.last))))));
-  main.append(el("div", { class: "table-wrap" }, tbl), el("p", { class: "note", style: "margin-top:10px" }, "Click a name to open the author's profile on the host; click elsewhere in the row to filter every view to that author, again to clear."));
+  const projects = authorProjects();
+  const rows = mergeAuthors(projects.map((P) => ({ name: P.name, canonical: P.canonical, anonymized: P.anonymized, authors: P.state.authors || [] })));
+  const byName = Object.fromEntries(projects.map((P) => [P.name, P]));
+  const projPill = (per) => { const P = byName[per.project]; const t = `${per.project}: ${per.created} created · ${per.touched} touched · ${per.superseded} superseded${per.first ? ` · ${per.first} → ${per.last}` : ""}`; return P?.open ? el("a", { class: "pill proj-pill", href: P.open, title: t, onclick: (ev) => ev.stopPropagation() }, per.project) : el("span", { class: "pill proj-pill", title: t }, per.project); };
+  const head = (cols) => el("thead", {}, el("tr", {}, cols.map((h) => el("th", {}, h))));
+  const numCells = (a) => [el("td", {}, a.created), el("td", {}, a.touched), el("td", {}, a.superseded), el("td", {}, el("div", { style: "min-width:160px" }, stack(a.evidence, EV_ORDER))), el("td", { class: "mono" }, fmtDate(a.first)), el("td", { class: "mono" }, fmtDate(a.last))];
+  const rowOf = (a, nameCell) => el("tr", { class: `clickable ${filter.author === a.name ? "sel" : ""}`, onclick: () => { filter.author = filter.author === a.name ? "" : a.name; rerender(); } }, nameCell, ...numCells(a));
+  // what was counted, and the friends not loaded yet
+  const g = graph || buildGraph(); const waiting = (g.friends || []).filter((f) => !FRIENDS.loaded[fkey(f.canonical)]);
+  const byRole = (role) => projects.filter((P) => P.role === role).map((P) => P.name);
+  main.append(el("p", { class: "note" }, `Counted: this project`, byRole("family").length ? ` · family: ${byRole("family").join(", ")}` : "", byRole("friend").length ? ` · friends: ${byRole("friend").join(", ")}` : "", byRole("path").length ? ` · path: ${byRole("path").join(", ")}` : "",
+    waiting.length ? [" · ", el("button", { type: "button", class: "link-btn", disabled: FRIENDS.loading, onclick: () => { setFriendsAuto(true); loadFriends(waiting).then(() => { if (location.hash === "#authors") render(); }); } }, FRIENDS.loading ? "loading the friends…" : `load the ${plural(waiting.length, "friend")} not here yet`)] : null));
+  const many = projects.length > 1;
+  const all = el("table", { class: "t" }, head(["Author", ...(many ? ["Projects"] : []), "Created", "Touched", "Superseded", "Evidence of created entries", "First", "Last"]),
+    el("tbody", {}, rows.map((a) => { const P = byName[a.per[0].project]; const link = a.anonymized ? el("span", {}, a.label) : authorLink(a.name, authorCommitIn(a.name, P?.state), P?.state?.project); return rowOf(a, [el("td", {}, link), ...(many ? [el("td", {}, el("div", { class: "proj-pills" }, a.per.map(projPill)))] : [])]); })));
+  main.append(el("div", { class: "table-wrap" }, all), el("p", { class: "note", style: "margin-top:10px" }, "Click a name to open the author's profile on the host; click elsewhere in the row to filter every view to that author, again to clear.", many ? " A name that recurs across projects is one row with the sums; a name an export anonymized (author-1) says nothing across projects and stays a row per project." : ""));
+  if (many) {
+    main.append(el("h2", {}, "By project"));
+    for (const P of projects) {
+      const prow = mergeAuthors([{ name: P.name, canonical: P.canonical, anonymized: P.anonymized, authors: P.state.authors || [] }]);
+      const d = el("details", { class: "authors-project", open: P.role === "self" });
+      d.append(el("summary", {}, el("span", { class: "tt" }, P.name), el("span", { class: "pill" }, P.role === "self" ? "this project" : P.role), el("span", { class: "count" }, plural(prow.length, "author")), P.open && P.role !== "self" ? el("a", { class: "backlink", href: P.open, onclick: (ev) => ev.stopPropagation() }, "open ›") : null));
+      d.append(el("div", { class: "table-wrap" }, el("table", { class: "t" }, head(["Author", "Created", "Touched", "Superseded", "Evidence of created entries", "First", "Last"]),
+        el("tbody", {}, prow.map((a) => rowOf(a, el("td", {}, P.anonymized ? el("span", {}, a.name) : authorLink(a.name, authorCommitIn(a.name, P.state), P.state.project))))))));
+      main.append(d);
+    }
+  }
   if (filter.author) main.append(el("h2", {}, `Entries created by ${filter.author}`), el("div", { class: "entry-list" }, S.entries.filter((e) => authorOf(e) === filter.author).map(entryRow)));
 }
 
@@ -2055,6 +2393,15 @@ function renderDetailsDefault() {
       el("h3", {}, "Keys"), el("p", { class: "note" }, el("kbd", {}, "/"), " search · ", el("kbd", {}, "g"), " graph · ", el("kbd", {}, "o"), " overview · ", el("kbd", {}, "q"), " queues · ", el("kbd", {}, "t"), " timeline · ", el("kbd", {}, "a"), " authors · ", el("kbd", {}, "l"), " findings"));
     return;
   }
+  if (route.startsWith("timeline")) {
+    // the timeline: the thoughts list first, as beside the graph, and a small project graph under it that follows the clock
+    d.dataset.pane = "graph";
+    d.append(el("div", { id: "thoughts" }));
+    renderThoughts(STAGE?.graph || graph);
+    d.append(el("h3", {}, "Graph"), el("p", { class: "note" }, "What existed on the day shown, with the status it had then."));
+    miniGraph(d, { tall: true });
+    return;
+  }
   d.dataset.pane = "graph";
   miniGraph(d, {});
 }
@@ -2071,7 +2418,7 @@ function miniGraph(d, ctx) {
   if (narrow()) { d.append(el("h3", {}, "Graph"), el("a", { class: "backlink", href: "#graph" }, "Open the project graph →")); return; }
   const modes = [...(focusId ? ["near"] : []), "project", ...(canFamily() ? ["family"] : [])];
   const mode = MINI && modes.includes(MINI) ? MINI : focusId ? "near" : familyGraphShown() && modes.includes("family") ? "family" : "project";
-  const box = el("div", { class: `mini ${focusId ? "tall" : "fill"}` });
+  const box = el("div", { class: `mini ${focusId || ctx.tall ? "tall" : "fill"}` });
   const seg = el("span", { class: "mini-seg" }, modes.length > 1 ? modes.map((m) => el("button", { type: "button", class: m === mode ? "on" : "", title: { near: "this entry's or topic's neighbourhood", project: "the whole project", family: "the whole family tree" }[m], onclick: () => { MINI = m; const keep = d.querySelector(".mini"); const h = keep?.previousElementSibling?.tagName === "H3" ? keep.previousElementSibling : null; h?.remove(); keep?.remove(); miniGraph(d, ctx); } }, m)) : el("span", { class: "mini-title" }, "graph"));
   const canvas = el("canvas");
   // one click to the full graph: the same level, centred on the entry or topic shown
@@ -2086,7 +2433,12 @@ function miniGraph(d, ctx) {
   const filters = el("div", { class: "mini-filters graph-ui", hidden: !MINI_FILTERS });
   const gear = el("button", { type: "button", class: "mini-gear", title: "the graph's switches — the same as in the full graph", onclick: () => { MINI_FILTERS = !MINI_FILTERS; filters.hidden = !MINI_FILTERS; } }, "⚙");
   const fillFilters = (g) => { if (mode !== "near") setKids(filters, ...graphControlGroups(g, mode === "family")); };
-  box.append(canvas, seg, el("span", { class: "mini-hint" }, mode === "near" ? "click to open" : "hover · click"), full, mode !== "near" ? gear : null, filters);
+  // fit and reset beside it, for the graph this box runs: fit the view, let go of the held thought
+  const corner = el("span", { class: "mini-corner" });
+  const cornerFor = (g) => setKids(corner,
+    el("button", { type: "button", class: "mini-corner-btn", title: "fit the view: everything in the box", onclick: () => { g.userMoved = false; g.needFit = true; g.wake?.(); } }, "fit"),
+    el("button", { type: "button", class: "mini-corner-btn", title: "let go of the held thought — every node alike again", onclick: () => { THOUGHT_PIN = null; focusStep(null); lightThought(g, null); renderThoughts(g); g.wake?.(); } }, "reset"));
+  box.append(canvas, seg, el("span", { class: "mini-hint" }, mode === "near" ? "click to open" : "hover · click"), corner, full, mode !== "near" ? gear : null, filters);
   if (focusId) d.append(el("h3", {}, "Graph"));
   d.append(box);
   const opts = { mini: true, focusId };
@@ -2096,12 +2448,13 @@ function miniGraph(d, ctx) {
     const up = modes.includes("family") && familyGraphShown() ? "family" : "project";
     if (n || hasFamily()) box.append(el("span", { class: "mini-seg mini-friends" }, el("button", { type: "button", title: `show the friends — switches to the ${up} level`,
       onclick: () => { MINI = up; FRIENDS.load = true; setFriendsAuto(true); render(); } }, n ? `friends (${n})` : "friends")));
-    return requestAnimationFrame(() => runGraph(canvas, ctx.entry ? buildSubgraph(ctx.entry) : buildTopicSubgraph(ctx.topic), opts));
+    const near = ctx.entry ? buildSubgraph(ctx.entry) : buildTopicSubgraph(ctx.topic); cornerFor(near);
+    return requestAnimationFrame(() => runGraph(canvas, near, opts));
   }
-  if (mode === "project") { const g = buildGraph(ctx.entry?.project || ctx.topic?.project || null); holdReading(g); fillFilters(g); /* friends are in the gear's groups */ return requestAnimationFrame(() => runGraph(canvas, g, opts)); }
+  if (mode === "project") { const g = buildGraph(ctx.entry?.project || ctx.topic?.project || null); holdReading(g); fillFilters(g); cornerFor(g); /* friends are in the gear's groups */ return requestAnimationFrame(() => runGraph(canvas, g, opts)); }
   // family: the family graph's nodes, in a view of its own (its own zoom, entries shown)
   const note = el("span", { class: "mini-hint", style: "top:28px;bottom:auto" }, "loading the family…"); box.append(note);
-  const show = (fg) => { note.remove(); if (!canvas.isConnected) return; const mg = { ...fg, scale: 1, ox: 0, oy: 0, showEntries: SHOW_ENTRIES, showLabels: true, raf: null, wake: null, alpha: Math.max(fg.alpha, 0.3) }; holdReading(mg); fillFilters(mg); runGraph(canvas, mg, opts); };
+  const show = (fg) => { note.remove(); if (!canvas.isConnected) return; const mg = { ...fg, scale: 1, ox: 0, oy: 0, showEntries: SHOW_ENTRIES, showLabels: true, raf: null, wake: null, alpha: Math.max(fg.alpha, 0.3) }; holdReading(mg); fillFilters(mg); cornerFor(mg); runGraph(canvas, mg, opts); };
   if (fgraph && Date.now() - fgraph.at < 30000) requestAnimationFrame(() => show(fgraph));
   else buildFamilyGraph().then(show);
 }
@@ -2132,9 +2485,11 @@ function assemble(topics, entries, prev = {}) {
     const a = entries.find((e) => e.id === x.from.id), b = entries.find((e) => e.id === x.to.id);
     const s = index[`e:${x.from.id}`], t = index[`e:${x.to.id}`];
     if (s == null || t == null) continue;
-    links.push({ s, t, kind: x.kind, len: 150 });
+    // the day the link came to be, for the clock: a See from its as-of day, a Superseded by from the status change
+    const day = x.kind === "see" ? seeDay(a, (a.see || []).find((r) => r?.uuid === b.uuid)) : supersededDay(a);
+    links.push({ s, t, kind: x.kind, len: 150, day });
     const ts = index[`t:${a.file}`], tt = index[`t:${b.file}`]; const k = `${ts}|${tt}`;
-    if (a.file !== b.file && ts != null && tt != null && !tpairs.has(k)) { tpairs.add(k); links.push({ s: ts, t: tt, kind: "xtopic", len: 200 }); }
+    if (a.file !== b.file && ts != null && tt != null && !tpairs.has(k)) { tpairs.add(k); links.push({ s: ts, t: tt, kind: "xtopic", len: 200, day }); }
   }
   return { nodes, links, index };
 }
@@ -2211,7 +2566,7 @@ async function buildFamilyGraph() {
     }
     for (const e of G.state.entries || []) {
       const t = nodes[index[tid(G, e.file)]];
-      add({ id: eid(G, e.id), kind: "entry", fam: G.key !== "self", proj: G.g.member.name, label: e.title, file: e.file, entry: e, r: 4.2, href: G.key === "self" ? entryHref(e) : G.g.href(e) }, t || hub);
+      add({ id: eid(G, e.id), kind: "entry", fam: G.key !== "self", proj: G.g.member.name, state: G.g.state, label: e.title, file: e.file, entry: e, r: 4.2, href: G.key === "self" ? entryHref(e) : G.g.href(e) }, t || hub);
     }
     for (const e of G.state.entries || []) {
       const me = index[eid(G, e.id)];
@@ -2551,7 +2906,7 @@ function addLinkedLayer(g, prev, items) {
       }
       for (const e of own) {
         const act = it.entry(m);
-        const n = add({ id: `fe:${it.k}:${m.key}:${e.id}`, kind: "entry", kin, proj: m.name, label: e.title, file: e.file, entry: e, r: 4.2, href: m.href ? m.href(e) : "#graph", action: act ? () => act(e) : null }, nodes[tIdx[e.file]] || hub);
+        const n = add({ id: `fe:${it.k}:${m.key}:${e.id}`, kind: "entry", kin, proj: m.name, state: m.state, label: e.title, file: e.file, entry: e, r: 4.2, href: m.href ? m.href(e) : "#graph", action: act ? () => act(e) : null }, nodes[tIdx[e.file]] || hub);
         if (e.uuid) idx[e.uuid] = index[n.id];
         if (tIdx[e.file] != null) links.push({ s: index[n.id], t: tIdx[e.file], kind: "member", len: 40 });
         entriesShown.push(e);
@@ -3023,11 +3378,13 @@ let THOUGHT_PIN = null; // the ids of the held thought, joined
 // Thoughts page — is marked in every graph on the page.
 let STEP_FOCUS = null; // an entry's Id (or node id)
 const ACTIVE_GRAPHS = new Set();
-function focusStep(ref) { STEP_FOCUS = ref || null; for (const g of ACTIVE_GRAPHS) g.wake?.(); }
+function focusStep(ref) { STEP_FOCUS = ref || null; for (const g of ACTIVE_GRAPHS) g.wake?.(); STAGE?.wake?.(); }
 const stepHover = (ref) => ({ onmouseenter: () => focusStep(ref), onmouseleave: () => focusStep(null) });
 function lightThought(g, t) {
   g.thought = t ? { nodes: new Set(t.steps), pairs: new Set(t.ids.slice(1).map((id, i) => `${id}|${t.ids[i]}`)) } : null;
-  g.alpha = Math.max(g.alpha, 0.02); g.wake?.();
+  // lighting a thought brings entries into view that may be hidden otherwise, so the layout settles again (and the
+  // small graph refits); letting go only redraws — a refit would move the view the person has set
+  if (t) g.alpha = Math.max(g.alpha, 0.02); g.wake?.(); STAGE?.wake?.();
 }
 // the thought being read (#thought/…) is held in every graph shown beside it, however the reader was reached —
 // read › without a click first, a link, a reload — the same as a thought clicked and then read
@@ -3056,7 +3413,7 @@ function renderThoughts(g) {
         el("span", { class: "count" }, String(t.steps.length)), `${short(t.steps[0])} → ${short(t.steps[t.steps.length - 1])}`, t.evolution ? el("span", { class: "pill" }, "evolution") : null, ...insightPills(t)),
       el("a", { class: "thought-read", href: thoughtHref(t), title: "read the whole thought — every entry in order, in full" }, "read ›"),
       t.ends.length ? el("button", { type: "button", class: "thought-follow link-btn", disabled: CHAIN.busy, title: `load the repositories this chain goes on into — ${repos(t.ends).join(", ")} — hop by hop, until it ends`, onclick: () => followThought(t) }, `continues ↗ ${repos(t.ends).join(", ")}`) : null,
-      on ? el("ol", { class: "thought-steps" }, t.steps.map((n) => el("li", stepHover(n.entry?.uuid || n.id), el("a", { href: n.href }, n.label.replace(/`/g, ""))))) : null);
+      on ? el("ol", { class: "thought-steps" }, t.steps.map((n) => el("li", stepHover(n.entry?.uuid || n.id), el("a", { href: n.href, onclick: (ev) => { if (n.entry && STAGE?.pick && location.hash.startsWith("#timeline")) { ev.preventDefault(); STAGE.pick(n.entry); } } }, n.label.replace(/`/g, ""))))) : null);
   };
   const openEnds = [...list, ...open].flatMap((t) => t.ends);
   const followBtn = openEnds.length ? el("button", { type: "button", class: "link-btn thought-follow-all", disabled: CHAIN.busy, title: "load every repository the chains here go on into, hop by hop — nothing else", onclick: followAll }, CHAIN.busy ? "loading the chains…" : `load the whole chains (${repos(openEnds).length} ${repos(openEnds).length === 1 ? "repository" : "repositories"})`) : null;
@@ -3187,7 +3544,12 @@ function viewGraph(main) {
     // on a phone the switches and the legend sit behind two buttons, so the graph gets the screen (CSS shows them there only)
     const toggle = (cls, label, other) => el("button", { type: "button", class: `graph-toggle ${cls}-toggle`, "aria-expanded": "false",
       onclick: (ev) => { const open = wrap.classList.toggle(`${cls}-open`); wrap.classList.remove(`${other}-open`); ev.currentTarget.setAttribute("aria-expanded", String(open)); } }, label);
-    wrap.replaceChildren(canvas, ui, legend, ...[pathBar()].filter(Boolean), toggle("ui", "Layers", "legend"), toggle("legend", "Legend", "ui"),
+    // the corner's reset lets go of the held thought and the pointed-at step: every node alike again; the bar's reset
+    // (fit, let go of placed nodes) stays what it is
+    const cornerReset = el("button", { type: "button", class: "graph-corner graph-corner-reset", title: "let go of the held thought — every node alike again", onclick: () => { THOUGHT_PIN = null; focusStep(null); renderThoughts(g); g.wake?.(); } }, "reset");
+    // fit: nothing changes but the view — zoomed and centred so that everything is in the box, and stays in it while the graph turns
+    const cornerFit = el("button", { type: "button", class: "graph-corner graph-corner-fit", title: "fit the view: everything in the box, centred on the point the graph turns around", onclick: () => { g.userMoved = false; g.needFit = true; g.wake?.(); } }, "fit");
+    wrap.replaceChildren(canvas, ui, legend, ...[pathBar()].filter(Boolean), toggle("ui", "Layers", "legend"), toggle("legend", "Legend", "ui"), cornerFit, cornerReset,
       el("div", { class: "graph-hint" }, family ? "family — a project's name goes there, in place · drag nodes · wheel zoom · drag background to pan" : "drag nodes · wheel zoom · drag background to pan · click to open"),
       el("div", { class: "graph-hint-touch" }, "pinch to zoom · drag to pan · tap to open"));
     // on a phone the graph opens fitted to the screen, also one that settled earlier and was moved then
@@ -3239,9 +3601,13 @@ function runGraph(canvas, g, opts = {}) {
   // or the globe jump in on the first pinch and refuse to zoom out again
   const minScale = () => Math.min(0.15, (g.fitScale || 0.15) / 2);
   const zoomTo = (ns, px, py) => { ns = Math.min(6, Math.max(minScale(), ns)); const k = ns / g.scale; g.ox = px - (px - g.ox) * k; g.oy = py - (py - g.oy) * k; g.scale = ns; };
-  const visible = (n) => n.kind !== "entry" || g.showEntries || !!g.thought?.nodes.has(n);
+  // under the clock an entry is there from the day it was created, a topic from its first entry's day
+  const topicAlive = (n) => !CLOCK || g.nodes.some((m) => m.kind === "entry" && m.file === n.file && (m.unit || "") === (n.unit || "") && atClock(m.entry, !!m.ext));
+  // under the clock every entry follows it, a friend's or a family member's as much as our own (their exports carry
+  // the same Git days); one without Git is simply there
+  const visible = (n) => n.kind === "topic" ? topicAlive(n) : n.kind !== "entry" ? true : atClock(n.entry, !!n.ext) && (g.showEntries || !!g.thought?.nodes.has(n));
   // a topic-level reference stands in for entry references only while entries are hidden
-  const linkOn = (l) => visible(g.nodes[l.s]) && visible(g.nodes[l.t]) && (l.kind !== "xtopic" || !g.showEntries);
+  const linkOn = (l) => visible(g.nodes[l.s]) && visible(g.nodes[l.t]) && (l.kind !== "xtopic" || !g.showEntries) && linkExistsAt(CLOCK, l.day);
   const dim = (n) => n.kind === "entry" && filterActive() && !matches(n.entry);
   const pick = (px, py) => { const [x, y] = toWorld(px, py); let best = null, bd = 1e9; for (const n of g.nodes) { if (!visible(n)) continue; const d = Math.hypot(n.x - x, n.y - y); if (d < Math.max(n.r + 4, 8) / Math.min(g.scale, 1) && d < bd) { best = n; bd = d; } } return best; };
   // a project's name under its hub is a link: pointed at, underlined; clicked, it goes there
@@ -3299,6 +3665,7 @@ function runGraph(canvas, g, opts = {}) {
     const dt = lastT && now ? Math.min(100, now - lastT) : 16; lastT = now || 0;
     const drifting = driftOn() && !hover && !drag && !pan && !pinch;
     if (drifting) { const a = DRIFT_RATE * dt, c = Math.cos(a), sn = Math.sin(a); for (const n of g.nodes) { const x = n.x, y = n.y; n.x = x * c - y * sn; n.y = x * sn + y * c; } }
+    if (g === STAGE?.graph && g.alpha > 0.01 && STAGE.follows?.()) STAGE.wake(); // settling: the stage settles with it, then keeps the positions
     // settled and only turning: every other frame is enough
     if (drifting && g.alpha <= 0.003 && (frame++ & 1)) { g.raf = canvas.isConnected ? requestAnimationFrame(step) : null; return; }
     const ns = g.nodes.filter(visible);
@@ -3326,7 +3693,10 @@ function runGraph(canvas, g, opts = {}) {
       let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
       for (const n of ns) { minX = Math.min(minX, n.x - n.r); maxX = Math.max(maxX, n.x + n.r); minY = Math.min(minY, n.y - n.r); maxY = Math.max(maxY, n.y + n.r + 18); }
       const pad = mini || narrow() ? 60 : 140;
-      if (ns.length) { const sw = Math.max(80, maxX - minX + pad), sh = Math.max(80, maxY - minY + pad); g.scale = Math.min(mini ? 2.2 : 1.2, Math.min(W / sw, H / sh)); g.fitScale = g.scale; g.ox = -((minX + maxX) / 2) * g.scale; g.oy = -((minY + maxY) / 2) * g.scale; }
+      // while the graph turns, the fit is centred on the point it turns around (the origin) and sized to the
+      // farthest node from it, so nothing leaves the box as it comes round; still, the fit is the nodes' box
+      if (ns.length && driftOn()) { let R = 0; for (const n of ns) R = Math.max(R, Math.hypot(n.x, n.y) + n.r + 18); const sw = Math.max(80, 2 * R + pad); g.scale = Math.min(mini ? 2.2 : 1.2, Math.min(W / sw, H / sw)); g.fitScale = g.scale; g.ox = 0; g.oy = 0; }
+      else if (ns.length) { const sw = Math.max(80, maxX - minX + pad), sh = Math.max(80, maxY - minY + pad); g.scale = Math.min(mini ? 2.2 : 1.2, Math.min(W / sw, H / sh)); g.fitScale = g.scale; g.ox = -((minX + maxX) / 2) * g.scale; g.oy = -((minY + maxY) / 2) * g.scale; }
       g.needFit = false;
     }
     // draw
@@ -3366,7 +3736,7 @@ function runGraph(canvas, g, opts = {}) {
       ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
       if (n.kind === "project") { ctx.fillStyle = color("--bg"); ctx.fill(); ctx.lineWidth = 3.5 / g.scale; ctx.strokeStyle = n.color; if (n.chain) ctx.setLineDash([8 / g.scale, 3 / g.scale, 2 / g.scale, 3 / g.scale]); else if (n.friend) ctx.setLineDash([5 / g.scale, 3 / g.scale]); else if (n.trail) ctx.setLineDash([1.5 / g.scale, 3 / g.scale]); ctx.stroke(); ctx.setLineDash([]); ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 0.38, 0, Math.PI * 2); ctx.fillStyle = n.color; ctx.fill(); }
       else if (n.kind === "topic") { ctx.fillStyle = n.color || color("--accent"); ctx.fill(); }
-      else { const sup = n.entry.status === "superseded"; ctx.fillStyle = sup ? color("--bg") : evColor[ev(n)] || color("--muted"); ctx.fill(); if (sup) { ctx.lineWidth = 1.2 / g.scale; ctx.strokeStyle = evColor[ev(n)] || color("--fg3"); ctx.stroke(); } if (n.entry.status === "open" || n.entry.status === "needs-review" || n.entry.status === "pending-confirmation") { ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 2.5 / g.scale, 0, Math.PI * 2); ctx.lineWidth = 1.2 / g.scale; ctx.strokeStyle = color(`--${n.entry.status}`); ctx.stroke(); } }
+      else { const st = statusNow(n.entry); const sup = st === "superseded"; ctx.fillStyle = sup ? color("--bg") : evColor[ev(n)] || color("--muted"); ctx.fill(); if (sup) { ctx.lineWidth = 1.2 / g.scale; ctx.strokeStyle = evColor[ev(n)] || color("--fg3"); ctx.stroke(); } if (st === "open" || st === "needs-review" || st === "pending-confirmation") { ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 2.5 / g.scale, 0, Math.PI * 2); ctx.lineWidth = 1.2 / g.scale; ctx.strokeStyle = color(`--${st}`); ctx.stroke(); } }
       if (n === focus) { ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 4 / g.scale, 0, Math.PI * 2); ctx.lineWidth = 1.5 / g.scale; ctx.strokeStyle = color("--fg"); ctx.stroke(); }
       if (n === stepNode) { ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 7 / g.scale, 0, Math.PI * 2); ctx.lineWidth = 3 / g.scale; ctx.strokeStyle = color("--accent2"); ctx.stroke(); ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 12 / g.scale, 0, Math.PI * 2); ctx.lineWidth = 1 / g.scale; ctx.stroke(); }
     }
@@ -3433,34 +3803,468 @@ function runGraph(canvas, g, opts = {}) {
 // ---------------------------------------------------------------- timeline (SVG)
 const PALETTE = ["#835bec", "#4aa3df", "#4fbf7a", "#e0a83a", "#e0574f", "#d66fd6", "#3fbfbf", "#b0b04a", "#ff8c5a", "#8b8b98"];
 const authorColor = (name) => PALETTE[Math.max(0, S.authors.findIndex((a) => a.name === name)) % PALETTE.length];
-function viewTimeline(main) {
-  main.append(el("h1", {}, "Timeline"), el("p", { class: "sub" }, "Entries by the month their heading first appeared in Git, stacked by author. Grey ticks below: entries superseded in that month."));
+// ---------------------------------------------------------------- timeline: the clock, the playhead, the stage
+// The Timeline owns the clock. The slider, the play button, the keys and a wheel over the stage set the day, and
+// every graph on the page follows it (setClock). The stage is a perspective view of the graph's entries: time runs
+// into the depth — the day shown is the near plane, what came before recedes, what a day brings arrives at the
+// front — a card per entry in the colours of its Type, filled by Evidence, edged by Status, the See and Superseded
+// by lines between cards from the day they were written. Plain canvas, projected by hand: three numbers per point,
+// no library. The scene and the layout are pure functions in lib.js (stageCards … pushApart); this file holds the
+// page, the camera, the painter and the input. #timeline/<day> opens the page on that day.
+const PLAY = { on: false, speed: 7, raf: null, last: 0, acc: 0, frac: 0 }; // speed: days per second; frac: the part of a day between two whole ones, for the stage's motion
+const SPEEDS = [[1 / 24, "1 hour /s"], [3 / 24, "3 hours /s"], [1, "1 day /s"], [7, "1 week /s"], [30, "1 month /s"], [120, "4 months /s"]];
+let STAGE = null; // the stage on the page: { wake, relax, reset, pick, close, graph, follows }
+let TIMELINE_FAMILY_ASKED = false; // the family graph is being built for the timeline
+// "graph": a card stands where its node stands in the graph beside, the stage is the graph with time pulled out as depth;
+// "topics": a lane per topic across the width. Kept per browser.
+let STAGE_ARRANGE = (() => { try { return localStorage.getItem("ktw-stage-arrange") || "graph"; } catch { return "graph"; } })();
+// other repositories' entries on the stage: "linked" — only the ones a chain of See or Superseded by joins to this
+// project's entries; "all" — every one the graph holds; "none". Kept per browser.
+let STAGE_FOREIGN = (() => { try { return localStorage.getItem("ktw-stage-foreign") || "linked"; } catch { return "linked"; } })();
+function setStageArrange(v) { STAGE_ARRANGE = v; try { localStorage.setItem("ktw-stage-arrange", v); } catch {} STAGE?.relax?.(); STAGE?.wake?.(); }
+function setStageForeign(v) { STAGE_FOREIGN = v; try { localStorage.setItem("ktw-stage-foreign", v); } catch {} render(); } // the lanes are the shown cards': the view is rebuilt
+const foreignShown = (c) => !c.ext || STAGE_FOREIGN === "all" || (STAGE_FOREIGN === "linked" && c.linked);
+function stopPlay() { PLAY.on = false; if (PLAY.raf) cancelAnimationFrame(PLAY.raf); PLAY.raf = null; PLAY.last = 0; PLAY.acc = 0; PLAY.frac = 0; }
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+// a segment of buttons on the stage, one of them on
+const stageSeg = (cls, title, options, current, pick, label = null) => el("span", { class: `stage-seg ${cls}`, title }, label ? el("span", { class: "seg-label" }, label) : null,
+  ...options.map(([v, l]) => el("button", { type: "button", class: v === current ? "on" : "", onclick: (ev) => { pick(v); for (const b of ev.currentTarget.parentNode.querySelectorAll("button")) b.classList.toggle("on", b === ev.currentTarget); } }, l)));
+
+function viewTimeline(main, day) {
+  main.append(el("h1", {}, "Timeline"));
   if (!S.project.git?.available) return main.append(el("p", { class: "center" }, "No Git repository — no dates to draw."));
   if (S.project.git.shallow) main.append(el("p", { class: "sub warn" }, "Shallow clone: the history stops at the clone's edge, so every entry older than that appears to start there. Fetch the full history (git fetch --unshallow) for real dates."));
+  const sub = el("p", { class: "sub" }, "The project day by day. The stage shows what existed on the day shown, the graph beside it the same; the playhead sets the day. The card shows the entry that appeared last by then, or the one clicked on the stage. The bars count the entries by the month their heading first appeared in Git, stacked by author, grey ticks for entries superseded that month.");
+  // the graph the stage is a view of and the thoughts beside it are drawn from: the family graph with the family
+  // scope (built once it is asked for, the view rendered again when it arrives), else this project's
+  const family = familyGraphShown(); const familyFresh = fgraph && Date.now() - fgraph.at < 30000;
+  if (family && !familyFresh && !TIMELINE_FAMILY_ASKED) { TIMELINE_FAMILY_ASKED = true; buildFamilyGraph().then(() => { TIMELINE_FAMILY_ASKED = false; if (location.hash.startsWith("#timeline")) render(); }); }
+  const g = family && familyFresh ? fgraph : buildGraph();
+  // the clock runs from the first day of any entry on the page — ours, or one a friend, the family or the path brought — to today
+  const span = daySpan([...S.entries, ...g.nodes.filter((n) => n.kind === "entry" && n.entry).map((n) => n.entry)]);
+  if (!span) return main.append(sub, el("p", { class: "center" }, "Nothing dated yet."));
+  const clamp = (d) => (d < span.from ? span.from : d > span.to ? span.to : d);
+  const bars = timelineBars(main, span, (d) => setDay(d));
+  const listBox = el("div", { class: "entry-list", style: "margin-top:16px" });
+  bars.onMonth = (k, entries) => { listBox.replaceChildren(el("h2", {}, k), ...entries.map(entryRow)); };
+  // the playhead: a slider over the days, play with a speed, the counts of the day
+  const range = el("input", { type: "range", min: 0, max: Math.max(1, dayDiff(span.from, span.to)), step: 1, class: "playhead-range", title: "the day the page shows — drag, or ← → (a day), shift ← → (a week), space plays" });
+  const dayLabel = el("b", { class: "playhead-day" }); const counts = el("span", { class: "playhead-counts" });
+  const playBtn = el("button", { type: "button", class: "play-btn", title: "play the days — space" });
+  const speedSel = el("select", { class: "play-speed", title: "how fast the days pass" }, SPEEDS.map(([v, l]) => el("option", { value: v }, l)));
+  speedSel.onchange = () => { PLAY.speed = Number(speedSel.value) || 7; };
+  for (const opt of speedSel.options) if (Math.abs(Number(opt.value) - PLAY.speed) < 1e-9) opt.selected = true;
+  const upd = () => {
+    const d = CLOCK || span.to;
+    range.value = dayDiff(span.from, d); dayLabel.textContent = d; bars.mark(d);
+    const here = S.entries.filter((e) => atClock(e)); const st = count(here.map((e) => ({ s: statusNow(e) })), "s"); const open = (st.open || 0) + (st["needs-review"] || 0) + (st["pending-confirmation"] || 0);
+    setKids(counts, `${plural(here.length, "entry")} by then`, st.active ? ` · ${st.active} active` : "", st.superseded ? ` · ${st.superseded} superseded` : "", open ? ` · ${open} in question` : "");
+    playBtn.textContent = PLAY.on ? "⏸" : "▶"; playBtn.classList.toggle("on", PLAY.on);
+    card.refresh();
+    try { history.replaceState(null, "", d === span.to ? "#timeline" : `#timeline/${d}`); } catch {}
+  };
+  const setDay = (d) => { setClock(clamp(d)); upd(); };
+  function play(on) {
+    if (on === PLAY.on) return;
+    if (!on) { stopPlay(); upd(); return; }
+    if ((CLOCK || span.to) >= span.to) setClock(span.from); // at the end: once more from the start
+    PLAY.on = true; PLAY.last = 0; PLAY.acc = 0;
+    const step = (now) => {
+      if (!PLAY.on || !range.isConnected) { stopPlay(); return; }
+      const dt = PLAY.last ? Math.min(0.1, (now - PLAY.last) / 1000) : 0; PLAY.last = now;
+      PLAY.acc += dt * PLAY.speed;
+      const whole = Math.floor(PLAY.acc); PLAY.frac = PLAY.acc - whole;
+      if (whole >= 1) { PLAY.acc -= whole; const d = addDays(CLOCK, whole); if (d >= span.to) { setClock(span.to); stopPlay(); upd(); return; } setDay(d); }
+      else STAGE?.wake?.();
+      PLAY.raf = requestAnimationFrame(step);
+    };
+    upd(); PLAY.raf = requestAnimationFrame(step);
+  }
+  playBtn.onclick = () => play(!PLAY.on);
+  range.oninput = () => { play(false); setDay(addDays(span.from, Number(range.value))); };
+  const jump = (to, title, label) => el("button", { type: "button", class: "play-jump", title, onclick: () => { play(false); setDay(to()); } }, label);
+  const card = entryCard(span);
+  // the stage and its switches
+  const wrap = el("div", { class: "stage-wrap" }); const canvas = el("canvas", { class: "stage" }); const tip = el("div", { class: "stage-tip", hidden: true });
+  wrap.append(canvas, tip,
+    stageSeg("stage-arrange", "where a card stands: where its node stands in the graph beside (the stage is the graph, time pulled out as depth), or in a lane per topic", [["graph", "as the graph"], ["topics", "by topic"]], STAGE_ARRANGE, setStageArrange),
+    stageSeg("stage-foreign", "other repositories' entries — friends, family, path: only the ones a chain of See or Superseded by joins to this project's, every one the graph holds, or none", [["linked", "linked"], ["all", "all"], ["none", "none"]], STAGE_FOREIGN, setStageForeign, "others"),
+    el("button", { type: "button", class: "stage-reset", title: "let go of the held thought and card — every card alike again — and reset the view", onclick: () => STAGE?.reset?.() }, "reset"));
+  main.append(el("div", { class: "timeline-head" },
+      el("div", { class: "timeline-head-text" }, sub, bars.node, bars.legend,
+        el("div", { class: "playhead" }, jump(() => span.from, "the first day", "⏮"), playBtn, jump(() => span.to, "today", "⏭"), range, dayLabel, speedSel, counts)),
+      el("div", { class: "stage-card-slot" }, card.node)),
+    wrap, stageLegend(),
+    el("p", { class: "note stage-note" }, el("span", { class: "stage-hint" }, "On the stage: wheel — a day forward or back, shift for a week · drag — look around · ctrl+wheel — zoom · double-click — reset the view · click a card to read it, the floor to let go. The thoughts beside: point at one to light its chain here and in the graph."), el("span", { class: "stage-hint-touch" }, "On the stage: drag — look around · pinch — zoom · tap a card to read it, the floor to let go. The slider sets the day.")),
+    listBox);
+  CLOCK = null; setClock(day && DAY_RE.test(day) ? clamp(day) : span.to); upd();
+  runStage(canvas, { wrap, tip, span, graph: g, setDay, play, open: card.hold, close: card.release });
+  // keys while the timeline is open: ← → a day, shift a week, space plays
+  const onKey = (ev) => {
+    if (!wrap.isConnected) return document.removeEventListener("keydown", onKey);
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(ev.target?.tagName) && ev.target !== range) return;
+    const d = CLOCK || span.to;
+    if (ev.key === "ArrowLeft") { play(false); setDay(addDays(d, ev.shiftKey ? -7 : -1)); ev.preventDefault(); }
+    else if (ev.key === "ArrowRight") { play(false); setDay(addDays(d, ev.shiftKey ? 7 : 1)); ev.preventDefault(); }
+    else if (ev.key === " " && ev.target !== range) { play(!PLAY.on); ev.preventDefault(); }
+  };
+  document.addEventListener("keydown", onKey);
+}
+// The bars: entries by the month their heading first appeared in Git, stacked by author, grey ticks for entries
+// superseded that month, a marker for the day shown. Returns the SVG, the authors' legend, `mark(day)` and a click
+// on a month (`onMonth(month, entries)` to set, and the day moves to the month's end through `setDay`).
+function timelineBars(main, span, setDay) {
   const created = S.entries.filter((e) => e.git?.created?.date && matches(e));
   const months = {}; const sup = {};
   for (const e of created) { const m = e.git.created.date.slice(0, 7); (months[m] ||= {})[e.git.created.author] = ((months[m] || {})[e.git.created.author] || 0) + 1; }
   for (const e of S.entries) for (const h of e.git?.status_history || []) if (h.status === "superseded" && h.date) sup[h.date.slice(0, 7)] = (sup[h.date.slice(0, 7)] || 0) + 1;
-  const keys = Object.keys({ ...months, ...sup }).sort();
-  if (!keys.length) return main.append(el("p", { class: "center" }, "Nothing dated yet."));
-  // fill gaps
-  const all = []; let [y, m] = keys[0].split("-").map(Number); const [ey, em] = keys[keys.length - 1].split("-").map(Number);
+  // every month from the first dated one to this month
+  const all = []; let [y, m] = (Object.keys({ ...months, ...sup }).sort()[0] || span.from.slice(0, 7)).split("-").map(Number); const [ey, em] = todayISO().slice(0, 7).split("-").map(Number);
   while (y < ey || (y === ey && m <= em)) { all.push(`${y}-${String(m).padStart(2, "0")}`); m++; if (m > 12) { m = 1; y++; } }
   const max = Math.max(1, ...all.map((k) => Object.values(months[k] || {}).reduce((a, b) => a + b, 0)));
-  const Wd = 900, Hd = 260, padL = 34, padB = 40, padT = 10; const bw = Math.min(48, (Wd - padL) / all.length - 4);
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("viewBox", `0 0 ${Wd} ${Hd}`);
+  // the drawing is as wide as the column beside the card, so its text keeps its size (an SVG scales as a whole);
+  // padT leaves room above the bars for the day's label, clear of them; a bar spans its month, a hair between two
+  const mainW = main.clientWidth || 900; const Wd = Math.max(360, Math.round(narrow() ? mainW - 28 : mainW - 64 - 18 - Math.min(420, Math.max(280, (mainW - 82) * 0.42))));
+  const Hd = 130, padL = 34, padB = 32, padT = 18; const colW = (Wd - padL) / all.length; const bw = colW - 2;
   const ns = (tag, attrs, text) => { const n = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); if (text != null) n.textContent = text; return n; };
-  const axis = ns("g", { class: "axis" }); svg.append(axis);
+  const svg = ns("svg", { viewBox: `0 0 ${Wd} ${Hd}` }); const axis = ns("g", { class: "axis" }); svg.append(axis);
   const scaleY = (v) => padT + (Hd - padB - padT) * (1 - v / max);
   for (const tick of [0, Math.ceil(max / 2), max]) { axis.append(ns("line", { x1: padL, x2: Wd, y1: scaleY(tick), y2: scaleY(tick) })); axis.append(ns("text", { x: padL - 6, y: scaleY(tick) + 3, "text-anchor": "end" }, tick)); }
-  const listBox = el("div", { class: "entry-list", style: "margin-top:16px" });
+  const monthX = (d) => { const i = all.indexOf(d.slice(0, 7)); if (i < 0) return d < all[0] ? padL : Wd; const dim = new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7), 0)).getUTCDate(); return padL + (i + (Math.min(+d.slice(8, 10), dim) - 1) / dim) * colW + 1; };
+  const marker = ns("line", { class: "now", x1: padL, x2: padL, y1: padT - 4, y2: Hd - padB + 14 }); const markerLabel = ns("text", { class: "now-label", x: padL, y: 9, "text-anchor": "start" }, "");
+  const out = { node: el("div", { class: "timeline" }, svg), onMonth: null,
+    legend: el("div", { class: "legend" }, S.authors.map((a) => el("span", {}, el("i", { class: "sw", style: `background:${authorColor(a.name)}` }), a.name)), el("span", {}, el("i", { class: "sw", style: "background:var(--superseded)" }), "superseded that month")),
+    mark: (d) => { const x = monthX(d); marker.setAttribute("x1", x); marker.setAttribute("x2", x); markerLabel.setAttribute("x", Math.min(Wd - 64, x + 4)); markerLabel.textContent = d; } };
   all.forEach((k, i) => {
-    const x = padL + i * ((Wd - padL) / all.length) + 2; let yTop = scaleY(0);
-    for (const a of S.authors.map((a) => a.name)) { const v = months[k]?.[a]; if (!v) continue; const h = scaleY(0) - scaleY(v); yTop -= h; const rect = ns("rect", { class: "b", x, y: yTop, width: bw, height: h, fill: authorColor(a), rx: 2 }); rect.append(ns("title", {}, `${k} · ${a}: ${v}`)); rect.addEventListener("click", () => { listBox.replaceChildren(el("h2", {}, `${k}`), ...created.filter((e) => e.git.created.date.startsWith(k)).map(entryRow)); listBox.scrollIntoView?.({ behavior: "smooth", block: "nearest" }); }); svg.append(rect); }
+    const x = padL + i * colW + 1; let yTop = scaleY(0);
+    for (const a of S.authors.map((a) => a.name)) {
+      const v = months[k]?.[a]; if (!v) continue; const h = scaleY(0) - scaleY(v); yTop -= h;
+      const rect = ns("rect", { class: "b", x, y: yTop, width: bw, height: h, fill: authorColor(a), rx: 2 }); rect.append(ns("title", {}, `${k} · ${a}: ${v} — click: that month's entries, and the day moves to its end`));
+      rect.addEventListener("click", () => { out.onMonth?.(k, created.filter((e) => e.git.created.date.startsWith(k))); const last = new Date(Date.UTC(+k.slice(0, 4), +k.slice(5, 7), 0)).toISOString().slice(0, 10); setDay(last < span.from ? span.from : last > span.to ? span.to : last); });
+      svg.append(rect);
+    }
     if (sup[k]) for (let s = 0; s < sup[k]; s++) svg.append(ns("rect", { class: "sup", x: x + s * 5, y: Hd - padB + 6, width: 3, height: 6 }));
-    if (all.length <= 18 || i % Math.ceil(all.length / 18) === 0) axis.append(ns("text", { x: x + bw / 2, y: Hd - padB + 24, "text-anchor": "middle" }, k));
+    if (all.length <= 18 || i % Math.ceil(all.length / 18) === 0) axis.append(ns("text", { x: x + bw / 2, y: Hd - padB + 22, "text-anchor": "middle" }, k));
   });
-  main.append(el("div", { class: "timeline" }, svg), el("div", { class: "legend" }, S.authors.map((a) => el("span", {}, el("i", { class: "sw", style: `background:${authorColor(a.name)}` }), a.name)), el("span", {}, el("i", { class: "sw", style: "background:var(--superseded)" }), "superseded")), el("p", { class: "note" }, "Click a bar to list that month's entries."), listBox);
+  svg.append(marker, markerLabel);
+  return out;
+}
+// The card beside the bars: the entry that appeared last by the day shown, or the one held — clicked on the stage
+// or in the thoughts list — until let go. The whole body, rendered as the reader renders it; the bodies sit beside
+// an export by default, this project's and a friend's alike, and are fetched once, on demand.
+function entryCard(span) {
+  const node = el("div", { class: "stage-card" }); let held = null; // the held entry's Id
+  const latest = (d) => { let best = null; for (const e of S.entries) { if (!existsAt(e, d, hasRepo(e))) continue; const c = createdOn(e) || span.to; if (!best || c >= best.c) best = { e, c }; } return best?.e || null; };
+  const fill = (e, isHeld, c = null) => {
+    const d = CLOCK || span.to; const lane = c?.lane?.title || (e.project ? `${e.project} · ` : "") + (topicOf(e.file)?.title || e.file).replace(/`/g, ""); const href = c?.href || entryHref(e);
+    const body = e.body?.text || "";
+    setKids(node, el("div", { class: "stage-card-head" }, el("span", { class: "note mono" }, `${createdOn(e) || "today"} · ${lane}`), isHeld ? el("button", { type: "button", class: "pill stage-card-held", title: "let go — back to the latest entry by the day shown", onclick: () => STAGE?.close?.() }, "picked ", el("b", {}, "×")) : el("span", { class: "pill" }, "latest by then")),
+      el("h3", {}, el("a", { href, title: "read the whole entry" }, e.title.replace(/`/g, ""))),
+      el("div", { class: "pills" }, ...typePills(e.type), statusPill(statusAt(e, d, c?.ext || hasRepo(e)) || e.status), evPill(e.evidence)),
+      body ? el("div", { class: "body stage-card-body", html: renderMarkdown(body) }) : el("p", { class: "empty stage-card-body" }, typeof S.bodies === "string" ? "loading the text…" : "no text"),
+      el("div", { class: "stage-card-foot" }, e.git?.created?.author ? el("span", { class: "note" }, `recorded by ${e.git.created.author}`) : el("span"), el("a", { href }, "open ›")));
+    const st = c?.state || SELF;
+    if (st && typeof st.bodies === "string" && !st.bodiesLoaded && !st.bodiesError) ensureBodies(st).then(() => { if (node.isConnected && (held ? held === (e.uuid || e.id) : latest(CLOCK || span.to) === e)) fill(e, isHeld, c); });
+  };
+  return { node,
+    refresh: () => { if (held) return; const e = latest(CLOCK || span.to); if (e) fill(e, false); else setKids(node, el("p", { class: "empty" }, "No entry by this day.")); },
+    hold: (e, c) => { held = e.uuid || e.id; selected = e.id; fill(e, true, c); },
+    release: () => { held = null; selected = null; const e = latest(CLOCK || span.to); if (e) fill(e, false); } };
+}
+// the legend under the stage: the kinds, the fills, the edges
+function stageLegend() {
+  const sw = (cls, style) => el("i", { class: `sw ${cls}`, style });
+  return el("div", { class: "stage-legend" },
+    el("span", { class: "grp" }, ...TYPE_KINDS.map((k) => el("span", { style: `color:${TYPE_COLORS[k]}`, html: `${typeGlyphSvg(k)} <span style="color:var(--fg2)">${k}</span>` })), el("span", {}, sw("", "color:var(--muted)"), el("span", {}, "no type"))),
+    el("span", { class: "grp", title: "Evidence is the fill" }, el("span", {}, sw("solid", "color:var(--fg2)"), "confirmed"), el("span", {}, sw("hatch", "color:var(--fg2)"), "inferred"), el("span", {}, sw("", "color:var(--fg2)"), "unknown")),
+    el("span", { class: "grp", title: "Status is the edge" }, el("span", {}, sw("dashed", "color:var(--fg3)"), "superseded"), el("span", {}, sw("ring", "color:var(--fg2)"), "open · needs review · pending")));
+}
+// A card's shape is its Type. decision: a plain card with a diamond. constraint: a thick band across the top, a
+// barred square. workaround: a folded corner and a dashed edge, a folded square. incident: a striped band across
+// the top, a triangle with a bar. The glyph as SVG for the legend, and on the canvas.
+function typeGlyphSvg(kind) {
+  const d = { decision: '<path d="M6 1 11 6 6 11 1 6z"/>', constraint: '<path d="M1.5 1.5h9v9h-9z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 5h9v2h-9z"/>',
+    workaround: '<path d="M1.5 1.5h6l3 3v6h-9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 1.5"/><path d="M7.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.4"/>',
+    incident: '<path d="M6 1.2 11.2 10.8H.8z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.3 4.5h1.4v3.2H5.3zM5.3 8.5h1.4v1.3H5.3z"/>' }[kind] || "";
+  return `<svg class="type-glyph" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" fill="currentColor">${d}</svg>`;
+}
+function typeGlyph(ctx, kind, x, y, s) { // `s` its size in pixels, at (x, y) top-left, in the current fill and stroke colour
+  ctx.save(); ctx.translate(x, y); ctx.scale(s / 12, s / 12); ctx.lineWidth = 1.5 * 12 / s; ctx.setLineDash([]);
+  if (kind === "decision") { ctx.beginPath(); ctx.moveTo(6, 1); ctx.lineTo(11, 6); ctx.lineTo(6, 11); ctx.lineTo(1, 6); ctx.closePath(); ctx.fill(); }
+  else if (kind === "constraint") { ctx.strokeRect(1.5, 1.5, 9, 9); ctx.fillRect(1.5, 5, 9, 2); }
+  else if (kind === "workaround") { ctx.setLineDash([2, 1.5]); ctx.beginPath(); ctx.moveTo(1.5, 1.5); ctx.lineTo(7.5, 1.5); ctx.lineTo(10.5, 4.5); ctx.lineTo(10.5, 10.5); ctx.lineTo(1.5, 10.5); ctx.closePath(); ctx.stroke(); ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(7.5, 1.5); ctx.lineTo(7.5, 4.5); ctx.lineTo(10.5, 4.5); ctx.stroke(); }
+  else if (kind === "incident") { ctx.beginPath(); ctx.moveTo(6, 1.2); ctx.lineTo(11.2, 10.8); ctx.lineTo(0.8, 10.8); ctx.closePath(); ctx.stroke(); ctx.fillRect(5.3, 4.5, 1.4, 3.2); ctx.fillRect(5.3, 8.5, 1.4, 1.3); }
+  ctx.restore();
+}
+
+// ---- the stage: scene, camera, layout, painter, input
+// The scene: the graph's entry nodes as cards — ours and the ones a friend, the family or the path brought, so a
+// thought that crosses repositories lights every step — the links between them, and the lanes by topic among the
+// cards that show. A card keeps its node's id and reads the node afresh (the graph rebuilds its nodes on every
+// render, the ids stay). Built once per view; a live update renders the view again.
+function stageScene(G, span) {
+  const entryNodes = (G?.nodes || []).filter((n) => n.kind === "entry" && n.entry);
+  const { cards, byId } = stageCards(entryNodes, { today: span.to, selfState: SELF });
+  const links = stageLinks(cards, byId); markLinked(cards, links);
+  const { lanes, cols } = stageLanes(cards, { show: foreignShown, topicTitle: (file) => topicOf(file)?.title });
+  return { G, cards, byId, links, lanes, cols, nodeOf: (c) => (G?.index?.[c.nid] != null ? G.nodes[G.index[c.nid]] : null) };
+}
+// The camera: the scale, the depth and the projection. World units: x across the near plane, y up, z the depth —
+// days back from the day shown, logarithmic and scaled to the span so the last days spread out where the eye is and
+// the past fills the stage. The scale follows the width (a plane of 5.6 units across); where the window has height
+// to spare the box grows, up to twice, and the scale grows with it. As the graph, a card stands where its node
+// stands in the graph beside: the graph's plane (its 4th to 96th percentile, outliers held at the edge) mapped onto
+// the near plane, the positions copied while the graph settles and then kept — following its slow turn walked the
+// cards around the stage without end.
+function stageCamera(scene, v, o) {
+  const F = 4.2; // focal length in plane units
+  const spanDays = Math.max(14, dayDiff(o.span.from, o.span.to));
+  const DEPTH_FAR = F * 1.4; // the depth at the span's end: size 1 / 2.4
+  const camY = 1.85, floorY = -0.95; // the eye just above the top row; the floor's height
+  const asGraph = () => STAGE_ARRANGE === "graph" && !!scene.G;
+  const baseK = () => Math.max(56, Math.min(190, (v.W - 40) / 5.6));
+  const KY = () => Math.max(baseK(), Math.min(2 * baseK(), (v.H - 60) / 3.15)) * v.zoom; // up: the same in both arrangements
+  const K = () => (asGraph() ? KY() : Math.max(56, Math.min(190, (v.W - 40) / (scene.cols + 1.2))) * v.zoom); // across: by topic the lanes' width
+  const planeHalf = () => (asGraph() ? Math.max(1.5, (v.W / 2 - 12) / K()) : scene.cols / 2); // as the graph the plane spans the box, its edges at the bottom corners
+  const horizon = () => v.H * 0.13 + v.panY; const cx = () => v.W / 2 + v.panX;
+  const now = () => (CLOCK || o.span.to);
+  const tNow = () => dayDiff(o.span.from, now()) + (PLAY.on ? PLAY.frac : 0); // days since the first day, fractional while playing
+  const zOf = (day) => logDepth(tNow() - dayDiff(o.span.from, day), spanDays, DEPTH_FAR);
+  const proj = (x, y, z) => { const s = F / (F + Math.max(z, -F * 0.9)); return [cx() + x * K() * s, horizon() + (camY - y) * KY() * s, s]; };
+  const depthAlpha = (z) => Math.max(0.2, Math.min(1, 1.1 - z / (DEPTH_FAR * 1.6)));
+  // the graph's positions, copied while it settles and then kept
+  // (copied until the graph has settled once; from then on only a node not yet known is added — the graph is nudged
+  // awake by a pointed-at thought, and following that would walk the cards along its turn a step per hover)
+  const POS = new Map(); let settled = false; // node id -> { x, y }
+  const syncPositions = () => { const G = scene.G; if (!G) return; for (const n of G.nodes) if ((n.kind === "entry" || n.kind === "topic") && (!settled || !POS.has(n.id))) POS.set(n.id, { x: n.x, y: n.y }); if (G.alpha <= 0.01) settled = true; };
+  const gbox = { x0: 0, x1: 1, y0: 0, y1: 1 };
+  const measureGraph = (shownCards) => { syncPositions(); const xs = [], ys = []; for (const c of shownCards) { const q = POS.get(c.nid); if (q) { xs.push(q.x); ys.push(q.y); } } const b = percentileBox(xs, ys); if (b) Object.assign(gbox, b); };
+  const clamp01 = (u) => Math.max(0, Math.min(1, u));
+  const gmap = (n) => { const ux = clamp01((n.x - gbox.x0) / (gbox.x1 - gbox.x0 || 1)), uy = clamp01((n.y - gbox.y0) / (gbox.y1 - gbox.y0 || 1)); return { x: (ux - 0.5) * (planeHalf() * 2 - 0.9), y: 1.3 - uy * (1.3 - (SHELF[0] - 0.45)) }; }; // the top row well under the eye
+  const basePos = (c) => { const q = asGraph() ? POS.get(c.nid) : null; return q ? gmap(q) : { x: c.x, y: c.y }; };
+  // the box's height: what the window has left under everything above the stage and over the legend and note under it
+  const roomBelow = () => { let below = 24; for (let n = o.wrap.nextElementSibling; n; n = n.nextElementSibling) below += n.offsetHeight + 12; const main = o.wrap.closest("#main"); if (main) below += parseFloat(getComputedStyle(main).paddingBottom) || 0; return below; };
+  const roomAbove = () => { const main = o.wrap.closest("#main"); return main ? o.wrap.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop : 0; };
+  const chrome = () => (narrow() ? 60 : 108); // the top bar, the strip, the status bar
+  const fitHeight = () => { const h = stageHeight(baseK() * 3.15 + 60, window.innerHeight - chrome() - roomAbove() - roomBelow()); if (Math.abs(h - o.wrap.getBoundingClientRect().height) > 2) o.wrap.style.height = `${h}px`; };
+  const zFar = () => Math.max(1, logDepth(tNow() + 20, spanDays, DEPTH_FAR)); // the floor's far edge: a little beyond the first day
+  return { camY, floorY, asGraph, K, KY, planeHalf, now, zOf, zFar, proj, depthAlpha, measureGraph, basePos, fitHeight };
+}
+// The layout: which cards show, where each stands, and the pushes that keep them apart. A push is an offset on the
+// card (ox, oy in plane units); nothing pulls an offset back on its own — a steady pull against the push made the
+// cards shiver — the offsets give up half their room, eased over a dozen frames, when the day or the arrangement
+// changes (relax). Settling ends after SETTLE_FRAMES frames of pushes until the next relax: two cards wedged
+// between their bounds would otherwise trade places forever.
+function stageLayout(scene, cam, v) {
+  const SETTLE_FRAMES = 120; let settleFrames = 0, easing = 0;
+  const thereAt = (c, day) => existsAt(c.e, day, c.ext || hasRepo(c.e));
+  const shown = (c) => foreignShown(c) && thereAt(c, cam.now()) && (!PLAY.on || cam.zOf(c.day) >= -0.02);
+  const posOf = (c) => { const q = cam.basePos(c); return { x: q.x + c.ox, y: q.y + c.oy }; };
+  const room = (c) => { const b = cam.basePos(c); return { xlo: -1.3, xhi: 1.3, ylo: Math.max(-0.9, cam.floorY + 0.3 - b.y), yhi: Math.min(0.9, cam.camY - 0.35 - b.y) }; };
+  const relax = () => { easing = 12; settleFrames = 0; };
+  // one frame of settling; true while more frames are wanted
+  const settle = (items) => {
+    let busy = false;
+    if (easing) { easing--; for (const c of scene.cards) { c.ox *= 0.944; c.oy *= 0.944; } busy = true; }
+    const sOf = new Map(items.map((i) => [i.c, i.box.s])); // each card's size on screen, for the push in plane units
+    if (settleFrames < SETTLE_FRAMES && pushApart(items, { px: (c) => cam.K() * (sOf.get(c) || 1), py: (c) => cam.KY() * (sOf.get(c) || 1), room })) { settleFrames++; busy = true; }
+    return busy;
+  };
+  return { thereAt, shown, posOf, relax, settle };
+}
+// The painter: the floor with its days and months, the lanes' names or the topics' names, the lines between cards,
+// the cards themselves — far ones first — and the names of the topics at the centre of their cards.
+function stagePainter(ctx, scene, cam, layout, v, o) {
+  const css = getComputedStyle(document.documentElement); const color = (name) => css.getPropertyValue(name).trim();
+  const HATCH = new Map(); // colour -> pattern: diagonal lines, the fill of an inferred entry
+  const hatch = (col) => { if (!HATCH.has(col)) { const pc = document.createElement("canvas"); pc.width = pc.height = 6; const x = pc.getContext("2d"); if (x) { x.strokeStyle = col; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-1, 7); x.lineTo(7, -1); x.moveTo(-1, 1); x.lineTo(1, -1); x.moveTo(5, 7); x.lineTo(7, 5); x.stroke(); } HATCH.set(col, ctx.createPattern(pc, "repeat")); } return HATCH.get(col); };
+  const litIds = () => { const t = scene.G?.thought; const set = new Set(); if (t) for (const n of t.nodes) if (n.entry) set.add(n.entry.uuid || n.id); return set; };
+  const font = (size, weight = "") => `${weight ? weight + " " : ""}${size}px ${color("--font") || "sans-serif"}`;
+  const rects = []; // the cards drawn this frame, near ones last, each with its foot (the line down to the floor)
+
+  function floor(day, xl, xr, zFar) {
+    const { proj, floorY, depthAlpha, zOf } = cam;
+    ctx.lineWidth = 1; ctx.strokeStyle = color("--line"); ctx.globalAlpha = 0.9;
+    const edges = cam.asGraph() ? [xl, xr] : Array.from({ length: scene.cols + 1 }, (_, i) => i - scene.cols / 2); // the plane's edges, or the lane lines
+    for (const x of edges) { const [ax, ay] = proj(x, floorY, -0.4); const [bx, by] = proj(x, floorY, zFar); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); }
+    ctx.font = font(10); ctx.textBaseline = "middle"; ctx.textAlign = "left"; // the labels inside the floor's left edge: it runs out of the box at the front
+    // the days: a faint line across for every day back from the one shown, as long as the lines stay apart on screen
+    // (the last days are wide apart, the old ones run together), the day of the month where there is room for a number
+    let lastY = -1e9, lastLabelY = -1e9;
+    for (let back = 0; back < 4000; back++) {
+      const d = addDays(day, -back); if (d < o.span.from) break; if (d.endsWith("-01")) continue; const z = zOf(d); if (z > zFar) break;
+      const [ax, ay] = proj(xl, floorY, z), [bx, by] = proj(xr, floorY, z); if (Math.abs(ay - lastY) < 7) continue; lastY = ay;
+      ctx.globalAlpha = 0.25 + 0.4 * depthAlpha(z); ctx.strokeStyle = color("--line"); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      if (Math.abs(ay - lastLabelY) >= 16 && ay > 8 && ay < v.H - 4) { lastLabelY = ay; ctx.fillStyle = color("--fg3"); ctx.globalAlpha = 0.5 + 0.4 * depthAlpha(z); ctx.fillText(String(Number(d.slice(8, 10))), ax + 6, ay); }
+    }
+    // the months: a line on the first, its label in bold, the year on January's
+    let [yy, mm] = day.slice(0, 7).split("-").map(Number);
+    for (let guard = 0; guard < 600; guard++) {
+      const first = `${yy}-${String(mm).padStart(2, "0")}-01`; const z = zOf(first); if (z > zFar) break;
+      const [ax, ay] = proj(xl, floorY, z), [bx, by] = proj(xr, floorY, z);
+      ctx.globalAlpha = 0.35 + 0.65 * depthAlpha(z); ctx.strokeStyle = mm === 1 ? color("--fg3") : color("--line"); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      ctx.fillStyle = color("--fg2"); ctx.font = font(10, "600"); if (ay > 8 && ay < v.H - 4) ctx.fillText(mm === 1 ? `${yy}-01` : first.slice(0, 7), ax + 6, ay); ctx.font = font(10);
+      mm--; if (mm < 1) { mm = 12; yy--; }
+    }
+    // the day shown, in the corner
+    ctx.globalAlpha = 1; ctx.textBaseline = "top"; ctx.font = `600 11px ${color("--mono") || "monospace"}`; ctx.fillStyle = color("--accent2"); ctx.fillText(`${day}${PLAY.on ? " ▶" : ""}`, 10, 9);
+  }
+  function laneNames(day) { // by topic: along the near edge, the upper shelf's lane above the lower's
+    const { proj, floorY, K } = cam;
+    ctx.font = font(10.5); ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (const L of scene.lanes) {
+      if (!L.items.some((c) => layout.thereAt(c, day))) continue;
+      const [x, y, s] = proj(L.x, floorY, 0); const w = K() * s * 0.9 - 10; let txt = L.title; while (txt.length > 3 && ctx.measureText(txt).width > w) txt = txt.slice(0, -2); if (txt !== L.title) txt = txt.slice(0, -1) + "…";
+      ctx.fillStyle = color("--fg2"); ctx.globalAlpha = L.shelf ? 0.9 : 0.65; ctx.fillText(`${L.shelf ? "▴" : "▾"} ${txt}`, x, y + (L.shelf ? 5 : 19));
+    }
+  }
+  function topicNames(vis, boxes) { // as the graph: each at the centre of its cards on screen, on a pill — the cards recede, a name on the near plane would stand nowhere near them
+    const groups = new Map();
+    for (const { c } of vis) { if (c.ext) continue; const b = boxes.get(c); const g = groups.get(c.e.file) || groups.set(c.e.file, { x: 0, y: 0, n: 0 }).get(c.e.file); g.x += b.cx; g.y += b.cy; g.n++; }
+    ctx.font = font(10.5, "600"); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (const [file, g] of groups) { const t = (topicOf(file)?.title || file).replace(/`/g, "").slice(0, 34); const x = g.x / g.n, y = g.y / g.n; const w = ctx.measureText(t).width + 12; ctx.globalAlpha = 0.82; ctx.fillStyle = color("--bg"); ctx.fillRect(x - w / 2, y - 8, w, 16); ctx.globalAlpha = 0.9; ctx.fillStyle = color("--fg2"); ctx.fillText(t, x, y); }
+  }
+  function lines(day, boxes, lit) { // every See and Superseded by written by then; a lit thought's and the held or pointed-at card's stand out, the rest fade
+    const pairs = scene.G?.thought?.pairs || null;
+    for (const l of scene.links) {
+      if (!boxes.has(l.a) || !boxes.has(l.b) || !linkExistsAt(day, l.day)) continue;
+      const onLit = pairs && (pairs.has(`${l.a.nid}|${l.b.nid}`) || pairs.has(`${l.b.nid}|${l.a.nid}`));
+      const near = [v.hover, v.held].some((c) => c && (l.a === c || l.b === c));
+      const A = boxes.get(l.a), B = boxes.get(l.b);
+      ctx.globalAlpha = onLit || near ? 0.95 : lit.size ? 0.08 : 0.35 * Math.min(A.s, B.s) + 0.1;
+      ctx.strokeStyle = onLit || near ? color("--fg") : l.kind === "see" ? color("--accent2") : color("--fg3"); ctx.lineWidth = onLit || near ? 1.6 : 1; ctx.setLineDash(l.kind === "superseded" ? [5, 4] : []);
+      ctx.beginPath(); ctx.moveTo(A.cx, A.cy); ctx.lineTo(B.cx, B.cy); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  function card(c, z, b, day, lit) { // a card in its Type's colour and shape, filled by Evidence, edged by Status, with its foot and its title
+    const e = c.e; const st = statusAt(e, day, c.ext || hasRepo(e)) || e.status; const sup = st === "superseded";
+    const held = c === v.held, hovered = c === v.hover;
+    const isLit = lit.has(e.uuid || c.nid); const isStep = STEP_FOCUS && (e.uuid === STEP_FOCUS || c.nid === STEP_FOCUS);
+    const faded = (lit.size && !isLit && !hovered && !held) || (filterActive() && !matches(e));
+    const fresh = dayDiff(c.day, day) <= 3 && !PLAY.frac; // arrived within three days of the day shown: it glows
+    const a = held ? 1 : (faded ? 0.16 : 1) * cam.depthAlpha(z); // the held card at full strength, whatever its depth
+    const [fx, fy] = cam.proj(layout.posOf(c).x, cam.floorY, z); // the foot
+    ctx.globalAlpha = a * (held || hovered ? 0.9 : 0.35); ctx.strokeStyle = held || hovered ? color("--fg") : color("--fg3"); ctx.lineWidth = held || hovered ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(b.cx, b.y1); ctx.lineTo(fx, fy); ctx.stroke();
+    b.foot = [b.cx, b.y1, fx, fy];
+    const kind = typeKind(e); const fold = kind === "workaround" ? Math.min(b.h * 0.45, b.w * 0.3) : 0;
+    const evc = sup ? color("--fg3") : TYPE_COLORS[kind] || color("--muted"); // the type's colour; a superseded card goes grey
+    const outline = () => { ctx.beginPath(); if (fold) { ctx.moveTo(b.x0, b.y0); ctx.lineTo(b.x1 - fold, b.y0); ctx.lineTo(b.x1, b.y0 + fold); ctx.lineTo(b.x1, b.y1); ctx.lineTo(b.x0, b.y1); ctx.closePath(); } else ctx.rect(b.x0, b.y0, b.w, b.h); };
+    ctx.globalAlpha = a;
+    if (fresh || isLit || hovered || held || isStep) { ctx.shadowColor = held || isStep ? color("--accent2") : isLit ? color("--fg") : evc; ctx.shadowBlur = held ? 36 : isStep ? 22 : 14; }
+    // the body: the background, then a solid tint for confirmed, hatching for inferred, nothing for unknown
+    ctx.fillStyle = color("--bg2"); ctx.globalAlpha = a * 0.9; outline(); ctx.fill(); ctx.shadowBlur = 0;
+    if (e.evidence === "confirmed") { ctx.fillStyle = evc; ctx.globalAlpha = a * (sup ? 0.12 : 0.3); outline(); ctx.fill(); }
+    else if (e.evidence === "inferred") { ctx.fillStyle = hatch(evc) || evc; ctx.globalAlpha = a * (sup ? 0.3 : 0.6); outline(); ctx.fill(); }
+    ctx.globalAlpha = a;
+    const band = Math.max(2, Math.min(5, b.h * 0.11));
+    if (kind === "constraint") { ctx.fillStyle = evc; ctx.globalAlpha = a * 0.9; ctx.fillRect(b.x0, b.y0, b.w, band); ctx.globalAlpha = a; }
+    if (kind === "incident") { ctx.save(); ctx.beginPath(); ctx.rect(b.x0, b.y0, b.w, band); ctx.clip(); ctx.fillStyle = evc; ctx.globalAlpha = a * 0.9; const sw = Math.max(3, band * 1.6); for (let x = b.x0 - band; x < b.x1 + band; x += sw * 2) { ctx.beginPath(); ctx.moveTo(x, b.y0); ctx.lineTo(x + sw, b.y0); ctx.lineTo(x + sw - band, b.y0 + band); ctx.lineTo(x - band, b.y0 + band); ctx.closePath(); ctx.fill(); } ctx.restore(); ctx.globalAlpha = a; }
+    if (fold) { ctx.fillStyle = color("--bg"); ctx.beginPath(); ctx.moveTo(b.x1 - fold, b.y0); ctx.lineTo(b.x1 - fold, b.y0 + fold); ctx.lineTo(b.x1, b.y0 + fold); ctx.closePath(); ctx.fill(); ctx.strokeStyle = evc; ctx.lineWidth = 1; ctx.stroke(); }
+    ctx.lineWidth = held ? 2.6 : hovered ? 2 : 1.2; ctx.strokeStyle = held ? color("--fg") : evc; ctx.setLineDash(sup || kind === "workaround" ? [4, 3] : []); outline(); ctx.stroke(); ctx.setLineDash([]);
+    if (held) { ctx.strokeStyle = color("--accent2"); ctx.lineWidth = 2; ctx.globalAlpha = 0.9; ctx.strokeRect(b.x0 - 6, b.y0 - 6, b.w + 12, b.h + 12); ctx.globalAlpha = a; }
+    if (kind && b.w > 30) { ctx.fillStyle = evc; ctx.strokeStyle = evc; const gs = Math.max(7, Math.min(11, b.h * 0.3)); typeGlyph(ctx, kind, b.x1 - gs - 4 - (fold ? fold * 0.6 : 0), b.y1 - gs - 3, gs); }
+    if (e.evidence === "unknown" && b.w > 30) { ctx.fillStyle = color("--unknown"); ctx.font = font(Math.max(8, Math.min(12, b.h * 0.32)), "700"); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText("?", b.x0 + 5, b.y1 - 2); }
+    if (st === "open" || st === "needs-review" || st === "pending-confirmation") { ctx.strokeStyle = color(`--${st}`); ctx.lineWidth = 1.2; ctx.strokeRect(b.x0 - 3, b.y0 - 3, b.w + 6, b.h + 6); }
+    if (isStep) { ctx.strokeStyle = color("--accent2"); ctx.lineWidth = 2.5; ctx.strokeRect(b.x0 - 5, b.y0 - 5, b.w + 10, b.h + 10); }
+    // the title on every card with room for a word, the type never below reading size: a card far back shows its first words
+    const fs = Math.max(9.5, Math.min(12, 11 * b.s * v.zoom)); const top = kind === "constraint" || kind === "incident" ? band + 1 : 0;
+    if (b.w > 26 && b.h - 6 - top >= fs) {
+      ctx.font = font(fs); ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillStyle = sup ? color("--fg3") : color("--fg");
+      const words = e.title.replace(/`/g, "").split(" "); const rows = []; let cur = "";
+      for (const w of words) { const t = cur ? `${cur} ${w}` : w; if (ctx.measureText(t).width > b.w - 10 && cur) { rows.push(cur); cur = w; } else cur = t; if (rows.length >= 3) break; }
+      if (rows.length < 3 && cur) rows.push(cur);
+      const lh = fs * 1.2; const maxRows = Math.max(1, Math.floor((b.h - 6 - top) / lh));
+      rows.slice(0, maxRows).forEach((t, i) => { let txt = t; if (i === maxRows - 1 && (rows.length > maxRows || words.length > rows.join(" ").split(" ").length)) txt += "…"; const room = b.w - 10 - (i === 0 && fold ? fold : 0); while (txt.length > 2 && ctx.measureText(txt).width > room) txt = txt.slice(0, -2) + "…"; ctx.fillText(txt, b.x0 + 5, b.y0 + 4 + top + i * lh); });
+    }
+  }
+  // one frame; true while the layout wants another
+  function draw() {
+    rects.length = 0; ctx.clearRect(0, 0, v.W, v.H);
+    const day = cam.now(); const lit = litIds(); const byGraph = cam.asGraph();
+    const vis = scene.cards.filter(layout.shown).map((c) => ({ c, z: cam.zOf(c.day) + c.dz })).sort((a, b) => b.z - a.z); // far ones first
+    if (byGraph) cam.measureGraph(vis.map((i) => i.c));
+    const half = cam.planeHalf(); const xl = -half - (byGraph ? 0 : 0.1), xr = half + (byGraph ? 0 : 0.1);
+    floor(day, xl, xr, cam.zFar());
+    if (!byGraph) laneNames(day);
+    const cardScale = byGraph ? 0.66 : 1; // as the graph the cards stand closer: smaller, the tip tells the rest
+    const boxes = new Map();
+    for (const { c, z } of vis) { const q = layout.posOf(c); const [x, y, s] = cam.proj(q.x, q.y, z); const grow = c === v.held ? 1.12 : 1; const w = cam.K() * s * 0.78 * cardScale * grow, h = Math.min(cam.KY(), cam.K() * 1.5) * s * 0.36 * cardScale * grow; boxes.set(c, { x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2, cx: x, cy: y, s, w, h }); }
+    const busy = layout.settle(vis.map((i) => ({ ...i, box: boxes.get(i.c) })));
+    lines(day, boxes, lit);
+    for (const { c, z } of vis) { const b = boxes.get(c); card(c, z, b, day, lit); rects.push({ ...b, c }); }
+    if (byGraph) topicNames(vis, boxes);
+    ctx.globalAlpha = 1;
+    return busy;
+  }
+  // the card under a point: its box, or its foot
+  const nearFoot = (r, px, py) => { const [ax, ay, bx, by] = r.foot; const dx = bx - ax, dy = by - ay; const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1))); return Math.hypot(px - (ax + t * dx), py - (ay + t * dy)) <= 4; };
+  const pick = (px, py) => { for (let i = rects.length - 1; i >= 0; i--) { const r = rects[i]; if (px >= r.x0 && px <= r.x1 && py >= r.y0 && py <= r.y1) return r.c; } for (let i = rects.length - 1; i >= 0; i--) if (nearFoot(rects[i], px, py)) return rects[i].c; return null; };
+  return { draw, pick };
+}
+// The input: the pointer and the fingers. A card under the pointer is pointed at (its node lit in the graph, a tip
+// beside it); a click holds it (the card beside the bars shows it) and a click on the floor lets go; a drag looks
+// around; the wheel scrubs the days, with ctrl it zooms; a double-click resets the view. On touch: one finger looks
+// around, two pinch, a tap holds.
+function stageInput(canvas, st, v, o) {
+  const { pick, wake, openCard, closeCard, showTip, hideTip } = st;
+  let drag = null, moved = false, pinch = null;
+  const pos = (ev) => { const r = canvas.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
+  canvas.onmousemove = (ev) => {
+    const [px, py] = pos(ev);
+    if (drag) { v.panX = drag.panX + (px - drag.px); v.panY = drag.panY + (py - drag.py); if (Math.hypot(px - drag.px, py - drag.py) > 4) moved = true; hideTip(); wake(); return; }
+    const c = pick(px, py);
+    if (c !== v.hover) { v.hover = c; focusStep(c?.e.uuid || c?.e.id || null); wake(); }
+    canvas.style.cursor = c ? "pointer" : "grab";
+    if (c) showTip(c, px, py); else hideTip();
+  };
+  canvas.onmouseleave = () => { if (v.hover) { v.hover = null; focusStep(null); wake(); } hideTip(); };
+  canvas.onmousedown = (ev) => { if (ev.button !== 0) return; const [px, py] = pos(ev); drag = { px, py, panX: v.panX, panY: v.panY }; moved = false; canvas.classList.add("grabbing"); };
+  const onUp = (ev) => { if (!drag) return; const [px, py] = pos(ev); drag = null; canvas.classList.remove("grabbing"); if (moved) return; const c = pick(px, py); if (c) openCard(c); else if (ev.target === canvas && v.held) closeCard(); };
+  window.addEventListener("mouseup", onUp);
+  canvas.onwheel = (ev) => {
+    ev.preventDefault();
+    if (ev.ctrlKey || ev.metaKey) { v.zoom = Math.min(4, Math.max(0.5, v.zoom * Math.exp(-ev.deltaY * 0.0015))); wake(); return; }
+    const d = Math.sign(ev.deltaY || ev.deltaX) * (ev.shiftKey ? 7 : 1); if (!d) return;
+    o.play(false); o.setDay(addDays(CLOCK || o.span.to, d)); hideTip();
+  };
+  canvas.ondblclick = () => { v.zoom = 1; v.panX = 0; v.panY = 0; wake(); };
+  const tpos = (t) => { const r = canvas.getBoundingClientRect(); return [t.clientX - r.left, t.clientY - r.top]; };
+  const tdist = (ts) => Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY);
+  canvas.addEventListener("touchstart", (ev) => { if (ev.touches.length === 2) { pinch = { d: tdist(ev.touches) || 1, zoom: v.zoom }; drag = null; return; } const [px, py] = tpos(ev.touches[0]); drag = { px, py, panX: v.panX, panY: v.panY }; moved = false; }, { passive: true });
+  canvas.addEventListener("touchmove", (ev) => { if (pinch && ev.touches.length === 2) { v.zoom = Math.min(4, Math.max(0.5, pinch.zoom * (tdist(ev.touches) / pinch.d))); wake(); ev.preventDefault(); return; } if (!drag || !ev.touches.length) return; const [px, py] = tpos(ev.touches[0]); v.panX = drag.panX + (px - drag.px); v.panY = drag.panY + (py - drag.py); if (Math.hypot(px - drag.px, py - drag.py) > 6) moved = true; wake(); ev.preventDefault(); }, { passive: false });
+  canvas.addEventListener("touchend", (ev) => { if (pinch) { if (!ev.touches.length) pinch = null; return; } if (!drag) return; const d = drag; drag = null; if (moved) return; const c = pick(d.px, d.py); if (c) openCard(c); else if (v.held) closeCard(); });
+  return { release: () => window.removeEventListener("mouseup", onUp) };
+}
+// The stage on the page: the scene from the graph, the camera, the layout, the painter and the input wired to one
+// view state, redrawn on demand (wake) — never idle-looping — and the API the rest of the page uses (STAGE).
+function runStage(canvas, o) {
+  const ctx = canvas.getContext("2d"); if (!ctx) return;
+  const v = { W: 0, H: 0, zoom: 1, panX: 0, panY: 0, hover: null, held: null, raf: null }; // the view: the box, the camera's zoom and pan, what is pointed at and held
+  const scene = stageScene(o.graph, o.span);
+  canvas.dataset.lanes = scene.lanes.map((L) => L.title).join(" | "); // what the stage holds, readable from outside (tests)
+  const cam = stageCamera(scene, v, o);
+  const layout = stageLayout(scene, cam, v);
+  const painter = stagePainter(ctx, scene, cam, layout, v, o);
+  const dpr = window.devicePixelRatio || 1;
+  const resize = () => { const r = canvas.getBoundingClientRect(); v.W = r.width; v.H = r.height; canvas.width = v.W * dpr; canvas.height = v.H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+  const frame = () => { v.raf = null; if (painter.draw()) wake(); };
+  const wake = () => { if (!v.raf && canvas.isConnected) v.raf = requestAnimationFrame(frame); };
+  // the tip beside the pointer, inside the box
+  const place = (box, px, py) => { const r = canvas.getBoundingClientRect(); const w = box.offsetWidth || 280, h = box.offsetHeight || 80; box.style.left = `${px + 14 + w > r.width - 8 ? Math.max(8, px - 14 - w) : px + 14}px`; box.style.top = `${py + 14 + h > r.height - 8 ? Math.max(8, py - 14 - h) : py + 14}px`; };
+  const showTip = (c, px, py) => { const e = c.e; setKids(o.tip, el("b", {}, e.title.replace(/`/g, "")), el("div", { class: "note" }, `${c.lane?.title || e.file} · ${c.day}${e.git?.created?.author ? " · " + e.git.created.author : ""}`), el("div", { class: "pills" }, ...typePills(e.type), statusPill(statusAt(e, cam.now(), c.ext || hasRepo(e)) || e.status), evPill(e.evidence))); o.tip.hidden = false; place(o.tip, px, py); };
+  const hideTip = () => { o.tip.hidden = true; };
+  const openCard = (c) => { v.held = c; o.open(c.e, c); wake(); };
+  const closeCard = () => { if (!v.held) return; v.held = null; o.close(); wake(); };
+  const input = stageInput(canvas, { pick: painter.pick, wake, openCard, closeCard, showTip, hideTip }, v, o);
+  STAGE = { wake, graph: scene.G, relax: layout.relax, follows: cam.asGraph, close: closeCard,
+    // reset: let go of the held card and the held thought, every card alike again, the view as it opened
+    reset: () => { THOUGHT_PIN = null; renderThoughts(scene.G); focusStep(null); closeCard(); v.zoom = 1; v.panX = 0; v.panY = 0; v.hover = null; hideTip(); cam.fitHeight(); wake(); },
+    // pick: an entry chosen elsewhere on the page (a thought's step in the pane) is held like a clicked card, and the day moves to its, so it arrives at the front
+    pick: (e) => { v.held = (e.uuid && scene.byId[e.uuid]) || scene.byId[e.id] || null; o.play(false); o.open(e, v.held); o.setDay(createdOn(e) || o.span.to); wake(); } };
+  resize();
+  const ro = new ResizeObserver(() => { if (!canvas.isConnected) { ro.disconnect(); input.release(); if (STAGE?.wake === wake) STAGE = null; return; } resize(); cam.fitHeight(); wake(); }); ro.observe(canvas);
+  cam.fitHeight(); wake();
 }
 
 // ---------------------------------------------------------------- search
@@ -3717,6 +4521,7 @@ function render() {
   const main = $("#main"); main.replaceChildren();
   const route = location.hash.slice(1) || "overview";
   selected = null;
+  if (!route.startsWith("timeline")) { CLOCK = null; CLOCK_N = -1; stopPlay(); STAGE = null; } // the clock lives in the timeline; everywhere else the page shows today
   GLOBE.view = route === "globe"; $("#app").classList.toggle("globe", GLOBE.view); // the globe: the graph alone, full width
   if (GLOBE.view) setTimeout(globeIntro, 0); else GLOBE_INTRO_SHOWN = false; // explained on the way in, once per visit
   $("#details").dataset.pane = "other";
@@ -3725,7 +4530,7 @@ function render() {
   else if (route === "graph/family") { setScope("family", { rerender: false }); setFamilyNeighbours(true); setFamilyEntries(true); history.replaceState(null, "", "#graph"); viewGraph(main); renderDetailsDefault(); } // an old link to the family graph: the family whole, in the graph and in the scope
   else if (route === "graph") { viewGraph(main); renderDetailsDefault(); }
   else if (route === "globe") { viewGraph(main); renderDetailsDefault(); }
-  else if (route === "timeline") { viewTimeline(main); renderDetailsDefault(); }
+  else if (route === "timeline" || route.startsWith("timeline/")) { viewTimeline(main, route.slice(9) || null); renderDetailsDefault(); }
   else if (route === "authors") { viewAuthors(main); renderDetailsDefault(); }
   else if (route === "queues") { viewQueues(main); renderDetailsDefault(); }
   else if (route === "findings") { viewFindings(main); renderDetailsDefault(); }
@@ -3865,8 +4670,9 @@ function connectLive() {
 // details, the graph view's legend).
 const SIDE_WIDTHS = ["1", "2", "3", "half"];
 const readSide = (key, fallback = "2") => { try { const v = localStorage.getItem(key); return SIDE_WIDTHS.includes(v) ? v : fallback; } catch { return fallback; } };
-const SIDE = { graph: readSide("ktw-side-graph", readSide("ktw-side")), other: readSide("ktw-side-other") };
-const paneKind = () => ($("#details")?.dataset.pane === "graph" ? "graph" : "other");
+const SIDE = { graph: readSide("ktw-side-graph", readSide("ktw-side")), other: readSide("ktw-side-other"), timeline: readSide("ktw-side-timeline", "1") };
+// three kinds of pane, each with its own remembered width: the graph beside a page, the graph beside the timeline (narrower by default — the stage wants the room), anything else
+const paneKind = () => ($("#details")?.dataset.pane === "graph" ? (location.hash.startsWith("#timeline") ? "timeline" : "graph") : "other");
 const sideLabel = (v) => (v === "half" ? "½" : `${v}×`);
 function applySide() {
   const v = SIDE[paneKind()];

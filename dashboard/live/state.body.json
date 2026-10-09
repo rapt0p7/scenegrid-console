@@ -1,6 +1,6 @@
 {
  "state-json": 2,
- "generated": "2026-10-08T12:08:05Z",
+ "generated": "2026-10-09T15:57:09Z",
  "bodies": {
   "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture-codec-padding": {
    "text": "We wrap at least two `AudioBufferSourceNode`s in a \"flip-flop\" scheduling pattern (overlapping lifecycles, NOT signal crossfade) using `AudioBufferSourceNode.start(when, offset, duration)`.\n\n**Reason:** Calling `start` with explicit `offset` and `duration` bypasses browser-injected decoder padding (priming samples) making gapless playback possible. However, this doesn't fix MDCT windowing ringing, which strictly mandates that the asset pipeline slices chunks from a single continuously-encoded bitstream.\n\n**Rejected alternative:** Using a standard HTML5 `<audio>` element. Rejected because the streaming pipeline must fit into the existing Web Audio DSP graph natively so that all routing, buses, VCAs, and limiters continue to work exactly as they do for fully-loaded tracks.",
