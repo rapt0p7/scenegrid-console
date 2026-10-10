@@ -384,7 +384,7 @@ describe('AudioEventOrchestrator (State Machine & Telemetry)', () => {
     });
 
     it('should initialize telemetry pool objects with complete initiator defaults and dispatch exact blocked telemetry details', () => {
-        const pooledObject = (dispatcher as any).telemetryPool.getNext();
+        const pooledObject = (dispatcher as any).telemetryLogger.telemetryPool.getNext();
         expect(pooledObject.initiator).toEqual({
             type: 'EVENT',
             method: undefined,
