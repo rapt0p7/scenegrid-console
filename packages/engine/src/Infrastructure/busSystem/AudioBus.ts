@@ -21,6 +21,13 @@ import type { BusId, Milliseconds, Seconds } from '@scene-grid/shared';
 import { safeDisconnect } from '@infrastructure/utils/safeDisconnect.js';
 import { evaluateRTPCCurve, isDefined, isAbsent, clamp, typedEntries, DeepReadonly } from '@scene-grid/shared';
 
+type SendTargetState = {
+    logical: number | null;
+    rtpc: number;
+    duration: Milliseconds;
+    targetNode?: AudioNodeLike;
+};
+
 export default class AudioBus implements IAudioBus {
     public logicalTargetGain: number = 1;
 
@@ -64,10 +71,7 @@ export default class AudioBus implements IAudioBus {
         gain: { logical: 1, rtpc: 1, duration: 0 as Milliseconds },
         filterFrequency: { logical: 20_000, rtpc: 0, duration: 0 as Milliseconds },
         pan: { logical: 0, rtpc: 0, duration: 0 as Milliseconds },
-        sends: new Map<
-            BusId,
-            { logical: number | null; rtpc: number; duration: Milliseconds; targetNode?: AudioNodeLike }
-        >()
+        sends: new Map<BusId, SendTargetState>()
     };
 
     constructor({
@@ -302,73 +306,99 @@ export default class AudioBus implements IAudioBus {
     }
 
     private recalculateAndApply(): void {
+        this.applyGainTarget();
+        this.applyFilterTarget();
+        this.applyPanTarget();
+        this.applySendsTargets();
+    }
+
+    private applyGainTarget(): void {
         const finalGain = clamp(this.targetParams.gain.logical * this.targetParams.gain.rtpc, 0, 4);
         this.logicalTargetGain = finalGain;
         this.automation.ramp(this.#inputGainNode.gain, finalGain, this.targetParams.gain.duration, 'linear');
         this.targetParams.gain.duration = 0 as Milliseconds;
+    }
 
-        if (this.isBiquadFilterNode(this.filterNode)) {
-            const finalFreq = clamp(
-                this.targetParams.filterFrequency.logical + this.targetParams.filterFrequency.rtpc,
-                20,
-                20_000
-            );
-            this.automation.ramp(
-                this.filterNode.frequency,
-                finalFreq,
-                this.targetParams.filterFrequency.duration,
-                'exponential'
-            );
-            this.targetParams.filterFrequency.duration = 0 as Milliseconds;
-        }
+    private applyFilterTarget(): void {
+        if (!this.isBiquadFilterNode(this.filterNode)) return;
 
-        if (isDefined(this.pannerNode)) {
-            const finalPan = clamp(this.targetParams.pan.logical + this.targetParams.pan.rtpc, -1, 1);
-            this.automation.ramp(this.pannerNode.pan, finalPan, this.targetParams.pan.duration, 'linear');
-            this.targetParams.pan.duration = 0 as Milliseconds;
-        }
+        const finalFreq = clamp(
+            this.targetParams.filterFrequency.logical + this.targetParams.filterFrequency.rtpc,
+            20,
+            20_000
+        );
+        this.automation.ramp(
+            this.filterNode.frequency,
+            finalFreq,
+            this.targetParams.filterFrequency.duration,
+            'exponential'
+        );
+        this.targetParams.filterFrequency.duration = 0 as Milliseconds;
+    }
 
+    private applyPanTarget(): void {
+        if (isAbsent(this.pannerNode)) return;
+
+        const finalPan = clamp(this.targetParams.pan.logical + this.targetParams.pan.rtpc, -1, 1);
+        this.automation.ramp(this.pannerNode.pan, finalPan, this.targetParams.pan.duration, 'linear');
+        this.targetParams.pan.duration = 0 as Milliseconds;
+    }
+
+    private applySendsTargets(): void {
         for (const [targetBusId, state] of this.targetParams.sends.entries()) {
-            const logicalValue = state.logical;
-            const isRemoving = logicalValue === null;
+            this.applySendTarget(targetBusId, state);
+        }
+    }
 
-            let sendGainNode = this.sendGains.get(targetBusId);
+    private applySendTarget(targetBusId: BusId, state: SendTargetState): void {
+        const isRemoving = state.logical === null;
+        const sendGainNode = this.sendGains.get(targetBusId);
 
-            if (isRemoving) {
-                if (isDefined(sendGainNode)) {
-                    this.automation.ramp(sendGainNode.gain, 0, state.duration, 'linear');
+        if (isRemoving) {
+            this.removeSendTarget(targetBusId, state, sendGainNode);
+        } else {
+            this.updateSendTarget(targetBusId, state, sendGainNode);
+        }
+        state.duration = 0 as Milliseconds;
+    }
 
-                    setTimeout(() => {
-                        const currentState = this.targetParams.sends.get(targetBusId);
-                        if (isDefined(currentState) && currentState.logical !== null) {
-                            return;
-                        }
+    private removeSendTarget(targetBusId: BusId, state: SendTargetState, sendGainNode?: GainNodeLike): void {
+        if (isAbsent(sendGainNode)) {
+            this.targetParams.sends.delete(targetBusId);
+            return;
+        }
 
-                        safeDisconnect(this.#postFilterGain, sendGainNode);
-                        if (isDefined(state.targetNode)) safeDisconnect(sendGainNode, state.targetNode);
-                        this.sendGains.delete(targetBusId);
+        this.automation.ramp(sendGainNode.gain, 0, state.duration, 'linear');
 
-                        this.targetParams.sends.delete(targetBusId);
-                    }, state.duration + 50);
-                } else {
-                    this.targetParams.sends.delete(targetBusId);
-                }
-            } else {
-                const finalSendGain = clamp(logicalValue * state.rtpc, 0, 4);
-
-                if (isAbsent(sendGainNode) && isDefined(state.targetNode)) {
-                    sendGainNode = this.context.createGain();
-                    sendGainNode.gain.value = 0;
-                    this.automation.set(sendGainNode.gain, 0);
-                    this.#postFilterGain.connect(sendGainNode);
-                    sendGainNode.connect(state.targetNode);
-                    this.sendGains.set(targetBusId, sendGainNode);
-                }
-                if (isDefined(sendGainNode)) {
-                    this.automation.ramp(sendGainNode.gain, finalSendGain, state.duration, 'linear');
-                }
+        setTimeout(() => {
+            const currentState = this.targetParams.sends.get(targetBusId);
+            if (isDefined(currentState) && currentState.logical !== null) {
+                return;
             }
-            state.duration = 0 as Milliseconds;
+
+            safeDisconnect(this.#postFilterGain, sendGainNode);
+            if (isDefined(state.targetNode)) safeDisconnect(sendGainNode, state.targetNode);
+            this.sendGains.delete(targetBusId);
+
+            this.targetParams.sends.delete(targetBusId);
+        }, state.duration + 50);
+    }
+
+    private updateSendTarget(targetBusId: BusId, state: SendTargetState, existingNode?: GainNodeLike): void {
+        const finalSendGain = clamp((state.logical ?? 0) * state.rtpc, 0, 4);
+        let sendGainNode = existingNode;
+
+        if (isAbsent(sendGainNode) && isDefined(state.targetNode)) {
+            sendGainNode = this.context.createGain();
+            sendGainNode.gain.value = 0;
+            this.automation.set(sendGainNode.gain, 0);
+            this.#postFilterGain.connect(sendGainNode);
+            sendGainNode.connect(state.targetNode);
+            this.sendGains.set(targetBusId, sendGainNode);
+        }
+
+        if (isDefined(sendGainNode)) {
+            this.automation.ramp(sendGainNode.gain, finalSendGain, state.duration, 'linear');
         }
     }
 
@@ -377,38 +407,47 @@ export default class AudioBus implements IAudioBus {
         safeDisconnect(this.#preFilterGain);
 
         const newFilter = this.swapState.newFilterConfigOrNode;
-
-        if (isDefined(newFilter)) {
-            this.filterNode = this.isAudioNode(newFilter) ? newFilter : this.createFilter(newFilter);
-
-            if (isDefined(this.filterNode)) {
-                this.connectFilter();
-
-                if (this.isAudioNode(newFilter)) {
-                    this.currentFilterConfig = this.isBiquadFilterNode(this.filterNode)
-                        ? {
-                              type: this.filterNode.type,
-                              frequency: this.filterNode.frequency?.value,
-                              Q: this.filterNode.Q?.value
-                          }
-                        : { type: 'reverb' };
-                } else {
-                    this.currentFilterConfig = newFilter;
-                }
-            } else {
-                this.#preFilterGain.connect(this.#postFilterGain);
-                this.currentFilterConfig = undefined;
-            }
-        } else {
-            this.filterNode = null;
-            this.#preFilterGain.connect(this.#postFilterGain);
-            this.currentFilterConfig = undefined;
-        }
+        this.applyNewFilter(newFilter);
 
         this.automation.ramp(this.#postFilterGain.gain, 1, this.swapState.duration, 'linear');
 
         this.swapState.active = false;
         this.swapState.newFilterConfigOrNode = null;
+    }
+
+    private applyNewFilter(newFilter: BiquadFilterNodeLike | IFilter | null): void {
+        if (isAbsent(newFilter)) {
+            this.clearFilterNode();
+            return;
+        }
+
+        this.filterNode = this.isAudioNode(newFilter) ? newFilter : this.createFilter(newFilter);
+
+        if (isAbsent(this.filterNode)) {
+            this.clearFilterNode();
+            return;
+        }
+
+        this.connectFilter();
+
+        if (!this.isAudioNode(newFilter)) {
+            this.currentFilterConfig = newFilter;
+            return;
+        }
+
+        this.currentFilterConfig = this.isBiquadFilterNode(this.filterNode)
+            ? {
+                  type: this.filterNode.type,
+                  frequency: this.filterNode.frequency?.value,
+                  Q: this.filterNode.Q?.value
+              }
+            : { type: 'reverb' };
+    }
+
+    private clearFilterNode(): void {
+        this.filterNode = null;
+        this.#preFilterGain.connect(this.#postFilterGain);
+        this.currentFilterConfig = undefined;
     }
 
     private coldStart(): void {
