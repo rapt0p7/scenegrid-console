@@ -105,9 +105,7 @@ describe('AudioDebugger', () => {
     it('should initialize custom visualizers with exact widths', async () => {
         const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
 
-        void debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
-
-        await new Promise(r => setTimeout(r, 0));
+        await debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
 
         expect(createFrequencyCurveWithRMS).toHaveBeenCalledTimes(2);
         expect(createMeters).toHaveBeenCalledTimes(2);
@@ -132,9 +130,7 @@ describe('AudioDebugger', () => {
         wrapperElement.innerHTML = '<span>Old Content</span>';
 
         const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
-        void debuggerInstance.init({ workletLoader: mockWorkletLoader });
-
-        await new Promise(r => setTimeout(r, 0));
+        await debuggerInstance.init({ workletLoader: mockWorkletLoader });
 
         const columns = wrapperElement.querySelectorAll('.bus-column');
         expect(columns.length).toBe(2);
@@ -149,9 +145,7 @@ describe('AudioDebugger', () => {
 
         const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
 
-        void debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
-
-        await new Promise(r => setTimeout(r, 0));
+        await debuggerInstance.init({ wrapperSelector: '#wrapper', workletLoader: mockWorkletLoader });
 
         const columns = wrapperElement.querySelectorAll('.bus-column');
         expect(columns.length).toBe(1);
@@ -159,5 +153,16 @@ describe('AudioDebugger', () => {
 
         expect(createFrequencyCurveWithRMS).toHaveBeenCalledTimes(1);
         expect(createMeters).toHaveBeenCalledTimes(1);
+    });
+
+    it('should skip null or falsy items in uiColumns loop', async () => {
+        const spy = vi.spyOn(Array.prototype, 'filter').mockImplementationOnce(() => [null] as any);
+        const debuggerInstance = new AudioDebugger(mockBusSystem, mockMasterNode);
+
+        await debuggerInstance.init({ workletLoader: mockWorkletLoader });
+
+        expect(createFrequencyCurveWithRMS).not.toHaveBeenCalled();
+        expect(createMeters).not.toHaveBeenCalled();
+        spy.mockRestore();
     });
 });

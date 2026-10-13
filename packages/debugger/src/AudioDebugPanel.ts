@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle */
 // oxlint-disable max-lines-per-function, typescript/prefer-readonly-parameter-types, no-underscore-dangle
 // noinspection D
 
@@ -31,6 +31,8 @@ interface IDebuggableEngine {
         rtpcManager: any;
         router: any;
         config: any;
+        poolManager?: any;
+        soundController?: any;
     };
 }
 
@@ -119,7 +121,11 @@ export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
     const fVoice = fProfile.addFolder({ title: 'VOICE MONITOR', expanded: true });
 
     const voiceContainer = fVoice.element.querySelector('.tp-fldv_c') ?? fVoice.element;
-    const globalVoiceLimit = audio._debug?.config?.globalVoiceLimit ?? 32;
+    const globalVoiceLimit =
+        audio._debug?.config?.globalVoiceLimit ??
+        audio._debug?.poolManager?.globalVoiceLimit ??
+        audio._debug?.router?.soundController?.debugPool?.globalVoiceLimit ??
+        32;
 
     const voiceMeter = new VoiceMeterWidget(voiceContainer as HTMLElement, globalVoiceLimit);
     const voiceList = new VoiceListWidget(voiceContainer as HTMLElement);

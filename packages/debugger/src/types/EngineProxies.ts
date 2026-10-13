@@ -36,3 +36,24 @@ export interface IAudioBusProxy {
 export interface IAudioBusSystemProxy {
     getAllBuses(): Map<string, IAudioBusProxy>;
 }
+
+export interface ILogicalVoiceProxy {
+    playbackId?: number | string;
+    soundId?: string;
+    logicalState?: string;
+    physicalInstance?: ISoundInstanceProxy | any;
+    isVirtualNode?: boolean;
+    virtualReason?: string;
+}
+
+export interface ISoundControllerProxy {
+    activeVoices?: Map<any, ILogicalVoiceProxy>;
+    getActivePlaybacks?(): Array<number | string>;
+    getSoundId?(id: any): string | undefined;
+    getPlaybackState?(id: any): string;
+    isGhostVoice?(id: any): boolean;
+    debugPool?: {
+        globalVoiceLimit?: number;
+        getActiveVoices?(): ReadonlySet<ISoundInstanceProxy> | ISoundInstanceProxy[];
+    };
+}

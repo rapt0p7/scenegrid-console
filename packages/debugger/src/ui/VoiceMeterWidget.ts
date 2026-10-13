@@ -36,15 +36,18 @@ export class VoiceMeterWidget {
     }
 
     public update(hwActive: number, virtualCulled: number): void {
-        const total = hwActive + virtualCulled;
+        const safeHw = Number.isFinite(hwActive) ? Math.max(0, hwActive) : 0;
+        const safeVirtual = Number.isFinite(virtualCulled) ? Math.max(0, virtualCulled) : 0;
+        const total = safeHw + safeVirtual;
 
-        const hwRatio = Math.min(hwActive / this.maxVoices, 1);
-        const totalRatio = Math.min(total / this.maxVoices, 1);
+        const max = Math.max(1, this.maxVoices || 32);
+        const hwRatio = Math.min(safeHw / max, 1);
+        const totalRatio = Math.min(total / max, 1);
 
         this.hwBar.style.clipPath = `inset(0 ${100 - hwRatio * 100}% 0 0)`;
         this.virtualBar.style.clipPath = `inset(0 ${100 - totalRatio * 100}% 0 0)`;
 
-        this.label.textContent = `${total} / ${this.maxVoices} (HW: ${hwActive})`;
+        this.label.textContent = `${total} / ${this.maxVoices} (HW: ${safeHw})`;
     }
 
     private injectStyles(): void {
