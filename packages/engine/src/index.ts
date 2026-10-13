@@ -10,5 +10,6 @@ export type { IRTPCManifest, IGlobalRTPCParameterConfig } from './Kernel/RTPC/Po
 export type { IEventMap } from './Domain/Configuration/Ports/IEventConfig.js';
 export type { IBankManifest } from './Domain/Configuration/Ports/IBankConfig.js';
 export type { IMusicFSMConfig } from './Domain/Configuration/Ports/IMusicFSMConfig.js';
+export type { IAudioBufferLoaderOptions } from './Domain/Configuration/Ports/IAudioBufferLoaderOptions.js';
 export { WorkletLoader } from './Infrastructure/index.js';
 export { default as ConsistencyChecker } from './Domain/Validation/ConsistencyChecker.js';

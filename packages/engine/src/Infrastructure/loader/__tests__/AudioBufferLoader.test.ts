@@ -274,6 +274,19 @@ describe('AudioBufferLoader', () => {
                 fakeError
             );
         });
+
+        it('should handle non-Error throw gracefully during load/decode', async () => {
+            mockContextManager.context.decodeAudioData.mockRejectedValueOnce('raw string error');
+            const result = await loader.load({
+                url: 'string-error.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(result.ok).toBe(false);
+            if (!result.ok) {
+                expect(result.error.message).toBe('raw string error');
+            }
+        });
     });
 
     describe('AudioBufferLoader - Additional Coverage & Mutation Killers', () => {
@@ -824,6 +837,36 @@ describe('AudioBufferLoader', () => {
                     delete proto.undefined;
                 }
             });
+
+            it('should execute continue when candidate extension evaluates to undefined (Line 348)', async () => {
+                const emptySplitCandidate = { split: () => [] };
+                const resolved = (loader as any).resolveFirstSupportedUrl([emptySplitCandidate, 'valid.mp3']);
+                expect(resolved).toBe('valid.mp3');
+
+                const originalSplit = String.prototype.split;
+                try {
+                    // oxlint-disable-next-line no-extend-native
+                    String.prototype.split = function (...args: any[]) {
+                        if (this.toString() === 'mock-empty-split') {
+                            return [];
+                        }
+                        return originalSplit.apply(this, args as any);
+                    };
+
+                    const result = (loader as any).resolveFirstSupportedUrl(['mock-empty-split', 'valid.mp3']);
+                    expect(result).toBe('valid.mp3');
+
+                    await loader.load({
+                        url: ['mock-empty-split', 'valid.mp3'],
+                        priority: 'low',
+                        expectedSizeMb: 1
+                    });
+                    expect(mockFetch).toHaveBeenCalledWith('valid.mp3');
+                } finally {
+                    // oxlint-disable-next-line no-extend-native
+                    String.prototype.split = originalSplit;
+                }
+            });
         });
 
         describe('loadBatch Promise Settlement (Lines 136, 139, 140)', () => {
@@ -937,6 +980,238 @@ describe('AudioBufferLoader', () => {
                     delete proto.undefined;
                 }
             });
+        });
+    });
+
+    describe('SSRF Protection (CWE-918)', () => {
+        it('should block cloud metadata IP endpoints (AWS, GCP, Azure)', async () => {
+            const result1 = await loader.load({
+                url: 'http://169.254.169.254/latest/meta-data',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(result1.ok).toBe(false);
+            if (!result1.ok) {
+                expect(result1.error.message).toContain('Blocked request to private or internal network resource');
+            }
+
+            const result2 = await loader.load({
+                url: 'http://metadata.google.internal/computeMetadata/v1/',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(result2.ok).toBe(false);
+
+            const result3 = await loader.load({
+                url: 'http://instance-data/latest/meta-data',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(result3.ok).toBe(false);
+
+            expect(mockFetch).not.toHaveBeenCalled();
+        });
+
+        it('should block loopback addresses by default', async () => {
+            const localhostRes = await loader.load({
+                url: 'http://localhost:5000/users',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(localhostRes.ok).toBe(false);
+
+            const ip127Res = await loader.load({
+                url: 'http://127.0.0.1:8080/audio.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(ip127Res.ok).toBe(false);
+
+            const ipv6LoopbackRes = await loader.load({
+                url: 'http://[::1]:8080/audio.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(ipv6LoopbackRes.ok).toBe(false);
+
+            expect(mockFetch).not.toHaveBeenCalled();
+        });
+
+        it('should allow loopback when allowLoopback option is enabled', async () => {
+            const devLoader = new AudioBufferLoader(mockContextManager, 6, 1024, 50, undefined, {
+                allowLoopback: true
+            });
+
+            const result = await devLoader.load({
+                url: 'http://localhost:3000/assets/sound.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+
+            expect(result.ok).toBe(true);
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/assets/sound.mp3');
+        });
+
+        it('should block private RFC 1918 and carrier-grade NAT IPv4 ranges', async () => {
+            const privateIps = [
+                'http://10.0.0.1/secret.wav',
+                'http://172.16.0.1/secret.wav',
+                'http://172.31.255.255/secret.wav',
+                'http://192.168.1.1/secret.wav',
+                'http://100.64.0.1/secret.wav'
+            ];
+
+            for (const ipUrl of privateIps) {
+                // oxlint-disable-next-line no-await-in-loop
+                const res = await loader.load({ url: ipUrl, priority: 'low', expectedSizeMb: 1 });
+                expect(res.ok).toBe(false);
+            }
+            expect(mockFetch).not.toHaveBeenCalled();
+        });
+
+        it('should block dangerous non-HTTP/HTTPS protocols', async () => {
+            const dangerousUrls = [
+                'file:///etc/passwd',
+                'gopher://127.0.0.1:6379/_flushall',
+                'ftp://example.com/audio.mp3',
+                'javascript:alert(1)'
+            ];
+
+            for (const dUrl of dangerousUrls) {
+                // oxlint-disable-next-line no-await-in-loop
+                const res = await loader.load({ url: dUrl, priority: 'low', expectedSizeMb: 1 });
+                expect(res.ok).toBe(false);
+            }
+            expect(mockFetch).not.toHaveBeenCalled();
+        });
+
+        it('should block protocol-relative URLs pointing to private or metadata hosts', async () => {
+            const result = await loader.load({
+                url: '//169.254.169.254/latest/meta-data',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(result.ok).toBe(false);
+            expect(mockFetch).not.toHaveBeenCalled();
+        });
+
+        it('should allow valid public HTTPS URLs', async () => {
+            const result = await loader.load({
+                url: 'https://cdn.example.com/sounds/music.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(result.ok).toBe(true);
+            expect(mockFetch).toHaveBeenCalledWith('https://cdn.example.com/sounds/music.mp3');
+        });
+
+        it('should enforce allowedDomains allowlist when configured', async () => {
+            const restrictedLoader = new AudioBufferLoader(mockContextManager, 6, 1024, 50, undefined, {
+                allowedDomains: ['trusted-cdn.com', 'assets.game.com']
+            });
+
+            const allowedRes = await restrictedLoader.load({
+                url: 'https://trusted-cdn.com/audio/theme.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(allowedRes.ok).toBe(true);
+
+            const subDomainRes = await restrictedLoader.load({
+                url: 'https://eu.trusted-cdn.com/audio/theme.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(subDomainRes.ok).toBe(true);
+
+            const blockedRes = await restrictedLoader.load({
+                url: 'https://evil-site.com/audio/theme.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(blockedRes.ok).toBe(false);
+            if (!blockedRes.ok) {
+                expect(blockedRes.error.message).toContain('not in the allowed domains list');
+            }
+        });
+
+        it('should enforce customValidator when configured', async () => {
+            const customLoader = new AudioBufferLoader(mockContextManager, 6, 1024, 50, undefined, {
+                customValidator: (url: string) => !url.includes('forbidden')
+            });
+
+            const okRes = await customLoader.load({
+                url: 'https://cdn.example.com/allowed.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(okRes.ok).toBe(true);
+
+            const badRes = await customLoader.load({
+                url: 'https://cdn.example.com/forbidden.mp3',
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(badRes.ok).toBe(false);
+            if (!badRes.ok) {
+                expect(badRes.error.message).toContain('failed custom security validation');
+            }
+        });
+
+        it('should allow data URLs with audio MIME types and reject non-audio data URLs', async () => {
+            const audioDataUrl = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+            const audioRes = await loader.load({
+                url: audioDataUrl,
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(audioRes.ok).toBe(true);
+
+            const htmlDataUrl = 'data:text/html,<script>alert(1)</script>';
+            const badRes = await loader.load({
+                url: htmlDataUrl,
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(badRes.ok).toBe(false);
+        });
+
+        it('should allow blob URLs', async () => {
+            const blobUrl = 'blob:https://example.com/3d8b5c90-4a57-4bf7-9a84-2195f448c5b9';
+            const res = await loader.load({
+                url: blobUrl,
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+            expect(res.ok).toBe(true);
+        });
+
+        it('should correctly expose isSafeUrl public helper', () => {
+            expect(loader.isSafeUrl('sound.mp3')).toBe(true);
+            expect(loader.isSafeUrl('/assets/theme.wav')).toBe(true);
+            expect(loader.isSafeUrl('https://cdn.example.com/sound.mp3')).toBe(true);
+            expect(loader.isSafeUrl('http://169.254.169.254/latest/meta-data')).toBe(false);
+            expect(loader.isSafeUrl('http://localhost:8080')).toBe(false);
+            expect(loader.isSafeUrl('http://127.0.0.1')).toBe(false);
+            expect(loader.isSafeUrl('http://10.0.0.1')).toBe(false);
+            expect(loader.isSafeUrl('file:///etc/passwd')).toBe(false);
+            expect(loader.isSafeUrl('')).toBe(false);
+        });
+
+        it('should block unsafe URLs when performLoad is invoked directly', async () => {
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            // @ts-expect-error accessing private method for defensive check coverage
+            const result = await loader.performLoad('http://169.254.169.254/latest/meta-data/');
+            expect(result.ok).toBe(false);
+            if (!result.ok) {
+                expect(result.error.message).toContain('Blocked request to private or internal network resource');
+            }
+            expect(consoleSpy).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    '[AudioBufferLoader] Blocked potentially unsafe URL "http://169.254.169.254/latest/meta-data/":'
+                )
+            );
+            consoleSpy.mockRestore();
         });
     });
 });

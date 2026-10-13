@@ -9,4 +9,5 @@ export interface IAudioBufferRequest {
 export interface IAudioBufferLoader {
     load(request: IAudioBufferRequest): Promise<Result<AudioBuffer, Error>>;
     clearCache(url?: string): void;
+    isSafeUrl?(url: string): boolean;
 }

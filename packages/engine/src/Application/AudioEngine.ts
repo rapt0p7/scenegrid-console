@@ -346,7 +346,8 @@ export class AudioEngine implements IAudioEngine {
                             result: { type: 'OOM_CRITICAL_EVICTION', targetUrl: url }
                         });
                     }
-                }
+                },
+                this.config.loaderOptions
             );
             this.#masterOutput = new MasterOutput(this.#contextManager, automation);
             this.#rtpcManager = new RTPCManager();

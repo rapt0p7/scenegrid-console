@@ -1,4 +1,5 @@
 import type { IBuses } from '@domain/BusSystem/Ports/IBuses.js';
+import type { IAudioBufferLoaderOptions } from '@domain/Configuration/Ports/IAudioBufferLoaderOptions.js';
 import type { IBankManifest } from '@domain/Configuration/Ports/IBankConfig.js';
 import type { IEventMap } from '@domain/Configuration/Ports/IEventConfig.js';
 import type { IMusicFSMConfig } from '@domain/Configuration/Ports/IMusicFSMConfig';
@@ -24,4 +25,5 @@ export interface IAudioEngineConfig {
         readonly ppqn?: 96 | 192 | 480 | 960;
     };
     readonly remoteSyncUri?: string;
+    readonly loaderOptions?: IAudioBufferLoaderOptions;
 }
