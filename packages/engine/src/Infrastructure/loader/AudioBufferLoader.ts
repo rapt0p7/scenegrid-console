@@ -1,8 +1,11 @@
+import type { IAudioBufferLoaderOptions } from '@domain/Configuration/Ports/IAudioBufferLoaderOptions.js';
 // noinspection D
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { IAudioBufferLoader, IAudioBufferRequest } from '@infrastructure/types/IAudioBufferLoader.js';
 
 import { ConcurrencyThrottler, Result, Ok, Err } from '@scene-grid/shared';
+
+import { validateAudioUrl } from './AudioUrlValidator.js';
 
 type Extension = 'mp3' | 'ogg' | 'wav' | 'm4a';
 
@@ -20,6 +23,7 @@ export class AudioBufferLoader implements IAudioBufferLoader {
     readonly #maxCapacity: number;
     readonly #ramQuotaMb: number;
     readonly #onEmergencyEviction?: (url: string) => void;
+    readonly #options?: IAudioBufferLoaderOptions;
     #currentRamMb: number = 0;
 
     readonly #bufferPool: (AudioBuffer | null)[];
@@ -43,13 +47,15 @@ export class AudioBufferLoader implements IAudioBufferLoader {
         concurrencyLimit: number = 6,
         maxQueueSize: number = 1024,
         ramQuotaMb: number = 50,
-        onEmergencyEviction?: (url: string) => void
+        onEmergencyEviction?: (url: string) => void,
+        options?: IAudioBufferLoaderOptions
     ) {
         this.#contextManager = contextManager;
         this.#throttler = new ConcurrencyThrottler<Result<AudioBuffer, Error>>(concurrencyLimit, maxQueueSize);
         this.#maxCapacity = maxQueueSize;
         this.#ramQuotaMb = ramQuotaMb;
         this.#onEmergencyEviction = onEmergencyEviction;
+        this.#options = options;
 
         // oxlint-disable-next-line unicorn/no-new-array typescript/no-unsafe-assignment
         this.#bufferPool = new Array(maxQueueSize).fill(null);
@@ -70,13 +76,22 @@ export class AudioBufferLoader implements IAudioBufferLoader {
     public async load(request: IAudioBufferRequest): Promise<Result<AudioBuffer, Error>> {
         const resolvedUrl = this.resolveFirstSupportedUrl(request.url);
 
-        const existingIdx = this.#urlToIndex.get(resolvedUrl);
+        const validationResult = validateAudioUrl(resolvedUrl, this.#options);
+        if (!validationResult.ok) {
+            console.warn(
+                `[AudioBufferLoader] Blocked potentially unsafe URL "${resolvedUrl}": ${validationResult.error.message}`
+            );
+            return Err(validationResult.error);
+        }
+        const safeUrl = validationResult.value;
+
+        const existingIdx = this.#urlToIndex.get(safeUrl);
         if (existingIdx !== undefined) {
             this.#updateMRU(existingIdx);
             return Ok(this.#bufferPool[existingIdx]!);
         }
 
-        const inFlight = this.#inFlightPromises.get(resolvedUrl);
+        const inFlight = this.#inFlightPromises.get(safeUrl);
         if (inFlight !== undefined) {
             return inFlight;
         }
@@ -86,13 +101,13 @@ export class AudioBufferLoader implements IAudioBufferLoader {
             this.#forceEvictOne();
         }
 
-        const loadPromise = this.#throttler.enqueue(() => this.performLoad(resolvedUrl));
-        this.#inFlightPromises.set(resolvedUrl, loadPromise);
+        const loadPromise = this.#throttler.enqueue(() => this.performLoad(safeUrl));
+        this.#inFlightPromises.set(safeUrl, loadPromise);
 
         try {
             const result = await loadPromise;
 
-            if (result.ok && !this.#urlToIndex.has(resolvedUrl)) {
+            if (result.ok && !this.#urlToIndex.has(safeUrl)) {
                 this.#evictFor(request.expectedSizeMb);
                 if (this.#freeIndexHead < 0) this.#forceEvictOne();
 
@@ -102,8 +117,8 @@ export class AudioBufferLoader implements IAudioBufferLoader {
                 this.#bufferPool[idx] = result.value;
                 this.#bufferSizes[idx] = request.expectedSizeMb;
                 this.#priorities[idx] = priorityNum;
-                this.#indexToUrl[idx] = resolvedUrl;
-                this.#urlToIndex.set(resolvedUrl, idx);
+                this.#indexToUrl[idx] = safeUrl;
+                this.#urlToIndex.set(safeUrl, idx);
                 this.#currentRamMb += request.expectedSizeMb;
 
                 this.#pushToHead(idx, priorityNum);
@@ -111,7 +126,7 @@ export class AudioBufferLoader implements IAudioBufferLoader {
 
             return result;
         } finally {
-            this.#inFlightPromises.delete(resolvedUrl);
+            this.#inFlightPromises.delete(safeUrl);
         }
     }
 
@@ -195,6 +210,10 @@ export class AudioBufferLoader implements IAudioBufferLoader {
 
     public getCurrentRam(): number {
         return this.#currentRamMb;
+    }
+
+    public isSafeUrl(url: string): boolean {
+        return validateAudioUrl(url, this.#options).ok;
     }
 
     #evictFor(requiredMb: number): void {
@@ -293,18 +312,27 @@ export class AudioBufferLoader implements IAudioBufferLoader {
     }
 
     private async performLoad(url: string): Promise<Result<AudioBuffer, Error>> {
+        const validationResult = validateAudioUrl(url, this.#options);
+        if (!validationResult.ok) {
+            console.warn(
+                `[AudioBufferLoader] Blocked potentially unsafe URL "${url}": ${validationResult.error.message}`
+            );
+            return Err(validationResult.error);
+        }
+        const safeUrl = validationResult.value;
+
         try {
-            const response = await fetch(url);
+            const response = await fetch(safeUrl);
             if (!response.ok) {
-                console.warn(`[AudioBufferLoader] Network error ${response.status} for ${url}.`);
-                return Err(new Error(`Network error ${response.status} for ${url}`));
+                console.warn(`[AudioBufferLoader] Network error ${response.status} for ${safeUrl}.`);
+                return Err(new Error(`Network error ${response.status} for ${safeUrl}`));
             }
 
             const arrayBuffer = await response.arrayBuffer();
             const decoded = await this.#contextManager.context.decodeAudioData(arrayBuffer);
             return Ok(decoded);
         } catch (error) {
-            console.error(`[AudioBufferLoader] Failed to load or decode ${url}.`, error);
+            console.error(`[AudioBufferLoader] Failed to load or decode ${safeUrl}.`, error);
             return Err(error instanceof Error ? error : new Error(String(error)));
         }
     }

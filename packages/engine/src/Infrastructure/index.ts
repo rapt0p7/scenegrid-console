@@ -16,6 +16,7 @@ export type { ISoundInstance, InstanceParameterTarget } from './types/ISoundInst
 export type { ISoundOptions } from './types/ISoundOptions.js';
 export type { IVoiceConfig } from './types/IVoiceConfig.js';
 export type { ISidechain, IPluginFactory, ILimiterNode } from './types/IAudioPlugins.js';
+export type { IAudioBufferLoader, IAudioBufferRequest } from './types/IAudioBufferLoader.js';
 
 export { default as AudioBusSystem } from './busSystem/AudioBusSystem.js';
 export { default as AudioContextManager } from './context/AudioContextManager.js';
@@ -29,6 +30,7 @@ export { StreamInstance } from './instance/StreamInstance.js';
 export { StreamNode } from './nodes/StreamNode.js';
 export { ChunkedLoader } from './loader/ChunkedLoader.js';
 export { AudioBufferLoader } from './loader/AudioBufferLoader.js';
+export { validateAudioUrl, isAudioUrlSafe } from './loader/AudioUrlValidator.js';
 export { BankManagerAdapter } from './loader/BankManagerAdapter.js';
 export { PlaybackScheduler } from './scheduling/PlaybackScheduler.js';
 export { CullingRunner } from './scheduling/CullingRunner.js';
