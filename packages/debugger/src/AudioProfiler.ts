@@ -4,6 +4,12 @@
 
 import type { ISoundControllerProxy, ISoundInstanceProxy } from './types/EngineProxies.js';
 
+interface VoiceAccumulator {
+    hw: number;
+    virtual: number;
+    dump: Array<{ name: string; isVirtual: boolean }>;
+}
+
 export class AudioProfiler {
     public readonly metrics = {
         voices: {
@@ -54,105 +60,108 @@ export class AudioProfiler {
         );
     }
 
-    // oxlint-disable-next-line max-lines-per-function
+    private recordVoice(acc: VoiceAccumulator, name: string, isVirtual: boolean, state?: string): void {
+        if (isVirtual) {
+            acc.virtual++;
+            acc.dump.push({
+                name,
+                isVirtual: true
+            });
+        } else if (state !== 'stopped') {
+            acc.hw++;
+            acc.dump.push({
+                name,
+                isVirtual: false
+            });
+        }
+    }
+
+    private collectFromVoiceMap(
+        controller: ISoundControllerProxy,
+        voices: Map<unknown, any>,
+        acc: VoiceAccumulator
+    ): void {
+        for (const [id, voice] of voices.entries()) {
+            // oxlint-disable-next-line typescript/no-unnecessary-type-conversion
+            const isGhost = Boolean(
+                voice?.isVirtualNode || (typeof controller.isGhostVoice === 'function' && controller.isGhostVoice(id))
+            );
+            const state =
+                typeof controller.getPlaybackState === 'function'
+                    ? controller.getPlaybackState(id)
+                    : voice?.physicalInstance?.state;
+            const isVirtual = isGhost || state === 'virtual';
+
+            const name =
+                voice?.soundId ??
+                (typeof controller.getSoundId === 'function' ? controller.getSoundId(id) : undefined) ??
+                String(id);
+
+            this.recordVoice(acc, name, isVirtual, state);
+        }
+    }
+
+    private collectFromPlaybackIds(
+        controller: ISoundControllerProxy,
+        ids: readonly unknown[],
+        acc: VoiceAccumulator
+    ): void {
+        for (const id of ids) {
+            const isGhost = typeof controller.isGhostVoice === 'function' && controller.isGhostVoice(id);
+            const state =
+                typeof controller.getPlaybackState === 'function' ? controller.getPlaybackState(id) : undefined;
+            // oxlint-disable-next-line typescript/no-unnecessary-type-conversion
+            const isVirtual = Boolean(isGhost || state === 'virtual');
+            const name =
+                (typeof controller.getSoundId === 'function' ? controller.getSoundId(id) : undefined) ?? String(id);
+
+            this.recordVoice(acc, name, isVirtual, state);
+        }
+    }
+
+    private collectFromSoundController(controller: ISoundControllerProxy, acc: VoiceAccumulator): void {
+        const activeVoices = controller.activeVoices;
+        if (activeVoices instanceof Map) {
+            this.collectFromVoiceMap(controller, activeVoices, acc);
+        } else if (typeof controller.getActivePlaybacks === 'function') {
+            this.collectFromPlaybackIds(controller, controller.getActivePlaybacks(), acc);
+        }
+    }
+
+    private collectFromPoolManager(acc: VoiceAccumulator): void {
+        const pool = this.engine._debug?.poolManager;
+        if (!pool || typeof pool.getActiveVoices !== 'function') return;
+
+        const activeVoices = pool.getActiveVoices() as ReadonlySet<ISoundInstanceProxy>;
+        for (const voice of activeVoices) {
+            const isVirtual = voice.state === 'virtual';
+            if (isVirtual) {
+                acc.virtual++;
+            } else {
+                acc.hw++;
+            }
+
+            acc.dump.push({
+                name: voice.id,
+                isVirtual
+            });
+        }
+    }
+
     private updateVoiceMetrics(): void {
         const soundController = this.getSoundController();
-
-        let hw = 0;
-        let virtual = 0;
-        const currentDump: Array<{ name: string; isVirtual: boolean }> = [];
+        const acc: VoiceAccumulator = { hw: 0, virtual: 0, dump: [] };
 
         if (soundController) {
-            const activeVoices = soundController.activeVoices;
-            if (activeVoices instanceof Map) {
-                for (const [id, voice] of activeVoices.entries()) {
-                    // oxlint-disable-next-line typescript/no-unnecessary-type-conversion
-                    const isGhost = Boolean(
-                        voice?.isVirtualNode ||
-                        (typeof soundController.isGhostVoice === 'function' && soundController.isGhostVoice(id))
-                    );
-                    const state =
-                        typeof soundController.getPlaybackState === 'function'
-                            ? soundController.getPlaybackState(id)
-                            : voice?.physicalInstance?.state;
-                    const isVirtual = isGhost || state === 'virtual';
-
-                    const name =
-                        voice?.soundId ??
-                        (typeof soundController.getSoundId === 'function'
-                            ? soundController.getSoundId(id)
-                            : undefined) ??
-                        String(id);
-
-                    if (isVirtual) {
-                        virtual++;
-                        currentDump.push({
-                            name,
-                            isVirtual: true
-                        });
-                    } else if (state !== 'stopped') {
-                        hw++;
-                        currentDump.push({
-                            name,
-                            isVirtual: false
-                        });
-                    }
-                }
-            } else if (typeof soundController.getActivePlaybacks === 'function') {
-                const activeIds = soundController.getActivePlaybacks();
-                for (const id of activeIds) {
-                    const isGhost =
-                        typeof soundController.isGhostVoice === 'function' && soundController.isGhostVoice(id);
-                    const state =
-                        typeof soundController.getPlaybackState === 'function'
-                            ? soundController.getPlaybackState(id)
-                            : undefined;
-                    // oxlint-disable-next-line typescript/no-unnecessary-type-conversion
-                    const isVirtual = Boolean(isGhost || state === 'virtual');
-                    const name =
-                        (typeof soundController.getSoundId === 'function'
-                            ? soundController.getSoundId(id)
-                            : undefined) ?? String(id);
-
-                    if (isVirtual) {
-                        virtual++;
-                        currentDump.push({
-                            name,
-                            isVirtual: true
-                        });
-                    } else if (state !== 'stopped') {
-                        hw++;
-                        currentDump.push({
-                            name,
-                            isVirtual: false
-                        });
-                    }
-                }
-            }
+            this.collectFromSoundController(soundController, acc);
         } else {
-            const pool = this.engine._debug?.poolManager;
-            if (pool && typeof pool.getActiveVoices === 'function') {
-                const activeVoices = pool.getActiveVoices() as ReadonlySet<ISoundInstanceProxy>;
-                for (const voice of activeVoices) {
-                    const isVirtual = voice.state === 'virtual';
-                    if (isVirtual) {
-                        virtual++;
-                    } else {
-                        hw++;
-                    }
-
-                    currentDump.push({
-                        name: voice.id,
-                        isVirtual
-                    });
-                }
-            }
+            this.collectFromPoolManager(acc);
         }
 
-        this.metrics.voices.hardwareActive = hw;
-        this.metrics.voices.virtualCulled = virtual;
-        this.metrics.voices.totalTracked = hw + virtual;
-        this.metrics.voices.dump = currentDump;
+        this.metrics.voices.hardwareActive = acc.hw;
+        this.metrics.voices.virtualCulled = acc.virtual;
+        this.metrics.voices.totalTracked = acc.hw + acc.virtual;
+        this.metrics.voices.dump = acc.dump;
     }
 
     private updateMixerMetrics(): void {
