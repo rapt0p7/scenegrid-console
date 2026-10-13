@@ -1,6 +1,8 @@
-// oxlint-disable no-underscore-dangle
+/* eslint-disable no-underscore-dangle */
+// oxlint-disable no-underscore-dangle typescript/no-unsafe-assignment
 // noinspection D
-import type { ISoundInstanceProxy } from './types/EngineProxies.js';
+
+import type { ISoundControllerProxy, ISoundInstanceProxy } from './types/EngineProxies.js';
 
 export class AudioProfiler {
     public readonly metrics = {
@@ -42,27 +44,109 @@ export class AudioProfiler {
         this.updateBusMetrics();
     }
 
-    private updateVoiceMetrics(): void {
-        const pool = this.engine._debug?.poolManager;
-        if (!pool || typeof pool.getActiveVoices !== 'function') return;
+    private getSoundController(): ISoundControllerProxy | undefined {
+        // oxlint-disable-next-line typescript/no-unsafe-return
+        return (
+            this.engine._debug?.soundController ??
+            this.engine._debug?.router?.['#soundController'] ??
+            this.engine._debug?.router?.soundController ??
+            this.engine._debug?.eventOrchestrator?.soundController
+        );
+    }
 
-        const activeVoices = pool.getActiveVoices() as ReadonlySet<ISoundInstanceProxy>;
+    // oxlint-disable-next-line max-lines-per-function
+    private updateVoiceMetrics(): void {
+        const soundController = this.getSoundController();
+
         let hw = 0;
         let virtual = 0;
-        const currentDump = [];
+        const currentDump: Array<{ name: string; isVirtual: boolean }> = [];
 
-        for (const voice of activeVoices) {
-            const isVirtual = voice.state === 'virtual';
-            if (isVirtual) {
-                virtual++;
-            } else {
-                hw++;
+        if (soundController) {
+            const activeVoices = soundController.activeVoices;
+            if (activeVoices instanceof Map) {
+                for (const [id, voice] of activeVoices.entries()) {
+                    // oxlint-disable-next-line typescript/no-unnecessary-type-conversion
+                    const isGhost = Boolean(
+                        voice?.isVirtualNode ||
+                        (typeof soundController.isGhostVoice === 'function' && soundController.isGhostVoice(id))
+                    );
+                    const state =
+                        typeof soundController.getPlaybackState === 'function'
+                            ? soundController.getPlaybackState(id)
+                            : voice?.physicalInstance?.state;
+                    const isVirtual = isGhost || state === 'virtual';
+
+                    const name =
+                        voice?.soundId ??
+                        (typeof soundController.getSoundId === 'function'
+                            ? soundController.getSoundId(id)
+                            : undefined) ??
+                        String(id);
+
+                    if (isVirtual) {
+                        virtual++;
+                        currentDump.push({
+                            name,
+                            isVirtual: true
+                        });
+                    } else if (state !== 'stopped') {
+                        hw++;
+                        currentDump.push({
+                            name,
+                            isVirtual: false
+                        });
+                    }
+                }
+            } else if (typeof soundController.getActivePlaybacks === 'function') {
+                const activeIds = soundController.getActivePlaybacks();
+                for (const id of activeIds) {
+                    const isGhost =
+                        typeof soundController.isGhostVoice === 'function' && soundController.isGhostVoice(id);
+                    const state =
+                        typeof soundController.getPlaybackState === 'function'
+                            ? soundController.getPlaybackState(id)
+                            : undefined;
+                    // oxlint-disable-next-line typescript/no-unnecessary-type-conversion
+                    const isVirtual = Boolean(isGhost || state === 'virtual');
+                    const name =
+                        (typeof soundController.getSoundId === 'function'
+                            ? soundController.getSoundId(id)
+                            : undefined) ?? String(id);
+
+                    if (isVirtual) {
+                        virtual++;
+                        currentDump.push({
+                            name,
+                            isVirtual: true
+                        });
+                    } else if (state !== 'stopped') {
+                        hw++;
+                        currentDump.push({
+                            name,
+                            isVirtual: false
+                        });
+                    }
+                }
             }
+        } else {
+            const pool = this.engine._debug?.poolManager;
+            if (pool && typeof pool.getActiveVoices === 'function') {
+                const activeVoices = pool.getActiveVoices() as ReadonlySet<ISoundInstanceProxy>;
+                for (const voice of activeVoices) {
+                    const isVirtual = voice.state === 'virtual';
+                    if (isVirtual) {
+                        virtual++;
+                    } else {
+                        hw++;
+                    }
 
-            currentDump.push({
-                name: voice.id,
-                isVirtual
-            });
+                    currentDump.push({
+                        name: voice.id,
+                        isVirtual
+                    });
+                }
+            }
         }
 
         this.metrics.voices.hardwareActive = hw;
