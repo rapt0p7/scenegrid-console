@@ -182,3 +182,6 @@ openwiki/.page-manifest.json
 examples/assets/*.*
 
 scripts/vite-worklet-isolator.d.ts
+
+# repowise API keys (local)
+.repowise/.env

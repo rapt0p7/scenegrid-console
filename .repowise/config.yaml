@@ -1,9 +1,12 @@
 editor_files:
   agents_md: true
-provider: deepseek
-model: deepseek-chat
-embedder: mock
+provider: gemini
+model: gemini-3.7-flash
+embedder: gemini
 reasoning: auto
 distill:
   commands:
-    enabled: true
+    enabled: false
+hooks:
+  read_skeleton: false
+  search_digest: false
