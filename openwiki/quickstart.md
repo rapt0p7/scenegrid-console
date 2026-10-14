@@ -3,9 +3,6 @@ type: quickstart
 title: OpenWiki quickstart
 description: Entry map for the repository wiki, with the canonical pages for each package, runtime workflow, and the minimal validation path for common change intents.
 tags: [openwiki, quickstart, navigation]
-verified:
-  - by: openwiki/0.5.1
-    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-85a2f85f45f76d7dd1978389
     resource: repo://examples/package.json
@@ -15,6 +12,10 @@ sources:
     resource: repo://packages/inspector/package.json
   - id: openwiki-source-c83ceec2d47257f066951051
     resource: repo://packages/shared/package.json
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-10-14T20:11:32.061Z
+generated: { by: "antigravity", at: "2026-10-14T20:11:32.061Z" }
 ---
 
 # OpenWiki quickstart
@@ -53,8 +54,8 @@ This wiki explains the repository as a set of runtime packages and workflows:
 | Change routing, playback policies, or RTPC binding | [Routing and playback managers](./engine/domain/router-and-managers.md) | `packages/engine/src/Domain/Router/AudioRouter.ts`, `ContainerPlaybackPolicy.ts`, `SwitchPlaybackPolicy.ts` | `packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts` | `npm test -- --runInBand packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts` |
 | Change Web Audio adapter plumbing, buses, or limiter behavior | [Engine infrastructure overview](./engine/infrastructure/overview.md) | `packages/engine/src/Infrastructure/**` | Subsystem tests linked from the infrastructure pages | Targeted subsystem test file |
 | Change shared math, memory, or worker contracts | [Shared package contract](./shared/index.md) | `packages/shared/src/index.ts`, `createTelemetryWorker`, `evaluateRTPCCurve`, `ConcurrencyThrottler` | `packages/shared/src/Math/__tests__/rtpcMath.test.ts`, `packages/shared/src/Memory/__tests__/ConcurrencyThrottler.test.ts` | `npm test -- --runInBand packages/shared/src/Math/__tests__/rtpcMath.test.ts` |
-| Change the inspector runtime overlay or panel | [Inspector debugger runtime](./inspector/debugger.md) | `packages/inspector/src/AudioDebugger.ts`, `attachDebugUI` | `packages/inspector/src/__tests__/AudioDebugger.test.ts` | `npm test -- --runInBand packages/inspector/src/__tests__/AudioDebugger.test.ts` |
-| Change inspector controls, hooks, or meters | [Inspector UI and hooks](./inspector/ui-and-hooks.md) | `AudioDebugPanel.ts`, `AudioProfiler.ts`, `visualizers.ts`, hooks | `packages/inspector/src/__tests__/visualizers.test.ts`, `packages/inspector/src/worklets/__tests__/meter.processor.test.ts` | `npm test -- --runInBand packages/inspector/src/__tests__/visualizers.test.ts` |
+| Change the inspector runtime overlay or panel | [Inspector debugger runtime](./inspector/debugger.md) | `packages/debugger/src/AudioDebugger.ts`, `attachDebugUI` | `packages/debugger/src/__tests__/AudioDebugger.test.ts` | `npm test -- --runInBand packages/debugger/src/__tests__/AudioDebugger.test.ts` |
+| Change inspector controls, hooks, or meters | [Inspector UI and hooks](./inspector/ui-and-hooks.md) | `AudioDebugPanel.ts`, `AudioProfiler.ts`, `visualizers.ts`, hooks | `packages/debugger/src/__tests__/visualizers.test.ts`, `packages/debugger/src/worklets/__tests__/meter.processor.test.ts` | `npm test -- --runInBand packages/debugger/src/__tests__/visualizers.test.ts` |
 
 ## Main concepts
 

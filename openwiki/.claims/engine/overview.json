@@ -1,14 +1,14 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:4aaf9a7aff2be8e89aed5d1aba554d1fd77883fbd88cd73ae1eb7f576a365cdf",
+    "pageVersion": "sha256:3c962a7d208c4c7ad21df6a8c765aeabe528ec453071f16a811bee7ebddf0b0d",
     "claims": [
         {
             "id": "claim_84d6ca1983e94a03be3dafb1c67934c2",
             "statement": "The `@scene-grid/engine` package root exports `AudioEngine`, `WorkletLoader`, and `ConsistencyChecker`, alongside public types for configuration, buses, snapshots, sound configurations, manifests, RTPC, events, and music FSM.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/index.ts#L1-L14",
-                    "version": "repo-lines-v1:sha256:b2f1631dd2d90967045fee9d9e6d484063f11276d946f913e1f13e48a1b2ea45:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YjAxMjkwNzgwN2Y0ZjljOTlkZjM3ZmM4ZDg4MTNjOWNmYzE5OWIwYzFiMGM1MDZjZjdlNmFjOTNkMmU5MmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4M2I2NjMwMjc5NzdlMTE0MDg2ZTQxYWM0NjBmYjUzOWMxNDRiZTMyNGNjZmExNzYzZDViMTNmYTA5NzUxZWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    "resource": "repo://packages/engine/src/index.ts#L1-L15",
+                    "version": "repo-lines-v1:sha256:2c0a7070d0fee00928f6ef4f73b549c6a8b08b997b5f6f096100df23b377d565:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzOGE1Zjk3M2JkZmM5ZTM0MGUyOTYyMGJlNTk0YzI2MjUzZTgyNjgwYzhkNmY5Y2E1NDhjNzUyMTMxMzY1NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ODVmZDJmNTc4NGViNWM2MDY3YjAwOTk1Y2FmNTQyMDkzZWMwNjI1NjNlODc0YmY5NjE2MDdiNmE0ZmFhOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         },
@@ -17,14 +17,14 @@
             "statement": "`AudioEngine` serves as the primary application facade composing domain orchestration, validation, mixer snapshots, and infrastructure adapters into a single runtime surface.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L52-L95",
-                    "version": "repo-lines-v1:sha256:71ebdc61d5d59f4e8cd231ff5ed104c017af3d681af56c7619711d1805f5388c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjODRlODA1YmQwODM1MDdlZjM1NGVlYzQ3ZWM2MzZjZDM3NzJiZmFjZDU0YWQxMzNjZDQ5ZjQzMzhhZTI0NmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjMjI0ODVmNTY3NTJjZGQ5NWY0NDVhYjZiNTQ1MTE5OTAzM2IwODEyODVjMDIyNjhmNDAwZTlhMzQyMTZjNGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxYjZlYTBmZjZmNWQxMDg2YjEzN2Q0NzQwY2EyY2VlOTc1ZGRjYTBjOTQzYzMyYzUzNTYxZTMyZjYwZThhMDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmZWIwNDliMWEzNTVmNjQyNzYyZTM0ZWJhOGFjYTE5ZWM4Y2RjMjMyMDYzMjRjMGRlODhhZTJmYWE5Yjk0ODgifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L35-L95",
+                    "version": "repo-lines-v1:sha256:0ddb1296432273596d9148e70c142368cb6865954036a9b276af0310521d4e90:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1ZDg1YTQwNDhjYWUyNjhjNTAzMjAxNDlkOTlkZjM2MjRjMmE3NmMyNTMwM2Y4MzAxNWI2YjNkMGJlYzZlMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5OWZkMjVjMzNmZmMyOGNhZWE4ZDllNzc2OWUzZGFlMTgyYzNlMjg3OGY4YzI5OTk5Y2UxMjg1NjdjZWU5OGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJhZjMyNDYzM2UzODI5OTgwM2FlYzczYThhN2RiMzMwYjUxNjcwNzA5ODlkNTI2ZmU5MWQzOGQzMGFjYTJhODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5ZTExYTEzOGQ3Y2JjYmY1NGU0NzE3MDc1NGQ3YzczNGJhN2JkYzg0MWRmNGU3MzUyZGM4ZWMyMzhlMjQ0OTIifQ"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

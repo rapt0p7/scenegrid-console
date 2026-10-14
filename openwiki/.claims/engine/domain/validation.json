@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:dfa9351d1614bcc1a12fea3bbe20d12149efcd72996477785d69dd7969dbd62a",
+    "pageVersion": "sha256:95b60c63dae4f7695046f84bdfef0ed444e37c7be785122f6fa13fdce03c0e6a",
     "claims": [
         {
             "id": "claim_6d66a57fe4c5461a89a26364cd4851cd",
@@ -55,8 +55,8 @@
             "statement": "`BusesRule` requires at least one bus, validates bus object shape, checks sends against known buses, rejects self-sends as feedback loops, validates sidechain and filter fields, and delegates RTPC validation for each bus.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Validation/Rules/BusesRule.ts#L9-L58",
-                    "version": "repo-lines-v1:sha256:a23c32a6c385d02a9ea5a7f82eed3be95457eb0b3d5b224163579ffea32c0583:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkNjQ4ODEyNDg1MzlhMmFkYzE5NjEzNWUyN2NjYzU0NWQzZDE4Yzg2MzkyODhlZTFmMzI4MDY3YWMwMzgxZWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUxYjY5NzYxNmU4NDYwMTZkNWRkMWU3MTQ3ZmYzMDhiN2M1ODBlYzYxNzU3MmZjZmZlZWExOWM3Yjc3ODdkYzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/engine/src/Domain/Validation/Rules/BusesRule.ts#L9-L59",
+                    "version": "repo-lines-v1:sha256:41d90efc24b83b16ffa711493660aa53d6b65c5689e348b5d2a09e70cb8449b4:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0MmJkN2FkMzM4ZTdmYzI4NjE3MmFiMTVkM2ZlODE2ZWI5OTUwODQwYWVkYzFiMGIxMzJmNzIyNjQxNjgxOWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0YzIwOGQyYmY5MTkwYzM0YjA1OTcxMDc5N2ZmZDBhY2E0MzZhMGIwMTgzZjUwZTJjODkxOTBmZGQ5M2RmYTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         },
@@ -65,8 +65,8 @@
             "statement": "`SoundMapRule` validates each sound-map entry against the bus registry, requires a bus for ordinary sounds, and delegates RTPC and shape-specific subrules for ducking, spatial, layered, container, switch, smart-loop, and scatterer sound forms.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Validation/Rules/SoundMapRule.ts#L16-L52",
-                    "version": "repo-lines-v1:sha256:6d9a58441e261735bacd2131152d13c338c9bc3d62f588887c886007e13bfbc0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlMTBkY2Y5NGFkM2Q4ZDE5YzYyM2RhNjA5NGE1YmU3MzVjMGY1ZGRmZGU4ZmM4YmYzZTZjMTQ3MmFhOWQ2MTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkMmUxNTI5NGE5NzgxOWMwNzdlYjI5OGU4Mjc3N2I3YjQwYWYyNDY1YmNhYWVlOGUxZjc5ZjVmMmE0MTk2MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/engine/src/Domain/Validation/Rules/SoundMapRule.ts#L17-L53",
+                    "version": "repo-lines-v1:sha256:6c98d89c8536d2041825861ddb2f0ddda1c5c4cec3af14c60b5db98516f4cbb6:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlMTBkY2Y5NGFkM2Q4ZDE5YzYyM2RhNjA5NGE1YmU3MzVjMGY1ZGRmZGU4ZmM4YmYzZTZjMTQ3MmFhOWQ2MTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3MjNhOTc5ZmZkZTQ5ZjQ4ZTM4Y2Y4MGFhNzRmMzIxNTBjM2U5ZTkwNzc3YmYyYzRjMTVjZGExM2RjMDU4NWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
                 }
             ]
         },
@@ -75,8 +75,8 @@
             "statement": "`EventsRule` validates event actions structurally, checks delays, probabilities, tags, conditions, RTPC references, target existence, and recursion-sensitive action types such as trigger, stop, mixer state, stinger, loop, and music transition actions.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Validation/Rules/EventsRule.ts#L9-L260",
-                    "version": "repo-lines-v1:sha256:3bf22521b960ec019ec9752a67bda6fd91ea5c7fadcd1486b7c845a5bbd0af0b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhMWNiYmI1YTcxNjRlYWYzMGU5NGE4OWI1OTMzNWQwMDljYTBhMTgwMzMyZGYwNzgwNDg3MzUzNzllZTQ2MDY2IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3ZWI3MDI1NzU5M2RhMDZmNjgyYTNkZGRhNTRhOWQyNjBkNGZjNTE0ZjY0NTIzN2Y1Y2E3NGIwOGY4ZGE2MWE2IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1Yjk2OGUyYTE3NTM3ZTAxYTFhNWNmOTdhMjUwMGYyOGZiMzFhM2MxYTQ0MDQ1MmY3NGQ0MDIzYTBkYzA5ZTMyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjMWQ0ZmU3NDkxNzZhY2NlYWI5ZjY0NjI5YmY0MjM3OTZiYWM5MDAyZWExYWI0NDJlMjJhNTNiMzU3ZWYzZjQyIn0"
+                    "resource": "repo://packages/engine/src/Domain/Validation/Rules/EventsRule.ts#L9-L293",
+                    "version": "repo-lines-v1:sha256:9bcde3a9baa9e313c13789dcade9a9f5e35a3b856415a1aa5d5a704374c7830f:eyJzZWxlY3RlZExpbmVDb3VudCI6Mjg1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhMWNiYmI1YTcxNjRlYWYzMGU5NGE4OWI1OTMzNWQwMDljYTBhMTgwMzMyZGYwNzgwNDg3MzUzNzllZTQ2MDY2IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJlMjJmYWE1MzViZDJlYTNkNTJlNzQxZWQ0NTQ0MzViN2ZlNDllODM1ODZlOTQzZDk4ZDgyYmJmYjI0ZDFmNWM1IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1Yjk2OGUyYTE3NTM3ZTAxYTFhNWNmOTdhMjUwMGYyOGZiMzFhM2MxYTQ0MDQ1MmY3NGQ0MDIzYTBkYzA5ZTMyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
                 }
             ]
         },
@@ -85,8 +85,8 @@
             "statement": "`ConsoleReporter` groups and prints validation errors and warnings to the console and only logs the OK message when the configuration is consistent.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Validation/Reporters/ConsoleReporter.ts#L4-L21",
-                    "version": "repo-lines-v1:sha256:1783f8b7cb1da1de3b4c5d3361c6981bace95524e33f546f1875911a2e5cc14a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYzlhNjFmNjRhZjA1YmE4MzJmNWQxN2JkNDJjZWJkNjU3MzBmNWI1ZjE0MTE1OTA0NzY5NTM5NGQ5MjZkOWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlODRlODc2YmM2NzM3MmY5ZmM0ZWJlMjE2MTMyYWI0MTJlODg3MGRiNDQwNDFmMjU2ODRiNjFiMDFhN2VlNjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/engine/src/Domain/Validation/Reporters/ConsoleReporter.ts#L4-L22",
+                    "version": "repo-lines-v1:sha256:e296e448b5770404f2af0f67b998c519a0a430a928221bca023c944a26d68100:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmNzU5NjAwMDJkNjEyOWFhNDAwYjI4NTdhNGNiMmQzMTI1ZDE3ZDA3MjEzMDlkNDdmMTQ2MThhZmQ5OGZhMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmMjZlMmI3ZmU2YjY3OTI1ZTk2ODNkYTFjMDc5NWNkZjUwNTk0YmFhMWUzMjI2ZmIwYmYxYjBkZjA4ZjRkOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         },
@@ -95,14 +95,14 @@
             "statement": "`TelemetryConsistencyReporter` packages the final validation result into a `CONSISTENCY_REPORT` telemetry packet with a timestamp and dispatches it through the telemetry dispatcher.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Validation/Reporters/TelemetryConsistencyReporter.ts#L5-L18",
-                    "version": "repo-lines-v1:sha256:0ac6ccffe88683678b2c8a1a4d8ff65385eb67c6337ecd5e807e605c86f6e4c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmYWU0NThmOTMyZDdjNWI4Y2RlOGIwZTg2MGEwMjAxMWU3NTRiYmJjOTI4NDI5OTRkZDViN2ZiZGY5NTBiYjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNlN2VhZDEzYmE3YWJiOGRmNTRiNDIxYWMwNDljN2QyZTg3MjZiMWZkZWNkNTVjZmM3ZGM5YzlhNGI4ZDkzM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/engine/src/Domain/Validation/Reporters/TelemetryConsistencyReporter.ts#L5-L19",
+                    "version": "repo-lines-v1:sha256:20940e2e9f74dd4237eddd533645095ac1d8fcaf65bfdd26b295b951ff2979cf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzYjBhODExNDQzYWM0OWNiZDEwYThhY2VmYjBmYzZiMTBjYzM5YzA0NzAxNGEyODVmZWYxOThmOGNmM2I5NjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlNTQ1ZTg1ZjY4OTAxY2FjYmQ4N2FmMGI3NTM5MjM0ZTNmMDAxYjQxYTIwMDc3MjBjNjI1ZTNlZWUzZjI3ZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

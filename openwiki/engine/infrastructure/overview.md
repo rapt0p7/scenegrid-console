@@ -3,12 +3,12 @@ type: infrastructure overview
 title: Engine infrastructure overview
 description: Map of the Web Audio adapters, loaders, scheduling, telemetry, state, and worklet subsystems behind the engine package.
 tags: [engine, infrastructure, web-audio]
-verified:
-  - by: openwiki/0.5.1
-    at: 2026-09-27T16:32:49.021Z
 sources:
   - id: openwiki-source-0c3d4233b100c93352d0e0b4
     resource: repo://packages/engine/src/Infrastructure/index.ts
+verified:
+  - by: openwiki/0.5.1
+    at: 2026-10-14T20:11:32.061Z
 ---
 
 # Engine infrastructure overview

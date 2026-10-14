@@ -1,22 +1,22 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:20aafeaf6b9163b71c2e3760475dd3a99d8fe390e2c57c7f8b2ff7bc20cad2b3",
+    "pageVersion": "sha256:05fe96bf4d87345d9ddcf5f49f2e2db615f26af150ca3b142c2f755536843934",
     "claims": [
         {
             "id": "claim_de9f5d980ed24013bcc009ad6d266981",
             "statement": "`AudioEventOrchestrator` is the event-runtime entrypoint: it evaluates conditions and probability gates, schedules delayed actions, supports nested event triggering with a recursion guard, and fans out to router, sequencer, mixer, RTPC, and bank collaborators for the supported action types.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts#L175-L260",
-                    "version": "repo-lines-v1:sha256:7a6e7963cd8e4e21c264bd549b2ae370e5eb5d96a6f77f65c9a7f680847690c4:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkZDEzNjc1MDRhM2QzMjkxZTdhYTJlZWQ5NmQ5YWFjM2NlOTlhNGRmZDk4ODczYWFjOTk3ODc3MjVlMjA3NzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiYThkOThjZTM3NTc3MGQxZjI0NWVlMTIyNzdhYjhiODA1YjAyY2I3YjJlMjY3OWRmZTJkYWU0MzZmNDAwNWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxMDJjNjc2ZDQ3YTgzNDJmYzg2NWY3OTkyZWY5OWI1MTg3NDlkYjRjMDAzZTcxMDg3MmU4MWQ2Y2RlZjhkNmUifQ"
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts#L132-L158",
+                    "version": "repo-lines-v1:sha256:34aa972a6109381ca63c93a75b668cc070a74cfd806c990863492d6a108dc73f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhZTZjMDFjZWM1MmFlNmZiM2M4ZTI2ZGY5MDQ3N2E4N2FiYTYyZTBmYTRlODk2N2MxZDRmMGI5Yjk1YjgxYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjN2U4OWU4NGRmOGY3YjQyN2RkMTljOTBkMWRhYTEzZjAxMTlhZDQ4OTY1MTIwNGRhMWU2ZTAyMWZhNjA3MTQifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts#L49-L89",
-                    "version": "repo-lines-v1:sha256:7ef9d893cb5c7c0f88a0a91844222a71ae6a3d3c249fb9f8ae4d2218c95e4c0a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3OWQ1OWFlOTQ5MmMwYjVjNjQ2YzE5ZmZiMTljNDE3NjQ3NmRhNGFmMTRiYzQ2YTU5ZjViMjA1YmM1MzE3ZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhZTdjNTgzYmQ1MzFlZWE0OTg3YzNmMDBmNmUwM2QxODYzNzUwZjI3ZWY5ODIzOTUwZTIxNjhiNDUxZTkwMjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3NmYzYzUyMTEyOTMzNGM1MjY5YWQ4Njc5YTU1N2EyNzIzNThhYTZhNDFmZTkwNTQwZjcwMGIzMmM4Njg1MDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmZmQ3YzEwOTE2ZjI3OGZiN2IwNTg0YzNkZmM3OGY3MTQ2NTQ2N2M2YTgwODJhNTMyYjZmNTRhYWI3ZGM5MmMifQ"
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts#L204-L280",
+                    "version": "repo-lines-v1:sha256:0e513bcc6c67f9f786b0cde4ed26f775f15d09fafe5fefd0540cf9c322bf15ec:eyJzZWxlY3RlZExpbmVDb3VudCI6NzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4MjhiMWQ2MWRjYWNhMzliOTQwOThlYmE4ZTFlOGYxNjYyZDhjY2FlMTUwODZmNmZkN2NmYmUwNGVmZGY4NDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkMjY4YzQyZDZiYzU0NjJhZjEzY2U5NjY4NDBiYmU3YjE0Yzc0N2YxZmM3OTUzM2Y0YzRjOWU4ZTM3MzQ2MDcifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts#L91-L173",
-                    "version": "repo-lines-v1:sha256:d6f4b0c46d7d6e6fd70b28679f8916e98ffe64aaaf51abecd51d710376086ff1:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxYTZiNTAzYTgyOTIzNjQ1MDIzYmE3MzJmZGE4YWM3NDgyZWZmNzQ2YmExZTc0OWZiYTk5YWE0ZTA3YzgwMmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg1ZGIzNjIyOWUwNGU2NDRkZWEzZDBkMDVjZTZjMzIwOTVlOTIxNDFmMjYzZmExMzEyMmNkNzkzM2Q3NGYyYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzNWJlNDM1MWQ4ZTZlODQ4NWNlNmU0Y2MxZDNiZjg1NmNhYjcwN2Y2YzI2ZTNiMDlkNDU3ZjNmNjQzZDlmYWYifQ"
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/AudioEventOrchestrator.ts#L68-L105",
+                    "version": "repo-lines-v1:sha256:87e206a8ddd743a24e6dc1a9ac355041a91d0687a4e70e474c03be743c8d40c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxMDg0MzgzNmRhM2Y3OWE4YzRhMWZmMjdlNzdjYTNmZjEwNzFmOTAyZTNiMjkwOTk5MzQzNzNkNzJlMzBlYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhNmRjZWI2ZmQ4ZDliMzg2YmRmZWQ4MjhmNjNkNzdjNThhNTcyMjdlOTRiMzNmNTI4MjdkMWRhZGFlZTE1MGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwZWMyMTI3NWM3NGNlMGVhYjJhZjA1ZGE2YzY3N2EzMGUxMjk1MzU1NjU4MzVjZGNkMGUyZjcxOWE2ZDE2YmUifQ"
                 }
             ]
         },
@@ -25,12 +25,12 @@
             "statement": "`Sequencer` is a stateful loop scheduler that resets track context on `playLoop`, cancels active regions on `stopLoop`, and rejects idle or non-interruptible transitions in progress before scheduling a new transition.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Orchestration/Sequencer.ts#L119-L169",
-                    "version": "repo-lines-v1:sha256:9cf270634fc65d072eebdb536c9c5b914514e666a6a0579b97622c5d705425af:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5ZDdjYjA1MWJiMWJhZWIzMGJkM2E4YWFiNzkzM2Q1NGU5ODE5NmI5MmUxODI1ZTg0YTM0NDFhYWNhNTk3NmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTFiZmFiY2ZiNmQ4OWZkOWY0ZTNiN2JjNGExNzRmZDkwYzk5ODE4NmU0ZmRlMmM4ZmEzNGU2ZDVjMjkzYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ODdjN2E0ZjRlM2Q0MWYxZmU5MGJmYjI5OTk1MWRhZGMwOThjOWM0YWZlNTdiZThkNjlkNTUxYzQ3NTE0YWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyYzU4MjZmOWU5NjgzMGI2NTg1MGFlMGNkNmYxNTAwZjY0NTEyMDQ2Y2ZiYmU2ZDBhYTdkMTM2NWZlMmFkMDQifQ"
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/Sequencer.ts#L101-L145",
+                    "version": "repo-lines-v1:sha256:6ef612a7f826c417ea3b1e518fe3a4e02743ebc495da847a28cf6db31ff1c6a2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZTdmZjdlMzE3ZGZkMjA2N2VmOTgzMDkyYWNhZGZkYWMyMmMwNTI3OGRhNmY4NDA2NTdmYTM5NWI4ZjRkOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkMmE2ZDE1ZGEwY2Q2NTkwYjBiN2MyY2MyNTA5ZjE2YWI0MjMxYWJhN2NjMjFlODg3NTRhYzc1NDk1NmQyMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlMGMyZGRmNTgxNWViY2Q5YzUzNzA5ZDQwYmQ0ZjZhMjRjOWE0YTg2ZDljYmFhYzk4YzE5YzA5YTI3YzlmOGIifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Orchestration/Sequencer.ts#L78-L112",
-                    "version": "repo-lines-v1:sha256:3816ffb08053af69f965467cbe26166b0f1ac5126d318abd29d3c10f5d5e6408:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkZDgwMGZlNDllN2YxZTJjYWQ2NDUxYmI4OTc0ODVhZDM3ZjI3YmU1ZjdhZjM0OTJhYzg1ZDNmMjA3YTU5MDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiMmRhMmQyOTczNzM4MTM0MjFjM2ZiNjVmZDg2YWQyZTZlOTQwMzYwYjIxZDUwYzE3ZGFlYjdmNTVjNThhMzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxYWYxM2IwMjY1YTEyMTMzNzQxNWZlZWJiM2YzNDY2NWNiYTU4NzczZTZlYjM0MmUyODA4MWIyMzM1M2Y5ZDMifQ"
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/Sequencer.ts#L57-L95",
+                    "version": "repo-lines-v1:sha256:8a0d6262a69b360197ac632fe9177bd5dfdef781d5c15b3ebeb808caf9eb43f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkN2E5MzQ2Njg0MzRmMDc1NGY2OTFiMDE1OGFlYzkxODg0YjdmMzdhMjg0YzMyMmYwM2VhNTkzODI5ZWIyOTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY1NDM2YzdiNzgxMzc4ZWQyNThmYjE5ZjFjMjZmMTkwOGE2NzY4MzFlODllYzhiMDY2NmFhM2EzYmQwNjc3ZDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJjNzM2NDM3NzgzZTQzMmVhMGZjNzkyYzQ0OGJkYWU4OWQ0YjNlNzk3Yzg5OTY1ZGVhMTdiMGM3YTY3MjE4ZmUifQ"
                 }
             ]
         },
@@ -43,8 +43,8 @@
                     "version": "repo-lines-v1:sha256:efd2a807c7601881f212508af2c99f8fb08a6d93c0636a2965fd54d35a3ef145:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjMWMxZDYyNDgyZGJjZmNlNGZmMWQxZTFhODVkZTc0YzE5MzdmNTc4ODA0NTAxNTY3Y2Y3Y2VlNzUzNjlmZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4MTdiMDdjYmFjYmFlN2VkMTJmNjE2MjYyZmJlOTE0OTQyOGY1OTM5MGI3NmE3MjdiMDQ4MmMyYzI4ZTdjMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Orchestration/Sequencer.ts#L135-L249",
-                    "version": "repo-lines-v1:sha256:caff628a1fb1b3ec19aefab1abe9875d86cda63b9d218a249b31b53339add590:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4OGY1MDUyZTVkOWJkNTk1MGMyOTNjZjZlZjkxZjQyMjFiMzJlM2ZmZjViNDg3MWQ1ZDQxYWYyZGFjZWRiZjU4IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MzlmNjAxMmM1MDFmYmI4YTllNDRjY2Y0ZDlhODE0NzNkZDNjYTA1Y2E3M2VkNzRlYjg0MDhlZWU4YTgwZDg0IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI3NTYxZTY2YWMyMjdkNTEyMzJlYTMxZTk0MTk2ZGM0MDc4OTNkN2ZmYmFmN2YyY2Y1ZjAzODFjYWVkNGYxNTY4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1YTFhOWM4YTM1ZTFlNDRkOWE2NzRmZTkzZmM4NzExZWQyMGFlZjhlMWYyMjczMWEwZmZmMjgzMmFiOTBjMGFmIn0"
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/Sequencer.ts#L101-L145",
+                    "version": "repo-lines-v1:sha256:6ef612a7f826c417ea3b1e518fe3a4e02743ebc495da847a28cf6db31ff1c6a2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZTdmZjdlMzE3ZGZkMjA2N2VmOTgzMDkyYWNhZGZkYWMyMmMwNTI3OGRhNmY4NDA2NTdmYTM5NWI4ZjRkOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkMmE2ZDE1ZGEwY2Q2NTkwYjBiN2MyY2MyNTA5ZjE2YWI0MjMxYWJhN2NjMjFlODg3NTRhYzc1NDk1NmQyMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlMGMyZGRmNTgxNWViY2Q5YzUzNzA5ZDQwYmQ0ZjZhMjRjOWE0YTg2ZDljYmFhYzk4YzE5YzA5YTI3YzlmOGIifQ"
                 }
             ]
         },
@@ -53,8 +53,8 @@
             "statement": "`SmartLoopTransitionPolicy` evaluates magnet conditions with RTPC values and hysteresis, updates magnet state tracking, and returns the first matching transition decision for the current region.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Orchestration/SmartLoopTransitionPolicy.ts#L19-L78",
-                    "version": "repo-lines-v1:sha256:ed16f3845064bc08b7ad3162bc03926b81483702f052920f300fbca135198cd7:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYzc4MmYxMjVmYjNjYzcyZWY4ZGE5OWZkNzZhMjU1M2Y3MTM3MjhiYjA4MDJjMDc5ZDI0OWY1YThhNWEwMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwMmY5ZjIxNjBkNzg0YmJjOWRlMzRhOWJhYzRjNmYzNmYwNTc4MWNjMGE1YzFlOGUzNTZiNDc0ZDk1N2I4YjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/engine/src/Domain/Orchestration/SmartLoopTransitionPolicy.ts#L19-L79",
+                    "version": "repo-lines-v1:sha256:55d3de8df30b77a146b193c473964dd6842931009f4c51faa57f116891b40a11:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExMzhmNmY1NjM5MGI5M2JjNzFlOWRhZGQwYmUxNDQ3NDdhNWM0MjVmYWU4YzEyNmNjODBhZGU5NTMwNTJkMjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwYTRmZDUyMzRhNjhiNjkxOTc3MWM2NWM1N2ExNTE3MzM4MzAyZTMyM2I3YjkxZmM0NTU1ZGY1YjFmZTc4MTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         },
@@ -113,6 +113,6 @@
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

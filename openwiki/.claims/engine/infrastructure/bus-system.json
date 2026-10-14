@@ -1,18 +1,18 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:22ee18a290ba4ccb1469ff1b395ea2c5fd630a810cceab2d4c0a1fdb96c900cc",
+    "pageVersion": "sha256:07b5af2dc010ea8e73e6a9e6fa3a9169fa5d4792ddfbf357bb5e911318f49418",
     "claims": [
         {
             "id": "claim_18faef7e535d44268703bb9e72db83d7",
             "statement": "The bus system owns the live audio-bus graph that sits between mixer state and concrete Web Audio nodes, creating `AudioBus` instances from configuration and exposing the routing/tap boundary to other subsystems.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L24-L54",
-                    "version": "repo-lines-v1:sha256:f47bc077289e2f715e616d3aa2b9850c7b282c789aa18c6f1caee4cc0fd753aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjNzFiMWY0MDBkNzMyNWE5NGQyNWFmZGFlMzY4MzFiOWM1NmNmNTA3Zjk2NWY1ZWQ2ODMwMTE0MjhiZmJjZTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiY2E4YTdjYTJjOTFlMWY1OTBhY2QxY2QzZGM3MTAwODc2ODkxMzQ2ZmVjM2IwZTRjZDQ1NWMwMWVlZDJiMTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxNzVhOWVhM2UyOWY3MzhmNjYzMzk5YjBkZTA5MTBjZTFmNGM4MWQ5MGUzN2U3ODY4ODA4MjJkZTM4NWJiN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5NDA0NDJhMmI0OTc0MjE3ZTA4NTRiMzAxZTJkYWU0MGZhNWNlZmY5NDYzYjU0NWQ3ZDZkYmMwYzJkYjhhOTUifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L31-L49",
+                    "version": "repo-lines-v1:sha256:7cc089bad488d087962cba88f8992eae66731368b9fe24ff43f5b0897ef01ef4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzQyODk3NTgyMjIyN2Y0OWQyOWM3MWE1NjEwZjIzNzE2YzFkMDNlNWVmN2QzYTlkODNmMzg4YjRiYzQzOGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2YWQ5ZmYzMmI1NzcxMjYwMjVhNTBhYmEwOTA1YmZhZDJmMDE1NTBiODgxODVjMmNiYjM0MDAwOWVjYTJlMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjYmYwOWM1ZDRiNjQ4MmE0OGZmY2ZmZTdlNWY1MTFiNmU3MzYyMGY0MDczMGVkZTc4NDcwODgxOTAzMDgxOTkifQ"
                 },
                 {
                     "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBusSystem.ts#L17-L30",
-                    "version": "repo-lines-v1:sha256:1e1cbddd19e0f11ebadece0e0310717c4e92707845c04cf8ca2af123990bd76c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5ZGQzNzFlZDczNjJmMGFmOGY5MGE5YThhZDhkODk2MGIzOTcwMDIyMTcxNWE5NzEyMjE0NTNkZTU5ZTM1NGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxZjAwNTAzNDIxZDFhZGY3MDgzMTljYjAyY2I1NDdmZTY5ZjRlODhlZDljMmVhZThhNTMxNTYyNzYxNzMyNjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlMzUzNzMyZDcyMDQ3ZTM5MjhmMzRmOTFlZGEzMTdlNWI0NjVjZDQ0MjZmNWY2YzIxMTY2ODIzY2I5NTQ2ZjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4YWJjNGQ0YjBlY2JjOGI1MzZlNWVlYmRkMzI2YWVlZGNkY2UwM2Q4MGEwZmQxNDlkMzM3NWZmZjc4Mzk1ODgifQ"
+                    "version": "repo-lines-v1:sha256:f4971f992b074d7aafd84481c0b6b6850701171fa6159fc2ed9c533ec7f1a1a1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5YjdlN2FiZjg5YTRkZmQwMmZmMjQ0ODgzYmQ4YjM2NTYwMDY2MGIzNDRiYzIwMmYyYTQyMDQzZDA2OWZjZWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxYjM2ZGY4OTc3MTAxY2IyYTdhM2RmYTUyYjU1NzMzZmVlODI1N2E4MWUzMjhjMzY1YjQ1NGQwZjI1YjJlY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFkOTJlNzBhYTQ4NzYwZjExYmE1N2M1NjBiMjQ2OGFlMjNiYzFjODc4ZWFiYzY3M2YwYzIwMTJkMDY3MWNlMjkifQ"
                 }
             ]
         },
@@ -21,12 +21,12 @@
             "statement": "Each `AudioBus` exposes a pre-filter ducker tap and a post-filter analyzer tap, while the underlying input gain node is connected through those stages toward the system master routing node.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L24-L42",
-                    "version": "repo-lines-v1:sha256:e6c52c7f3855375b0914aeca7c7c720c526d80349cf17b9d5dee88d774a9c09e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjNzFiMWY0MDBkNzMyNWE5NGQyNWFmZGFlMzY4MzFiOWM1NmNmNTA3Zjk2NWY1ZWQ2ODMwMTE0MjhiZmJjZTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxNzVhOWVhM2UyOWY3MzhmNjYzMzk5YjBkZTA5MTBjZTFmNGM4MWQ5MGUzN2U3ODY4ODA4MjJkZTM4NWJiN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzM2U2NzZmZDk3OWY4MzFjMmYwODY5MDNlOGU4Mzc5N2Y5OWQyMzgyNGVkNjBlNzU2ODZmMDg3NWI5N2UyYTgifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L102-L118",
+                    "version": "repo-lines-v1:sha256:0a56c44aa880d9fbd4732a6acb9a19742c7d137cdb38900165a6d0fe870b6f75:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyYzNjYTExNTQ1ZDU1MjY3OWQ3MmMwMzMzYWViMzQzOTMwZWMwMjhlMzA4ODM3YmE3NDkzOWExMDY1ODcxNzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmNzRhMDc5NWUxN2UyMDI3MDFhNTNkNTA5YjMzNzQ2MTVkZmZkMzkzZWFhMWNiODI1YTI3ZWQzYjA2OTIxMDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiNGY2YjgzMDc3NjNlYTdkZGEyYWEwYmFhNjEzMTY1Yzk5ZWU5ZWU3MjEwNWZkZGIzYWM2OWQ2MzUwNTYwOTUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L98-L118",
-                    "version": "repo-lines-v1:sha256:6084ec5bac167bb5eaed77b41da8e286fbe9e0deec71f340c2531c818eebef8d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4OTMwZGZjMGRmNWVlZmFlODQ0ZTZmMDRkM2M0ZDc0NmY1OWU1ODQ3YjNhOTg3Yzk4NWVhNTM2ZjdmNGExZjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiZTk0ZWI5Y2Y1ODM4YmFiZDdhNDYxMjQyMWFhMzQwZjhmMTNkMDA3NDBkOTFlYmE4YWIzODM2NWQxZjdjOGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlZTE3OTNiMjhlZDliMWUyZDY4MjE5ZWM0NmM4YzUyZGZjMTdjZTc0YTczOTYyZDlkNWI5MDA4NDhkNDI0MTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjliMWVmMzgwNGE4MGE3MGJjYzJkMjhlZjBmOTBmYjdlYTg1ZTNiODMzYmQ1Y2VkZmRhMWU1OTg5ZjA3Yjc0NDgifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L34-L45",
+                    "version": "repo-lines-v1:sha256:cf06b035751e4bc5b5b83452a3735f86279fa760592598024f8442022bc5bae2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzZWY1NzIwYjY3YjA2NjJhZjU1MGUyODYxMmQ2MjY2N2VkOWM0NmJmYzkzOWI3ZDMyM2NkMzc0Mzc3N2UyZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNjNDU1ZTUyMWZjZTNkNzI2YWVjYTIyODJiY2NhZmJkYTY0NDQ3NmU5YjJmODY3MDAyMmNhMWFjZGVkZWVjZTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5NGVlOTc5OTI1ZTc1YWI3ZTI2NzRlYjc4NTRjNWZkM2VkZjhkZWY2MWY0OTIyOTBiZWY2NjY4YWE0MjM1MmQifQ"
                 }
             ]
         },
@@ -91,16 +91,16 @@
             "statement": "`AudioBus` maintains logical gain, RTPC gain, filter frequency, pan, and per-target send state as deferred parameters that are applied during `processFrame()`, which is how send fades and RTPC-driven changes reach Web Audio parameters.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L121-L130",
-                    "version": "repo-lines-v1:sha256:4d0be536c5b4247df31aaf77b749d8cdd7ad6b67b720f363ba73cff2915f270b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmYjk3N2FlMzk3YThjODNmYTg3NWVlNGNhNjgyZTYxZDA0YjI2MTkxYzY1ODAxMWQ2ODI0NzI3YjBiNGZlN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhNzVmNTgzODk5OGVkOTUzZGUwMzAxODc1MDk5MjkyNmZjMGEyMjVhMDMxZDY1NDIwZmMwOTE4YmY1YTAxNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhYmQzMGFiNTkwNDE0YmM5YjhjODlmNTA1MDE4OTcyM2U5NjhmMTEyYTdkOGRhM2MzNjZhMjFkMjY1ODYyMmMifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L125-L130",
+                    "version": "repo-lines-v1:sha256:5709b6438a6a9673d603e7b03571afa526f704fb8c36ead1b4831de49ac14dbe:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjE1NWUxNjg4ZWFmNDY5NTViMjVjZGNkYzM5ZTA5NDJhNDRiY2MxOWJmYzcxOWM4Nzg0MjU2NGU2YTkzNmU5ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTg4NTJiMGI1MmRmNzdkMGY1NjAxZjRhNTE5NGVkY2UwNGRhZjUxYzUxYzg3NmUzMTYyNjgyMTZhYjk5Y2I2NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzI5YjBjNThhMjQzYjdmN2Y4OTg2ZTdiNTI2YTczMzMxODRjMmM0YmQwOGMzYTM3OTc2N2U3ODBiNzU5YTQ0ZSJ9"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L300-L340",
-                    "version": "repo-lines-v1:sha256:a558d67c819d857a8a1f90f40052118b2a7f187d2367d960279e1d974ef68ca8:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3YjkwZjc2YTUwOWY0ODgwMjNmODgxMzk1MWRhMWUwMzA0ZGM4YTY3NzMwMDZkZmZjZGE0MzI4YWY0NWQ0ZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmZjk5YmM0N2RjNzZhYmNlMDY3OThiMGQwY2Q2ZjlhZDJlYjA5MmY0ZGU2MTg3MDBjMWMyNmI4M2FlNGQ2NjYifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L308-L350",
+                    "version": "repo-lines-v1:sha256:b28e28a96a83283638c0482602f08022f42de422396d818b71275b0c8d687874:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyM2FiMzM1MWY2MzI1MmU5YWQzYjBiYzk3NjE0YzM4ODdiNWM0MDM2ODRhZTAzNTlkNmFhZDJkMjA0MmE3YWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxNDM5Yjg2NmJkZDE1NTVkMTFhYmU5ZjM0NmU2ZmQ0NDM5NDU5NzNkOWE0ZjQ0ZWI4MDUzYTI3YjJlYmZkNTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4MTg0NmE1NzYzOGUyNGY3ZWEwOTA3Njg1YzJiNzE4OGU5YjUyYzcyYjA5YzM1MmFlMzQ5MTZkMzFlNGFlY2YifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L63-L71",
-                    "version": "repo-lines-v1:sha256:a8e94a046d095deb636d693ede6534c993a9e90fd4f6b53a1b1cb9ce70f13623:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2VhMTk0ZmEwMmNjZGQyZDliNjYyNmIzMzU4ZDIzYmQwYmJlODVhNzQ0ZWE5OGQ1MjE2MmY1MDdiOTM5YWZjZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTM0ZjAzNTYxOTgwOTJhODEwMWYxMTcwYjAwNzEwNmFjMjNkNDk5M2Q2MzRmOWM4YTljZDk0OTUwYmY2M2JlOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGMyNWE1ZmQ3N2FmOGQ0ZTAzYjBlODM1NDBjZWY3MWVlMzFjNWRkZTA2ODAzMGMyNzA1Y2UwMWM4ZmE0Y2E0OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDBkYThhNzFiZGNiZWRiYWFlOGM2M2Y2YmI5ZDliYzU0NjY2YjEwOGVjZDk5NDc3MDBhYzhmYzIxNzJiYTUwMSJ9"
+                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/AudioBus.ts#L70-L75",
+                    "version": "repo-lines-v1:sha256:6bc0f71699f8c42c71237b206505a2a96a134b13a613adade57e52be5e0897e4:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGJjMTQ3OTZlZGY1ZjliM2Q0NzMyYmFmYjI0NTUzZGU0YjZmZTk4YmVkZWZiZTVkODhmYmNkN2IzMWQzNWVmYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWQ5ZTEyNTQ2NDI1NTc2ZDNkZWFlOGM5YjlkYmYxMjhkNWQ2ZGRhZjVkN2ZlODU3OTM0OTI3ZGVmZmEzYjlkZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWIxOTZjYTEwM2IzMGJlYjFkOWYyMDcwYjMyMTI4NjY2OTQ0NzgzMmMyZWJmZjkwN2I2MGRiYzg2OGRkODcxNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTVjYWU0NGFhZGZhZmQ4ODUyZWI0ZDM5NjY1YTQ1ODU4NWI2MDMzODExNDk5ZDI5NTY1YjBjNGQ3MTRiYjk3MCJ9"
                 }
             ]
         },
@@ -109,14 +109,14 @@
             "statement": "The cold-start audio leak test establishes that applying mixer state immediately after startup does not leave unintended audible output on inactive buses.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/__tests__/ColdStartAudioLeak.test.ts#L22-L102",
-                    "version": "repo-lines-v1:sha256:3fd5510241a6419544bd952e3135753a095ecf9c90a7bcd872d90184f78cebe2:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDliOGExODFjYTg1ZTg0MzY5MGNlNzhlNmRkM2NhY2Y4OTdmNDk1NmQ1ZmNhMzM4MjJiZGJmMjRmYjk0MzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkOGM2Y2E5YjYwNDdkOTRmNjk5MGNmMTExYTE4NTEwZmRlMGYyMjJhMmU3YWQxMGY2MGY0MGY2MjQ4NGE5NmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/busSystem/__tests__/ColdStartAudioLeak.test.ts#L22-L100",
+                    "version": "repo-lines-v1:sha256:6b853a901e3c285481e723a1d846b1aea19f42e260004b1aeb170ddc9832572e:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDliOGExODFjYTg1ZTg0MzY5MGNlNzhlNmRkM2NhY2Y4OTdmNDk1NmQ1ZmNhMzM4MjJiZGJmMjRmYjk0MzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkOGM2Y2E5YjYwNDdkOTRmNjk5MGNmMTExYTE4NTEwZmRlMGYyMjJhMmU3YWQxMGY2MGY0MGY2MjQ4NGE5NmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

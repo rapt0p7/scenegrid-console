@@ -8,10 +8,10 @@ sources:
     resource: repo://packages/engine/src/Application/AudioEngine.ts
   - id: openwiki-source-47db8ab555df91361739a053
     resource: repo://packages/engine/src/index.ts
+generated: { by: "antigravity", at: "2026-09-27T16:32:49.021Z" }
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T16:32:49.021Z
-generated: { by: "antigravity", at: "2026-09-27T16:32:49.021Z" }
+    at: 2026-10-14T20:11:32.061Z
 ---
 
 # Engine package overview

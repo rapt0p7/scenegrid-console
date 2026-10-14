@@ -1,14 +1,14 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:8699ec63312d6ae96b691ce302c929c81013d856c8eaccce640d387c68c59bff",
+    "pageVersion": "sha256:96b2302adfc781755f67ab00530e1752fad81f6bc3dbc1f1e0a10859cfbb1cce",
     "claims": [
         {
             "id": "claim_73f7c3a56e7a4dabab93fb392775d8da",
             "statement": "`MeterProcessor` is an `AudioWorkletProcessor` computing real-time RMS, peak, and K-weighted audio energy levels for inspector visualizers.",
             "evidence": [
                 {
-                    "resource": "repo://packages/inspector/src/worklets/meter.processor.ts#L30-L45",
-                    "version": "repo-lines-v1:sha256:02a2ac1ab26e79d6a5f875dde103ea4d7552a94b9dca269b60d34e8ffc6eff8f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViNDIzMjUyMTZiNDNmYTNmM2EwMzg2MjVhMTM1ZjI2MzU1N2Q3YzY2ZDRmYzBkYjNkZTRlNmExMmEyZmVmYjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3Nzg4NWRiYjA0MWYyZWY5ZmMyZTkxYWJjNDUxNDg4OGI1ZDNjM2JhNTliYTcxYjM3NjE1NTRmM2ZlOGVhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1OWU3MjcwMjU2ZGQyOTI2ZmQ0NGM4MzczZDdmOTBiMzMxMjQxNTkyYjQwYzRiNTA3ODQ2MjliOTZlNzk2ZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwY2MwYmYzM2YxNWEwODE1NTk1ODU0MmEyMTIxZTBjNWIxYmI3MGY4NDBiN2NhYzI1MTEwNzQ3ZjNmYjdlYjIifQ"
+                    "resource": "repo://packages/debugger/src/worklets/meter.processor.ts#L30-L57",
+                    "version": "repo-lines-v1:sha256:98e9195a3ca40a148d5b4bb84a98f76f8cf4cd2bd6edf6e81ea5b08ff0e8a515:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViNDIzMjUyMTZiNDNmYTNmM2EwMzg2MjVhMTM1ZjI2MzU1N2Q3YzY2ZDRmYzBkYjNkZTRlNmExMmEyZmVmYjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1OWU3MjcwMjU2ZGQyOTI2ZmQ0NGM4MzczZDdmOTBiMzMxMjQxNTkyYjQwYzRiNTA3ODQ2MjliOTZlNzk2ZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5Y2FjN2VhZGVkZDRiYzYzMzY2YTQ2MTAzYzYyNWQ0MjFjNDJmMzllYTVlMGUwNzg1NzIyMWM3ZjZhYmZjNjcifQ"
                 }
             ]
         },
@@ -17,14 +17,14 @@
             "statement": "`AudioDebugPanel` constructs a Tweakpane control interface with `AudioProfiler`, `VoiceMeterWidget`, and `VoiceListWidget` to inspect engine debug state and trigger playback operations.",
             "evidence": [
                 {
-                    "resource": "repo://packages/inspector/src/AudioDebugPanel.ts#L5-L40",
-                    "version": "repo-lines-v1:sha256:e434a7c8ba09338671d9436253cc5251546deeb161d933307f1ed8893e13fbbb:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmNThjNTg0OWU5NmM0OWE0MGVjNTQ3ZTU2NzBmZWZmZjE3MTk4MGM3OTI0ZjBjM2UyNGExYTBkMTY4YjZmN2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2M2I0Y2ZjNGEyMDVjNWQ1Yzc5MmQ5ZDQxMmE4ZTk5Nzg4ZTc0NDdmYzkzNzhlZmE2NGZkNmUwZTEzYTYwOGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzZjY3MDdmM2NjYmZhMmY3ZThkNjA5NjE3OTBjODE5M2I1NDRiMTZkYzM3OGFiZmJlNmFiYjk5NWZhZjkzOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE0MGY1ODFlZWZjMDZhZWIwMDViN2ZkZDNmYjA3YTg2Y2ZkZTNkOTZmNjkwYWI2MDkzNWEzOTgwZTkyYmE4YmYifQ"
+                    "resource": "repo://packages/debugger/src/AudioDebugPanel.ts#L5-L37",
+                    "version": "repo-lines-v1:sha256:d591269f263b95f806ba00aaf7cc5c9092d048dc7dc3e6fe9af78cd0ee77c814:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0ZjY1MTEyZGNjZGQ0MWYyMWRlMDQyODU1MDY3YTAwMzAyZGRiZWU2NDM4MGY1YTU0NjVlYmIxYmRjZjU1OTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY3MmE3OTBhNWIxZGViOGE0NjVjZjI0MjZmYTA4NGUzYzgwMzQ0N2M2YTA1OGZjYzUwOTQ0OWRkOWNlZDBlNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwZjI2ZjNkYjg2Yzk4OWUzMGVkMmQzNDg4ODk4ODI3NTQ5YzNlOTFlNTM0Y2JlMzFhZjVhNjczYmJjNzgyNjUifQ"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

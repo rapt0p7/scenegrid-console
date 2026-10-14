@@ -1,13 +1,13 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:8e7fb7540fc097babb56e65da8ae6302b93af0187c7198087e1149ffb6afd24d",
+    "pageVersion": "sha256:143a9a9f4d22f2f34857ddcaea86a7527e017293cc7b13cb86e8c19e8ea538ec",
     "claims": [
         {
             "id": "claim_cfcdd8e0bb0e408898b8fcbc66b1ab9d",
             "statement": "`attachDebugUI` verifies the presence of `_debug.busSystem` on the passed `AudioEngine` instance before instantiating `AudioDebugger` and initializing DOM visualization.",
             "evidence": [
                 {
-                    "resource": "repo://packages/inspector/src/index.ts#L7-L18",
+                    "resource": "repo://packages/debugger/src/index.ts#L7-L18",
                     "version": "repo-lines-v1:sha256:9003efd54ef9558e279569411f9f4e2c9a00808dc5515258d8d6eea260fe410d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjMjkwNzRjYzk3MTM5Njk1NGNmYTU4NTFmOTFiZTAwZGM2NTlkOTkxMDJlODNlZWQwMjI4YzI2MzEyMTIzMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlNWZmZjk2ZDk4N2RlNGZkMGIwMTkwYTBmYmQxNGU1OWU5MmZjMzI3ODA4YTZmY2U5Zjg5NDFlMTViOGNiOGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
@@ -17,7 +17,7 @@
             "statement": "`AudioDebugger.init` queries the specified DOM wrapper element, warning and returning if missing, and dynamically constructs spectrum and meter columns for the master node and active bus analyzer taps.",
             "evidence": [
                 {
-                    "resource": "repo://packages/inspector/src/AudioDebugger.ts#L23-L60",
+                    "resource": "repo://packages/debugger/src/AudioDebugger.ts#L23-L60",
                     "version": "repo-lines-v1:sha256:e3ea641ef86103d16ade6a18957362e02f9d8698634e5044c93db075d5f1fd89:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0NTJmMmExZjJhMGY3YjIzZWVmMzAyOWYzNmRhZmM1MDc5YmZmOGMyYjNkN2U0N2IwNWI3NTI2YzhjZDQzNzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ODdjN2E0ZjRlM2Q0MWYxZmU5MGJmYjI5OTk1MWRhZGMwOThjOWM0YWZlNTdiZThkNjlkNTUxYzQ3NTE0YWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0MDQwNTVjYjI0OTNiN2Y5YjBiYzdkN2M0NjBkMzkxMDBiNWNiNGZmZDAyMmQzNDIwYzcxOGJkOWY1ZmY2NjYifQ"
                 }
             ]
@@ -25,6 +25,6 @@
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

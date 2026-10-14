@@ -3,14 +3,15 @@ type: runtime entrypoint
 title: Inspector debugger runtime
 description: The `AudioDebugger` and `attachDebugUI` entrypoints that attach live bus visualizations to an initialized engine instance.
 tags: [inspector, runtime, debugger]
+sources:
+  - id: openwiki-source-0832095ccce44564be245c56
+    resource: repo://packages/debugger/src/AudioDebugger.ts
+  - id: openwiki-source-e2c68503f698be46f934529d
+    resource: repo://packages/debugger/src/index.ts
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T16:32:49.021Z
-sources:
-  - id: openwiki-source-1d5210582c2e4047cd94c6c3
-    resource: repo://packages/inspector/src/AudioDebugger.ts
-  - id: openwiki-source-fbd7fb9bd8ae10b828f46f70
-    resource: repo://packages/inspector/src/index.ts
+    at: 2026-10-14T20:11:32.061Z
+generated: { by: "antigravity", at: "2026-10-14T20:11:32.061Z" }
 ---
 
 # Inspector debugger runtime
@@ -19,9 +20,9 @@ This page documents the runtime entry that turns engine debug state into a visib
 
 ## Entrypoints
 
-- `AudioDebugger` in `packages/inspector/src/AudioDebugger.ts`
-- `attachDebugUI` in `packages/inspector/src/index.ts`
-- `initAudioDebugPanel` in `packages/inspector/src/AudioDebugPanel.ts`
+- `AudioDebugger` in `packages/debugger/src/AudioDebugger.ts`
+- `attachDebugUI` in `packages/debugger/src/index.ts`
+- `initAudioDebugPanel` in `packages/debugger/src/AudioDebugPanel.ts`
 
 ## Responsibilities
 
@@ -53,7 +54,7 @@ sequenceDiagram
 
 ## Representative tests
 
-- `packages/inspector/src/__tests__/AudioDebugger.test.ts`
+- `packages/debugger/src/__tests__/AudioDebugger.test.ts`
 
 ## Scope boundary
 

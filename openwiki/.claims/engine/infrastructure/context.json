@@ -1,14 +1,14 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:ed0b37423335bcd890ae253c1d9edb548ae4033149b679aee6253260f8bfd08d",
+    "pageVersion": "sha256:3ddf9d2aead8b7f05dd5d37ca7a3f04ad178e680503d2bfd40bcc42bfabf0544",
     "claims": [
         {
             "id": "claim_0f37dd4c26b3445894b7f08626af1413",
             "statement": "AudioContextFactory creates realtime audio contexts with `latencyHint: 'interactive'` and optional sample rate, and can also create offline audio contexts.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/context/AudioContextFactory.ts#L9-L19",
-                    "version": "repo-lines-v1:sha256:590386846373072760afbd26e0e7239ccde94e5c3d9bbdda2082c8acd142e972:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4N2JhOGIyOTRhYTIzNGRlZTk1MGVmYzA3ZGZjNDE2ZTI5ODA0ZWE4Y2Q0NDNlZWMzYTA5MzU4YjMzNmYyYTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkZmNhNjAwYWI5OTgyMGVlMjU0MmI1MGM0ZjBkMjg5Mzk4OTExMGVkMmVhNmQ4NDZhMjQyZjg2OGJkNjA4NTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAxOWEyYmM1YTFjZjAyYTkyYTEyZmZjOGQ4NzJkZTk0MmM4ZTY1NTMxZjMzNWU1NDBjZDIyMzY4NDJmNTBhNTYifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/context/AudioContextFactory.ts#L9-L20",
+                    "version": "repo-lines-v1:sha256:38249f209cfd03bac196d77148733dc180bcacaeb5dcfeef1a51e070aafeb434:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0Y2M4MWFlOWFjYWY4ZjRiYmE4YTRhNjVkYjNmZjMwMTIzOTg5YmQ0NDA0NjU3YWEzZWQ4ZmUwYTMxZDlhMzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAxMzNlNzM1OWFjMzkwNmFmMzFkMjhkNTkyYmEwNWJjMDJjYzYzNDM5ODdjNzZjMTBiYjc3ZTQyYzEzMzkxY2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNWM0ZTQyYTExMjc5MjYwMjNmZTQzOTJkYTFkYjYwOTQ5ZjkyZjcxYzQ0ZWZjMDljNTc0YTc4M2Q0ZjQ3YzkifQ"
                 }
             ]
         },
@@ -59,12 +59,12 @@
             "statement": "ListenerManager applies listener position and orientation via `AutomationEngine.ramp()` with 50 ms smoothing when param-based listener fields are available, and falls back to legacy synchronous listener methods when they are not.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/context/ListenerManager.ts#L5-L41",
-                    "version": "repo-lines-v1:sha256:1540c13beae9dc9233980dbe014f4d68628f866ffd1514f1de790e3af6abeccc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjNzNjNmE0YzM4MTE3NzNiMzhjNjk0ZjE0NTEzMjQ2YWFmMjNlNTNmMTVmNDBhODYyOTRhN2JlMmM1MDVjOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2ZGNiMWRjZDNlODM0NjU4MzdhNjMyOTExOTE3MTk3YTAwNWMyYjIyOTAxMzY2NjViYzllZTRjZWU2NTM0MTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/context/ListenerManager.ts#L5-L42",
+                    "version": "repo-lines-v1:sha256:1933d536be56cccd76cdcfe64639805de0f38b49191ea7e61bbe4066913df984:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjODk0MWE4ZThkNjZmYjc3MjJlNzdjYmY5N2JiNWEyOTRiNTVjNWM3NDA4M2IwMjE4NTU5NGYzZmE2OWY3NmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjczOWNkMDNjZjJiN2Y3ZTMwMTJjN2E2NWFmM2NlOWYyYzFmOGM1MTYyMGRjZWI0MGQ4MmU2ODlhMjQ0OGM3MzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/ListenerManager.test.ts#L41-L87",
-                    "version": "repo-lines-v1:sha256:f7e37da9142a50accda7d644d743c94ce590a2c837ae817c425ee8efc08a16c7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViZWVhY2NjODUwN2ZkNTE5ZjM2MjNhMjM5OTg4ZTQ2NjRhMzgwNmYyZjYzMzA1MGQ4Mjk3NzcyMTUzMDRiYmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDM5ODI3NWYxZDhjYzQxNDFiY2QwNzlkZWYzM2Q0YzU1MjA1ZmMwZGJlYTliNzM4NTQyZmVhYzFkYTZiOTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5MWQwZTE0M2Y1MjYwOWNjODkxNmZiNDQ0ZTMwNzE5YWQ0YWE5NDdiMDAyZTU4MDQwNzRhZTlhMmQ4ZGFlZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3YmI4MTg3MjY5ODU5NjIzN2VhNzBkZmI5NTIwYTkzMWZjM2FlZTcwY2I0MWZkNjgzNGVlODQ0ZTI1ZjRmODAifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/context/__tests__/ListenerManager.test.ts#L41-L88",
+                    "version": "repo-lines-v1:sha256:8daeef2dfc06dae96db74f8eec36efa7994b936123218413526753423100167f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1MjQzMTVhYzcwMTViYmFmOGE5Y2VmYWY2YzU2MTcyMjc2ODJkNWVkYTZjZDUyYTM1M2I5Y2ZlYzU2ZWI3YjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDExY2FmNDNlOTdlZjM2OWU2YmVlZDFhMjY4YmQwNTgzOGYyOWI5ZGQyNTRiZjY5YmE2NDg4NDE0NzIzNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmMjRiMjBjMmM1OTM0NjA3Yjc0YmY5NWU0MjM1YzM4YjgyYjIxMWYwYzgzZTkyZTJjODE1YWJlNjM4MzFmNmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIifQ"
                 }
             ]
         },
@@ -127,6 +127,6 @@
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

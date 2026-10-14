@@ -5,7 +5,7 @@ description: Map of the SceneGrid workspace packages, their supported dependency
 tags: [architecture, monorepo, browser-runtime, audio, telemetry, inspector]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T16:32:49.021Z
+    at: 2026-10-14T20:11:32.061Z
 sources:
   - id: openwiki-source-739d3ff1d3f2cc6c1de83f4b
     resource: repo://.dependency-cruiser.cjs
@@ -17,30 +17,32 @@ sources:
     resource: repo://package.json
   - id: openwiki-source-92450a7065eb85e0f30b5461
     resource: repo://packages/cli/package.json
+  - id: openwiki-source-27bb31b0369962e083132457
+    resource: repo://packages/debugger/package.json
+  - id: openwiki-source-0832095ccce44564be245c56
+    resource: repo://packages/debugger/src/AudioDebugger.ts
+  - id: openwiki-source-e2c68503f698be46f934529d
+    resource: repo://packages/debugger/src/index.ts
   - id: openwiki-source-a038f25a99dd9c7512d4a006
     resource: repo://packages/engine/package.json
   - id: openwiki-source-5236a07fa61d4cd901388060
     resource: repo://packages/engine/src/Application/AudioEngine.ts
   - id: openwiki-source-a1c5d4117cfa37afc36cb8c7
     resource: repo://packages/inspector/package.json
-  - id: openwiki-source-1d5210582c2e4047cd94c6c3
-    resource: repo://packages/inspector/src/AudioDebugger.ts
   - id: openwiki-source-1b12caf4e36a36f4bc7138ba
     resource: repo://packages/inspector/src/hooks/useCommandTransmitter.ts
   - id: openwiki-source-91b3f26e900846572fc5f81d
     resource: repo://packages/inspector/src/hooks/useTelemetryBus.ts
-  - id: openwiki-source-fbd7fb9bd8ae10b828f46f70
-    resource: repo://packages/inspector/src/index.ts
   - id: openwiki-source-265221f77947a8a08e9a018a
     resource: repo://packages/shared/src/index.ts
   - id: openwiki-source-5b2c1d48af432dc4e7386288
     resource: repo://packages/shared/src/Workers/TelemetryWorker.ts
-generated: { by: "antigravity", at: "2026-09-25T08:14:31.202Z" }
+generated: { by: "antigravity", at: "2026-10-14T20:11:32.061Z" }
 ---
 
 # Repository architecture and runtime boundaries
 
-SceneGrid is an npm workspace for a browser audio runtime. Its production-facing package is `@scene-grid/engine`; `@scene-grid/shared` supplies the lowest-level cross-package utilities; `@scene-grid/inspector` is an optional browser debugging UI; and `@scene-grid/cli` provides Node command-line processing dependent on the engine. The `examples` workspace is the integration host dependent on all three browser packages.
+SceneGrid is an npm workspace for a browser audio runtime. Its production-facing package is `@scene-grid/engine`; `@scene-grid/shared` supplies the lowest-level cross-package utilities; `@scene-grid/debugger` provides embedded diagnostic and analyzer panels; `@scene-grid/inspector` is a React telemetry and visual inspector interface; and `@scene-grid/cli` provides Node command-line processing dependent on the engine. The `examples` workspace is the integration host dependent on the browser packages.
 
 ## Workspace responsibilities and public surfaces
 
@@ -48,24 +50,28 @@ SceneGrid is an npm workspace for a browser audio runtime. Its production-facing
 | --- | --- | --- |
 | `@scene-grid/shared` | Dependency-free common types, utilities, telemetry contracts, and the shared-worker factory. | Root export provides branded/music/condition/culling and inspector-command types; memory, math, guard, immutability, and typed-object helpers; telemetry types; and `createTelemetryWorker()`. |
 | `@scene-grid/engine` | Browser audio application façade and its domain, kernel, and infrastructure implementation. | `AudioEngine`, configuration and registry types, selected domain types/enums, `WorkletLoader`, and infrastructure types. |
-| `@scene-grid/inspector` | Optional diagnostics and control UI. | `attachDebugUI()` builds analyzer views from `audioEngine._debug`; `initAudioDebugPanel()` builds the interactive debug pane. |
+| `@scene-grid/debugger` | Embedded in-game diagnostic and analyzer UI. | `attachDebugUI()` builds analyzer views from `audioEngine._debug`; `initAudioDebugPanel()` builds the interactive debug pane. |
+| `@scene-grid/inspector` | Optional telemetry and visual inspector UI. | React components and hooks for inspecting graph state and transmitting commands. |
 | `@scene-grid/cli` | Node command-line asset pipeline and alias preparation. | The `scenegrid` executable resolves configuration, runs the asset pipeline, and exits nonzero on failure. |
 | `examples` | Vite browser host and reference integration. | Owns authored audio configuration and creates, initializes, unlocks, loads, and drives an `AudioEngine`. |
 
-The package manifests make `shared` a dependency of both engine and inspector. The inspector has no declared engine package dependency; it accepts an engine-shaped object and its debug proxies at its integration boundary. The example workspace depends on all three browser packages (`@scene-grid/engine`, `@scene-grid/inspector`, and `@scene-grid/shared`), while the CLI depends on `@scene-grid/engine`.
+The package manifests make `shared` a dependency of engine, debugger, and inspector. The inspector and debugger have no declared engine package dependency; they accept an engine-shaped object and its debug proxies at their integration boundary. The example workspace depends on the browser packages (`@scene-grid/debugger`, `@scene-grid/engine`, `@scene-grid/inspector`, and `@scene-grid/shared`), while the CLI depends on `@scene-grid/engine`.
 
 ```mermaid
 flowchart LR
     shared["@scene-grid/shared"]
     engine["@scene-grid/engine"]
+    debugger["@scene-grid/debugger"]
     inspector["@scene-grid/inspector"]
     cli["@scene-grid/cli"]
     example["examples Vite host"]
 
     shared --> engine
+    shared --> debugger
     shared --> inspector
     engine --> cli
     engine --> example
+    debugger --> example
     inspector --> example
     shared --> example
 ```
@@ -128,9 +134,9 @@ The façade groups public operations by domain: event subscription and posting, 
 
 `createTelemetryWorker()` constructs a module `SharedWorker` from the shared package. It can send `INIT_CONFIG` when `remoteSyncUri` is configured. The worker shares the latest manifest, validation/RAM reports, snapshot, and up to 200 lifecycle/cause-chain logs with newly connected ports. If remote synchronization is configured, it forwards data over a WebSocket, replays buffered state after connection, relays received commands to ports, and reconnects with exponential backoff capped at 30 seconds.
 
-In a non-production engine build, `init()` additionally makes an inspector command port and ticks a `CommandReceiver` on the engine ticker. That receiver can invoke event, snapshot, RTPC/switch override, global playback, loop, and music-transition actions against the assembled runtime. This is separate from the inspector's direct UI integration: `attachDebugUI()` reads `audioEngine._debug`, while the React-oriented inspector hooks open the same named shared worker to consume telemetry and transmit commands. The engine package itself does not import the inspector package.
+In a non-production engine build, `init()` additionally makes an inspector command port and ticks a `CommandReceiver` on the engine ticker. That receiver can invoke event, snapshot, RTPC/switch override, global playback, loop, and music-transition actions against the assembled runtime. This is separate from direct UI integration: `@scene-grid/debugger`'s `attachDebugUI()` reads `audioEngine._debug`, while the React-oriented inspector hooks open the same named shared worker to consume telemetry and transmit commands. Neither the engine nor shared packages import the inspector or debugger packages.
 
-`AudioDebugger` is intentionally resilient at the DOM boundary. It warns and returns if its wrapper selector finds no element; otherwise it clears the wrapper and creates spectrum and meter views for the master node and every active bus analyzer tap. `initAudioDebugPanel()` similarly warns when it cannot find an engine instance.
+`AudioDebugger` (provided by `@scene-grid/debugger`) is intentionally resilient at the DOM boundary. It warns and returns if its wrapper selector finds no element; otherwise it clears the wrapper and creates spectrum and meter views for the master node and every active bus analyzer tap. `initAudioDebugPanel()` similarly warns when it cannot find an engine instance.
 
 ## Change and operations guidance
 

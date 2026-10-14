@@ -1,14 +1,14 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:eb279e28f378e6e1a1874e44bc0b6a33f1e415900f3446dfb009263b3958ce62",
+    "pageVersion": "sha256:08b99a83397d35041054b6a1a076365b4463754eab75652d98a109562631c049",
     "claims": [
         {
             "id": "claim_98b085f5e4ab4475b4252091fa518f49",
             "statement": "The engine infrastructure layer translates high-level domain audio decisions into Web Audio operations across context management, audio buses, node composition, plugins, scheduling, loaders, voice pooling, state registries, and telemetry transports.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/index.ts#L20-L49",
-                    "version": "repo-lines-v1:sha256:49a8ce71628d11d5e0a3b477492c317296e5cd366243a4c24320682d7d4eb034:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyZWY2ODVjNmQ0OGVmMjI5OTg1NGY2ZGNkNmNjMzhjNjkwMWY5NWYwNTFhZjBlOWJmZGU4OWRmNWI0OGM2NjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmNjdkYzFmNjMzYTU2MTQ1MzYxYjg2ODg4Y2Q2N2UwNDY2NWJmZjc3NTI3NzFjNDJlMDM3YmViOWE3NGRlNzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5OGU0MDg2OWUzNjVmZTJiYTRhOTM1Y2NjMGM4NTIzMTU4ZjRjNGRlYzQwYTJjYjI5NTQzMzE0M2UwY2VhODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/index.ts#L21-L51",
+                    "version": "repo-lines-v1:sha256:21c1f6ec3b82fa1e938a17a08b451d400e18b310eeb9a1fe6d4ab46bc7a55fbc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5NDNhNDZlZmEwY2U5ODgzZTgxZWUzZjM5NDBkZjY4NTEwMDczMGNkMmQ5MmJlNjliZTcyOWZhNTNhODcwMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmZDhkZGI2YTZmMDkwZjBjMTY0Nzc0ZmJlMGYwZWY1YTM1ZjgwOThmOTUyY2IxMjFhN2YyMTAyNmZhNzRmNjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyNDlhOGFkZGRmZWE2OWFiOWIzMGIwZjAzNTgwY2MxZGU5MzUwNWIxOGRkMmQyMTNkZGM0ODFhOTJlZjQ5MjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         },
@@ -17,14 +17,14 @@
             "statement": "Engine infrastructure exports concrete adapters and utilities including `AudioBusSystem`, `AudioContextManager`, `MasterOutput`, `AudioBufferLoader`, `BankManagerAdapter`, `SoundPoolManager`, `EngineTicker`, and `TelemetryDispatcher` consumed by `AudioEngine`.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/index.ts#L20-L49",
-                    "version": "repo-lines-v1:sha256:49a8ce71628d11d5e0a3b477492c317296e5cd366243a4c24320682d7d4eb034:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyZWY2ODVjNmQ0OGVmMjI5OTg1NGY2ZGNkNmNjMzhjNjkwMWY5NWYwNTFhZjBlOWJmZGU4OWRmNWI0OGM2NjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmNjdkYzFmNjMzYTU2MTQ1MzYxYjg2ODg4Y2Q2N2UwNDY2NWJmZjc3NTI3NzFjNDJlMDM3YmViOWE3NGRlNzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5OGU0MDg2OWUzNjVmZTJiYTRhOTM1Y2NjMGM4NTIzMTU4ZjRjNGRlYzQwYTJjYjI5NTQzMzE0M2UwY2VhODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/index.ts#L21-L51",
+                    "version": "repo-lines-v1:sha256:21c1f6ec3b82fa1e938a17a08b451d400e18b310eeb9a1fe6d4ab46bc7a55fbc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5NDNhNDZlZmEwY2U5ODgzZTgxZWUzZjM5NDBkZjY4NTEwMDczMGNkMmQ5MmJlNjliZTcyOWZhNTNhODcwMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmZDhkZGI2YTZmMDkwZjBjMTY0Nzc0ZmJlMGYwZWY1YTM1ZjgwOThmOTUyY2IxMjFhN2YyMTAyNmZhNzRmNjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyNDlhOGFkZGRmZWE2OWFiOWIzMGIwZjAzNTgwY2MxZGU5MzUwNWIxOGRkMmQyMTNkZGM0ODFhOTJlZjQ5MjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

@@ -1,30 +1,31 @@
 ---
 type: inspector subsystem
 title: Inspector UI and hooks
-description: Tweakpane control panels, profiler widgets, telemetry hooks, visualizer helpers, and the meter worklet used by the inspector package.
+description: Tweakpane control panels, profiler widgets, telemetry hooks, visualizer helpers, and the meter worklet used by the inspector and debugger packages.
 tags: [inspector, ui, hooks, worklet]
+sources:
+  - id: openwiki-source-350abc7ea9e73c4d11087d9e
+    resource: repo://packages/debugger/src/AudioDebugPanel.ts
+  - id: openwiki-source-29f3a7d8494894a66cad5c49
+    resource: repo://packages/debugger/src/worklets/meter.processor.ts
 verified:
   - by: openwiki/0.5.1
-    at: 2026-09-27T16:32:49.021Z
-sources:
-  - id: openwiki-source-6f2f07a38d4c4a6926b35ac8
-    resource: repo://packages/inspector/src/AudioDebugPanel.ts
-  - id: openwiki-source-fc6c0b5e3ddbca159052e109
-    resource: repo://packages/inspector/src/worklets/meter.processor.ts
+    at: 2026-10-14T20:11:32.061Z
+generated: { by: "antigravity", at: "2026-10-14T20:11:32.061Z" }
 ---
 
 # Inspector UI and hooks
 
-This page covers the rest of the inspector package beyond the top-level debugger entry.
+This page covers the debugger and inspector UI components, widgets, and reactive telemetry hooks.
 
 ## Owned modules
 
-- `AudioDebugPanel`
-- `AudioProfiler`
-- `visualizers.ts`
-- hooks: `useCommandTransmitter`, `useSnapshotTimeline`, `useTelemetryBus`
-- UI widgets such as `VoiceMeterWidget` and `VoiceListWidget`
-- `worklets/meter.processor.ts`
+- `AudioDebugPanel` in `packages/debugger/src/AudioDebugPanel.ts`
+- `AudioProfiler` in `packages/debugger/src/AudioProfiler.ts`
+- `visualizers.ts` in `packages/debugger/src/visualizers.ts`
+- hooks: `useCommandTransmitter`, `useSnapshotTimeline`, `useTelemetryBus` in `packages/inspector/src/hooks/`
+- UI widgets such as `VoiceMeterWidget` and `VoiceListWidget` in `packages/debugger/src/ui/`
+- `worklets/meter.processor.ts` in `packages/debugger/src/worklets/`
 
 ## Responsibilities
 
@@ -43,9 +44,9 @@ This page covers the rest of the inspector package beyond the top-level debugger
 
 ## Representative tests
 
-- `packages/inspector/src/__tests__/visualizers.test.ts`
-- `packages/inspector/src/worklets/__tests__/meter.processor.test.ts`
-- `packages/inspector/src/__tests__/AudioDebugger.test.ts` for the live DOM integration path
+- `packages/debugger/src/__tests__/visualizers.test.ts`
+- `packages/debugger/src/worklets/__tests__/meter.processor.test.ts`
+- `packages/debugger/src/__tests__/AudioDebugger.test.ts` for the live DOM integration path
 
 ## Scope boundary
 

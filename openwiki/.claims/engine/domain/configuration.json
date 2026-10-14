@@ -1,34 +1,34 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:a338deacab42b9f38caa2ae6275884e9dc4632575c63f0af48136ff216b42f3c",
+    "pageVersion": "sha256:f55c010b42c36ff2a9d75a66b474d3492343575d7073e16e0e0e0095ebc4e81e",
     "claims": [
         {
             "id": "claim_3436b86eb5904368b84d0d48eac48235",
             "statement": "The configuration layer defines domain input contracts for banks, events, music FSM, RTPC, sound maps, and sound variants, and these types model authored manifests rather than example catalogs.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IBankConfig.ts",
-                    "version": "repo-file-v1:sha256:91ed038b5193e67b855b91eb5bce1f2635073dd98b464f66ea7c81ed7375d4aa"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IBankConfig.ts#L1-L10",
+                    "version": "repo-lines-v1:sha256:91ed038b5193e67b855b91eb5bce1f2635073dd98b464f66ea7c81ed7375d4aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzMTg3ODE0ODg2ZWQwMTY0NzQwMjg2ZDhjZTc0NzlkMmI5ZTA5MzA4NjkyMjRiZDRlY2ExNDgwZDdhODg5YjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5NGFlYjdjYzY2M2RlYjMxYTRmZjAwYTBlNzMwYWIwOTkyNzFmNzY2ODMxNmMyYmY5NTU0ZjJjY2M0NGE5MTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IEventConfig.ts",
-                    "version": "repo-file-v1:sha256:50d84bf8a06b65d794990ede47a6a4c30bdb263a66dea81d68578c957aacf684"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IEventConfig.ts#L1-L30",
+                    "version": "repo-lines-v1:sha256:1f6b1374d7bb8b93a78a658755f1e1d3570ef8f5b00c6e12806b241af4cb5229:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwOGFkYTZkZWVkMmZiZjg4MjZhYTZhMWU3MTRkZGZmNGVkZjFiNDg1MThhNWVlMDA5Njk0OWE5YTcxMjA2MjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4MDY3MTliYjc0NjQ2MDMwODc4MTk3ZWJmZWQzOWZiNTg2M2UwMDc4NDgwODU1N2ViNzBiMzMwMDNlODcyNmIifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IMusicFSMConfig.ts",
-                    "version": "repo-file-v1:sha256:d0a597ff8ea846fbbd17641224f5a5381a70a43b092ceacb65467a977aca2a97"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IMusicFSMConfig.ts#L1-L30",
+                    "version": "repo-lines-v1:sha256:d7e8b5550233c1c31e95bc611a1eb4d21506d44b9c11f5976cb798479d353164:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyY2IwZThhZjNiYWMyMzBhYWQxYmU3ODhjZGI3NGEzYmQ1Y2Q5NTM0MWIyYTlkMjJjMzExZDJhNjhmNzE0MzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjM2FmOWIwOWIwYTJmNTgzMDUyYzFlNGNhNjVlYjNiMTM5Y2E1YTYwNDM0ZDIxMTU1NjZlOWMzNjBmMzNiZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlZGU1YjNkNmExYjk1NTE5OGNmNzE3MzFkMGY1NDUyODliYWUyNmQ0MjU5M2UyMWY0ZWI3NTgzNTVmODc2NDUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IRTPCConfig.ts",
-                    "version": "repo-file-v1:sha256:b88cbb5529e4875717954579205f7b048f134646015c631f425f0311d5955b53"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IRTPCConfig.ts#L1-L23",
+                    "version": "repo-lines-v1:sha256:b88cbb5529e4875717954579205f7b048f134646015c631f425f0311d5955b53:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyY2IwZThhZjNiYWMyMzBhYWQxYmU3ODhjZGI3NGEzYmQ1Y2Q5NTM0MWIyYTlkMjJjMzExZDJhNjhmNzE0MzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts",
-                    "version": "repo-file-v1:sha256:2918302a9f14c70ca3b785ca5e2fcac7ff0fb317850fc728119d9a5e12811e3d"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts#L1-L144",
+                    "version": "repo-lines-v1:sha256:8c95dfe52cf46c9828e7beec936bc5e4a2b2bb53b86be02dcca138cd21e527a5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyZDZhNjhmYmQ5MzZhYTc5MjY2ZDEyMGQyN2JkNTQ3YmNjNDk3MTZkNjM5NDM0YzBjMDE4NjU3NGZiYWIxMmVkIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJmY2IwMWFiZGI3N2U4NjBkNjE4Y2Q0ZjA2M2QyYzJkZTcxOTFmZjM1ZmJjYzczM2ZmZDhjY2MyYzNjZTcyYTI1IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundMap.ts",
-                    "version": "repo-file-v1:sha256:73ecbdbe8e1d56f90cce0ea5e18b8b23d0d5b869bd2e1898fe16bc835198b7cd"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundMap.ts#L1-L6",
+                    "version": "repo-lines-v1:sha256:68c10b67955c428ca28e2dd2811b8c159d16861b3d40272448ac6961e86a9870:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWEyNDQ0MWJkOWIyOTMwYmMxNWIwOWZkODlhZGQxM2E2N2Y4MjA1NGE4OGM1YzE0YjM4ZDVjZGUyMDg1M2JhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
                 }
             ]
         },
@@ -67,12 +67,12 @@
             "statement": "`IRTPCConfig` binds a game parameter to either a curve definition or preset, with optional send-target bus and smoothing time, and `RTPCTargetProperty` enumerates the supported target fields that sound configs may drive.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IRTPCConfig.ts",
-                    "version": "repo-file-v1:sha256:b88cbb5529e4875717954579205f7b048f134646015c631f425f0311d5955b53"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/IRTPCConfig.ts#L1-L23",
+                    "version": "repo-lines-v1:sha256:b88cbb5529e4875717954579205f7b048f134646015c631f425f0311d5955b53:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyY2IwZThhZjNiYWMyMzBhYWQxYmU3ODhjZGI3NGEzYmQ1Y2Q5NTM0MWIyYTlkMjJjMzExZDJhNjhmNzE0MzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts",
-                    "version": "repo-file-v1:sha256:2918302a9f14c70ca3b785ca5e2fcac7ff0fb317850fc728119d9a5e12811e3d"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts#L1-L24",
+                    "version": "repo-lines-v1:sha256:943052973df0d2ced59f6f868609979e01d4eff46b78f5df003d33d231f98d1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkNmE2OGZiZDkzNmFhNzkyNjZkMTIwZDI3YmQ1NDdiY2M0OTcxNmQ2Mzk0MzRjMGMwMTg2NTc0ZmJhYjEyZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkzZDllM2Q5ODMwOWZmMjRhN2Y4NWQyMDIyYmU4ODdkMTNjZDYyMDNkMTQxZWJhZWRiMjAyZmQ1ODc4ODY2MzAifQ"
                 }
             ]
         },
@@ -81,12 +81,12 @@
             "statement": "`ISoundMap` is an indexed sound manifest keyed by `SoundId`, with each entry resolved to an `AnySoundConfig` union member.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts",
-                    "version": "repo-file-v1:sha256:2918302a9f14c70ca3b785ca5e2fcac7ff0fb317850fc728119d9a5e12811e3d"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts#L138-L144",
+                    "version": "repo-lines-v1:sha256:557d0b355a5d17d9920f8e978d2a7d9338fb99e6ff554d3a5a5c86ebacc4139d:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDlkNzMwNjVhZjNiMThiMjc4ZDAzNjdjMDUzZTZhMTFjNzk2MzUxNTg5ZWJhNGUyZDNmMWZlOGY0ZjVlM2IwNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmNiMDFhYmRiNzdlODYwZDYxOGNkNGYwNjNkMmMyZGU3MTkxZmYzNWZiY2M3MzNmZmQ4Y2NjMmMzY2U3MmEyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjQ1M2Q3ZTE0MjZlMzIwMzc5NWQ3NmI0NmZjODE2MjUwZDNhYjQ3OWYxMTIzMjdkMTQwNTMzN2I1ZTM4ZGNhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundMap.ts",
-                    "version": "repo-file-v1:sha256:73ecbdbe8e1d56f90cce0ea5e18b8b23d0d5b869bd2e1898fe16bc835198b7cd"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundMap.ts#L1-L6",
+                    "version": "repo-lines-v1:sha256:68c10b67955c428ca28e2dd2811b8c159d16861b3d40272448ac6961e86a9870:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWEyNDQ0MWJkOWIyOTMwYmMxNWIwOWZkODlhZGQxM2E2N2Y4MjA1NGE4OGM1YzE0YjM4ZDVjZGUyMDg1M2JhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
                 }
             ]
         },
@@ -109,8 +109,12 @@
             "statement": "After validation, `AudioEngine.init()` creates a `SoundRegistry` from every sprite-manifest entry's URL, passes its map to `SoundController`, and resolves registry URLs through the buffer cache when creating ordinary sound instances; registry membership therefore does not establish that a decoded buffer is available.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts",
-                    "version": "repo-file-v1:sha256:9f10fd4bb6d3a515d4a4850f149c1808b0dd21cd0efeb1e220f8f6e0ede316c7"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L357-L380",
+                    "version": "repo-lines-v1:sha256:ca53936eccbeb6f6e2bf4ae770531c17216d92dc9700a9ce686f746092e4052d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhMjQ4NmFhYWE4NDZjNTBiYmNjNTEwNGU5NzhhNjZjNjA4MWE2ZmFmZmJhNjhhOGNkZDg0MmE5ZTNmNGJiYzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzMTA5ODEzODI3ZTE3NmE3ZTAwYWEyOGE4MTY0MzQ5ZmEyZWYzM2I3YzY4NzNlMWU2YzVlNjZkM2Y1MzA1YzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkNGJmNzBkNjI4NDBlNzdmYzJkZmMzZWQxZWZlNGY4MmIyOWI1OGRiNjAzMGFkMDJlYmQxNzUyMWNkNGQ2ZGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyNTMwZWZmYjc5NDFiNDkyNGIxN2EwNzgzNjA0YzFkNGZiY2UxYzg2MjE1YzhkMzM2MDgyNTE0Yjg4ZWU3ZTMifQ"
+                },
+                {
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L460-L475",
+                    "version": "repo-lines-v1:sha256:1cbd14427e63250540e859e6ded2c98762746d6669b4420f2a3411c018a6a756:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNlYWNjMDcwYmM4YzEzNTcyZWQ2MWVmOTY0NTY5NGU4N2FkYWJkNGRiNzNlYWE4MDMzYzFiZTJhNWUzODllZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0NjYwOGU0ODMwZWNkZTQ5OWMyYTA3NDIxNGU0YjNmOGE0ODI4MmE1NWZjM2Q2Mjg3NWFkZTdmYjU5YjIwMjkifQ"
                 }
             ]
         },
@@ -129,8 +133,8 @@
             "statement": "`IAudioEngineConfig` is the aggregate authored configuration: manifest, buses, snapshots, sound map, events, and banks are required, while RTPCs, music FSM, voice and RAM limits, precalculated sizes, sequencer settings, seed, and remote telemetry URI are optional.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/Ports/IAudioEngineConfig.ts#L1-L27",
-                    "version": "repo-lines-v1:sha256:ce4d9884c81f0c4fd1d40874112ab7a047398016c6f3afa7dd4ee5d3041f0ae5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2OGE5MGNmNTA3YzE4MGMzZmFmZWY3YmI0NmI2OGQwMTE2MDEwOGNmMGY4ZmE5NDllZTE5Zjk0ODFlMGU3ZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    "resource": "repo://packages/engine/src/Application/Ports/IAudioEngineConfig.ts#L11-L29",
+                    "version": "repo-lines-v1:sha256:08134c8deffe270b7d4b6ea6af10e6d89c4db1d68a03a85dc259a8fbbdbc2974:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1ODZkNGUzNmQ0ZDlkMDQ2YmRjNDA2ZGQyNDFkYjg0MTU1OWI2NTNmMDExZmViODZmYzI3MTQwN2E0Yjk4MmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA4NjcwMjAzM2ZjYmZkMzc4ZGQ4NTEwNDlkOTBkNjA4NDI2MDJhMjJmY2YxMzY1YmIyMzAxZDI3NTBmNDUyODAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         },
@@ -139,16 +143,16 @@
             "statement": "The sprite sound manifest associates each `SoundId` with one URL or an ordered URL list and optional loading priority, whereas `ISoundMap` associates a `SoundId` with behavior configuration; the sound-config union supports basic, smart-loop, container, layered, switch, and scatterer entries that can reference other sound IDs.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts#L17-L23",
-                    "version": "repo-lines-v1:sha256:af45de7ef04cab1da64b33fd7d488055ca9447cbe78ea3ec4a8084f6addcfad7:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzM0NjQzMDhmZjFkMWY1NDc2YjI5NTllYjUwZjU2MGYzZTYzZTBjNzU1ZWQ1Y2EwNjU4MGYwYmE3NGYyN2NhMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWI2MTgxMmU1YmM1ODNiMzEyNmFmYmNmZTQ0ZTgxZDUxNDBlYzk0ZmUzMjU3YTVkMzhlY2YzODA2ZTcwMWJjOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGUwODBkNTY2YmM3Y2UyOGM4MTkwMDQ5OTJjNzMwNGU0ZmQ1OWE5ZmU2ZTc5MGZkOGIwODgwOTA1YTcxZDZiYiJ9"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts#L17-L24",
+                    "version": "repo-lines-v1:sha256:6d6fac7f107a863d6d4ef43a8e8ab2428f87aac211195b6c06b150be4ce30f08:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjA2ZjFhMzQ4NDlhZDVhMDg1ZWVlMjBjYjExMWE3YTQ2MzBjNjdkZjk3YjE4ZWYyMzkyNTMzYTJmMTUxMDc4YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzZhZTNmY2RkMDM2ZTkyMDcxMTU0ODFmMGRlZDBkMmI0MzI0MDlhMTE1YTRlM2RjNGJkMmFmYzljNjQ3N2M3NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTNkOWUzZDk4MzA5ZmYyNGE3Zjg1ZDIwMjJiZTg4N2QxM2NkNjIwM2QxNDFlYmFlZGIyMDJmZDU4Nzg4NjYzMCJ9"
                 },
                 {
                     "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts#L71-L144",
-                    "version": "repo-lines-v1:sha256:138ccce62053aea4c27c237e3816461bc113a525d1638e7b3dfc14d69bc46fc6:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODFhOWNiYzA1NzRhZTg0MjQ4MGMwYzdkMzkwY2JhNDQxZmQ4MjJlY2IwMmIzMTk3NDNlYzNkYjYwOTU4ZGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyNDEwMmIxMDY0ZjE4ODMyNzEwYTc2MzczZDNiY2I0NTc3MmM3ZmYzNTA5MThmNmJhM2I2YzczYzQzYjM4MmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3Y2NkYmJkMGNmYjFhN2ZkZjVkY2VmYzNhMzUwODJlM2E4ODZmNWY3NTk0NmI4ODNlMDgyZjM0ZDc0ZTViMGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    "version": "repo-lines-v1:sha256:931c4df461754cf961d9a9e6d9e01a95243519c4c7e81a3ccd46b99d03d88ae0:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlMDk1MzE4ZWNiNTc1YjBiYjUxMTFkNjA2YjFmYzRkYWI1OGVkM2RmMTZlMTI5MTEwNTExOTFlYWJjN2IxNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjYjAxYWJkYjc3ZTg2MGQ2MThjZDRmMDYzZDJjMmRlNzE5MWZmMzVmYmNjNzMzZmZkOGNjYzJjM2NlNzJhMjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkNzEwNmUyN2ZmMDE1MTQ2MjVlZTlhODdmODFhZDVjMTUzYjM3MDBhMGRkZmI4ZDkzZTRlNTQzODZhOWE5ZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 },
                 {
                     "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISoundMap.ts#L1-L6",
-                    "version": "repo-lines-v1:sha256:73ecbdbe8e1d56f90cce0ea5e18b8b23d0d5b869bd2e1898fe16bc835198b7cd:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDU3MWM4Yjg4NTZhNDU3ODlhODU0YmJiNmI2ZGZiZTUxYjM5MmZhYzJhNzUzZmY0OTE3Yzg2ZDBkNTdjNmZkZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+                    "version": "repo-lines-v1:sha256:68c10b67955c428ca28e2dd2811b8c159d16861b3d40272448ac6961e86a9870:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWEyNDQ0MWJkOWIyOTMwYmMxNWIwOWZkODlhZGQxM2E2N2Y4MjA1NGE4OGM1YzE0YjM4ZDVjZGUyMDg1M2JhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
                 },
                 {
                     "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISpriteSoundManifest.ts#L1-L9",
@@ -171,12 +175,12 @@
             "statement": "`AudioEngine.streams.load(soundId)` fetches JSON from the first URL of that sound's sprite-manifest entry and caches the resulting `IStreamManifest` by URL; it rejects an unknown ID or failed response, while `unload()` evicts the cache entry and ignores an unknown ID. `SoundController` uses the cached manifest in preference to a decoded buffer when playing that descriptor.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts",
-                    "version": "repo-file-v1:sha256:9f10fd4bb6d3a515d4a4850f149c1808b0dd21cd0efeb1e220f8f6e0ede316c7"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L252-L276",
+                    "version": "repo-lines-v1:sha256:30937433816fd793a398af0f7b8731dc20bc2c5a3c8fb72df90f977d48cbf962:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViMTMwYTEwYjE1YWU1YmExNWI3ZGM3N2ZiYWZmYmJmYTg0YmNiN2VjYjJkMTYwMDgzMzUxYzI1MzExNGViMGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4MDg4M2RjYzQ1NWNiNGUwODk3NDkxNzMwZmVhYmQzOWM3MTRhYTRmYTUzZTc4MzA1YThkN2ViMWQyZjYxZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiNWViZTczZjYyNzQ4NzU5ZDRjMThhMmJiM2QwODk0NDFkNjlhMDQ4YmIyMWJjMmJlOGUyODMxNTEzNjQ3YzgifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/loader/SoundController.ts",
-                    "version": "repo-file-v1:sha256:0c9fe2508e6e181dcb31d4cde47de73082c06275500f0b4114518948b17926f6"
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/SoundController.ts#L1-L80",
+                    "version": "repo-lines-v1:sha256:52cb3ff6df7dda307269f413bde8129e9bf33f3cfec95b3ed98e5c0f86669db8:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1NmViNDNjNjU2NDFmM2ZkMTdkMmEwMTc5YzhlMWQ2Nzc4ZDZiNDRiNjU5NzU4MzZiMjYwN2ZiOGYxZWJiNTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhOTIwZDAxZmU5ZTQwNzdkMDA4MDhlYjI2YTAyMDZiNDE0MDI3YTYyNWJiMGVhNzIxNDE2YWVjYjRkZTc3Y2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5ZjBhNTNjMjJjMjE2OTIzMTc2ODE5M2E1MjdkYzMyOWZkNTNkYmY0NmU3OGQ5ODdjMGIzM2VhNTE5ZjNlZmQifQ"
                 }
             ]
         },
@@ -185,14 +189,14 @@
             "statement": "Validation runs against the aggregate configuration before runtime composition completes. In strict mode an invalid result emits `engine:error` with `INIT_FAILED` and returns; in non-strict mode initialization warns and proceeds.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts",
-                    "version": "repo-file-v1:sha256:9f10fd4bb6d3a515d4a4850f149c1808b0dd21cd0efeb1e220f8f6e0ede316c7"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L296-L313",
+                    "version": "repo-lines-v1:sha256:94ebc16f60d219f894b3c6942771f566b33987ebdfbfc66e16f52028697c551c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0M2EzOTMxYjQ1YTU4YzIyMTMyMmQwOGU0YWNkYTRiNzJjNzZhZjdmOWQwMDAyZmU5YTkyZTY4N2M4Y2QzOGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyOWZmM2RhYmJmOGFlYzEwNzBmMjk2YTU0Y2MwNDE1MDUzMzE2OTVjNDEzZjg3YjRkMzNkYWQwZGMwMzliMzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwYTVlNDFhZWYzMDBlOTZmMjE1ZjRlZGJhYmQzMzUwYTcyNzY5ODczZjc3N2QwNGJlMDAyODIxODAwZWEyZDUifQ"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

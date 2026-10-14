@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:c5816742d5ef9566bf0c21620be093ad57bdcbfe6b6122eeccc34dd89bcfaa5b",
+    "pageVersion": "sha256:1f8a0a526b414c5d8d3af19449f413982a0342d0860b9b1ecc61545256f49e95",
     "claims": [
         {
             "id": "claim_554af01e97f64d1ba7cc1004f09bd3f9",
@@ -17,12 +17,12 @@
             "statement": "`MixerLayerStack` keeps active layers in a `Map` keyed by `LayerId`, sorts them from lowest to highest numeric priority during resolution, and exposes the shared `PRIORITY` bands `BASE`, `OVERLAY`, `MODAL`, and `TRANSIENT`.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerLayer.ts#L52-L67",
-                    "version": "repo-lines-v1:sha256:e14e48aceac4a5f070fa96d4c21d802e57e7ac962a412249acbe2f1bb38add9d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MGIwYTYzMjBkZjFlMmEzM2Y1ZjkwMGU3ZmRjNWQ2MDgwMWVlYWJmYjU0YjU1NDMxZjc5NDNkZTAyM2FmNGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMxYjRhYjYzZjY0MTRjNTgxYWQ4NDk3OTYzMjhhYjExYzE5NWU0OTlhYTc5ZTRiMWRmMjAxZDk3MDc1MjBlYzAifQ"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerLayer.ts#L10-L15",
+                    "version": "repo-lines-v1:sha256:224b65112bc898a4bdb01a3e97777bc9330d05babcf2d838185d8c7c07a07d28:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg2Y2Q3ODM1NDc2ODk2MTY2Y2Y2NWMyOGQzODg4NmEyNWE1MzZjMzZiYzIxOTQ4NDZiYTBlY2RiOTk4NGMwOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDNjNDlkZjMxMmU5YjhkODBhNGQ4NGJmNmZhNTQ4MmMzYjcxOGY4ODE4ZTg5ZTY5ODhmNGY1NzA0OTc3YmY3NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2FlOGRjOTE4YjA0MzRjMDc3NTRlMjA5Y2E5ZGY3NjZkYTY3MmNiYzFmOTQ4NWNlMzg3ZTJlYjIxODBiOWMwNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWU4ODJkYTc3NTNiZjQzMmI0YTcxODUzNmM1YmNjNWE4OGFhMWVmZjBhZjI4YWQ1NGM0ODk1NGExM2FhZmY5NSJ9"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerLayer.ts#L9-L18",
-                    "version": "repo-lines-v1:sha256:7d6c260e1b7f56fb530aaf750c0785587c91389f3b3b2cae2c83af68490932cb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NmNkNzgzNTQ3Njg5NjE2NmNmNjVjMjhkMzg4ODZhMjVhNTM2YzM2YmMyMTk0ODQ2YmEwZWNkYjk5ODRjMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4ZWY4OGIwNzg1NjI0ZjYxZDQ1ZTA4Y2NiNDkwNmRhNDJkNTMzNWRlYWJjOTRhYzdmNGU2OWQ5YTg2OTA4MGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjYjE5NzYyYmMwY2FmODBmYzBkMWY0N2E2NGExMjBlOThlNWI3MDIyZTI4ZmRmNTgwYmY0M2VlNGNjNjA4ODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBiY2VjNzNjZTU3N2MyNWMyYTkyYjQ2OWZlYWE1OTRlOTQwMjlmYWMzZDQ1YTJkZWU0M2EyZDE5MDM2Yzc3ZTkifQ"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerLayer.ts#L53-L64",
+                    "version": "repo-lines-v1:sha256:6eacf8f998c92e2d071a3d0185f8f8c7ea93e8cde4f1a5eb358e3333cfe36808:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MGIwYTYzMjBkZjFlMmEzM2Y1ZjkwMGU3ZmRjNWQ2MDgwMWVlYWJmYjU0YjU1NDMxZjc5NDNkZTAyM2FmNGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkMWMzZGI0ZTM4OGE3NjgwZjI5ODdlYjJmMmMyOTQwYzM1NTI0ZjljYWY0OWU4YTE0NjFjNTUyMmRkNDNlNzIifQ"
                 }
             ]
         },
@@ -51,12 +51,12 @@
             "statement": "`MixerStateResolver` merges each base bus with its snapshot patch by multiplying gains, clamping them to the configured maximum, carrying forward or overriding filters, and merging sends and RTPC bindings with explicit `null` removals.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L27-L43",
-                    "version": "repo-lines-v1:sha256:c0965527aa916f5b202c4daa4560ed726abc5dd6b2fd1ff4ada705951aeb45f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxZGU2NDU0OGY5MGJkNGVkMGIwZjljNDNjNDg5OWVlMzZkN2U5YTBmYzU0MGUwMmUwNzQyNjgzMTBhZjk3NTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MDYwMjk0ZGFmNjExODdkMzZhYTU4ZjViMmQ4NDQ3ZTgxMDNjMTYzZGQzNzE2ODFkZmFlYmZkNGIwMzVhZDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmMmExYTgzNDBkODZiMzc2ZWQwMWYzNTVmZDIwN2RlMmZhYmIwYjViOTVmNzkzN2JjODc3NWIwNjNmNjA1N2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyYzNmZTViZjNjNTg2MDk0Y2ZjMjc0YzFjM2MyMWM4ODRhZWZlNTY4N2JkMGFlZDVkOTMwM2VhODIzODI5MmEifQ"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L27-L44",
+                    "version": "repo-lines-v1:sha256:c49c356ad89bd6c84e274e0e45d8bd84090fb605c82e4fb1c15f5d9ce8eae1ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxZGU2NDU0OGY5MGJkNGVkMGIwZjljNDNjNDg5OWVlMzZkN2U5YTBmYzU0MGUwMmUwNzQyNjgzMTBhZjk3NTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmMmExYTgzNDBkODZiMzc2ZWQwMWYzNTVmZDIwN2RlMmZhYmIwYjViOTVmNzkzN2JjODc3NWIwNjNmNjA1N2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyYWU2OWNjYjZiY2U0NjZkMGZkMDgzNzU0YTAyZmQzNWQ0NzJhNDk3YWRmYzdjNmViMGQ3ZWZkOWQ3ZGEyMzMifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L46-L130",
-                    "version": "repo-lines-v1:sha256:806bdb89f61c815bb0749e22866db8f48f01a358cf4422de3852a756c63db9c7:eyJzZWxlY3RlZExpbmVDb3VudCI6ODUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmNDRkZDI0NzAzYTBkZDk2ODYxNmI1OTEyMTNlZWI2ZjVmYmZjZWRjZTM2OGNjN2NhOTBiMjcxYThlODcxMWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkODEzNzAzN2VjMDkwNDIzYzBkOTQxOTk1MGU1MGIxYzZkNmQ0MjlmMzI5N2ZjMTlkZGVjMzdjODY4YzY1MGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzNjcyNGJiMDRiN2MzNzQzNTM5OTYyNDYxYTgyZDE3NmE1MmRiMTg1ZDdhNmU2YWE3YzM1MTU5M2M4OTk0ZTQifQ"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L46-L129",
+                    "version": "repo-lines-v1:sha256:52707a3990cb151fb13a5d8441a6554a6006f022e67a242af2e8ded64dd6331a:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmNDRkZDI0NzAzYTBkZDk2ODYxNmI1OTEyMTNlZWI2ZjVmYmZjZWRjZTM2OGNjN2NhOTBiMjcxYThlODcxMWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMzFiYTgyZTM4MGEwOTI1NGYxYzY0OGY1ODlkYmU0NGZkODliN2VhOTMyODg3NjIzYmNmMWFiMmZhYWNmZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmYzk5MTVlOGQwNTg1YTBhMTM4YmVmMTU4MDI2YjlkZTVjMDNjOGExNDYwYmI3MjcwNmU0NzRiN2M3MDA4ODYifQ"
                 }
             ]
         },
@@ -65,8 +65,8 @@
             "statement": "When a snapshot patch omits a bus-level filter or sends map, the resolver preserves the base value; when the patch uses `null`, it explicitly clears the filter, send destination, or RTPC entry.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L63-L130",
-                    "version": "repo-lines-v1:sha256:3b3600040c1af5e98f713e4cef34a2b892dd9e8e51e683c1f4a43b2b4e1aa585:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjZDNkOTY2NzhlYjIzZDQ2MWY5MWFhNmI1ZGZkODhmZDNhNzZjMGQyN2RlNjJmNmQyYjE0MGNiNTM0MTE0OWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMzFiYTgyZTM4MGEwOTI1NGYxYzY0OGY1ODlkYmU0NGZkODliN2VhOTMyODg3NjIzYmNmMWFiMmZhYWNmZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzNjcyNGJiMDRiN2MzNzQzNTM5OTYyNDYxYTgyZDE3NmE1MmRiMTg1ZDdhNmU2YWE3YzM1MTU5M2M4OTk0ZTQifQ"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L63-L128",
+                    "version": "repo-lines-v1:sha256:de4240676dbe97a3a31782107957fdc94cb429700b2fe138b03d9651b029e947:eyJzZWxlY3RlZExpbmVDb3VudCI6NjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjZDNkOTY2NzhlYjIzZDQ2MWY5MWFhNmI1ZGZkODhmZDNhNzZjMGQyN2RlNjJmNmQyYjE0MGNiNTM0MTE0OWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMzFiYTgyZTM4MGEwOTI1NGYxYzY0OGY1ODlkYmU0NGZkODliN2VhOTMyODg3NjIzYmNmMWFiMmZhYWNmZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzNjcyNGJiMDRiN2MzNzQzNTM5OTYyNDYxYTgyZDE3NmE1MmRiMTg1ZDdhNmU2YWE3YzM1MTU5M2M4OTk0ZTQifQ"
                 }
             ]
         },
@@ -75,8 +75,8 @@
             "statement": "Resolved mixer metadata is rebuilt on every merge by combining base and patch metadata and writing a fresh `performance.now()` timestamp.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L36-L43",
-                    "version": "repo-lines-v1:sha256:879150e485c28b8f3272b82aaa99e1dde3da580d4e77d801231bc0d7f129faa4:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGIxYjAxZWYxZjU2Yjg4NDQ0NGI1NWM0MTY2NzkzZmUxZGVkNGE1N2Q4ZTc3NGU3Y2ViOWRjMGY2OTg2YzZkNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjUwNjAyOTRkYWY2MTE4N2QzNmFhNThmNWIyZDg0NDdlODEwM2MxNjNkZDM3MTY4MWRmYWViZmQ0YjAzNWFkNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGQ1ZWZiMThjMzU2MTllYTU5MDgxMDNjNjE4YTY2NjY2YWU1ODEzNThiZDQ1NWRhYmJjMDIzMjdkZjg1ZjZiNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODJjM2ZlNWJmM2M1ODYwOTRjZmMyNzRjMWMzYzIxYzg4NGFlZmU1Njg3YmQwYWVkNWQ5MzAzZWE4MjM4MjkyYSJ9"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerStateResolver.ts#L35-L43",
+                    "version": "repo-lines-v1:sha256:f18f51c8ba1ba97f7965b6188a45fffe02a292fe1b05672e4b559820fb06c13d:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjkwMWExMWYyZDgxNzIwYzAyNTVkNWUxNTIyMmIxMTg1MWZhMmY3ZDEyM2NmNzQzOTJkZmQ1ZGY2YWVhMGZhZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmE2MTI0YTc2YTNlMTZiN2Y0MmU3NWY4ZGQyYzFjZjdhNzRiNDYyMWRhOGI4NzliYWY4NzUwNjAzMDA0NzdiMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODJjM2ZlNWJmM2M1ODYwOTRjZmMyNzRjMWMzYzIxYzg4NGFlZmU1Njg3YmQwYWVkNWQ5MzAzZWE4MjM4MjkyYSJ9"
                 }
             ]
         },
@@ -115,12 +115,12 @@
             "statement": "Mixer snapshot telemetry is emitted from `MixerSnapshotManager` via a pooled cause-chain packet that records the API method, snapshot id or `CLEAR`, fade time, and the current sound-controller time in milliseconds.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerSnapshotManager.ts#L106-L124",
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerSnapshotManager.ts#L107-L125",
                     "version": "repo-lines-v1:sha256:5b1490a8a959c22e7e9af9b422074aee08e55e0e78842422f07ac2371f352b9a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZDZmNDQ2NzE1MDA4MzM2ZWJiOGRjZDc4ZjNhOWIyMGJmM2FkZWE0ODdiZjlmZmMwZmY0MWI1YzdjM2UyODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTRlYmJmZDhlZmVhNGQ0OWVjNWM3YTM4Yjg3MTYwNWNlNGYzMGM5NTY3NmQ2ZTU5MTBmYzQ4ZjUwMzQ1MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerSnapshotManager.ts#L17-L27",
-                    "version": "repo-lines-v1:sha256:c33645c8aeffca568ac747c12762eb264ebb49bf845ebfea13c14c8949357582:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4YWQ4OGUzZjdhZDM3MGNjZDVlMTViNzcyMmQ3NGE3MDc2MmEzYThiOTM4MzkzNmNjOTljOTc5ZmUxNjRhMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwYTJkMGRhYWYyNDAwNTdmYjU5ZmM5YjVmYzliYTQ4ODEwOWY5NjRlMzRkNjk3OTVjZjQ0NzkwMWYxZmQ1YzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMzBmZTZkMGUyNzNkNzQ5NTk2YzczOTA1MTJlOTk3MGFkODg1OWZhZTg0ZDFmNDE0Yzk1MTM4M2I0NTc3ZjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4Mzk1N2Y4OTA2MTgyNDMzOTMxOGIyNTU2YjczMWFmYzg5ODlhYmRlN2NiYTYyNDAxYmE2YzBiMDNhNTJmYWIifQ"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/MixerSnapshotManager.ts#L18-L28",
+                    "version": "repo-lines-v1:sha256:7837395524f16ab74520d2699bc44618e006196a0492667e51076dd7f8973428:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4YWQ4OGUzZjdhZDM3MGNjZDVlMTViNzcyMmQ3NGE3MDc2MmEzYThiOTM4MzkzNmNjOTljOTc5ZmUxNjRhMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwYTJkMGRhYWYyNDAwNTdmYjU5ZmM5YjVmYzliYTQ4ODEwOWY5NjRlMzRkNjk3OTVjZjQ0NzkwMWYxZmQ1YzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMzBmZTZkMGUyNzNkNzQ5NTk2YzczOTA1MTJlOTk3MGFkODg1OWZhZTg0ZDFmNDE0Yzk1MTM4M2I0NTc3ZjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4Mzk1N2Y4OTA2MTgyNDMzOTMxOGIyNTU2YjczMWFmYzg5ODlhYmRlN2NiYTYyNDAxYmE2YzBiMDNhNTJmYWIifQ"
                 }
             ]
         },
@@ -167,16 +167,16 @@
             "statement": "Mixer responsibilities are covered by focused tests for the coordinator, layer stack, snapshot manager, state resolver, and transition engine.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerCoordinator.test.ts#L1-L73",
-                    "version": "repo-lines-v1:sha256:53b400ae3e4cc2468c3e31b73d1df9646f2052e10f2d1ea65a39c7698c791229:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzOTJjZjY5OTM0OTQ1ZGRlZmY3ZDIwZGUxODVkMTU5M2YzY2JjZjhhNzE0MDI1YzY4MGY0MWY0ODkzZjFhY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerCoordinator.test.ts#L1-L66",
+                    "version": "repo-lines-v1:sha256:bad9ad67f3427b78ce5b004c5f14f9e53c7326379556212b32703a753aadfed6:eyJzZWxlY3RlZExpbmVDb3VudCI6NjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjczM2ZmYmU2ZmRlZmEyNjkxNmQzMGFmZjZhNmRmNTY2YWY5YTg0YTczMjZjNzFmMmZkNmQxNzE2N2VlNGVhMDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerLayer.test.ts#L1-L98",
-                    "version": "repo-lines-v1:sha256:5a9e3d8f004e2d4ede7e09b97b4867dc0b33e5120743ba81849d888cb3441004:eyJzZWxlY3RlZExpbmVDb3VudCI6OTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzOTJjZjY5OTM0OTQ1ZGRlZmY3ZDIwZGUxODVkMTU5M2YzY2JjZjhhNzE0MDI1YzY4MGY0MWY0ODkzZjFhY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerLayer.test.ts#L1-L96",
+                    "version": "repo-lines-v1:sha256:7d3bebc8463c267bafd52a3c11197b662273a394365ae3ea1fbb011eeff517bb:eyJzZWxlY3RlZExpbmVDb3VudCI6OTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjNjY0MDA3OGZkZDgwMTgwZGVhNzkxN2MwZmNlYzc3MzM2NWMyZjAwMTU4ODg1ZjlhOTFhNDhjOWE2YjU4MWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzZGRlZjcyNDc4NmI0YWY0NWFiN2NhZDgxZDM3N2FlNTQzYmI3ODQxMjk2NTY4ZmI1MjI2OTk4YWVjMjE2MzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerSnapshotManager.test.ts#L1-L260",
-                    "version": "repo-lines-v1:sha256:f1c599eebf2e6534edf73380391368973ecd5cccc1c5d64681a3a3e19c038d13:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiOTU2MTI4YTI3MDkzZjQyMGNjMWQ5MTkyMmQxYTAzNWFiN2Y4MWVlYTUxMTk2OGE3OTU5ZjRkNDA5YjlkMmQwIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMjhjYzdjZTU0NzM3OTQ0ODhkODkwNGYwNTkyNzJkNmIxZTNkNGFhYmQ4NmNhYWFlMGE1ZTFlMmM4OTAyMjA4IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlYjhmMDY5ZDBjMzgxMTMzNWZmMDZkNDAwNDZiMDRhYzliZDdjOTQ3ZGE0Yjg0MThjM2ZkOGFiMGEyZGIzMzhiIn0"
+                    "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerSnapshotManager.test.ts#L1-L312",
+                    "version": "repo-lines-v1:sha256:67c380f2dbbd167a8fd374c110c10f895d25d257f2db7aa31a852045ac440e84:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiOTU2MTI4YTI3MDkzZjQyMGNjMWQ5MTkyMmQxYTAzNWFiN2Y4MWVlYTUxMTk2OGE3OTU5ZjRkNDA5YjlkMmQwIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhM2RkZWY3MjQ3ODZiNGFmNDVhYjdjYWQ4MWQzNzdhZTU0M2JiNzg0MTI5NjU2OGZiNTIyNjk5OGFlYzIxNjM0IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
                 },
                 {
                     "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerStateResolver.test.ts#L1-L260",
@@ -184,13 +184,13 @@
                 },
                 {
                     "resource": "repo://packages/engine/src/Domain/Mixer/__tests__/MixerTransitionEngine.test.ts#L1-L320",
-                    "version": "repo-lines-v1:sha256:2f0b7a85b4f626b5084ccc04629e82b6164d9cc4c982052f6edcb643b644ef9c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwYTYzZWViYzI5NTk1YWJiMzFjNzQ0MTM1ZTI0Y2E0NzkzNmVmY2JkMGVkZWNjYjMwYmE3MjNhNGVjN2IxOTJhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5MTA1OWM4Y2ZiNWEwNzJjNmY2NGRkM2QxYmZkYmMzNTZmYmVjOTNhZWVjODg3OTFkYTdlZGJhODljMDg4NWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0ZjMzZmU5Yzc2NWMzNWYyMzMzZWQ2YzdkNGUzOGMzYmY2MTRjZTI3M2NhNmM0ZTc2MDFlNDFkMWQ3MzU5YTJkIn0"
+                    "version": "repo-lines-v1:sha256:f2ac43dc1d16b7d114ffb9a9e14e5e93663d396d796768601b68e594c2b9a5de:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwYTYzZWViYzI5NTk1YWJiMzFjNzQ0MTM1ZTI0Y2E0NzkzNmVmY2JkMGVkZWNjYjMwYmE3MjNhNGVjN2IxOTJhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3ZWI3MDI1NzU5M2RhMDZmNjgyYTNkZGRhNTRhOWQyNjBkNGZjNTE0ZjY0NTIzN2Y1Y2E3NGIwOGY4ZGE2MWE2IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2NDRlYjc5Yjk4MzAwZjI3NjdmMzQ1MzBlNzkxNGQ3NjNkZDNmZTFkYTRiNzZjYWIzNDhjYTFhY2Y1NzQyMDIyIn0"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }

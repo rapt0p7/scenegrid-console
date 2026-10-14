@@ -1,14 +1,14 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:e4e6bc290af493eea510e995e7fbb5fafd2b4104306d24952c0b97afeab70dfa",
+    "pageVersion": "sha256:df7fedcb2067780c4093632cea5ec60cc64465b04f569951a606d3e68cda4b61",
     "claims": [
         {
             "id": "claim_6a03f3d1cfd14b2e9fb13d0628b171ed",
             "statement": "`SoundInstance` is the per-voice state holder for a live playback instance, and it can be reused after stop while releasing internal references on dispose so stale playback state does not leak forward.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts",
-                    "version": "repo-file-v1:sha256:159945a02b60c66de241ded0009da8192389ee10953f40ef85452e67abf3402b"
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts#L1-L1283",
+                    "version": "repo-lines-v1:sha256:2587057919e55d3e2eb7c4047e6df2a9284587cd89249c3f3e77dce66f5835a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI4MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg1YjQ0ZmI5MTQyMTU5NjFlMjc0MzhjMmI2ZjFkN2Y5NjkxYzI1MWFkZWNiNzJhM2YyNGEzZTkwMmNlZDMyNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTNkZGVmNzI0Nzg2YjRhZjQ1YWI3Y2FkODFkMzc3YWU1NDNiYjc4NDEyOTY1NjhmYjUyMjY5OThhZWMyMTYzNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
                 }
             ]
         },
@@ -17,8 +17,8 @@
             "statement": "`SoundPoolManager` owns the pool of reusable voices, hands out instances for playback, and takes them back after playback ends so later requests can reuse existing allocations instead of creating new ones.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundPoolManager.test.ts",
-                    "version": "repo-file-v1:sha256:70ca833c4636a065fb3b645c1a053a8a2130b4736928769f817b145167d9dd40"
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundPoolManager.test.ts#L1-L672",
+                    "version": "repo-lines-v1:sha256:6d7158b5c8d018c3b0704cf963d4684327af2ea939ab875038880aa841ffbfe8:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkYmJkNTI0MmJlNzMxNTVjY2E5OWYzN2E3MGMwNDE0NzM5ZjY0ZWU2ZDA3YWYwNzI5NzQ5MWFjOTFmM2IzNTY5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhM2RkZWY3MjQ3ODZiNGFmNDVhYjdjYWQ4MWQzNzdhZTU0M2JiNzg0MTI5NjU2OGZiNTIyNjk5OGFlYzIxNjM0IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
                 }
             ]
         },
@@ -27,12 +27,12 @@
             "statement": "The pool manager must preserve a single-owner lifecycle for each active voice: one live playback owns an instance at a time, and cleanup is the boundary that returns the instance to pooled reuse or terminal disposal.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts",
-                    "version": "repo-file-v1:sha256:159945a02b60c66de241ded0009da8192389ee10953f40ef85452e67abf3402b"
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts#L1-L1283",
+                    "version": "repo-lines-v1:sha256:2587057919e55d3e2eb7c4047e6df2a9284587cd89249c3f3e77dce66f5835a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI4MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg1YjQ0ZmI5MTQyMTU5NjFlMjc0MzhjMmI2ZjFkN2Y5NjkxYzI1MWFkZWNiNzJhM2YyNGEzZTkwMmNlZDMyNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTNkZGVmNzI0Nzg2YjRhZjQ1YWI3Y2FkODFkMzc3YWU1NDNiYjc4NDEyOTY1NjhmYjUyMjY5OThhZWMyMTYzNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundPoolManager.test.ts",
-                    "version": "repo-file-v1:sha256:70ca833c4636a065fb3b645c1a053a8a2130b4736928769f817b145167d9dd40"
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundPoolManager.test.ts#L1-L672",
+                    "version": "repo-lines-v1:sha256:6d7158b5c8d018c3b0704cf963d4684327af2ea939ab875038880aa841ffbfe8:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkYmJkNTI0MmJlNzMxNTVjY2E5OWYzN2E3MGMwNDE0NzM5ZjY0ZWU2ZDA3YWYwNzI5NzQ5MWFjOTFmM2IzNTY5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhM2RkZWY3MjQ3ODZiNGFmNDVhYjdjYWQ4MWQzNzdhZTU0M2JiNzg0MTI5NjU2OGZiNTIyNjk5OGFlYzIxNjM0IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
                 }
             ]
         },
@@ -41,14 +41,14 @@
             "statement": "Instance and pool cleanup are important for GC stability because stopped or disposed voices must release graph links and internal references before reuse, otherwise old voices remain reachable and reuse becomes unsafe.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts",
-                    "version": "repo-file-v1:sha256:159945a02b60c66de241ded0009da8192389ee10953f40ef85452e67abf3402b"
+                    "resource": "repo://packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts#L1-L1283",
+                    "version": "repo-lines-v1:sha256:2587057919e55d3e2eb7c4047e6df2a9284587cd89249c3f3e77dce66f5835a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI4MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg1YjQ0ZmI5MTQyMTU5NjFlMjc0MzhjMmI2ZjFkN2Y5NjkxYzI1MWFkZWNiNzJhM2YyNGEzZTkwMmNlZDMyNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTNkZGVmNzI0Nzg2YjRhZjQ1YWI3Y2FkODFkMzc3YWU1NDNiYjc4NDEyOTY1NjhmYjUyMjY5OThhZWMyMTYzNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-09-27T16:32:49.021Z"
+        "at": "2026-10-14T20:11:32.061Z"
     }
 }
