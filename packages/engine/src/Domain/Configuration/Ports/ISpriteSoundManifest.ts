@@ -5,5 +5,6 @@ export type ISpriteSoundManifest = Record<
     {
         readonly url: string | readonly string[];
         readonly priority?: 'high' | 'low';
+        readonly isStream?: boolean;
     }
 >;

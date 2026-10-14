@@ -81,7 +81,6 @@ async function bootstrap() {
     await audio.banks.load('music');
     await audio.banks.load('sfx');
     await audio.banks.load('sfx2');
-    await audio.streams.load('backgroundMain');
 
     // @ts-expect-error
     globalThis.AudioEngine = audio;
@@ -143,6 +142,7 @@ async function bootstrap() {
                 };
 
                 // oxlint-disable-next-line no-underscore-dangle
+                // eslint-disable-next-line no-underscore-dangle
                 await audio._hotReloadConfig(updatedConfig);
             }
         });

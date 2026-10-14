@@ -120,7 +120,6 @@ export class AudioEngine implements IAudioEngine {
     #conductor?: MusicConductor;
     #prng!: SeededPRNG;
     #bankManager!: BankManagerAdapter;
-    #streamManifests = new Map<string, IStreamManifest>();
     #telemetry!: TelemetryDispatcher;
     #reporters!: IConsistencyReporter[];
     #isInitialized = false;
@@ -245,32 +244,6 @@ export class AudioEngine implements IAudioEngine {
             getState: (bankId: AutocompleteBank): BankState => {
                 if (!this.#isInitialized) return 'UNLOADED';
                 return this.#bankManager.getBankState(bankId as BankId);
-            }
-        };
-    }
-
-    public get streams() {
-        return {
-            load: async (soundId: AutocompleteSound): Promise<void> => {
-                const urlConfig = this.config.manifest[soundId as SoundId]?.url;
-                if (!urlConfig) throw new Error(`SoundId "${soundId}" not found in manifest`);
-
-                const url: string = Array.isArray(urlConfig) ? urlConfig[0] : urlConfig;
-
-                if (this.#streamManifests.has(url)) return;
-
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`Failed to load stream manifest: ${url}`);
-
-                const manifest: IStreamManifest = await response.json();
-                this.#streamManifests.set(url, manifest);
-            },
-
-            unload: (soundId: AutocompleteSound): void => {
-                const urlConfig = this.config.manifest[soundId as SoundId]?.url;
-                if (!urlConfig) return;
-                const url: string = Array.isArray(urlConfig) ? urlConfig[0] : urlConfig;
-                this.#streamManifests.delete(url);
             }
         };
     }
@@ -438,8 +411,7 @@ export class AudioEngine implements IAudioEngine {
             await this.#busSystem.initialize(this.#engineTicker);
 
             const manifestResolver = (url: string | readonly string[]) => {
-                const key = Array.isArray(url) ? url[0] : url;
-                return this.#streamManifests.get(key);
+                return this.#bankManager.getStreamManifest(url);
             };
 
             const streamFactory = (manifest: IStreamManifest) => {
@@ -525,7 +497,7 @@ export class AudioEngine implements IAudioEngine {
                 bufferLoader,
                 soundPool,
                 this.#router,
-                this.config.precalculatedSizes || {},
+                this.config.precalculatedSizes ?? {},
                 {
                     onStart: totalItems => {
                         this.#dispatcher.emit('load:start', { totalItems });
@@ -558,7 +530,8 @@ export class AudioEngine implements IAudioEngine {
                     onUnload: bankId => {
                         this.#dispatcher.emit('unload:complete', { bankId });
                     }
-                }
+                },
+                this.config.loaderOptions
             );
 
             this.#eventOrchestrator = new AudioEventOrchestrator(

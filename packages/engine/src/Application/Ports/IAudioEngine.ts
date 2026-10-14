@@ -46,11 +46,6 @@ export interface IAudioEngine {
         get: (parameterName: AutocompleteGameParam) => number | undefined;
     };
 
-    streams: {
-        load(soundId: AutocompleteSound): Promise<void>;
-        unload(soundId: AutocompleteSound): void;
-    };
-
     /**
      * Mixer control interface (VCA snapshot system).
      *

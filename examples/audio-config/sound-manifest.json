@@ -15,7 +15,8 @@
     },
     "backgroundMain": {
         "url": "/assets/asami_main_loop_a.957dc0.json",
-        "priority": "high"
+        "priority": "high",
+        "isStream": true
     },
     "backgroundMain2": {
         "url": [

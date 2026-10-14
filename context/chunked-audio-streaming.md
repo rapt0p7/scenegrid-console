@@ -63,3 +63,20 @@ If a chunk is not ready by its scheduled boundary (network stall, decode latency
 **Reason:** Shifting the timeline breaks sync with the rest of the engine's sequencer and scheduling layer.
 
 **Rejected alternative:** Shifting the timeline to wait for the chunk. Rejected because it would desync the background track from all other interactive elements on the AudioContext timeline.
+
+## Unified Bank Loading for Streaming Manifests
+
+**Id:** f158941a-a192-4f6c-8461-18e391b107e2
+**Type:** decision
+**Status:** active
+**Evidence:** confirmed
+**Source:** design.md (unify-stream-bank-loading)
+
+We eliminated the standalone `audio.streams` public API (`load`, `unload`) and transferred full ownership of streaming sound lifecycle management to `BankManagerAdapter`. Sounds in bank manifests are partitioned via hybrid detection (`isStream: true` or URL ending in `/\.json($|\?)/`). Stream manifests are fetched directly with SSRF URL validation, cached separately from decoded audio buffers, and evicted alongside buffer resources when `unloadBank()` is called.
+
+**Reason:** Requiring developers to manually orchestrate separate loading workflows (`audio.banks.load('music')` followed by individual `audio.streams.load('bgm')`) fractured lifecycle ownership, complicated loading progress telemetry, and leaked internal audio streaming mechanics to the caller. Unifying them under banks provides a single asynchronous completion boundary and uniform progress reporting while keeping stream chunks isolated from audio buffer RAM quotas.
+
+**Rejected alternative:** Retaining `audio.streams.load` alongside bank loading as a deprecated API. Rejected because the engine is on a 0.2.* version with a small consumer surface, and a clean breaking removal eliminates duplicate cache invalidation and race conditions between bank unloads and stream unloads.
+
+**Rejected alternative:** Passing stream manifest URLs into `AudioBufferLoader.loadBatch`. Rejected because `AudioBufferLoader.performLoad()` unconditionally calls `AudioContext.decodeAudioData()`, which rejects on JSON manifests and falsely deducts from `ramQuotaMb` and LRU eviction budgets.
+

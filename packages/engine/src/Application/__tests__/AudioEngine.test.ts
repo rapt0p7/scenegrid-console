@@ -1350,13 +1350,12 @@ describe('AudioEngine', () => {
         });
     });
 
-    describe('Streams API', () => {
-        it('should expose load and unload methods on engine.streams', () => {
-            expect(engine.streams.load).toBeInstanceOf(Function);
-            expect(engine.streams.unload).toBeInstanceOf(Function);
+    describe('Unified Bank Stream Manifest Loading', () => {
+        it('should not expose streams property on engine', () => {
+            expect((engine as any).streams).toBeUndefined();
         });
 
-        it('should fetch and cache the manifest JSON on streams.load()', async () => {
+        it('should fetch and cache the manifest JSON on banks.load()', async () => {
             const mockManifest = {
                 isLooping: true,
                 chunks: [{ url: '/streams/chunk_0.ogg', durationSamples: 220500, trimStartSamples: 0 }]
@@ -1373,12 +1372,12 @@ describe('AudioEngine', () => {
                 soundMap: {},
                 snapshots: {},
                 events: {},
-                banks: {}
+                banks: { ['music' as BankId]: { id: 'music' as BankId, sounds: ['bgm' as SoundId] } }
             });
             await streamEngine.init();
 
-            await streamEngine.streams.load('bgm');
-
+            const result = await streamEngine.banks.load('music');
+            expect(result.ok).toBe(true);
             expect(globalThis.fetch).toHaveBeenCalledWith('/streams/bgm.json');
         });
 
@@ -1399,31 +1398,17 @@ describe('AudioEngine', () => {
                 soundMap: {},
                 snapshots: {},
                 events: {},
-                banks: {}
+                banks: { ['music' as BankId]: { id: 'music' as BankId, sounds: ['bgm' as SoundId] } }
             });
             await streamEngine.init();
 
-            await streamEngine.streams.load('bgm');
-            await streamEngine.streams.load('bgm');
+            await streamEngine.banks.load('music');
+            await streamEngine.banks.load('music');
 
             expect(fetchMock).toHaveBeenCalledTimes(1);
         });
 
-        it('should throw if soundId is not in the manifest on streams.load()', async () => {
-            const streamEngine = new AudioEngine({
-                manifest: {},
-                buses: { master: { gain: 1 } },
-                soundMap: {},
-                snapshots: {},
-                events: {},
-                banks: {}
-            });
-            await streamEngine.init();
-
-            await expect(streamEngine.streams.load('ghost')).rejects.toThrow('SoundId "ghost" not found in manifest');
-        });
-
-        it('should throw if the network response is not ok on streams.load()', async () => {
+        it('should return Err result if the network response is not ok on banks.load()', async () => {
             globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
 
             const streamEngine = new AudioEngine({
@@ -1432,16 +1417,18 @@ describe('AudioEngine', () => {
                 soundMap: {},
                 snapshots: {},
                 events: {},
-                banks: {}
+                banks: { ['music' as BankId]: { id: 'music' as BankId, sounds: ['bgm' as SoundId] } }
             });
             await streamEngine.init();
 
-            await expect(streamEngine.streams.load('bgm')).rejects.toThrow(
-                'Failed to load stream manifest: /streams/bgm.json'
-            );
+            const result = await streamEngine.banks.load('music');
+            expect(result.ok).toBe(false);
+            if (!result.ok) {
+                expect(result.error.message).toContain('Failed to load bank music');
+            }
         });
 
-        it('should remove the manifest from the cache on streams.unload()', async () => {
+        it('should remove the manifest from the cache on banks.unload()', async () => {
             const mockManifest = {
                 isLooping: true,
                 chunks: [{ url: '/streams/chunk_0.ogg', durationSamples: 220500, trimStartSamples: 0 }]
@@ -1458,23 +1445,17 @@ describe('AudioEngine', () => {
                 soundMap: {},
                 snapshots: {},
                 events: {},
-                banks: {}
+                banks: { ['music' as BankId]: { id: 'music' as BankId, sounds: ['bgm' as SoundId] } }
             });
             await streamEngine.init();
 
-            await streamEngine.streams.load('bgm');
+            await streamEngine.banks.load('music');
             fetchMock.mockClear();
 
-            streamEngine.streams.unload('bgm');
+            streamEngine.banks.unload('music');
 
-            await streamEngine.streams.load('bgm');
+            await streamEngine.banks.load('music');
             expect(fetchMock).toHaveBeenCalledTimes(1);
-        });
-
-        it('should silently ignore streams.unload() for unknown soundIds', () => {
-            expect(() => {
-                engine.streams.unload('ghost');
-            }).not.toThrow();
         });
     });
 
@@ -1493,7 +1474,7 @@ describe('AudioEngine', () => {
                 soundMap: {},
                 snapshots: {},
                 events: {},
-                banks: {}
+                banks: { ['music' as BankId]: { id: 'music' as BankId, sounds: ['bgm' as SoundId] } }
             });
             await resolverEngine.init();
 
@@ -1505,7 +1486,7 @@ describe('AudioEngine', () => {
             delete (globalThis as any).__capturedManifestResolver;
         });
 
-        it('should resolve a manifest by URL after streams.load() caches it', async () => {
+        it('should resolve a manifest by URL after banks.load() caches it', async () => {
             const mockManifest = {
                 isLooping: true,
                 chunks: [{ url: '/streams/chunk_0.ogg', durationSamples: 220500, trimStartSamples: 0 }]
@@ -1529,11 +1510,11 @@ describe('AudioEngine', () => {
                 soundMap: {},
                 snapshots: {},
                 events: {},
-                banks: {}
+                banks: { ['music' as BankId]: { id: 'music' as BankId, sounds: ['bgm' as SoundId] } }
             });
             await resolverEngine.init();
 
-            await resolverEngine.streams.load('bgm');
+            await resolverEngine.banks.load('music');
 
             const resolver = (globalThis as any).__capturedManifestResolver as (url: string | string[]) => any;
 
