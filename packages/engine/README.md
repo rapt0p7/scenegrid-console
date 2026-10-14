@@ -64,9 +64,9 @@ const audio = new AudioEngine({
 // 4. Initialize and run consistency checks
 await audio.init({ isStrictValidation: false });
 
-// 5. Explicitly load required asset banks into memory
+// 5. Explicitly load required asset banks into memory (handles both audio buffers and stream manifests)
 await audio.banks.load('sfx');
-await audio.streams.load('backgroundMain');
+await audio.banks.load('music');
 
 // 6. Unlock the Web Audio API context within a user gesture!
 document.addEventListener('pointerup', async () => {
@@ -83,7 +83,7 @@ document.addEventListener('pointerup', async () => {
 The engine strictly enforces a unidirectional, acyclic signal path:
 
 1. **Intake & Validation**: During `await audio.init()`, the `ConsistencyChecker` verifies routing safety, preventing loops (e.g., Bus A -> Bus B -> Bus A). By default, it logs warnings, but with `{ isStrictValidation: true }`, initialization safely aborts upon detecting errors.
-2. **Asset Loading**: Assets are not loaded automatically. You must explicitly load pre-packaged banks (`audio.banks.load()`) or individual streams (`audio.streams.load()`).
+2. **Asset Loading**: Assets are not loaded automatically. You must explicitly load pre-packaged banks (`audio.banks.load()`), which manages both decoded audio buffer loading and streaming manifests.
 3. **Execution Context**: The engine remains muted until `await audio.unlock()` is called in response to a user interaction, satisfying modern browser Auto-Play policies.
 4. **Zero-GC Voice Allocation**: `SoundPoolManager` pre-allocates exactly `globalVoiceLimit` instances of physical voices at startup. When polyphony exceeds this, it employs a `steal_oldest` policy based on priority to swap inactive voices without dynamically allocating new JavaScript objects.
 5. **DSP Routing**: The finalized graph is processed via an isolated `AudioWorklet` and piped to the `AudioDestination`.

@@ -4,7 +4,7 @@ import type { BankId, SoundId } from '@scene-grid/shared';
 export default {
     music: {
         id: 'music' as BankId,
-        sounds: ['backgroundMain2', 'backgroundMain3', 'smartLoop'] as SoundId[]
+        sounds: ['backgroundMain', 'backgroundMain2', 'backgroundMain3', 'smartLoop'] as SoundId[]
     },
     sfx: {
         id: 'sfx' as BankId,
