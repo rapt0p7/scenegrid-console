@@ -1,6 +1,6 @@
 {
  "state-json": 2,
- "generated": "2026-10-14T22:40:33Z",
+ "generated": "2026-10-15T14:14:41Z",
  "bodies": {
   "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture-codec-padding": {
    "text": "We wrap at least two `AudioBufferSourceNode`s in a \"flip-flop\" scheduling pattern (overlapping lifecycles, NOT signal crossfade) using `AudioBufferSourceNode.start(when, offset, duration)`.\n\n**Reason:** Calling `start` with explicit `offset` and `duration` bypasses browser-injected decoder padding (priming samples) making gapless playback possible. However, this doesn't fix MDCT windowing ringing, which strictly mandates that the asset pipeline slices chunks from a single continuously-encoded bitstream.\n\n**Rejected alternative:** Using a standard HTML5 `<audio>` element. Rejected because the streaming pipeline must fit into the existing Web Audio DSP graph natively so that all routing, buses, VCAs, and limiters continue to work exactly as they do for fully-loaded tracks.",
@@ -41,6 +41,17 @@
    "reason": "Shifting the timeline breaks sync with the rest of the engine's sequencer and scheduling layer.",
    "rejected": [
     "Shifting the timeline to wait for the chunk. Rejected because it would desync the background track from all other interactive elements on the AudioContext timeline."
+   ],
+   "consequence": null,
+   "considered": null,
+   "why_open": null
+  },
+  "chunked-audio-streaming.md#unified-bank-loading-for-streaming-manifests": {
+   "text": "We eliminated the standalone `audio.streams` public API (`load`, `unload`) and transferred full ownership of streaming sound lifecycle management to `BankManagerAdapter`. Sounds in bank manifests are partitioned via hybrid detection (`isStream: true` or URL ending in `/\\.json($|\\?)/`). Stream manifests are fetched directly with SSRF URL validation, cached separately from decoded audio buffers, and evicted alongside buffer resources when `unloadBank()` is called.\n\n**Reason:** Requiring developers to manually orchestrate separate loading workflows (`audio.banks.load('music')` followed by individual `audio.streams.load('bgm')`) fractured lifecycle ownership, complicated loading progress telemetry, and leaked internal audio streaming mechanics to the caller. Unifying them under banks provides a single asynchronous completion boundary and uniform progress reporting while keeping stream chunks isolated from audio buffer RAM quotas.\n\n**Rejected alternative:** Retaining `audio.streams.load` alongside bank loading as a deprecated API. Rejected because the engine is on a 0.2.* version with a small consumer surface, and a clean breaking removal eliminates duplicate cache invalidation and race conditions between bank unloads and stream unloads.\n\n**Rejected alternative:** Passing stream manifest URLs into `AudioBufferLoader.loadBatch`. Rejected because `AudioBufferLoader.performLoad()` unconditionally calls `AudioContext.decodeAudioData()`, which rejects on JSON manifests and falsely deducts from `ramQuotaMb` and LRU eviction budgets.",
+   "reason": "Requiring developers to manually orchestrate separate loading workflows (`audio.banks.load('music')` followed by individual `audio.streams.load('bgm')`) fractured lifecycle ownership, complicated loading progress telemetry, and leaked internal audio streaming mechanics to the caller. Unifying them under banks provides a single asynchronous completion boundary and uniform progress reporting while keeping stream chunks isolated from audio buffer RAM quotas.",
+   "rejected": [
+    "Retaining `audio.streams.load` alongside bank loading as a deprecated API. Rejected because the engine is on a 0.2.* version with a small consumer surface, and a clean breaking removal eliminates duplicate cache invalidation and race conditions between bank unloads and stream unloads.",
+    "Passing stream manifest URLs into `AudioBufferLoader.loadBatch`. Rejected because `AudioBufferLoader.performLoad()` unconditionally calls `AudioContext.decodeAudioData()`, which rejects on JSON manifests and falsely deducts from `ramQuotaMb` and LRU eviction budgets."
    ],
    "consequence": null,
    "considered": null,
