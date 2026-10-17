@@ -17,7 +17,7 @@ import { typedEntries, typedKeys, isDefined } from '@scene-grid/shared';
 
 export default class AudioBusSystem implements IAudioBusSystem {
     private readonly context: AudioCtx;
-    private readonly busConfig: IBuses | null = null;
+    private busConfig: IBuses | null = null;
     private readonly automation: AutomationEngine | null = null;
     private readonly buses: Map<BusId, AudioBus> = new Map();
     private readonly hotPathBuses: AudioBus[] = [];
@@ -264,62 +264,85 @@ export default class AudioBusSystem implements IAudioBusSystem {
      * @internal Hot Module Replacement API
      * Soft-reloads the bus system configuration without stopping the audio context.
      */
-    // oxlint-disable-next-line max-lines-per-function
     public async updateConfig(newConfig: IBuses): Promise<void> {
         const previousBusesConfig = this.busConfig;
-
-        (this as any).busConfig = newConfig;
+        this.busConfig = newConfig;
 
         for (const [busId, busConfig] of typedEntries(newConfig)) {
-            let bus = this.buses.get(busId as BusId);
-
-            if (!bus) {
-                bus = new AudioBus({
-                    id: busId as BusId,
-                    config: busConfig,
-                    context: this.context,
-                    automation: this.automation!,
-                    routerMasterGain: this.masterBus,
-                    pluginFactory: this.pluginFactory
-                });
-                this.buses.set(busId as BusId, bus);
-                this.hotPathBuses.push(bus);
-            }
-
-            bus.bindRTPC(busConfig.rtpc);
-            bus.safeReplaceFilter(busConfig.filter ?? null, 100 as Milliseconds);
+            this.upsertBus(busId as BusId, busConfig);
         }
 
-        const promises = [];
+        const promises: Promise<void>[] = [];
         for (const [busId, busConfig] of typedEntries(newConfig)) {
-            const oldBusConfig = previousBusesConfig?.[busId];
+            const typedBusId = busId as BusId;
+            this.syncBusSends(typedBusId, busConfig, previousBusesConfig?.[busId]);
 
-            if (busConfig.sends) {
-                for (const [targetBusId, sendGain] of typedEntries(busConfig.sends)) {
-                    this.applySend(busId as BusId, targetBusId, sendGain, 100 as Milliseconds);
-                }
-            }
-
-            if (oldBusConfig?.sends) {
-                for (const targetBusId of typedKeys(oldBusConfig.sends)) {
-                    const isStillExists = busConfig.sends && isDefined(busConfig.sends[targetBusId]);
-
-                    if (!isStillExists) {
-                        this.applySend(busId as BusId, targetBusId, null, 100 as Milliseconds);
-                    }
-                }
-            }
-
-            if (busConfig.sidechain?.enabled && !this.sidechains.has(busId)) {
-                promises.push(this.createSidechain(busId as BusId));
-            } else if (!busConfig.sidechain?.enabled && this.sidechains.has(busId)) {
-                const ducker = this.sidechains.get(busId);
-                ducker?.dispose();
-                this.sidechains.delete(busId);
+            const sidechainPromise = this.syncBusSidechain(typedBusId, busConfig);
+            if (sidechainPromise) {
+                promises.push(sidechainPromise);
             }
         }
 
         await Promise.all(promises);
+    }
+
+    private createAndRegisterBus(busId: BusId, busConfig: IBus): AudioBus {
+        const bus = new AudioBus({
+            id: busId,
+            config: busConfig,
+            context: this.context,
+            automation: this.automation!,
+            routerMasterGain: this.masterBus,
+            pluginFactory: this.pluginFactory
+        });
+        this.buses.set(busId, bus);
+        this.hotPathBuses.push(bus);
+        return bus;
+    }
+
+    private upsertBus(busId: BusId, busConfig: IBus): void {
+        const bus = this.buses.get(busId) ?? this.createAndRegisterBus(busId, busConfig);
+
+        bus.bindRTPC(busConfig.rtpc);
+        bus.safeReplaceFilter(busConfig.filter ?? null, 100 as Milliseconds);
+    }
+
+    private applyBusSends(busId: BusId, sends: Record<BusId, number> | undefined, duration: Milliseconds): void {
+        if (!sends) return;
+
+        for (const [targetBusId, sendGain] of typedEntries(sends)) {
+            this.applySend(busId, targetBusId, sendGain, duration);
+        }
+    }
+
+    private syncBusSends(busId: BusId, busConfig: IBus, oldBusConfig?: IBus): void {
+        this.applyBusSends(busId, busConfig.sends, 100 as Milliseconds);
+
+        if (!oldBusConfig?.sends) return;
+
+        for (const targetBusId of typedKeys(oldBusConfig.sends)) {
+            const isStillExists = busConfig.sends && isDefined(busConfig.sends[targetBusId]);
+
+            if (!isStillExists) {
+                this.applySend(busId, targetBusId, null, 100 as Milliseconds);
+            }
+        }
+    }
+
+    private syncBusSidechain(busId: BusId, busConfig: IBus): Promise<void> | undefined {
+        const isEnabled = Boolean(busConfig.sidechain?.enabled);
+        const hasSidechain = this.sidechains.has(busId);
+
+        if (isEnabled && !hasSidechain) {
+            return this.createSidechain(busId);
+        }
+
+        if (!isEnabled && hasSidechain) {
+            this.sidechains.get(busId)?.dispose();
+            this.sidechains.delete(busId);
+        }
+
+        return undefined;
     }
 
     private async createSidechain(busId: BusId, options: IDuckingConfig = {}): Promise<void> {
@@ -390,33 +413,21 @@ export default class AudioBusSystem implements IAudioBusSystem {
 
     private async initBuses(): Promise<void> {
         for (const [busId, busConfig] of typedEntries(this.busConfig!)) {
-            const bus = new AudioBus({
-                id: busId as BusId,
-                config: busConfig,
-                context: this.context,
-                automation: this.automation!,
-                routerMasterGain: this.masterBus,
-                pluginFactory: this.pluginFactory
-            });
+            const bus = this.createAndRegisterBus(busId as BusId, busConfig);
 
             if (busConfig.rtpc) {
                 bus.bindRTPC(busConfig.rtpc);
             }
-
-            this.buses.set(busId as BusId, bus);
-            this.hotPathBuses.push(bus);
         }
 
-        const promises = [];
+        const promises: Promise<void>[] = [];
 
         for (const [busId, busConfig] of typedEntries(this.busConfig!)) {
-            if (busConfig.sends) {
-                for (const [targetBusId, sendGain] of typedEntries(busConfig.sends)) {
-                    this.applySend(busId as BusId, targetBusId, sendGain, 0 as Milliseconds);
-                }
-            }
+            const typedBusId = busId as BusId;
+            this.applyBusSends(typedBusId, busConfig.sends, 0 as Milliseconds);
+
             if (busConfig.sidechain?.enabled) {
-                promises.push(this.createSidechain(busId as BusId));
+                promises.push(this.createSidechain(typedBusId));
             }
         }
 
