@@ -2,7 +2,33 @@
 
 What changed in each version that an existing project may need to know about or act on — not limited to changes to the `context/` entry *format*. Also covers structural/placement conventions (e.g. how `context/index.md` is ordered) and config defaults added to the config files (`.keep-the-why`, the personal file; before 0.10.0, blocks in `AGENTS.md`/`AGENTS.local.md`). Not every release needs an entry here — only ones with something an existing project should check. See `setup.md` for how and when this file gets consulted; note that "consulted" doesn't always mean "asks the user to act" — a purely informational entry (e.g. a config field silently backfilled to a default) is recorded here for completeness but needs no prompt.
 
+"Do it now", "mechanical" and "one pass by the agent" below say how a migration runs once the person has chosen to migrate now (`setup.md`, "Context schema and migrations") — completely, not left for the next touch. They never skip that question. The one exception is the 0.10.0 relocation of a legacy config block, and it says so.
+
 Entries below assume 0.2.0 as the starting point — nothing before it tracked a `context-schema` at all, and 0.2.0 itself introduced no `context/` entry format change.
+
+## 0.20.2 — the dashboard export's path is `keep-the-why-dashboard/` (informational, no action required)
+
+**What changed:** the path `references/ci-linting.md` and `setup.md` give the dashboard export on a project's site is `<site>/keep-the-why-dashboard/` — the badge, `dashboard-state` and the snippets for a docs build, GitHub Pages and GitLab Pages with it. It was `<site>/dashboard/live/`: a generic name that can collide with a dashboard of the project's own, and says nothing about what is there.
+
+**Existing projects:** nothing to migrate. An export already published under `/dashboard/live/` stays where it is — the path is a convention, `dashboard-state` and the badge name whatever path a project uses, and nothing reads the old one by name. Advance `context-schema` to 0.20.2 as usual.
+
+## 0.20.1 — a sentence for projects that keep ADRs; the dashboard on GitLab Pages (informational, no action required)
+
+**What changed:** `references/help.md` and `references/repository-structure.md` carry the sentence for a project that already keeps ADRs — *"Carry the decisions from our ADRs into `context/` — leave the ADR files untouched."* — and what it does: one entry per record, `Source` naming the record's file, the records themselves untouched. `references/ci-linting.md` shows the dashboard on GitLab Pages. The dashboard went from 0.7.x to 0.10.0 in the meantime (timeline clock and stage, authors across projects, previews on the graph page, Esc as reset) — its own package, no schema change.
+
+**Existing projects:** nothing to migrate. Advance `context-schema` to 0.20.1 as usual.
+
+## 0.20.0 — the skill explains itself; steadier wording; the eval judge on Opus (informational, no action required)
+
+**What changed:** `references/help.md` says what Keep the Why is — the format, the skill, the linter, the dashboard, the registry; what is required and what optional — and lists the sentences that start each mode, setup, an update and each optional component; the skill reads it before explaining itself, and its description names questions about how it works. Wording measured on `claude-sonnet-5-5`: the description opens with its scope, the pending-confirmation check may say "nothing pending" in one short line, a correction gets its own `CHANGELOG.md` line, an invalid or contradictory `confirmation-flow` is asked about alone, the project wizard always lists the CI-linting question. The eval judge is Claude Opus. A context cache is read with read commands only — not even a test file to probe whether it could be written.
+
+**Existing projects:** nothing to migrate. Advance `context-schema` to 0.20.0 as usual.
+
+## 0.19.0 — the optional components are offered, set up on request; a request can answer the wizards (informational, no action required)
+
+**What changed:** the skill names three optional components — the linter in CI, the dashboard on the project's site (now also through a GitHub Pages workflow of its own, where no docs build exists), and a listing in the registry — and sets each one up only on a yes or a request (`references/ci-linting.md`, "Optional components"). The project wizard's question about the linter in CI defaults to *no* (it defaulted to yes where GitHub or GitLab was detected), the dashboard question defaults to *no* and is asked wherever the remote is on GitHub, and the start mode defaults to capture from now on. A setup request that already gives the answers ("with default settings") is the answer to both wizards: no list is shown, the reply lists every value written. Also: `SKILL.md` carries the local linter's install order itself, and its pointers to a procedure in a reference file are phrased as read-before triggers; behaviour the references already described, nothing a project has to do.
+
+**Existing projects:** nothing to migrate. A wizard default applies to a new setup only: a project whose CI already runs the linter keeps its workflow, and nothing is added to one that has none. Any of the components can be asked for at any time. Advance `context-schema` to 0.19.0 as usual.
 
 ## 0.18.2 — an `Id` is lowercase, whatever the OS command printed; the live badge is `badge-entries.svg` (two mechanical checks)
 

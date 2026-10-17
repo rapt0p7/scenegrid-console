@@ -79,7 +79,7 @@ README, for what Keep the Why actually is.
 - canonical: https://github.com/acme/widget-service
 - context: `context/`
 - init: complete
-- context-schema: 0.18.2
+- context-schema: 0.20.2
 - capture-confirmation: confirm-when-unsure
 - source-reference: never
 <!-- /keep-the-why:config -->
@@ -135,7 +135,7 @@ One file per project per developer per machine, `<id>` being the project's `id`.
 | `confirmation-flow` | `sequential` \| `batch` | asked once; the wizard proposes `batch` | how several pending questions or confirmations are presented |
 | `update-check` | `every <N> days — last: <YYYY-MM-DD>[ — on-failure: retry-quietly \| disabled]` \| `no` | asked by the wizard | the release check and when it last completed |
 | `consistency-check` | `every <N> days — last: <YYYY-MM-DD>` \| `no` | asked by the wizard | the `Revisit when` sweep and when it last ran |
-| `pending-confirmation-check` | `on-start` \| `no` | `no` | list entries with `Status: pending-confirmation` at session start; silent when there are none |
+| `pending-confirmation-check` | `on-start` \| `no` | `no` | list entries with `Status: pending-confirmation` at session start; with none, at most one short line |
 | `local-lint` | `auto` \| `ask` \| `no` | `auto` from the wizard; `ask` when the line is absent | run `keep-the-why-lint` after every write to the context location and after a settings change (`--setup`); the linter's version must be at least the skill's — `auto` installs or updates it from PyPI unasked, `ask` asks first |
 | `session` | `attended` \| `unattended` | inherits §5, else `attended` | for this project, whether someone is present to answer; overrides the machine-wide value |
 | `migration-prompt` | `<X.Y.Z> declined` | absent | this developer declined the migration prompt for exactly that target version; one line per version |
