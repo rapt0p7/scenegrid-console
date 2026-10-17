@@ -90,29 +90,8 @@ export class StreamNode implements ITickable {
         this.pauseSnapshotTime = this.context.currentTime;
 
         this.loader.pause(this.pauseSnapshotTime);
-
-        const playheadNode = this.scheduledNodes.find(
-            n => this.pauseSnapshotTime >= n.logicalStartTime && this.pauseSnapshotTime <= n.absoluteEndTime
-        );
-
-        if (playheadNode) {
-            this.activeChunkIndex = playheadNode.index;
-            this.currentChunkStartTime = playheadNode.logicalStartTime;
-        } else if (this.scheduledNodes.length > 0) {
-            const futureNode = this.scheduledNodes.find(n => n.logicalStartTime >= this.pauseSnapshotTime);
-            if (futureNode) {
-                this.activeChunkIndex = futureNode.index;
-                this.currentChunkStartTime = futureNode.logicalStartTime;
-            }
-        }
-
-        for (let i = 0; i < this.scheduledNodes.length; i++) {
-            try {
-                this.scheduledNodes[i].source.stop();
-                this.scheduledNodes[i].source.disconnect();
-            } catch {}
-        }
-        this.scheduledNodes.length = 0;
+        this.capturePausePlayhead();
+        this.stopAndClearScheduledNodes();
     }
 
     public resume(when?: number): void {
@@ -123,39 +102,19 @@ export class StreamNode implements ITickable {
 
         this.loader.resume(resumeTime);
 
-        const sampleRate = this.context.sampleRate || 44100;
-        let elapsed = this.pauseSnapshotTime - this.currentChunkStartTime;
-        if (elapsed < 0) elapsed = 0;
+        let elapsed = Math.max(0, this.pauseSnapshotTime - this.currentChunkStartTime);
+        const durationSec = this.getChunkDurationSec(this.activeChunkIndex);
 
-        const targetChunk = this.manifest.chunks[this.activeChunkIndex];
-        const durationSec = targetChunk.durationSamples / sampleRate;
-
-        if (Math.abs(elapsed - durationSec) < EPSILON || elapsed >= durationSec) {
+        if (this.hasReachedChunkEnd(elapsed, durationSec)) {
             elapsed = 0;
-            this.activeChunkIndex++;
-            if (this.activeChunkIndex >= this.manifest.chunks.length) {
-                if (this.internalIsLooping) this.activeChunkIndex = 0;
-                else {
-                    this.isPlaying = false;
-                    this.onEnded?.();
-                    return;
-                }
-            }
+            if (!this.advanceChunkCursor()) return;
         }
 
-        const activeDurationSec = this.manifest.chunks[this.activeChunkIndex].durationSamples / sampleRate;
+        const activeDurationSec = this.getChunkDurationSec(this.activeChunkIndex);
         const remainingSec = activeDurationSec - elapsed;
 
         this.scheduleChunk(this.activeChunkIndex, resumeTime, elapsed);
-
-        this.activeChunkIndex++;
-        if (this.activeChunkIndex >= this.manifest.chunks.length) {
-            if (this.internalIsLooping) this.activeChunkIndex = 0;
-            else {
-                this.isPlaying = false;
-                this.onEnded?.();
-            }
-        }
+        this.advanceChunkCursor();
 
         this.nextChunkScheduledTime = resumeTime + remainingSec;
 
@@ -177,48 +136,51 @@ export class StreamNode implements ITickable {
 
     private scheduleUpcomingChunks(currentTimeSec: number, physicalDeltaMs: number): void {
         if (this.activeChunkIndex >= this.manifest.chunks.length) return;
+        if (!this.ensureInitialBuffer(currentTimeSec, physicalDeltaMs)) return;
 
-        const sampleRate = this.context.sampleRate || 44100;
-        const currentChunk = this.manifest.chunks[this.activeChunkIndex];
-        const durationSec = currentChunk.durationSamples / sampleRate;
-
+        const durationSec = this.getChunkDurationSec(this.activeChunkIndex);
         const lookAheadWindow = Math.max(durationSec * 0.5, 0.5);
 
-        if (!this.initialBufferMet) {
-            let loadedCount = 0;
-            for (let i = 0; i < this.BUFFER_WATERMARK; i++) {
-                let checkIdx = this.activeChunkIndex + i;
-                if (checkIdx >= this.manifest.chunks.length && !this.internalIsLooping) {
-                    loadedCount++;
-                } else {
-                    if (this.internalIsLooping) checkIdx = checkIdx % this.manifest.chunks.length;
-                    if (this.loader.hasChunk(checkIdx)) loadedCount++;
-                }
-            }
+        if (this.nextChunkScheduledTime - currentTimeSec > lookAheadWindow) return;
 
-            if (loadedCount >= Math.min(this.BUFFER_WATERMARK, this.manifest.chunks.length)) {
-                this.initialBufferMet = true;
-            } else {
-                if (this.nextChunkScheduledTime <= currentTimeSec) {
-                    this.nextChunkScheduledTime += physicalDeltaMs / 1000;
-                }
-                return;
-            }
+        if (this.loader.hasChunk(this.activeChunkIndex)) {
+            this.scheduleChunk(this.activeChunkIndex, this.nextChunkScheduledTime, 0);
+            this.advanceToNextChunkIndex();
+        } else if (this.nextChunkScheduledTime <= currentTimeSec) {
+            // Shift the scheduled time forward to prevent the late-drop cascade.
+            // Without this, on a very slow network a chunk arriving 30s late would produce
+            // lateOffset > durationSec, causing scheduleChunk to return with actualDuration<=0,
+            // and advanceToNextChunkIndex would then silently skip it — cascading through all
+            // subsequent chunks until the timeline catches real time again.
+            this.nextChunkScheduledTime += physicalDeltaMs / 1000;
+        }
+    }
+
+    private ensureInitialBuffer(currentTimeSec: number, physicalDeltaMs: number): boolean {
+        if (this.initialBufferMet) return true;
+
+        let loadedCount = 0;
+        for (let i = 0; i < this.BUFFER_WATERMARK; i++) {
+            if (this.isWatermarkChunkReady(this.activeChunkIndex + i)) loadedCount++;
         }
 
-        if (this.nextChunkScheduledTime - currentTimeSec <= lookAheadWindow) {
-            if (this.loader.hasChunk(this.activeChunkIndex)) {
-                this.scheduleChunk(this.activeChunkIndex, this.nextChunkScheduledTime, 0);
-                this.advanceToNextChunkIndex();
-            } else if (this.nextChunkScheduledTime <= currentTimeSec) {
-                // Shift the scheduled time forward to prevent the late-drop cascade.
-                // Without this, on a very slow network a chunk arriving 30s late would produce
-                // lateOffset > durationSec, causing scheduleChunk to return with actualDuration<=0,
-                // and advanceToNextChunkIndex would then silently skip it — cascading through all
-                // subsequent chunks until the timeline catches real time again.
-                this.nextChunkScheduledTime += physicalDeltaMs / 1000;
-            }
+        if (loadedCount >= Math.min(this.BUFFER_WATERMARK, this.manifest.chunks.length)) {
+            this.initialBufferMet = true;
+            return true;
         }
+
+        if (this.nextChunkScheduledTime <= currentTimeSec) {
+            this.nextChunkScheduledTime += physicalDeltaMs / 1000;
+        }
+        return false;
+    }
+
+    private isWatermarkChunkReady(checkIdx: number): boolean {
+        const chunkCount = this.manifest.chunks.length;
+        if (checkIdx >= chunkCount && !this.internalIsLooping) return true;
+
+        const resolvedIdx = this.internalIsLooping ? checkIdx % chunkCount : checkIdx;
+        return this.loader.hasChunk(resolvedIdx);
     }
 
     private scheduleChunk(chunkIndex: number, scheduledWhen: number, logicalOffsetSec: number): void {
@@ -265,37 +227,65 @@ export class StreamNode implements ITickable {
     }
 
     private advanceToNextChunkIndex(): void {
-        const sampleRate = this.context.sampleRate || 44100;
-        const currentChunk = this.manifest.chunks[this.activeChunkIndex];
-        const durationSec = currentChunk.durationSamples / sampleRate;
+        this.nextChunkScheduledTime += this.getChunkDurationSec(this.activeChunkIndex);
+        this.advanceChunkCursor();
+    }
 
-        this.nextChunkScheduledTime += durationSec;
+    private advanceChunkCursor(): boolean {
         this.activeChunkIndex++;
+        if (this.activeChunkIndex < this.manifest.chunks.length) return true;
 
-        if (this.activeChunkIndex >= this.manifest.chunks.length) {
-            if (this.internalIsLooping) {
-                this.activeChunkIndex = 0;
-            } else {
-                this.isPlaying = false;
-                this.onEnded?.();
-            }
+        if (this.internalIsLooping) {
+            this.activeChunkIndex = 0;
+            return true;
         }
+
+        this.isPlaying = false;
+        this.onEnded?.();
+        return false;
     }
 
     private cleanupFinishedNodes(currentTimeSec: number): void {
         while (this.scheduledNodes.length > 0) {
-            const nodeInfo = this.scheduledNodes[0];
+            if (currentTimeSec <= this.scheduledNodes[0].absoluteEndTime + 1.0) break;
 
-            if (currentTimeSec > nodeInfo.absoluteEndTime + 1.0) {
-                const node = this.scheduledNodes.shift();
-                if (node) {
-                    try {
-                        node.source.disconnect();
-                    } catch {}
-                }
-            } else {
-                break;
-            }
+            const node = this.scheduledNodes.shift();
+            if (node) this.teardownSourceNode(node.source, false);
         }
+    }
+
+    private capturePausePlayhead(): void {
+        const targetNode =
+            this.scheduledNodes.find(
+                n => this.pauseSnapshotTime >= n.logicalStartTime && this.pauseSnapshotTime <= n.absoluteEndTime
+            ) ?? this.scheduledNodes.find(n => n.logicalStartTime >= this.pauseSnapshotTime);
+
+        if (targetNode) {
+            this.activeChunkIndex = targetNode.index;
+            this.currentChunkStartTime = targetNode.logicalStartTime;
+        }
+    }
+
+    private stopAndClearScheduledNodes(): void {
+        for (let i = 0; i < this.scheduledNodes.length; i++) {
+            this.teardownSourceNode(this.scheduledNodes[i].source, true);
+        }
+        this.scheduledNodes.length = 0;
+    }
+
+    private teardownSourceNode(source: AudioBufferSourceNode, stopFirst: boolean): void {
+        try {
+            if (stopFirst) source.stop();
+            source.disconnect();
+        } catch {}
+    }
+
+    private getChunkDurationSec(chunkIndex: number): number {
+        const sampleRate = this.context.sampleRate || 44100;
+        return this.manifest.chunks[chunkIndex].durationSamples / sampleRate;
+    }
+
+    private hasReachedChunkEnd(elapsed: number, durationSec: number): boolean {
+        return Math.abs(elapsed - durationSec) < EPSILON || elapsed >= durationSec;
     }
 }
