@@ -11,6 +11,7 @@ import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js'
 import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
 import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 import type { ILogicalVoice } from '@infrastructure/types/ILogicalVoice.js';
+import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
 import type { ISoundOptions } from '@infrastructure/types/ISoundOptions.js';
 import type {
     BusId,
@@ -522,7 +523,7 @@ export class SoundController implements ISoundController {
         return voice;
     }
 
-    #scheduleVirtualExpiration(id: PlaybackId, instance: any): void {
+    #scheduleVirtualExpiration(id: PlaybackId, instance: ISoundInstance): void {
         if (!instance.isLooping && instance.duration > 0) {
             const remainingSec = Math.max(
                 0,
@@ -533,8 +534,8 @@ export class SoundController implements ISoundController {
         }
     }
 
-    #detachInstanceSidechains(instance: any): Map<BusId, number> | undefined {
-        const poolIndex = instance._poolIndex;
+    #detachInstanceSidechains(instance: ISoundInstance): Map<BusId, number> | undefined {
+        const poolIndex = (instance as any)._poolIndex;
         const targetBuses = this.#sidechainLinks[poolIndex];
 
         if (targetBuses && instance.sidechainTriggerNode) {
@@ -546,8 +547,8 @@ export class SoundController implements ISoundController {
         return targetBuses;
     }
 
-    #restoreInstanceSidechains(instance: any): void {
-        const poolIndex = instance._poolIndex;
+    #restoreInstanceSidechains(instance: ISoundInstance): void {
+        const poolIndex = (instance as any)._poolIndex;
         const targetBuses = this.#sidechainLinks[poolIndex];
 
         if (targetBuses && instance.sidechainTriggerNode) {
@@ -557,8 +558,8 @@ export class SoundController implements ISoundController {
         }
     }
 
-    #handleVoiceEnded = (instance: any): void => {
-        const playbackId = instance._currentPlaybackId;
+    #handleVoiceEnded = (instance: ISoundInstance): void => {
+        const playbackId = (instance as any)._currentPlaybackId;
         if (playbackId) {
             const voice = this.activeVoices.get(playbackId);
             if (voice) {
@@ -569,7 +570,7 @@ export class SoundController implements ISoundController {
         }
     };
 
-    #handleInstanceReleased = (instance: any): void => {
+    #handleInstanceReleased = (instance: ISoundInstance): void => {
         this.#detachInstanceSidechains(instance)?.clear();
     };
 
