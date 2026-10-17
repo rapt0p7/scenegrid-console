@@ -1,9 +1,7 @@
 // oxlint-disable import/max-dependencies max-lines-per-function
 // noinspection D
 
-import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
-import { VariationResolver } from '@domain/Router/VariationResolver.js';
-
+import type { IStopOptions } from '@domain/Configuration/Ports/IEventConfig.js';
 import type {
     AnySoundConfig,
     IContainerSoundConfig,
@@ -14,18 +12,20 @@ import type {
 } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { ISoundMap } from '@domain/Configuration/Ports/ISoundMap.js';
 import type ContainerPlaybackPolicy from '@domain/Managers/ContainerPlaybackPolicy.js';
-import type SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 import type { IContainerHistoryRegistry } from '@domain/Managers/Ports/IContainerHistoryRegistry.js';
-import type { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
 import type { IDuckingManager } from '@domain/Managers/Ports/IDuckingManager.js';
+import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
+import type { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
+import type SwitchPlaybackPolicy from '@domain/Managers/SwitchPlaybackPolicy.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
-import { PlaybackId, SoundId, IPRNG, TimeMath, Milliseconds, ContextTime, Seconds } from '@scene-grid/shared';
-import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { IStopOptions } from '@domain/Configuration/Ports/IEventConfig.js';
-import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
-import { isAbsent } from '@scene-grid/shared';
 import type { ITelemetryDispatcher } from '@domain/Shared/Ports/ITelemetryDispatcher.js';
+
+import { InstanceRTPCBinder } from '@domain/Managers/InstanceRTPCBinder.js';
+import { ScattererOrchestrator } from '@domain/Orchestration/ScattererOrchestrator.js';
+import { VariationResolver } from '@domain/Router/VariationResolver.js';
+import { PlaybackId, SoundId, IPRNG, TimeMath, Milliseconds, ContextTime, Seconds } from '@scene-grid/shared';
+import { isAbsent } from '@scene-grid/shared';
 
 export default class AudioRouter implements IAudioRouter {
     private readonly duckingManager: IDuckingManager;
@@ -177,27 +177,9 @@ export default class AudioRouter implements IAudioRouter {
         const length = playbacksToStop.length;
         for (let i = 0; i < length; i++) {
             const playbackId = playbacksToStop[i];
-            const soundId = this.soundController.getSoundId(playbackId);
-
-            if (!soundId) {
-                this.soundController.stopById(playbackId, timeToStop);
-                continue;
+            if (allowTail) {
+                this.spawnTailForPlayback(playbackId);
             }
-
-            const config = this.getSoundConfig(soundId);
-
-            if (allowTail && config && 'tail' in config && config.tail) {
-                const position = this.soundController.getPosition(playbackId);
-                const tailPlaybackIds = this.play(config.tail);
-
-                if (position && tailPlaybackIds) {
-                    const ids = Array.isArray(tailPlaybackIds) ? tailPlaybackIds : [tailPlaybackIds];
-                    for (let j = 0; j < ids.length; j++) {
-                        this.soundController.setPosition(ids[j], position.x, position.y, position.z);
-                    }
-                }
-            }
-
             this.soundController.stopById(playbackId, timeToStop);
         }
     }
@@ -224,6 +206,30 @@ export default class AudioRouter implements IAudioRouter {
 
     public performCrossfade(outId: PlaybackId, inId: PlaybackId, duration: Milliseconds): void {
         this.soundController.crossfade(outId, inId, duration);
+    }
+
+    private spawnTailForPlayback(playbackId: PlaybackId): void {
+        const tailSoundId = this.getTailSoundId(playbackId);
+        if (!tailSoundId) return;
+
+        const position = this.soundController.getPosition(playbackId);
+        const tailPlaybackIds = this.play(tailSoundId);
+        if (!position || !tailPlaybackIds) return;
+
+        const ids = Array.isArray(tailPlaybackIds) ? tailPlaybackIds : [tailPlaybackIds];
+        for (let j = 0; j < ids.length; j++) {
+            this.soundController.setPosition(ids[j], position.x, position.y, position.z);
+        }
+    }
+
+    private getTailSoundId(playbackId: PlaybackId): SoundId | undefined {
+        const soundId = this.soundController.getSoundId(playbackId);
+        if (!soundId) return undefined;
+
+        const config = this.getSoundConfig(soundId);
+        if (!config || !('tail' in config)) return undefined;
+
+        return config.tail;
     }
 
     private resolvePlaybacks(target: PlaybackId | PlaybackId[] | SoundId): PlaybackId[] {

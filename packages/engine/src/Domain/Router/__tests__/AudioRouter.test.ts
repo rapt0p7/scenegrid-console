@@ -956,6 +956,30 @@ describe('AudioRouter (Command Dispatcher)', () => {
             expect(mockController.stopById).toHaveBeenCalledTimes(1);
             expect(mockController.stopById).toHaveBeenCalledWith(10, undefined);
         });
+
+        it('should skip tail spawning when allowTail is explicitly false', () => {
+            testSoundMap['sound_with_tail'] = { busId: 'sfx', tail: 'tail_sound' };
+            mockController.getSoundId.mockReturnValue('sound_with_tail' as SoundId);
+
+            router.stop(50 as PlaybackId, { allowTail: false });
+
+            expect(mockController.play).not.toHaveBeenCalled();
+            expect(mockController.stopById).toHaveBeenCalledWith(50, undefined);
+        });
+
+        it('should not set position if tail sound fails to play (returns null)', () => {
+            testSoundMap['sound_with_tail'] = { busId: 'sfx', tail: 'tail_sound' };
+            testSoundMap['tail_sound'] = { busId: 'sfx' };
+            mockController.getSoundId.mockReturnValue('sound_with_tail' as SoundId);
+            mockController.getPosition.mockReturnValue({ x: 1, y: 2, z: 3 });
+            mockController.play.mockReturnValueOnce(null);
+
+            router.stop(50 as PlaybackId);
+
+            expect(mockController.play).toHaveBeenCalledWith('tail_sound', expect.any(Object));
+            expect(mockController.setPosition).not.toHaveBeenCalled();
+            expect(mockController.stopById).toHaveBeenCalledWith(50, undefined);
+        });
     });
 
     describe('Recursion Depth & Array Resolution', () => {
