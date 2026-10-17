@@ -1852,5 +1852,60 @@ describe('Sequencer (Interactive Music)', () => {
             const track = (manager as any).tracks.get('battle_music');
             expect(track.nextScheduleTime).toBeCloseTo(2.5);
         });
+
+        it('should fallback to 0ms crossfade on quantized transition when neither options nor config define crossfade', () => {
+            mockRouter.getSoundConfig.mockReturnValue({
+                busId: 'music',
+                smartLoop: {
+                    bpm: 120,
+                    beatsPerBar: 4,
+                    regions: {
+                        intro: [0, 44_100],
+                        main: [44_100, 132_300]
+                    }
+                }
+            });
+
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            mockController.fadeVolume.mockClear();
+            simulatedTime = 0.5 as ContextTime;
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main' as RegionId,
+                options: { quantize: 'NextBeat' }
+            });
+
+            expect(mockController.fadeVolume).not.toHaveBeenCalled();
+            expect(mockController.stopById).toHaveBeenCalledWith(1, 1.5);
+        });
+
+        it('should safely skip offset calculation when targetRegion is undefined or fallback to now when gridStartTime is null', () => {
+            manager.playLoop('battle_music' as SoundId, 'intro' as RegionId);
+            const track = (manager as any).getTrackContext('battle_music');
+            track.gridStartTime = null;
+            simulatedTime = 0.5 as ContextTime;
+            mockController.play.mockClear();
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'non_existent_target' as RegionId,
+                options: { quantize: 'Immediate', offsetMode: 'Relative' }
+            });
+
+            expect(mockController.play).not.toHaveBeenCalled();
+
+            track.state = LoopState.LOOPING;
+            track.currentRegion = 'intro' as RegionId;
+            track.gridStartTime = null;
+
+            manager.transitionTo({
+                soundId: 'battle_music' as SoundId,
+                targetRegion: 'main' as RegionId,
+                options: { quantize: 'Immediate', offsetMode: 'Relative' }
+            });
+
+            expect(mockController.play).toHaveBeenCalledWith('battle_music', expect.objectContaining({ offset: 1 }));
+        });
     });
 });
