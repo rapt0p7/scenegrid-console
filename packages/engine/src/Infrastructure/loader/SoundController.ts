@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 // oxlint-disable no-underscore-dangle
 // noinspection D
 
@@ -10,6 +11,7 @@ import type SoundPoolManager from '@infrastructure/instance/SoundPoolManager.js'
 import type { PlaybackScheduler } from '@infrastructure/scheduling/PlaybackScheduler.js';
 import type { AudioCtx } from '@infrastructure/types/IAudioContext.js';
 import type { ILogicalVoice } from '@infrastructure/types/ILogicalVoice.js';
+import type { ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
 import type { ISoundOptions } from '@infrastructure/types/ISoundOptions.js';
 import type {
     BusId,
@@ -100,7 +102,6 @@ export class SoundController implements ISoundController {
         this.lastPlayTimes.delete(soundId);
     }
 
-    // oxlint-disable-next-line max-lines-per-function
     public play(
         soundId: SoundId,
         {
@@ -113,49 +114,13 @@ export class SoundController implements ISoundController {
         }: IControllerPlayOptions
     ): PlaybackId | null {
         const definition = this.registry.get(soundId);
-        if (!definition) return null;
-
-        const now = (this.getCurrentTime() * 1000) as Milliseconds;
-        const lastPlay = this.lastPlayTimes.get(soundId) ?? (-Number.MAX_SAFE_INTEGER as Milliseconds);
-        const cooldownMs = (definition.options.cooldownMs ?? DEFAULT_COOLDOWN) as Milliseconds;
-
-        if (now - lastPlay < cooldownMs) {
+        if (!definition || !this.#tryPassCooldown(soundId, definition)) {
             return null;
         }
 
-        this.lastPlayTimes.set(soundId, now);
-
-        let instance: any;
-
-        const manifest = this.manifestResolver(definition.options.url);
-
-        if (manifest) {
-            instance = this.streamFactory(manifest);
-            instance._poolIndex = -1;
-        } else {
-            const buffer = this.bufferResolver(definition.options.url);
-            if (!buffer) {
-                this.telemetry?.dispatch({
-                    type: 'CAUSE_CHAIN',
-                    timestampMs: this.getCurrentTime() * 1000,
-                    initiator: { type: 'API', method: 'controller.play' },
-                    result: { type: 'BLOCKED', reason: `VOICE_DROPPED_DECODE_FAILED: ${soundId}` }
-                });
-                return null;
-            }
-
-            const acquireResult = this.pool.acquire(soundId, buffer);
-
-            if (typeof acquireResult === 'string') {
-                this.telemetry?.dispatch({
-                    type: 'CAUSE_CHAIN',
-                    timestampMs: this.getCurrentTime() * 1000,
-                    initiator: { type: 'API', method: 'controller.play' },
-                    result: { type: 'BLOCKED', reason: `Pool rejected play for ${soundId}. Reason: ${acquireResult}` }
-                });
-                return null;
-            }
-            instance = acquireResult;
+        const instance = this.#acquirePhysicalInstance(soundId, definition);
+        if (!instance) {
+            return null;
         }
 
         const playbackId = this.nextPlaybackId++ as PlaybackId;
@@ -175,7 +140,7 @@ export class SoundController implements ISoundController {
                 : undefined
         };
 
-        instance._currentPlaybackId = playbackId;
+        (instance as any)._currentPlaybackId = playbackId;
 
         this.activeVoices.set(playbackId, logicalVoice);
 
@@ -436,63 +401,33 @@ export class SoundController implements ISoundController {
     }
 
     virtualize(id: PlaybackId, reason: VirtualReason = 'VIRTUAL_BY_API'): void {
-        const voice = this.activeVoices.get(id);
-        if (voice?.logicalState === 'paused') return;
-        if (voice?.physicalInstance && 'virtualize' in voice.physicalInstance) {
-            const instance = voice.physicalInstance;
+        const voice = this.#getPhysicalVoiceForTransition(id, 'virtualize');
+        if (!voice) return;
 
-            if (!instance.isLooping && instance.duration > 0) {
-                const remainingSec = Math.max(
-                    0,
-                    (instance.duration - instance.currentTime) / instance.playbackRate
-                ) as Seconds;
-                const endTime = (this.context.currentTime + remainingSec) as ContextTime;
-                this.virtualTimers.push({ playbackId: id, endTime });
-            }
+        const instance = voice.physicalInstance!;
+        this.#scheduleVirtualExpiration(id, instance);
+        this.#detachInstanceSidechains(instance);
 
-            const poolIndex = (instance as any)._poolIndex;
-            const targetBuses = this.#sidechainLinks[poolIndex];
+        instance.virtualize();
+        (voice as any).virtualReason = reason;
 
-            if (targetBuses && instance.sidechainTriggerNode) {
-                for (const busId of targetBuses.keys()) {
-                    this.busSystem.removeSidechainSource(instance.sidechainTriggerNode, busId);
-                }
-            }
-
-            instance.virtualize();
-
-            (voice as any).virtualReason = reason;
-
-            this.pushLifecycle('VIRTUALIZE', id, voice.soundId, reason);
-        }
+        this.pushLifecycle('VIRTUALIZE', id, voice.soundId, reason);
     }
 
     devirtualize(id: PlaybackId): void {
-        const voice = this.activeVoices.get(id);
-        if (voice?.logicalState === 'paused') return;
-        if (voice?.physicalInstance && 'devirtualize' in voice.physicalInstance) {
-            this.#removeFromVirtualQueue(id);
+        const voice = this.#getPhysicalVoiceForTransition(id, 'devirtualize');
+        if (!voice) return;
 
-            const instance = voice.physicalInstance;
-            instance.devirtualize();
+        this.#removeFromVirtualQueue(id);
 
-            (voice as any).virtualReason = undefined;
+        const instance = voice.physicalInstance!;
+        instance.devirtualize();
+        (voice as any).virtualReason = undefined;
 
-            const poolIndex = (instance as any)._poolIndex;
-            const targetBuses = this.#sidechainLinks[poolIndex];
+        this.#restoreInstanceSidechains(instance);
+        voice.onRevive?.(id);
 
-            if (targetBuses && instance.sidechainTriggerNode) {
-                for (const [busId, intensity] of targetBuses.entries()) {
-                    this.busSystem.addSidechainSource(instance.sidechainTriggerNode, busId, intensity);
-                }
-            }
-
-            if (voice.onRevive) {
-                voice.onRevive(id);
-            }
-
-            this.pushLifecycle('REVIVE', id, voice.soundId);
-        }
+        this.pushLifecycle('REVIVE', id, voice.soundId);
     }
 
     fadeVolume(
@@ -536,8 +471,95 @@ export class SoundController implements ISoundController {
         return () => void 0;
     }
 
-    #handleVoiceEnded = (instance: any): void => {
-        const playbackId = instance._currentPlaybackId;
+    #tryPassCooldown(soundId: SoundId, definition: SoundDescriptor): boolean {
+        const now = (this.getCurrentTime() * 1000) as Milliseconds;
+        const lastPlay = this.lastPlayTimes.get(soundId) ?? (-Number.MAX_SAFE_INTEGER as Milliseconds);
+        const cooldownMs = (definition.options.cooldownMs ?? DEFAULT_COOLDOWN) as Milliseconds;
+
+        if (now - lastPlay < cooldownMs) {
+            return false;
+        }
+
+        this.lastPlayTimes.set(soundId, now);
+        return true;
+    }
+
+    #acquirePhysicalInstance(soundId: SoundId, definition: SoundDescriptor): ISoundInstance | null {
+        const manifest = this.manifestResolver(definition.options.url);
+        if (manifest) {
+            const instance = this.streamFactory(manifest);
+            instance._poolIndex = -1;
+            return instance;
+        }
+
+        const buffer = this.bufferResolver(definition.options.url);
+        if (!buffer) {
+            this.#dispatchPlayBlocked(`VOICE_DROPPED_DECODE_FAILED: ${soundId}`);
+            return null;
+        }
+
+        const acquireResult = this.pool.acquire(soundId, buffer);
+        if (typeof acquireResult === 'string') {
+            this.#dispatchPlayBlocked(`Pool rejected play for ${soundId}. Reason: ${acquireResult}`);
+            return null;
+        }
+
+        return acquireResult;
+    }
+
+    #dispatchPlayBlocked(reason: string): void {
+        this.telemetry?.dispatch({
+            type: 'CAUSE_CHAIN',
+            timestampMs: this.getCurrentTime() * 1000,
+            initiator: { type: 'API', method: 'controller.play' },
+            result: { type: 'BLOCKED', reason }
+        });
+    }
+
+    #getPhysicalVoiceForTransition(id: PlaybackId, method: 'virtualize' | 'devirtualize'): ILogicalVoice | undefined {
+        const voice = this.activeVoices.get(id);
+        if (!voice || voice.logicalState === 'paused') return undefined;
+        if (!voice.physicalInstance || !(method in voice.physicalInstance)) return undefined;
+        return voice;
+    }
+
+    #scheduleVirtualExpiration(id: PlaybackId, instance: ISoundInstance): void {
+        if (!instance.isLooping && instance.duration > 0) {
+            const remainingSec = Math.max(
+                0,
+                (instance.duration - instance.currentTime) / instance.playbackRate
+            ) as Seconds;
+            const endTime = (this.context.currentTime + remainingSec) as ContextTime;
+            this.virtualTimers.push({ playbackId: id, endTime });
+        }
+    }
+
+    #detachInstanceSidechains(instance: ISoundInstance): Map<BusId, number> | undefined {
+        const poolIndex = (instance as any)._poolIndex;
+        const targetBuses = this.#sidechainLinks[poolIndex];
+
+        if (targetBuses && instance.sidechainTriggerNode) {
+            for (const busId of targetBuses.keys()) {
+                this.busSystem.removeSidechainSource(instance.sidechainTriggerNode, busId);
+            }
+        }
+
+        return targetBuses;
+    }
+
+    #restoreInstanceSidechains(instance: ISoundInstance): void {
+        const poolIndex = (instance as any)._poolIndex;
+        const targetBuses = this.#sidechainLinks[poolIndex];
+
+        if (targetBuses && instance.sidechainTriggerNode) {
+            for (const [busId, intensity] of targetBuses.entries()) {
+                this.busSystem.addSidechainSource(instance.sidechainTriggerNode, busId, intensity);
+            }
+        }
+    }
+
+    #handleVoiceEnded = (instance: ISoundInstance): void => {
+        const playbackId = (instance as any)._currentPlaybackId;
         if (playbackId) {
             const voice = this.activeVoices.get(playbackId);
             if (voice) {
@@ -548,18 +570,8 @@ export class SoundController implements ISoundController {
         }
     };
 
-    #handleInstanceReleased = (instance: any): void => {
-        const poolIndex = instance._poolIndex;
-        if (poolIndex === undefined || poolIndex < 0) return;
-
-        const targetBuses = this.#sidechainLinks[poolIndex];
-
-        if (instance.sidechainTriggerNode) {
-            for (const busId of targetBuses.keys()) {
-                this.busSystem.removeSidechainSource(instance.sidechainTriggerNode, busId);
-            }
-        }
-        targetBuses.clear();
+    #handleInstanceReleased = (instance: ISoundInstance): void => {
+        this.#detachInstanceSidechains(instance)?.clear();
     };
 
     #removeFromVirtualQueue(playbackId: PlaybackId): void {
