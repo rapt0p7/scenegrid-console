@@ -2,14 +2,17 @@
 
 import type { IAudioBusSystem } from '@domain/BusSystem/Ports/IAudioBusSystem.js';
 import type { IBus } from '@domain/BusSystem/Ports/IBuses.js';
+import type { IFilter } from '@domain/BusSystem/Ports/IFilter.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
-import type { ITransitionOptions, MixerState } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
+import type { ITransitionOptions, MixerState, Sends } from '@domain/Mixer/Ports/IMixerTransitionEngine.js';
 import type { BusId, DeepReadonly } from '@scene-grid/shared';
 import type { Emitter } from 'mitt';
 
 import { isFilterEqual } from '@domain/BusSystem/ValueObjects/filterEquals.js';
 import { isDefined, type Milliseconds, typedEntries, typedKeys } from '@scene-grid/shared';
 import mitt from 'mitt';
+
+type BusTransitionConfig = DeepReadonly<MixerState['buses'][BusId]>;
 
 type MixerFSMState =
     | { type: 'IDLE' }
@@ -106,28 +109,55 @@ export default class MixerTransitionEngine {
         return {};
     }
 
+    private resolveBusGain(busConfig: BusTransitionConfig | undefined, baseConfig: IBus): number {
+        return isDefined(busConfig?.gain) ? busConfig.gain : (baseConfig.gain ?? 0);
+    }
+
+    private resolveBusFilter(busConfig: BusTransitionConfig | undefined, baseConfig: IBus): IFilter | null {
+        return isDefined(busConfig?.filter) ? busConfig.filter : (baseConfig.filter ?? null);
+    }
+
+    private resolveBusSends(
+        busConfig: BusTransitionConfig | undefined,
+        baseConfig: IBus
+    ): DeepReadonly<Sends> | IBus['sends'] {
+        return isDefined(busConfig?.sends) ? busConfig.sends : baseConfig.sends;
+    }
+
+    private applySends(busId: BusId, sends: DeepReadonly<Sends> | IBus['sends'], duration: Milliseconds): void {
+        if (!sends) return;
+
+        for (const [targetBusId, sendGain] of typedEntries(sends)) {
+            this.busSystem.applySend(busId, targetBusId, sendGain, duration);
+        }
+    }
+
+    private clearRemovedSends(
+        busId: BusId,
+        previousSends: DeepReadonly<Sends> | IBus['sends'],
+        nextSends: DeepReadonly<Sends> | IBus['sends'],
+        duration: Milliseconds
+    ): void {
+        if (!previousSends) return;
+
+        for (const targetBusId of typedKeys(previousSends)) {
+            if (!nextSends || !isDefined(nextSends[targetBusId])) {
+                this.busSystem.applySend(busId, targetBusId, null, duration);
+            }
+        }
+    }
+
     private forceInstantTransition(target: DeepReadonly<MixerState>): void {
         for (const [busId, bus] of this.busSystem.getAllBuses()) {
             const nextBusConfig = target.buses[busId];
             const baseConfig = this.getBaseConfig(busId);
 
-            const targetGain = isDefined(nextBusConfig?.gain) ? nextBusConfig.gain : (baseConfig.gain ?? 0);
-            bus.setGainImmediate(targetGain);
-
-            const targetFilter = isDefined(nextBusConfig?.filter) ? nextBusConfig.filter : (baseConfig.filter ?? null);
-            bus.safeReplaceFilter(targetFilter, 0 as Milliseconds);
-
-            const targetSends = isDefined(nextBusConfig?.sends) ? nextBusConfig.sends : baseConfig.sends;
-            if (targetSends) {
-                for (const [targetBusId, sendGain] of typedEntries(targetSends)) {
-                    this.busSystem.applySend(busId, targetBusId, sendGain, 0 as Milliseconds);
-                }
-            }
+            bus.setGainImmediate(this.resolveBusGain(nextBusConfig, baseConfig));
+            bus.safeReplaceFilter(this.resolveBusFilter(nextBusConfig, baseConfig), 0 as Milliseconds);
+            this.applySends(busId, this.resolveBusSends(nextBusConfig, baseConfig), 0 as Milliseconds);
         }
 
-        this.current = target;
-        this.state = { type: 'IDLE' };
-        this.isInitialized = true;
+        this.completeTransition(target);
     }
 
     private startFilterPhase(target: DeepReadonly<MixerState>, filterPhaseDuration: Milliseconds): void {
@@ -136,10 +166,8 @@ export default class MixerTransitionEngine {
             const previousBusConfig = this.current.buses[busId];
             const baseConfig = this.getBaseConfig(busId);
 
-            const nextFilter = isDefined(nextBusConfig?.filter) ? nextBusConfig.filter : (baseConfig.filter ?? null);
-            const previousFilter = isDefined(previousBusConfig?.filter)
-                ? previousBusConfig.filter
-                : (baseConfig.filter ?? null);
+            const nextFilter = this.resolveBusFilter(nextBusConfig, baseConfig);
+            const previousFilter = this.resolveBusFilter(previousBusConfig, baseConfig);
 
             if (!isFilterEqual(previousFilter, nextFilter)) {
                 bus.safeReplaceFilter(nextFilter, filterPhaseDuration);
@@ -158,29 +186,18 @@ export default class MixerTransitionEngine {
             const previousBusConfig = this.current.buses[busId];
             const baseConfig = this.getBaseConfig(busId);
 
-            const nextGain = isDefined(nextBusConfig?.gain) ? nextBusConfig.gain : (baseConfig.gain ?? 0);
-            const previousGain = isDefined(previousBusConfig?.gain) ? previousBusConfig.gain : (baseConfig.gain ?? 0);
+            const nextGain = this.resolveBusGain(nextBusConfig, baseConfig);
+            const previousGain = this.resolveBusGain(previousBusConfig, baseConfig);
 
             if (nextGain !== previousGain) {
                 bus.setLogicalGain(nextGain, remainingTime);
             }
 
-            const nextSends = isDefined(nextBusConfig?.sends) ? nextBusConfig.sends : baseConfig.sends;
-            const previousSends = isDefined(previousBusConfig?.sends) ? previousBusConfig.sends : baseConfig.sends;
+            const nextSends = this.resolveBusSends(nextBusConfig, baseConfig);
+            const previousSends = this.resolveBusSends(previousBusConfig, baseConfig);
 
-            if (nextSends) {
-                for (const [targetBusId, sendGain] of typedEntries(nextSends)) {
-                    this.busSystem.applySend(busId, targetBusId, sendGain, remainingTime);
-                }
-            }
-
-            if (previousSends) {
-                for (const targetBusId of typedKeys(previousSends)) {
-                    if (!nextSends || !isDefined(nextSends[targetBusId])) {
-                        this.busSystem.applySend(busId, targetBusId, null, remainingTime);
-                    }
-                }
-            }
+            this.applySends(busId, nextSends, remainingTime);
+            this.clearRemovedSends(busId, previousSends, nextSends, remainingTime);
         }
     }
 
