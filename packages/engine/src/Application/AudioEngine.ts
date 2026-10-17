@@ -254,216 +254,38 @@ export class AudioEngine implements IAudioEngine {
         this.config = deepFreeze<IAudioEngineConfig>({ ...config });
     }
 
-    // oxlint-disable-next-line max-lines-per-function
     public async init(parameters?: InitParameters): Promise<Result<void, string[]>> {
         if (this.#isInitialized) return Ok(undefined);
 
-        const telemetryWorker = createTelemetryWorker(
-            { name: 'SceneGridTelemetry' },
-            { remoteSyncUri: this.config.remoteSyncUri }
-        );
-        const workerPort = telemetryWorker.port;
-
-        const transport = new WorkerTelemetryTransport(workerPort);
-        this.#telemetry = new TelemetryDispatcher(transport);
-        this.#reporters = [new ConsoleReporter(), new TelemetryConsistencyReporter(this.#telemetry)];
-
-        const [isConfigValid, report] = ConsistencyChecker.validate(this.config, {
-            reporters: this.#reporters,
-            isReturnWithReport: true
-        });
-
-        if (!isConfigValid) {
-            if (parameters?.isStrictValidation) {
-                this.#dispatcher.emit('engine:error', { code: 'INIT_FAILED', message: 'Strict validation failed' });
-                console.error(
-                    '[AudioEngine] Engine initialized with errors. Some features may not work correctly. Exiting.'
-                );
-                return Err(report.errors);
-            }
-            console.warn('[AudioEngine] Engine initialized with errors. Some features may not work correctly.');
-        }
+        const workerPort = this.initTelemetry();
+        const validationResult = this.validateConfig(parameters);
+        if (!validationResult.ok) return validationResult;
 
         try {
-            this.#contextManager = new AudioContextManager(44_100);
-
-            this.#contextManager.onStateChange = state => {
-                if (state === 'suspended') this.#dispatcher.emit('state:suspended', void 0);
-                if (state === 'running') this.#dispatcher.emit('state:resumed', void 0);
-            };
-
-            this.#engineTicker = new EngineTicker(() => this.#contextManager.currentTime);
-            this.#engineTicker.start();
-
-            const seed = this.config.seed ?? Date.now();
-            this.#prng = new SeededPRNG(seed);
-            const automation = new AutomationEngine(this.#contextManager.context, this.#engineTicker);
-            this.#contextManager.initSpatial(automation);
+            const automation = this.initCoreContext();
             const nodeFactory = new AudioNodeFactory(this.#contextManager);
             const scheduler = new PlaybackScheduler(this.#contextManager);
-            const bufferLoader = new AudioBufferLoader(
-                this.#contextManager,
-                6,
-                1024,
-                this.config.ramQuotaMb ?? Number.MAX_SAFE_INTEGER,
-                (url: string) => {
-                    console.error(
-                        `[SceneGrid Quota Manager] CRITICAL OOM EVICTION: High-priority asset dropped -> ${url}`
-                    );
-
-                    if (this.#telemetry) {
-                        this.#telemetry.dispatch({
-                            type: 'CAUSE_CHAIN',
-                            timestampMs: this.#soundController.getCurrentTime() * 1000,
-                            initiator: { type: 'RAM_QUOTA_MANAGER' },
-                            result: { type: 'OOM_CRITICAL_EVICTION', targetUrl: url }
-                        });
-                    }
-                },
-                this.config.loaderOptions
-            );
+            const bufferLoader = this.createBufferLoader();
             this.#masterOutput = new MasterOutput(this.#contextManager, automation);
             this.#rtpcManager = new RTPCManager();
 
             if (this.config.rtpcManifest) this.initRTPC(this.config.rtpcManifest);
 
-            const soundRegistry = new SoundRegistry();
-            for (const [key, entry] of typedEntries(this.config.manifest)) {
-                soundRegistry.register(key, {
-                    options: { url: entry.url }
-                });
-            }
+            const soundRegistry = this.createSoundRegistry();
+            const soundPool = this.createSoundPool(soundRegistry, bufferLoader, nodeFactory, automation);
 
-            const instanceFactory = (soundId: SoundId): SoundInstance => {
-                if (soundId === ('__RESERVED__' as SoundId)) {
-                    return new SoundInstance(soundId, this.#contextManager, nodeFactory, null, automation, {});
-                }
+            await this.initBusSystem(automation);
 
-                const { options } = soundRegistry.get(soundId);
-                const soundConfig = this.config.soundMap[soundId] as any;
-
-                const buffer = bufferLoader.getBuffer(options.url);
-
-                if (!buffer) {
-                    console.warn(
-                        `[AudioEngine] Buffer for "${soundId}" not found. Ensure the corresponding bank is loaded.`
-                    );
-                    return new SoundInstance(
-                        '__RESERVED__' as SoundId,
-                        this.#contextManager,
-                        nodeFactory,
-                        null,
-                        automation,
-                        {}
-                    );
-                }
-
-                const instanceOptions = {
-                    ...options,
-                    spatial: soundConfig?.spatial,
-                    hasPanner: soundConfig?.hasPanner
-                };
-
-                return new SoundInstance(
-                    soundId,
-                    this.#contextManager,
-                    nodeFactory,
-                    buffer,
-                    automation,
-                    instanceOptions
-                );
-            };
-
-            const soundPool = new SoundPoolManager(instanceFactory, {
-                globalVoiceLimit: this.config.globalVoiceLimit ?? 32,
-                voiceConfigResolver: (soundId: SoundId) => {
-                    const cfg = this.config.soundMap[soundId];
-                    return isDefined(cfg) && 'voice' in cfg ? cfg.voice : undefined;
-                }
-            });
-
-            const pluginFactory: IPluginFactory = {
-                createLimiter: () =>
-                    new TinyLimiterNode(this.#contextManager.context, {
-                        lookahead: 0.008,
-                        ceiling: 0.98,
-                        release: 0.12
-                    }),
-                createSidechain: (target, options) =>
-                    new SidechainDucker({
-                        ctx: this.#contextManager.context,
-                        targetGainNode: target,
-                        ...options
-                    }),
-                getFiltersPlugin: () => FiltersPlugin
-            };
-
-            this.#busSystem = new AudioBusSystem(
-                {
-                    context: this.#contextManager.context,
-                    automation,
-                    masterOutput: this.#masterOutput as any,
-                    busConfig: this.config.buses,
-                    pluginFactory
-                },
-                { isUseLimiter: true }
-            );
-            await this.#busSystem.initialize(this.#engineTicker);
-
-            const manifestResolver = (url: string | readonly string[]) => {
-                return this.#bankManager.getStreamManifest(url);
-            };
-
-            const streamFactory = (manifest: IStreamManifest) => {
-                const loader = new ChunkedLoader(this.#contextManager.context, this.#telemetry);
-                loader.loadManifest(manifest);
-
-                const streamNode = new StreamNode(this.#contextManager.context, loader, manifest);
-                const instance = new StreamInstance(streamNode, manifest);
-                const randomStr = this.#prng.next().toString(36).slice(7);
-                const tickerId = `stream-${randomStr}` as TickerTaskId;
-                this.#engineTicker.add(tickerId, 1, instance);
-                instance.on('ended', () => {
-                    this.#engineTicker.remove(tickerId);
-                    instance.dispose();
-                });
-                return instance;
-            };
-
-            this.#soundController = new SoundController(
+            this.#soundController = this.createSoundController(
                 soundPool,
                 scheduler,
-                this.#contextManager.context,
                 automation,
-                soundRegistry.registry,
-                this.#busSystem,
-                (url: string | readonly string[]) => bufferLoader.getBuffer(url),
-                manifestResolver,
-                streamFactory,
-                this.#telemetry
+                soundRegistry,
+                bufferLoader
             );
-
             this.#instanceRTPCBinder = new InstanceRTPCBinder(this.#rtpcManager, this.#soundController);
 
-            const duckingManager = new DuckingManager(this.#busSystem, this.#soundController);
-            const containerHistoryRegistry = new ContainerHistoryRegistry();
-            const containerPolicy = new ContainerPlaybackPolicy(this.#prng);
-            const switchPolicy = new SwitchPlaybackPolicy();
-            const switchHistoryRegistry = new SwitchHistoryRegistry();
-
-            this.#router = new AudioRouter({
-                soundController: this.#soundController,
-                duckingManager,
-                containerPolicy,
-                historyRegistry: containerHistoryRegistry,
-                soundMap: this.config.soundMap,
-                instanceRTPCBinder: this.#instanceRTPCBinder,
-                rtpcAdapter: this.#rtpcManager,
-                switchPolicy,
-                switchHistoryRegistry,
-                prng: this.#prng,
-                telemetry: this.#telemetry
-            });
+            const { containerPolicy, switchHistoryRegistry } = this.initRouter();
 
             const smartLoopTransitionPolicy = new SmartLoopTransitionPolicy(this.#rtpcManager);
             this.#sequencer = new Sequencer(
@@ -475,227 +297,18 @@ export class AudioEngine implements IAudioEngine {
                 this.#telemetry
             );
 
-            const resolver = new MixerStateResolver({ defaultBusGain: 1 });
+            const mixerTransitionEngine = this.initMixer();
+            this.#bankManager = this.createBankManager(bufferLoader, soundPool);
+            this.initOrchestration(containerPolicy);
 
-            const layerStack = new MixerLayerStack(resolver, () => {
-                coordinator.recompute({ duration: 500 as Milliseconds });
-            });
-
-            const mixerTransitionEngine = new MixerTransitionEngine(this.#busSystem, this.#rtpcManager);
-            const coordinator = new MixerCoordinator(layerStack, mixerTransitionEngine);
-            this.#snapshotManager = new MixerSnapshotManager(
-                layerStack,
-                this.config.snapshots,
-                coordinator,
-                this.#telemetry,
-                this.#soundController
-            );
-
-            this.#bankManager = new BankManagerAdapter(
-                this.config.banks,
-                this.config.manifest,
-                bufferLoader,
-                soundPool,
-                this.#router,
-                this.config.precalculatedSizes ?? {},
-                {
-                    onStart: totalItems => {
-                        this.#dispatcher.emit('load:start', { totalItems });
-                    },
-                    onProgress: (loadedItems, totalItems, progress, lastLoadedResource) => {
-                        this.#dispatcher.emit('load:progress', {
-                            loadedItems,
-                            totalItems,
-                            progress,
-                            lastLoadedResource
-                        });
-                        if (this.#telemetry) {
-                            this.#telemetry.dispatch({
-                                type: 'RAM_REPORT',
-                                ramQuotaMb: this.config.ramQuotaMb,
-                                currentRamMb: bufferLoader.getCurrentRam()
-                            });
-                        }
-                    },
-                    onError: (key, error) => {
-                        this.#dispatcher.emit('engine:error', {
-                            code: 'DECODE_ERROR',
-                            message: `Failed to load resource: ${key}`,
-                            details: error
-                        });
-                    },
-                    onComplete: (failedItems, durationMs) => {
-                        this.#dispatcher.emit('load:complete', { failedItems, durationMs });
-                    },
-                    onUnload: bankId => {
-                        this.#dispatcher.emit('unload:complete', { bankId });
-                    }
-                },
-                this.config.loaderOptions
-            );
-
-            this.#eventOrchestrator = new AudioEventOrchestrator(
-                this.config.events,
-                this.#router,
-                this.#rtpcManager,
-                this.#sequencer,
-                this.#snapshotManager,
-                this.#soundController,
-                this.#prng,
-                this.#bankManager
-            );
-
-            this.#scattererOrchestrator = new ScattererOrchestrator(
-                this.#router,
-                this.#soundController,
-                this.#sequencer,
-                containerPolicy,
-                this.#prng
-            );
-            this.#router.setScattererOrchestrator(this.#scattererOrchestrator);
-
-            if (this.config.musicFSM) {
-                this.#conductor = new MusicConductor(this.#sequencer, this.#snapshotManager, this.#rtpcManager);
-                this.#conductor.init(this.config.musicFSM);
-            }
-
-            const snapshotter = new TelemetrySnapshotter(
-                this.#telemetry,
-                this.#soundController,
-                this.#rtpcManager,
-                this.#busSystem,
-                switchHistoryRegistry,
-                this.#sequencer,
-                typedKeys(this.config.rtpcManifest ?? {}),
-                typedKeys(this.config.soundMap).filter(k => 'isSwitch' in this.config.soundMap[k]),
-                typedKeys(this.config.buses) as BusId[],
-                this.config.globalVoiceLimit ?? 128
-            );
-
-            const cullingArbiter = new VoiceCullingArbiter(0.01, 1000 as Milliseconds, this.config.globalVoiceLimit);
-
-            const cullingProvider = new CullingContextProvider(
-                this.#soundController,
-                this.#busSystem,
-                this.config.soundMap
-            );
-
-            this.#cullingRunner = new CullingRunner(
-                cullingArbiter,
-                this.#soundController,
-                cullingProvider,
-                this.#telemetry
-            );
-
-            this.#engineTicker.add('telemetry' as TickerTaskId, this.#telemetry.TICK_DIVIDER, this.#telemetry);
-
-            this.#engineTicker.add('snapshotter' as TickerTaskId, snapshotter.TICK_DIVIDER, snapshotter);
-
-            this.#engineTicker.add('rtpc-manager' as TickerTaskId, RTPCManager.TICK_DIVIDER, this.#rtpcManager);
-
-            this.#engineTicker.add('bus-system' as TickerTaskId, RTPCManager.TICK_DIVIDER, {
-                tick: () => {
-                    this.#busSystem.tickRTPC(this.#rtpcManager);
-                }
-            });
-
-            this.#engineTicker.add('instance-rtpc' as TickerTaskId, RTPCManager.TICK_DIVIDER, {
-                tick: () => {
-                    this.#instanceRTPCBinder.tickRTPC();
-                }
-            });
-
-            this.#engineTicker.add(
-                'sound-controller' as TickerTaskId,
-                SoundController.TICK_DIVIDER,
-                this.#soundController
-            );
-            this.#engineTicker.add('culling-runner' as TickerTaskId, CullingRunner.TICK_DIVIDER, this.#cullingRunner);
-            mixerTransitionEngine.events.on('transition:start', () => {
-                this.#cullingRunner.tick(this.#contextManager.currentTime, 0 as Milliseconds);
-            });
-            this.#engineTicker.add(
-                'mixer-state-manager' as TickerTaskId,
-                MixerTransitionEngine.TICK_DIVIDER,
-                mixerTransitionEngine
-            );
-
-            this.#engineTicker.add(
-                'scatterer-orchestrator' as TickerTaskId,
-                this.#scattererOrchestrator.TICK_DIVIDER,
-                this.#scattererOrchestrator
-            );
-
-            this.#engineTicker.add(
-                'audio-event-orchestrator' as TickerTaskId,
-                this.#eventOrchestrator.TICK_DIVIDER,
-                this.#eventOrchestrator
-            );
-
-            if (this.#conductor) {
-                this.#engineTicker.add('music-conductor' as TickerTaskId, MusicConductor.TICK_DIVIDER, this.#conductor);
-            }
+            const snapshotter = this.createTelemetrySnapshotter(switchHistoryRegistry);
+            this.initCulling();
+            this.registerTickerTasks(snapshotter, mixerTransitionEngine);
 
             this.#isInitialized = true;
 
             this.#telemetry.dispatchManifest(this.config);
-
-            if (process.env.NODE_ENV !== 'production') {
-                const debugPort: IInspectorDebugPort = {
-                    fireEvent: eventId => {
-                        this.#eventOrchestrator.postEvent(eventId);
-                    },
-                    applySnapshot: (snapshotId, fade) => {
-                        this.#snapshotManager.activateSnapshot(
-                            snapshotId,
-                            'scene_main' as LayerId,
-                            PRIORITY.BASE,
-                            fade
-                        );
-                    },
-                    setRtpcOverride: (param, val, isOverride) => {
-                        this.#rtpcManager.setOverride(param, val, isOverride);
-                    },
-                    setSwitchOverride: (switchId, key, isOverride) => {
-                        switchHistoryRegistry.setOverride(switchId, key, isOverride);
-                    },
-                    stopAll: () => {
-                        this.#soundController.stopAll();
-                    },
-                    pauseAll: () => {
-                        this.#soundController.pauseAll();
-                    },
-                    resumeAll: () => {
-                        this.#soundController.resumeAll();
-                    },
-                    clearAllOverrides: () => {
-                        this.#rtpcManager.resetOverrides();
-                        switchHistoryRegistry.resetOverrides();
-                    },
-                    playLoop: (soundId, region) => {
-                        this.#sequencer.playLoop(soundId, region);
-                    },
-                    stopLoop: soundId => {
-                        this.#sequencer.stopLoop(soundId);
-                    },
-                    transitionMusicTo: (soundId, targetRegion, transitionRegionName, options) => {
-                        this.#sequencer.transitionTo({
-                            soundId,
-                            targetRegion,
-                            transitionRegionName,
-                            options
-                        });
-                    }
-                };
-
-                const receiver = new CommandReceiver(workerPort, debugPort);
-
-                this.#engineTicker.add(
-                    'inspector-command-receiver' as TickerTaskId,
-                    CommandReceiver.TICK_DIVIDER,
-                    receiver
-                );
-            }
+            this.initCommandReceiver(workerPort, switchHistoryRegistry);
 
             this.#dispatcher.emit('engine:ready', {
                 timestamp: performance.now(),
@@ -820,6 +433,473 @@ export class AudioEngine implements IAudioEngine {
                 parameterName as GameParamId,
                 config.attack ?? (0 as Milliseconds),
                 config.release ?? (0 as Milliseconds)
+            );
+        }
+    }
+
+    private initTelemetry(): MessagePort {
+        const telemetryWorker = createTelemetryWorker(
+            { name: 'SceneGridTelemetry' },
+            { remoteSyncUri: this.config.remoteSyncUri }
+        );
+        const workerPort = telemetryWorker.port;
+
+        const transport = new WorkerTelemetryTransport(workerPort);
+        this.#telemetry = new TelemetryDispatcher(transport);
+        this.#reporters = [new ConsoleReporter(), new TelemetryConsistencyReporter(this.#telemetry)];
+
+        return workerPort;
+    }
+
+    private validateConfig(parameters?: InitParameters): Result<void, string[]> {
+        const [isConfigValid, report] = ConsistencyChecker.validate(this.config, {
+            reporters: this.#reporters,
+            isReturnWithReport: true
+        });
+
+        if (!isConfigValid) {
+            if (parameters?.isStrictValidation) {
+                this.#dispatcher.emit('engine:error', { code: 'INIT_FAILED', message: 'Strict validation failed' });
+                console.error(
+                    '[AudioEngine] Engine initialized with errors. Some features may not work correctly. Exiting.'
+                );
+                return Err(report.errors);
+            }
+            console.warn('[AudioEngine] Engine initialized with errors. Some features may not work correctly.');
+        }
+
+        return Ok(undefined);
+    }
+
+    private initCoreContext(): AutomationEngine {
+        this.#contextManager = new AudioContextManager(44_100);
+
+        this.#contextManager.onStateChange = state => {
+            if (state === 'suspended') this.#dispatcher.emit('state:suspended', void 0);
+            if (state === 'running') this.#dispatcher.emit('state:resumed', void 0);
+        };
+
+        this.#engineTicker = new EngineTicker(() => this.#contextManager.currentTime);
+        this.#engineTicker.start();
+
+        const seed = this.config.seed ?? Date.now();
+        this.#prng = new SeededPRNG(seed);
+        const automation = new AutomationEngine(this.#contextManager.context, this.#engineTicker);
+        this.#contextManager.initSpatial(automation);
+
+        return automation;
+    }
+
+    private createBufferLoader(): AudioBufferLoader {
+        return new AudioBufferLoader(
+            this.#contextManager,
+            6,
+            1024,
+            this.config.ramQuotaMb ?? Number.MAX_SAFE_INTEGER,
+            (url: string) => {
+                console.error(`[SceneGrid Quota Manager] CRITICAL OOM EVICTION: High-priority asset dropped -> ${url}`);
+
+                if (this.#telemetry) {
+                    this.#telemetry.dispatch({
+                        type: 'CAUSE_CHAIN',
+                        timestampMs: this.#soundController.getCurrentTime() * 1000,
+                        initiator: { type: 'RAM_QUOTA_MANAGER' },
+                        result: { type: 'OOM_CRITICAL_EVICTION', targetUrl: url }
+                    });
+                }
+            },
+            this.config.loaderOptions
+        );
+    }
+
+    private createSoundRegistry(): SoundRegistry {
+        const soundRegistry = new SoundRegistry();
+        for (const [key, entry] of typedEntries(this.config.manifest)) {
+            soundRegistry.register(key, {
+                options: { url: entry.url }
+            });
+        }
+        return soundRegistry;
+    }
+
+    private createSoundInstance(
+        soundId: SoundId,
+        soundRegistry: SoundRegistry,
+        bufferLoader: AudioBufferLoader,
+        nodeFactory: AudioNodeFactory,
+        automation: AutomationEngine
+    ): SoundInstance {
+        if (soundId === ('__RESERVED__' as SoundId)) {
+            return new SoundInstance(soundId, this.#contextManager, nodeFactory, null, automation, {});
+        }
+
+        const { options } = soundRegistry.get(soundId);
+        const soundConfig = this.config.soundMap[soundId] as any;
+        const buffer = bufferLoader.getBuffer(options.url);
+
+        if (!buffer) {
+            console.warn(`[AudioEngine] Buffer for "${soundId}" not found. Ensure the corresponding bank is loaded.`);
+            return new SoundInstance(
+                '__RESERVED__' as SoundId,
+                this.#contextManager,
+                nodeFactory,
+                null,
+                automation,
+                {}
+            );
+        }
+
+        const instanceOptions = {
+            ...options,
+            spatial: soundConfig?.spatial,
+            hasPanner: soundConfig?.hasPanner
+        };
+
+        return new SoundInstance(soundId, this.#contextManager, nodeFactory, buffer, automation, instanceOptions);
+    }
+
+    private createSoundPool(
+        soundRegistry: SoundRegistry,
+        bufferLoader: AudioBufferLoader,
+        nodeFactory: AudioNodeFactory,
+        automation: AutomationEngine
+    ): SoundPoolManager {
+        const instanceFactory = (soundId: SoundId): SoundInstance =>
+            this.createSoundInstance(soundId, soundRegistry, bufferLoader, nodeFactory, automation);
+
+        return new SoundPoolManager(instanceFactory, {
+            globalVoiceLimit: this.config.globalVoiceLimit ?? 32,
+            voiceConfigResolver: (soundId: SoundId) => {
+                const cfg = this.config.soundMap[soundId];
+                return isDefined(cfg) && 'voice' in cfg ? cfg.voice : undefined;
+            }
+        });
+    }
+
+    private async initBusSystem(automation: AutomationEngine): Promise<void> {
+        const pluginFactory: IPluginFactory = {
+            createLimiter: () =>
+                new TinyLimiterNode(this.#contextManager.context, {
+                    lookahead: 0.008,
+                    ceiling: 0.98,
+                    release: 0.12
+                }),
+            createSidechain: (target, options) =>
+                new SidechainDucker({
+                    ctx: this.#contextManager.context,
+                    targetGainNode: target,
+                    ...options
+                }),
+            getFiltersPlugin: () => FiltersPlugin
+        };
+
+        this.#busSystem = new AudioBusSystem(
+            {
+                context: this.#contextManager.context,
+                automation,
+                masterOutput: this.#masterOutput as any,
+                busConfig: this.config.buses,
+                pluginFactory
+            },
+            { isUseLimiter: true }
+        );
+        await this.#busSystem.initialize(this.#engineTicker);
+    }
+
+    private createStreamFactory(): (manifest: IStreamManifest) => StreamInstance {
+        return (manifest: IStreamManifest) => {
+            const loader = new ChunkedLoader(this.#contextManager.context, this.#telemetry);
+            loader.loadManifest(manifest);
+
+            const streamNode = new StreamNode(this.#contextManager.context, loader, manifest);
+            const instance = new StreamInstance(streamNode, manifest);
+            const randomStr = this.#prng.next().toString(36).slice(7);
+            const tickerId = `stream-${randomStr}` as TickerTaskId;
+            this.#engineTicker.add(tickerId, 1, instance);
+            instance.on('ended', () => {
+                this.#engineTicker.remove(tickerId);
+                instance.dispose();
+            });
+            return instance;
+        };
+    }
+
+    private createSoundController(
+        soundPool: SoundPoolManager,
+        scheduler: PlaybackScheduler,
+        automation: AutomationEngine,
+        soundRegistry: SoundRegistry,
+        bufferLoader: AudioBufferLoader
+    ): SoundController {
+        const manifestResolver = (url: string | readonly string[]) => {
+            return this.#bankManager.getStreamManifest(url);
+        };
+
+        const streamFactory = this.createStreamFactory();
+
+        return new SoundController(
+            soundPool,
+            scheduler,
+            this.#contextManager.context,
+            automation,
+            soundRegistry.registry,
+            this.#busSystem,
+            (url: string | readonly string[]) => bufferLoader.getBuffer(url),
+            manifestResolver,
+            streamFactory,
+            this.#telemetry
+        );
+    }
+
+    private initRouter(): {
+        containerPolicy: ContainerPlaybackPolicy;
+        switchHistoryRegistry: SwitchHistoryRegistry;
+    } {
+        const duckingManager = new DuckingManager(this.#busSystem, this.#soundController);
+        const containerHistoryRegistry = new ContainerHistoryRegistry();
+        const containerPolicy = new ContainerPlaybackPolicy(this.#prng);
+        const switchPolicy = new SwitchPlaybackPolicy();
+        const switchHistoryRegistry = new SwitchHistoryRegistry();
+
+        this.#router = new AudioRouter({
+            soundController: this.#soundController,
+            duckingManager,
+            containerPolicy,
+            historyRegistry: containerHistoryRegistry,
+            soundMap: this.config.soundMap,
+            instanceRTPCBinder: this.#instanceRTPCBinder,
+            rtpcAdapter: this.#rtpcManager,
+            switchPolicy,
+            switchHistoryRegistry,
+            prng: this.#prng,
+            telemetry: this.#telemetry
+        });
+
+        return { containerPolicy, switchHistoryRegistry };
+    }
+
+    private initMixer(): MixerTransitionEngine {
+        const resolver = new MixerStateResolver({ defaultBusGain: 1 });
+
+        const layerStack = new MixerLayerStack(resolver, () => {
+            coordinator.recompute({ duration: 500 as Milliseconds });
+        });
+
+        const mixerTransitionEngine = new MixerTransitionEngine(this.#busSystem, this.#rtpcManager);
+        const coordinator = new MixerCoordinator(layerStack, mixerTransitionEngine);
+        this.#snapshotManager = new MixerSnapshotManager(
+            layerStack,
+            this.config.snapshots,
+            coordinator,
+            this.#telemetry,
+            this.#soundController
+        );
+
+        return mixerTransitionEngine;
+    }
+
+    private createBankManager(bufferLoader: AudioBufferLoader, soundPool: SoundPoolManager): BankManagerAdapter {
+        return new BankManagerAdapter(
+            this.config.banks,
+            this.config.manifest,
+            bufferLoader,
+            soundPool,
+            this.#router,
+            this.config.precalculatedSizes ?? {},
+            {
+                onStart: totalItems => {
+                    this.#dispatcher.emit('load:start', { totalItems });
+                },
+                onProgress: (loadedItems, totalItems, progress, lastLoadedResource) => {
+                    this.#dispatcher.emit('load:progress', {
+                        loadedItems,
+                        totalItems,
+                        progress,
+                        lastLoadedResource
+                    });
+                    if (this.#telemetry) {
+                        this.#telemetry.dispatch({
+                            type: 'RAM_REPORT',
+                            ramQuotaMb: this.config.ramQuotaMb,
+                            currentRamMb: bufferLoader.getCurrentRam()
+                        });
+                    }
+                },
+                onError: (key, error) => {
+                    this.#dispatcher.emit('engine:error', {
+                        code: 'DECODE_ERROR',
+                        message: `Failed to load resource: ${key}`,
+                        details: error
+                    });
+                },
+                onComplete: (failedItems, durationMs) => {
+                    this.#dispatcher.emit('load:complete', { failedItems, durationMs });
+                },
+                onUnload: bankId => {
+                    this.#dispatcher.emit('unload:complete', { bankId });
+                }
+            },
+            this.config.loaderOptions
+        );
+    }
+
+    private initOrchestration(containerPolicy: ContainerPlaybackPolicy): void {
+        this.#eventOrchestrator = new AudioEventOrchestrator(
+            this.config.events,
+            this.#router,
+            this.#rtpcManager,
+            this.#sequencer,
+            this.#snapshotManager,
+            this.#soundController,
+            this.#prng,
+            this.#bankManager
+        );
+
+        this.#scattererOrchestrator = new ScattererOrchestrator(
+            this.#router,
+            this.#soundController,
+            this.#sequencer,
+            containerPolicy,
+            this.#prng
+        );
+        this.#router.setScattererOrchestrator(this.#scattererOrchestrator);
+
+        if (this.config.musicFSM) {
+            this.#conductor = new MusicConductor(this.#sequencer, this.#snapshotManager, this.#rtpcManager);
+            this.#conductor.init(this.config.musicFSM);
+        }
+    }
+
+    private createTelemetrySnapshotter(switchHistoryRegistry: SwitchHistoryRegistry): TelemetrySnapshotter {
+        return new TelemetrySnapshotter(
+            this.#telemetry,
+            this.#soundController,
+            this.#rtpcManager,
+            this.#busSystem,
+            switchHistoryRegistry,
+            this.#sequencer,
+            typedKeys(this.config.rtpcManifest ?? {}),
+            typedKeys(this.config.soundMap).filter(k => 'isSwitch' in this.config.soundMap[k]),
+            typedKeys(this.config.buses) as BusId[],
+            this.config.globalVoiceLimit ?? 128
+        );
+    }
+
+    private initCulling(): void {
+        const cullingArbiter = new VoiceCullingArbiter(0.01, 1000 as Milliseconds, this.config.globalVoiceLimit);
+
+        const cullingProvider = new CullingContextProvider(
+            this.#soundController,
+            this.#busSystem,
+            this.config.soundMap
+        );
+
+        this.#cullingRunner = new CullingRunner(
+            cullingArbiter,
+            this.#soundController,
+            cullingProvider,
+            this.#telemetry
+        );
+    }
+
+    private registerTickerTasks(snapshotter: TelemetrySnapshotter, mixerTransitionEngine: MixerTransitionEngine): void {
+        this.#engineTicker.add('telemetry' as TickerTaskId, this.#telemetry.TICK_DIVIDER, this.#telemetry);
+        this.#engineTicker.add('snapshotter' as TickerTaskId, snapshotter.TICK_DIVIDER, snapshotter);
+        this.#engineTicker.add('rtpc-manager' as TickerTaskId, RTPCManager.TICK_DIVIDER, this.#rtpcManager);
+
+        this.#engineTicker.add('bus-system' as TickerTaskId, RTPCManager.TICK_DIVIDER, {
+            tick: () => {
+                this.#busSystem.tickRTPC(this.#rtpcManager);
+            }
+        });
+
+        this.#engineTicker.add('instance-rtpc' as TickerTaskId, RTPCManager.TICK_DIVIDER, {
+            tick: () => {
+                this.#instanceRTPCBinder.tickRTPC();
+            }
+        });
+
+        this.#engineTicker.add('sound-controller' as TickerTaskId, SoundController.TICK_DIVIDER, this.#soundController);
+        this.#engineTicker.add('culling-runner' as TickerTaskId, CullingRunner.TICK_DIVIDER, this.#cullingRunner);
+        mixerTransitionEngine.events.on('transition:start', () => {
+            this.#cullingRunner.tick(this.#contextManager.currentTime, 0 as Milliseconds);
+        });
+        this.#engineTicker.add(
+            'mixer-state-manager' as TickerTaskId,
+            MixerTransitionEngine.TICK_DIVIDER,
+            mixerTransitionEngine
+        );
+
+        this.#engineTicker.add(
+            'scatterer-orchestrator' as TickerTaskId,
+            this.#scattererOrchestrator.TICK_DIVIDER,
+            this.#scattererOrchestrator
+        );
+
+        this.#engineTicker.add(
+            'audio-event-orchestrator' as TickerTaskId,
+            this.#eventOrchestrator.TICK_DIVIDER,
+            this.#eventOrchestrator
+        );
+
+        if (this.#conductor) {
+            this.#engineTicker.add('music-conductor' as TickerTaskId, MusicConductor.TICK_DIVIDER, this.#conductor);
+        }
+    }
+
+    private createDebugPort(switchHistoryRegistry: SwitchHistoryRegistry): IInspectorDebugPort {
+        return {
+            fireEvent: eventId => {
+                this.#eventOrchestrator.postEvent(eventId);
+            },
+            applySnapshot: (snapshotId, fade) => {
+                this.#snapshotManager.activateSnapshot(snapshotId, 'scene_main' as LayerId, PRIORITY.BASE, fade);
+            },
+            setRtpcOverride: (param, val, isOverride) => {
+                this.#rtpcManager.setOverride(param, val, isOverride);
+            },
+            setSwitchOverride: (switchId, key, isOverride) => {
+                switchHistoryRegistry.setOverride(switchId, key, isOverride);
+            },
+            stopAll: () => {
+                this.#soundController.stopAll();
+            },
+            pauseAll: () => {
+                this.#soundController.pauseAll();
+            },
+            resumeAll: () => {
+                this.#soundController.resumeAll();
+            },
+            clearAllOverrides: () => {
+                this.#rtpcManager.resetOverrides();
+                switchHistoryRegistry.resetOverrides();
+            },
+            playLoop: (soundId, region) => {
+                this.#sequencer.playLoop(soundId, region);
+            },
+            stopLoop: soundId => {
+                this.#sequencer.stopLoop(soundId);
+            },
+            transitionMusicTo: (soundId, targetRegion, transitionRegionName, options) => {
+                this.#sequencer.transitionTo({
+                    soundId,
+                    targetRegion,
+                    transitionRegionName,
+                    options
+                });
+            }
+        };
+    }
+
+    private initCommandReceiver(workerPort: MessagePort, switchHistoryRegistry: SwitchHistoryRegistry): void {
+        if (process.env.NODE_ENV !== 'production') {
+            const debugPort = this.createDebugPort(switchHistoryRegistry);
+            const receiver = new CommandReceiver(workerPort, debugPort);
+
+            this.#engineTicker.add(
+                'inspector-command-receiver' as TickerTaskId,
+                CommandReceiver.TICK_DIVIDER,
+                receiver
             );
         }
     }

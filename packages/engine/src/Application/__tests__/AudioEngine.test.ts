@@ -1164,6 +1164,13 @@ describe('AudioEngine', () => {
         capturedDebugPort.setRtpcOverride('test', 1, true);
         expect(setOverrideSpy).toHaveBeenCalledWith('test', 1, true);
 
+        const setSwitchOverrideSpy = vi
+            .spyOn(infra.SwitchHistoryRegistry.prototype, 'setOverride')
+            .mockImplementation(() => {});
+        capturedDebugPort.setSwitchOverride('sw_test', 'key_a', true);
+        expect(setSwitchOverrideSpy).toHaveBeenCalledWith('sw_test', 'key_a', true);
+        setSwitchOverrideSpy.mockRestore();
+
         const playLoopSpy = vi
             .spyOn((await import('@domain/Orchestration/Sequencer.js')).default.prototype, 'playLoop')
             .mockImplementation(() => {});
@@ -1304,6 +1311,38 @@ describe('AudioEngine', () => {
 
         addSpy.mockRestore();
         tickRTPCSpy.mockRestore();
+    });
+
+    it('should trigger cullingRunner.tick on mixer transition:start event and resolve buffers via SoundController callback', async () => {
+        const infra = await import('@infrastructure');
+        const addSpy = vi.spyOn(infra.EngineTicker.prototype, 'add');
+        const RealSoundController = (infra as any).SoundController as typeof SoundController;
+        let capturedBufferResolver: ((url: string | readonly string[]) => any) | undefined;
+        const scSpy = vi.spyOn(infra, 'SoundController' as any).mockImplementation(function (...args: any[]) {
+            capturedBufferResolver = args[6];
+            return Reflect.construct(RealSoundController, args);
+        });
+
+        const testEngine = new AudioEngine({
+            manifest: {},
+            buses: { master: { gain: 1 } },
+            soundMap: {},
+            snapshots: {},
+            events: {},
+            banks: {}
+        });
+        await testEngine.init();
+
+        const mixerEngineTask = addSpy.mock.calls.find(call => call[0] === 'mixer-state-manager')?.[2] as any;
+        expect(mixerEngineTask).toBeDefined();
+        mixerEngineTask.events.emit('transition:start', undefined);
+        expect((globalThis as any).__mockCullingRunnerInstance.tick).toHaveBeenCalled();
+
+        expect(capturedBufferResolver).toBeDefined();
+        expect(capturedBufferResolver!('audio/test.mp3')).toBeInstanceOf(ArrayBuffer);
+
+        scSpy.mockRestore();
+        addSpy.mockRestore();
     });
 
     describe('Music Conductor wiring', () => {
