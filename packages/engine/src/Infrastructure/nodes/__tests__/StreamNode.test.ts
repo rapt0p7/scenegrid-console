@@ -313,6 +313,27 @@ describe('StreamNode (Infrastructure Layer)', () => {
             expect(endedSpy).toHaveBeenCalled();
             expect(createdNodes.length).toBe(0);
         });
+
+        it('should schedule remaining audio and end manifest when resuming mid-way through final chunk (Not Looping)', () => {
+            streamNode.setLoop(false);
+            streamNode.start(0);
+            streamNode.pause();
+
+            const endedSpy = vi.fn();
+            streamNode.onEnded = endedSpy;
+
+            (streamNode as any).activeChunkIndex = 2;
+            (streamNode as any).pauseSnapshotTime = 0.5;
+            (streamNode as any).currentChunkStartTime = 0.0;
+
+            createdNodes.length = 0;
+
+            streamNode.resume();
+
+            expect(createdNodes.length).toBe(1);
+            expect(streamNode.isPlaying).toBe(false);
+            expect(endedSpy).toHaveBeenCalled();
+        });
     });
 
     describe('3.6: Buffer Watermark and Scheduling logic', () => {
