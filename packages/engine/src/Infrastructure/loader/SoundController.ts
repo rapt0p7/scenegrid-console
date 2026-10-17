@@ -140,7 +140,7 @@ export class SoundController implements ISoundController {
                 : undefined
         };
 
-        instance._currentPlaybackId = playbackId;
+        (instance as any)._currentPlaybackId = playbackId;
 
         this.activeVoices.set(playbackId, logicalVoice);
 
@@ -484,7 +484,7 @@ export class SoundController implements ISoundController {
         return true;
     }
 
-    #acquirePhysicalInstance(soundId: SoundId, definition: SoundDescriptor): any {
+    #acquirePhysicalInstance(soundId: SoundId, definition: SoundDescriptor): ISoundInstance | null {
         const manifest = this.manifestResolver(definition.options.url);
         if (manifest) {
             const instance = this.streamFactory(manifest);
