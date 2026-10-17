@@ -223,6 +223,30 @@ describe('MixerTransitionEngine', () => {
 
                 expect(mockBusSystem.applySend).toHaveBeenCalledWith('music', 'reverb', null, 750);
             });
+
+            it('should clear only removed sends while applying remaining sends in new target config', () => {
+                manager.applyState(
+                    {
+                        buses: {
+                            ['music' as BusId]: {
+                                gain: 1,
+                                sends: { ['reverb' as BusId]: 0.5, ['delay' as BusId]: 0.3 }
+                            }
+                        }
+                    },
+                    { duration: 0 as Milliseconds }
+                );
+                mockBusSystem.applySend.mockClear();
+
+                manager.applyState(
+                    { buses: { ['music' as BusId]: { gain: 1, sends: { ['delay' as BusId]: 0.6 } } } },
+                    { duration: 1000 as Milliseconds }
+                );
+                manager.tick(0, 250 as Milliseconds);
+
+                expect(mockBusSystem.applySend).toHaveBeenCalledWith('music', 'delay', 0.6, 750);
+                expect(mockBusSystem.applySend).toHaveBeenCalledWith('music', 'reverb', null, 750);
+            });
         });
     });
 
