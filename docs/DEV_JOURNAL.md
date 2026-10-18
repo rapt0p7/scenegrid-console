@@ -412,6 +412,23 @@
 
 ---
 
+## [Phase 28] Focus: Unified Stream Banks, SSRF Hardening, and Subsystem Decomposition
+
+* **Context/Problem:** Managing streaming sounds independently through a standalone `audio.streams` API fractured asset lifecycles, complicated loading progress telemetry, and leaked internal streaming mechanics to client applications. Fetching audio assets also lacked SSRF protections against internal network probing and private IP access. Furthermore, rapid feature additions caused several core subsystems (`AudioEngine.init`, `Sequencer`, `SoundController`, `AudioRouter`, `StreamNode`, and `AudioEventOrchestrator`) to suffer from elevated cyclomatic complexity, deeply nested control flows, and degraded class cohesion.
+* **Solution:**
+    * **Unified Bank Streaming:** Eliminated the standalone `audio.streams` API (`load`, `unload`) in favor of unified bank management. `BankManagerAdapter` now transparently detects and loads streaming sound manifests (`isStream: true` or `.json` URLs) alongside audio buffers, isolating them from PCM decoding and RAM quota calculations, while providing unified progress telemetry and cascading cleanup on bank unload.
+    * **SSRF Protection:** Introduced `AudioUrlValidator` into `AudioBufferLoader` and bank stream loaders, strictly blocking RFC 1918 private IPs, loopback, link-local addresses, and dangerous URI schemes, while allowing configurable domain allowlists and custom validators.
+    * **Subsystem Decomposition & Complexity Reduction:** Conducted a comprehensive structural refactoring pass across key hotspots: decomposed the 400-NLOC `AudioEngine.init` facade into cohesive private subsystem builders; extracted `MusicSnapshotManager` and stage helpers from `Sequencer`; decomposed `SoundController` voice virtualization and acquisition; simplified `AudioRouter.stop()` tail playback; streamlined `StreamNode` chunk scheduling; and extracted `AudioEventTelemetryLogger` to resolve LCOM4 cohesion issues.
+    * **Modular Tooling & Test Rigor:** Extracted `@scene-grid/debugger` into a standalone workspace package, resolved profiler voice accumulation and meter edge cases, and integrated mutation testing triage (`mutant-survival-triage`) to ensure complete test resilience and 100% line coverage across refactored paths.
+
+*Manual notes (to be filled):*
+
+* **❌ What didn't work:**
+* **⚖️ Trade-off:**
+* **🎯 Next step:**
+
+---
+
 ## [Architectural Invariants] Documented Rules (from docs/architecture commits)
 
 The following explicit rules have been locked in the documentation:

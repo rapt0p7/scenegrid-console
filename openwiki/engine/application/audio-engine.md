@@ -15,16 +15,16 @@ sources:
     resource: repo://packages/engine/src/Domain/Events/Ports/IEngineEvents.ts
   - id: openwiki-source-cb7652a6bc5670b325741638
     resource: repo://packages/engine/src/Infrastructure/telemetry/CommandReceiver.ts
-generated: { by: "openwiki/0.5.2", at: "2026-09-15T07:28:56.245Z" }
+generated: { by: "antigravity", at: "2026-10-18T15:38:42.987Z" }
 verified:
   - by: openwiki/0.5.1
-    at: 2026-10-14T20:11:32.061Z
+    at: 2026-10-18T16:02:46.366Z
 ---
 
 
 # AudioEngine facade and lifecycle
 
-`AudioEngine` is the application-layer composition root exported by `@scene-grid/engine`. Consumers construct it with the aggregate `IAudioEngineConfig`, call `init()`, then use a deliberately high-level façade for playback, events, parameters, mixer state, music, spatial positioning, asset banks, and stream manifests. Internal Web Audio, routing, mixing, orchestration, loading, telemetry, and culling collaborators remain implementation details.
+`AudioEngine` is the application-layer composition root exported by `@scene-grid/engine`. Consumers construct it with the aggregate `IAudioEngineConfig`, call `init()`, then use a deliberately high-level façade for playback, events, parameters, mixer state, music, spatial positioning, and asset banks (which manage both buffer and stream sounds). Internal Web Audio, routing, mixing, orchestration, loading, telemetry, and culling collaborators remain implementation details.
 
 ## Construction and configuration
 
@@ -91,10 +91,9 @@ The interface is intentionally grouped rather than exposing the graph directly.
 | `mixer` | `setState()` activates a snapshot on the base `scene_main` layer at `BASE` priority; modifiers activate and clear independent overlay layers. |
 | `music` and `conductor` | `music` delegates loops, stingers, and transitions to `Sequencer`. `conductor.start()` is a no-op unless a configured music FSM caused a conductor to be created. |
 | `spatial` | Updates listener position/orientation through the context manager. `setSoundPosition()` accepts one playback id or an array and applies the position to every id. |
-| `banks` | Loads, unloads, and queries `BankManagerAdapter`; operations before init are no-ops and `getState()` returns `UNLOADED`. |
-| `streams` | Fetches and caches the JSON stream manifest referenced by a sound's first URL. Loading an absent sound id or failed response rejects; repeated loads of a cached URL do not refetch. `unload()` evicts the cached manifest and silently ignores an unknown sound id. |
+| `banks` | Loads, unloads, and queries `BankManagerAdapter`; operations before init are no-ops and `getState()` returns `UNLOADED`. Manages both buffer assets and stream manifest loading. |
 
-`unlock()` resumes the audio context for a user-gesture flow and `suspend()` suspends it. The example initializes non-strictly, loads banks and a stream manifest, then calls `unlock()` on `pointerup`; it maps document visibility changes to `suspend()` and `unlock()`.
+`unlock()` resumes the audio context for a user-gesture flow and `suspend()` suspends it. The example initializes non-strictly, loads banks (including streaming audio), then calls `unlock()` on `pointerup`; it maps document visibility changes to `suspend()` and `unlock()`.
 
 ## Events, errors, and operational signals
 
@@ -102,7 +101,7 @@ Subscribe before initialization if the application needs to observe startup fail
 
 Bank callbacks are adapted into `load:start`, `load:progress`, `load:complete`, and `unload:complete`. Per-resource decode failure also emits `engine:error` with `DECODE_ERROR`; progress emits a RAM report through telemetry. The buffer-loader emergency-eviction callback logs the condition and emits a `CAUSE_CHAIN` telemetry packet identifying `RAM_QUOTA_MANAGER` and `OOM_CRITICAL_EVICTION`.
 
-An exception during runtime construction emits `engine:error` with `INIT_FAILED`, including the original error in `details`, and is rethrown. In contrast, stream-manifest fetch errors simply reject `streams.load()`; they do not pass through the engine event dispatcher.
+An exception during runtime construction emits `engine:error` with `INIT_FAILED`, including the original error in `details`, and is rethrown.
 
 See [domain validation](../domain/validation.md) for rule and reporting detail, and [loaders and sound control](../infrastructure/loader.md) for bank state and asset cleanup behavior.
 

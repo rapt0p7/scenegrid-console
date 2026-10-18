@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:5e63ddef5993ad6f6967bc94741eccc91b8192eb9c12be4db3dc23c5c2a5ea81",
+    "pageVersion": "sha256:0d7bb4ad8b5f9fc5fcb401abb5c494ba079765ddf33c52d30ce551c2dd148a33",
     "claims": [
         {
             "id": "claim_20b01eefcb144371b3cdc2be08056b55",
@@ -37,16 +37,12 @@
             "statement": "`AudioEngine` is the runtime application façade: it deep-freezes its initial configuration, and successful `init()` creates telemetry and validation support, composes the audio, scheduling, routing, mixer, bank, culling, event, sequencer, and optional music-conductor graph, registers ticker work, dispatches the manifest, and emits `engine:ready`.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L280-L312",
-                    "version": "repo-lines-v1:sha256:11c555bdf5a9190101dd184b739bfd7f63c8fd194598b884e3e9f70f33c0fd8b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjZTZlZGRlMGM3MGRjOTQ4MmFjYmQ5YzFmNWY2ZjJiYWRiZTFkZjViY2UyZTg5NGU2YzA3ZjIxYjA5ZTE3NDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdiNWViZTczZjYyNzQ4NzU5ZDRjMThhMmJiM2QwODk0NDFkNjlhMDQ4YmIyMWJjMmJlOGUyODMxNTEzNjQ3YzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5MjE0OGMzYzI4MWQ0MjM2NWM1MWUxYjNkOGM5MjdiZmE0Y2RhODFhNzdkNWU2NDZlMTJjNzBhZDNhNjE1YWUifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L251-L255",
+                    "version": "repo-lines-v1:sha256:b27abbea2731591d1041de650c6f4d8428b1eff96ef53f2e064f2a560d0a81e9:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjlmMGJhNmNhMmQxM2U3NTc2MmQyZjE4NWM5ZGQ2ZTBkYjk3MzdlODBiYTg4MGQ0ODM0YmFhYWM2NmFlZGQ4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzgwODgzZGNjNDU1Y2I0ZTA4OTc0OTE3MzBmZWFiZDM5YzcxNGFhNGZhNTNlNzgzMDVhOGQ3ZWIxZDJmNjFmZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDdiYjMwMzM2YzRhZDc0NzA4ZDgzMmQ4NTU1MzI5NzM3MDI5YzFkNzQyMGZkOTM0Mzk3ZTYzYTkxNzFlYzFiZiJ9"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L314-L665",
-                    "version": "repo-lines-v1:sha256:1132f788cc7a6064d2cf79ef6d88e9c9fe0422793a0e0b69d095cf3dedd994e2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJjODc4YTA3ZjVlNzBhYTI1NTU2ZWEwMGFlZGZlYTRkZjllZjk5ZWU4NmQyNzQyNzVlMDNiN2U5N2I0ZmNhZDQyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5YjMyNjNmYzYwODRhMTI2NjE4YmNjZDE5OWQzMDJkMzI0NjMxOGVkMzJiNTQ0ODU1MWNhZTc5MGFkMzY0MmY2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIyNzMyZDRlMTBhMWRlMzRjNmNlNjRiNDFjYjhkOTlhZGQ4ZjY2MmQ0ZjIyZmU4ZWEwMDU0Njc5NjlkNGQ1NTEzIn0"
-                },
-                {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L666-L738",
-                    "version": "repo-lines-v1:sha256:7ac9c808f11c3079127fbe9f03131bc898092a009fe7080d88f88a9ec5817f98:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlOWRmNzE3YzBmM2YxYWVjN2IxN2M3MjNiNzM5MDU1OThkNDZkNjMwODcwZGNmYTIwOTE0MWUzMWQ3YTk0YzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5ZTczOGIzNDA0ZTRiNGNjNzExZGJjNjUxZjU4ZTU0NDdhMGVjYzI5ZDQxMzE5MmI4NWI1ZjBjYTk3NWM1MzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI2M2M3YmNjMmUyODgzNDc0OTBhMjQ1ZGY3YzFjY2VmYmVjNzdhZjIyOTYxZDA3ZjM5YWE0MTNiODljNjMzZTMifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L257-L324",
+                    "version": "repo-lines-v1:sha256:22d230f41933e3b4f2628a32bc4e98964a383ba91724a825cb80c9980d82c1a7:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiNjY0NTlkNDAzYzkyMjQ2ZGVlZWVkNDU1NWVmMGE2NDIxODhlOGZmOTc4NDVjOGY0YTc4MjNhZjFlZjA3NDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExOWNhNTFjZDkzYmViMzk4NTYxYTQyMGYyNDc1ZTQ1OTMzOGZmNDI0YTA0YjFiNzA0NjA2NmVkYTQ1Zjg3NWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI2M2M3YmNjMmUyODgzNDc0OTBhMjQ1ZGY3YzFjY2VmYmVjNzdhZjIyOTYxZDA3ZjM5YWE0MTNiODljNjMzZTMifQ"
                 }
             ]
         },
@@ -83,8 +79,8 @@
             "statement": "The runtime attaches inspector support only in non-production mode by creating a debug port and a command receiver that can fire events, apply snapshots, override RTPC and switch state, stop or pause playback, and drive music transitions.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L670-L725",
-                    "version": "repo-lines-v1:sha256:8d89c8ebc3b0ff2303e9163b1697f321f84b631d164ddd1ddeaa622195533d56:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NGRhZTk0Y2UyODVlMTVhMzQyYjI1Y2M5MTg1ZTFhN2YxZjI2NDllZmVjNTliZDViMTk2OTA5NjFkYjNhYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MjJjNDJjZDE5YzZkMDNkODA4YzQ1MjcyMDU1MjgyNWI3ZWExYzViNDkxYjIxODUxMWNhYzc0MTVjZjlkOWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0ZGU2ZTU3NmNjYzE2ZjcwOWYyOTUzYzg0YmQ5NzA4NzFiMGQ5NjllMzY2Nzg1ZDU3N2NiYTMwOWVkNWQ3NDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlNjcxMzQwYmIxZjRjOTAwMzIyMThhMjE4Mzk0NWM5MGFkYjAxOGUxOGI1MzhjMTc2MWM0MDhmZDk4ZmJhNDIifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L850-L905",
+                    "version": "repo-lines-v1:sha256:74b494d9164d25895cf3570cc0b2a705c2f91d2ab58e4d0fae521fb8105f8846:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4MjYwYWRjMTgzMzAwYzlmMjY2MGJjMjE0NTVjZWExYWJiMzVmZjI1ZTRjNjE2MzNmYTVjYWUyYTJlY2JkNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
                 },
                 {
                     "resource": "repo://packages/inspector/src/hooks/useCommandTransmitter.ts#L6-L31",
@@ -157,16 +153,16 @@
             "statement": "The example browser host constructs `AudioEngine` from authored audio configuration, initializes it in non-strict mode, loads banks and a stream manifest, defers `unlock()` and playback until a one-time pointer event, dynamically imports inspector UI only outside production, and maps visibility changes to suspend or unlock.",
             "evidence": [
                 {
-                    "resource": "repo://examples/main.ts#L115-L129",
-                    "version": "repo-lines-v1:sha256:4f84d8abc72db34d770b0e28dd991b8223a5acd2ad99da0678a53f49f3d9b566:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3MDM5YTE0OTUzYzQ3YjI1MjZmNDU2Y2VmNzQ1MDNhNzg4MmM3ZDU0ZjJhYTM1NzMyZDY1ODgwYzg4NmZmMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4YTQzM2JkNzc5Y2FhYjhlNmI1MjJjMjVjMTIzMTNkMmRjZjA4ZWMyN2U5Y2NiYzljNGQ5MDNiOGEyZWYzNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjViNWM1Y2RmMGJiNGE4ZDAzNjdhODMxOWZhMmRiNTg2NjMwYjUxZGViN2NlYjdiMGRhNzM4ZThjYmVmMDQ1ZjIifQ"
+                    "resource": "repo://examples/main.ts#L122-L129",
+                    "version": "repo-lines-v1:sha256:d4915540e6c8e0d5c782d8fc285ae9ad4bbbb7b9891049cb820534ac0585db71:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjgwMmY5MGRhMzlhYWMwNWY4NWY0NTk5ODliYzE5ZGZhODlkODg4NTM3Njc1NmNiNDA1MmQ0N2Q4NDQxYjRhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTZmOGY4OWZmZmM4YjNkMzBmNmM2NGUxMGQ0NThlMjE0Nzk5YzFjM2ZmMzUxNjVlMzQxYWE2YzQ3Mjg5NmNmZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmQwNGFjZTNmZmY2YWUxOTdmMDUyODMwZjA3YjVkN2ExMDE4YTc5YWRhMTRjNDQ3M2Y2OWM4MjcwNjgzMzdjOSJ9"
                 },
                 {
                     "resource": "repo://examples/main.ts#L34-L48",
-                    "version": "repo-lines-v1:sha256:6e1c09282e80162083849aded2b65d5bdcb46510ab181ea26fd88e815582c9d4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4YjY1MDNhNWM0OGYxOWFiNWVmNzk2NTgxMGY0MjFjMGEwZWY3ODFjNDlhMDg3ZGQ0YmEzMTE2Y2UxYjg2NjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0NTAwM2MxNTM0NmExMjNiN2I1YzUwYTY5ZWVhNTRmNjQwYjhlZjY1Yjg4YTk1ZGZmMjljMzg5MTE4OTlhYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4NzUxZTk1ZTBkMDgyNzk3NGZkYzkyMWJlZTViOGYzNThlNTNjYjQ2ZGZkMmQ5YTA4YmU1OWNhZjAwMjAyNDUifQ"
+                    "version": "repo-lines-v1:sha256:6ad6c2f07221aa777730a712e4e6df1a610d807045577ff0b846e3531502a3f3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlNzk4ZjI2M2ViZWYxYmU3YzBhOTRmZTQ3NTBhNTVhOTZmM2JiNjRmNjRlOTZjMjM2NTMxNjNhYTdiZDcyNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDExY2FmNDNlOTdlZjM2OWU2YmVlZDFhMjY4YmQwNTgzOGYyOWI5ZGQyNTRiZjY5YmE2NDg4NDE0NzIzNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllMTQ0YzY0YTIxNWUwOGQ5ZjAyY2FhMmY5ZGU5ZGRiODNiOGQ1YTAwMTUxNzUwMWYxYzE3ZWQ0ZDIwN2U3ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3NmExYzJhMGRkYjJlOTI2NzY4Mzg4N2FkM2Y3NTA1MWQzNzQzMDljMzgyZmI5YzZlZTJkYTZkMDAwMDBiMmIifQ"
                 },
                 {
                     "resource": "repo://examples/main.ts#L53-L113",
-                    "version": "repo-lines-v1:sha256:2c27aeb87b134bd73e761de279bd2bef542f938c57d3de451e59151540e11dbf:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0Y2U4NzUxMmJkYzIzMDM3MDQ2ODQzZDRlNmVkZDkyMDAzZmI5YzQ0OGMyMDAzYzRmOGI1NGVjZjZmNDM1MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhNzFkOWZiODgwZWVjZGNiYTUzMjc1MmRhMjM3YTZlOGI2MzJlMWNlY2ZlNTM2ZDhmZTkyYjhmZDA5NzJiYzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlNGUxMjVkOWFhZWVmYTJlYThmNjA1NTVkMDJjZTY4Mjc5Zjk3ZTZkNTZmNGM5ZGUyY2UzNTZlZWRkMWM5NzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3MjJlYzg5YjE5OTFmOWNmMzhkNDU2ZmVlYTg4NzUxNmQxMjA0OGZiN2UwNDVkZGY2NGVjNmZlNzI5ZWFjNDkifQ"
+                    "version": "repo-lines-v1:sha256:bd833857878d7334e919d126e886a8ceef9647763a0ceaa5f89e3ca6020cb627:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3YzYyNDZkNzMyMTliMGEyMDYwZDJlZmU5ZmRlYzA3Y2UxMDEzMDAzNTY0ZjMxZmI5MWZhYmVkNDRmZWM5MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMTQwZTA2ZTA3YWQ4NWNmZWE2NTgyODdkZTYzNjA2MWNlNWY4ZGE2ODg5Y2MwZmUwZmE1NWY3NTc2NTJhOTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc5MTU0NzJjMjllNmNmNzM1ODg0ZGZkMzFlMWVhNTg4NzU4YzFjZDFhYjA0MzNmNGU2YTQ1ODI3ODY1MzAwNTYifQ"
                 }
             ]
         },
@@ -191,6 +187,6 @@
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-10-14T20:11:32.061Z"
+        "at": "2026-10-18T16:02:46.366Z"
     }
 }

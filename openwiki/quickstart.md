@@ -12,10 +12,10 @@ sources:
     resource: repo://packages/inspector/package.json
   - id: openwiki-source-c83ceec2d47257f066951051
     resource: repo://packages/shared/package.json
+generated: { by: "antigravity", at: "2026-10-14T20:11:32.061Z" }
 verified:
   - by: openwiki/0.5.1
-    at: 2026-10-14T20:11:32.061Z
-generated: { by: "antigravity", at: "2026-10-14T20:11:32.061Z" }
+    at: 2026-10-18T16:02:46.366Z
 ---
 
 # OpenWiki quickstart

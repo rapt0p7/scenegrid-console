@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:f55c010b42c36ff2a9d75a66b474d3492343575d7073e16e0e0e0095ebc4e81e",
+    "pageVersion": "sha256:de32e586a3f99b35e8e08bc52c798cde72b14c5754279701fe6350fee16abba3",
     "claims": [
         {
             "id": "claim_3436b86eb5904368b84d0d48eac48235",
@@ -109,12 +109,12 @@
             "statement": "After validation, `AudioEngine.init()` creates a `SoundRegistry` from every sprite-manifest entry's URL, passes its map to `SoundController`, and resolves registry URLs through the buffer cache when creating ordinary sound instances; registry membership therefore does not establish that a decoded buffer is available.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L357-L380",
-                    "version": "repo-lines-v1:sha256:ca53936eccbeb6f6e2bf4ae770531c17216d92dc9700a9ce686f746092e4052d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhMjQ4NmFhYWE4NDZjNTBiYmNjNTEwNGU5NzhhNjZjNjA4MWE2ZmFmZmJhNjhhOGNkZDg0MmE5ZTNmNGJiYzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzMTA5ODEzODI3ZTE3NmE3ZTAwYWEyOGE4MTY0MzQ5ZmEyZWYzM2I3YzY4NzNlMWU2YzVlNjZkM2Y1MzA1YzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkNGJmNzBkNjI4NDBlNzdmYzJkZmMzZWQxZWZlNGY4MmIyOWI1OGRiNjAzMGFkMDJlYmQxNzUyMWNkNGQ2ZGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyNTMwZWZmYjc5NDFiNDkyNGIxN2EwNzgzNjA0YzFkNGZiY2UxYzg2MjE1YzhkMzM2MDgyNTE0Yjg4ZWU3ZTMifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L274-L285",
+                    "version": "repo-lines-v1:sha256:a0c1a4953f0cfe0d46d7e4934a6e60f4c0127b0dc9387567a7f68ba983e0a565:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzMWU5ZTM1ZTdhNzQzZTk0NGI5ZTc1NTk3YzZhNDNjMGJmN2JkNjZiNWUyNDg2MDRlMDdlMWQwNmFkMTJmNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzYjA1OTc4OTYyMWM0YjJhYTk2NTk3ZGJkNTQ0MWY1MjEwNmU0OWY1YmZiN2FiZjVlNzdjODlhNDQ0M2VjMDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkNGJmNzBkNjI4NDBlNzdmYzJkZmMzZWQxZWZlNGY4MmIyOWI1OGRiNjAzMGFkMDJlYmQxNzUyMWNkNGQ2ZGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0YTU0ZTgwY2ViODI0NWIzODEyMTczZjllYzhkMzA3ZTQ0YWQxZDA4Yjg3NDNlYTg3ZTBjNzc5N2UzZWQ4YWMifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L460-L475",
-                    "version": "repo-lines-v1:sha256:1cbd14427e63250540e859e6ded2c98762746d6669b4420f2a3411c018a6a756:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNlYWNjMDcwYmM4YzEzNTcyZWQ2MWVmOTY0NTY5NGU4N2FkYWJkNGRiNzNlYWE4MDMzYzFiZTJhNWUzODllZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0NjYwOGU0ODMwZWNkZTQ5OWMyYTA3NDIxNGU0YjNmOGE0ODI4MmE1NWZjM2Q2Mjg3NWFkZTdmYjU5YjIwMjkifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L515-L523",
+                    "version": "repo-lines-v1:sha256:d80def64e4c11fe6f9df6d00cab36cd664d0083dc3fbb4c39ca590ef4a6707ab:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdmYzkwYTY4MzA1NDQyNjJlOTUxNWQ4N2ZkMzhlYjhiODRjOGM4NzRmZjc2MGE4OTg3ODcyNjA4NjJlYTNiZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjJkODI4YTAzN2FjMWM4MTUzNWIxZDU1MDA4MzIzMjNiZmJiODY2YTNhM2Y4N2U3YTY4YzEzYTJiYWU1NmZmZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDlmNWYzOTI3MDI2YjNiMGNjZjk2NTUwMjQ2NTBhMTJlNGY5MTM4MWMyN2NlMzEzNGJjNDc1MWE3YzY5MDAwYSJ9"
                 }
             ]
         },
@@ -155,8 +155,8 @@
                     "version": "repo-lines-v1:sha256:68c10b67955c428ca28e2dd2811b8c159d16861b3d40272448ac6961e86a9870:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWEyNDQ0MWJkOWIyOTMwYmMxNWIwOWZkODlhZGQxM2E2N2Y4MjA1NGE4OGM1YzE0YjM4ZDVjZGUyMDg1M2JhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISpriteSoundManifest.ts#L1-L9",
-                    "version": "repo-lines-v1:sha256:533bd2ba196d1d353d8ba24350c61a058a3d905d3ddf941386f35b398d83f37f:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmYwYmQ2M2QxZDRiNTJjMTJkNTgzMDg4MzU3ZDUwZmM3NGM5MzE3ZjA1ODc0NTc3MmI0ZjE4ZTY4NDhmNjExYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjQyMGQ0YTRjYzdiNWFjNGE2NjMwNjNhZjc5NTdkMTMwY2Y0MGJlNjlhNTQ3NGZjMmNmNmM3OTZhMjgyMzVmMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+                    "resource": "repo://packages/engine/src/Domain/Configuration/Ports/ISpriteSoundManifest.ts#L1-L10",
+                    "version": "repo-lines-v1:sha256:7c7afdff96b3b3afce13b8dbffacaf2e3f09d643b8fc202c691eb623eaf27aea:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwZmI5NjgzNWNmMTllNTMwMWFlMGE0NDY3ZWMyYWM4NTE1M2Q1YWZkNzUxNTE1YTYyMDA3MzNhY2QyYTM3NDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjOTAwNjkwODUxNWNhYjM0ZDE0ZmE5ODAxYWQ1NWJjN2EwZjVmMzdmNDcwYTgzOTQ5M2Q2ZmI1MDIyZGZjMWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                 }
             ]
         },
@@ -165,22 +165,22 @@
             "statement": "Bank loading joins a bank's listed sound IDs to the sprite manifest to create buffer requests with manifest priority and estimated size; unknown manifest IDs are skipped, and a bank with no loadable entries immediately becomes `LOADED`. Unload stops the bank's sounds without tails, purges their pooled instances and cached URLs, then records `UNLOADED`.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts",
-                    "version": "repo-file-v1:sha256:bcea726b46dfbf1f013363950878bc195adbd4ea98f017d76fd35a7ce88d3178"
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts#L53-L137",
+                    "version": "repo-lines-v1:sha256:8a130bc26ce2ad17929c21e7310a769cdebaab8bafde04a6030d954bb333e566:eyJzZWxlY3RlZExpbmVDb3VudCI6ODUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OWMxNjQ3NWIxMDc5YTM4ODk5OTRkOGQyMjg5MWExMGZiNGRkZDM4MjFhYjNmOWIyNzRiMTkyMWU5MjM3M2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1OGRiOTI2ZmI2NGFhMjE4MjZlYzI5M2VmNTRjMWY2ODFhZmY1MGY4M2FkZGMxMjY1MTJlMzBkOGM4M2Q3NTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkZDRlZWRhY2M0OGEzNWY0ZmM0YWQyNjE2NmFhOTRjMWMzNWUyYmY5MDRmZWIzZTJjMzUwOTg3NzdhZDAwNjIifQ"
                 }
             ]
         },
         {
             "id": "claim_5fd440ea83a748deab6430e125c9f66f",
-            "statement": "`AudioEngine.streams.load(soundId)` fetches JSON from the first URL of that sound's sprite-manifest entry and caches the resulting `IStreamManifest` by URL; it rejects an unknown ID or failed response, while `unload()` evicts the cache entry and ignores an unknown ID. `SoundController` uses the cached manifest in preference to a decoded buffer when playing that descriptor.",
+            "statement": "`BankManagerAdapter` fetches and caches `IStreamManifest` JSON payloads from sprite-manifest URLs when loading banks containing stream sounds, while `unloadBank()` evicts cached stream manifests. `SoundController` uses the cached manifest from `BankManagerAdapter` in preference to a decoded buffer when playing that descriptor.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L252-L276",
-                    "version": "repo-lines-v1:sha256:30937433816fd793a398af0f7b8731dc20bc2c5a3c8fb72df90f977d48cbf962:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViMTMwYTEwYjE1YWU1YmExNWI3ZGM3N2ZiYWZmYmJmYTg0YmNiN2VjYjJkMTYwMDgzMzUxYzI1MzExNGViMGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4MDg4M2RjYzQ1NWNiNGUwODk3NDkxNzMwZmVhYmQzOWM3MTRhYTRmYTUzZTc4MzA1YThkN2ViMWQyZjYxZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiNWViZTczZjYyNzQ4NzU5ZDRjMThhMmJiM2QwODk0NDFkNjlhMDQ4YmIyMWJjMmJlOGUyODMxNTEzNjQ3YzgifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts#L209-L240",
+                    "version": "repo-lines-v1:sha256:93e7871170097f32371693c8b8dde310e67b38550240b499bcb7d8fe990381af:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlODA1ODNiOWQxODE2MGM0NTRmYTljMmE5YmY0MTRhZWI5NDdhMDE1NjJlMzU4NDdmYzY4ZTcwNGI4MTVjYmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYyZDgyOGEwMzdhYzFjODE1MzViMWQ1NTAwODMyMzIzYmZiYjg2NmEzYTNmODdlN2E2OGMxM2EyYmFlNTZmZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3MDc4NjIyZTIxYWU3MDA0MDBkNGE4ZGNiMWI5ZTc2Y2YyYWFjZDU2NDlhNTNkODc2NjQ1YTZiMjU4MmNhYWIifQ"
                 },
                 {
-                    "resource": "repo://packages/engine/src/Infrastructure/loader/SoundController.ts#L1-L80",
-                    "version": "repo-lines-v1:sha256:52cb3ff6df7dda307269f413bde8129e9bf33f3cfec95b3ed98e5c0f86669db8:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1NmViNDNjNjU2NDFmM2ZkMTdkMmEwMTc5YzhlMWQ2Nzc4ZDZiNDRiNjU5NzU4MzZiMjYwN2ZiOGYxZWJiNTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhOTIwZDAxZmU5ZTQwNzdkMDA4MDhlYjI2YTAyMDZiNDE0MDI3YTYyNWJiMGVhNzIxNDE2YWVjYjRkZTc3Y2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5ZjBhNTNjMjJjMjE2OTIzMTc2ODE5M2E1MjdkYzMyOWZkNTNkYmY0NmU3OGQ5ODdjMGIzM2VhNTE5ZjNlZmQifQ"
+                    "resource": "repo://packages/engine/src/Infrastructure/loader/SoundController.ts#L58-L80",
+                    "version": "repo-lines-v1:sha256:2c083b94d08decd9a10da5e98419a87c02f79e3e20710bb47cbeb2b967d8dde7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZTU0NzkxNmVjZDM3YzdiZTRjODBkNjk2OTcxMjgxNzI4M2U0YmNkMTYzM2M1NzA4MGE5NDUyNDFmMTU5YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0OWM0NWVhNjJhMGM1M2I4ZTQwYzNiN2QxZjkzYWIyNjYxYmMzM2MyNTM1MTFmMjBlYTdiMmVlZDQwZmQ0NWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkOTIxM2RjMjM4NzY5YjUzZWVhMmY0YTFhNjdmODlkMDE3MjY3YjBiZDg0Y2JkMGQxMjIzNDUzMDY5OGQ2M2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA0MzVhZGZmZjE2OTk3OTZlNGNkNDY2Zjg4MzE5MzBhMTAwM2Y5YTViOWJhNzM0NzY2OWNhZjgyNTlmODE4YTAifQ"
                 }
             ]
         },
@@ -189,14 +189,14 @@
             "statement": "Validation runs against the aggregate configuration before runtime composition completes. In strict mode an invalid result emits `engine:error` with `INIT_FAILED` and returns; in non-strict mode initialization warns and proceeds.",
             "evidence": [
                 {
-                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L296-L313",
-                    "version": "repo-lines-v1:sha256:94ebc16f60d219f894b3c6942771f566b33987ebdfbfc66e16f52028697c551c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0M2EzOTMxYjQ1YTU4YzIyMTMyMmQwOGU0YWNkYTRiNzJjNzZhZjdmOWQwMDAyZmU5YTkyZTY4N2M4Y2QzOGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyOWZmM2RhYmJmOGFlYzEwNzBmMjk2YTU0Y2MwNDE1MDUzMzE2OTVjNDEzZjg3YjRkMzNkYWQwZGMwMzliMzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwYTVlNDFhZWYzMDBlOTZmMjE1ZjRlZGJhYmQzMzUwYTcyNzY5ODczZjc3N2QwNGJlMDAyODIxODAwZWEyZDUifQ"
+                    "resource": "repo://packages/engine/src/Application/AudioEngine.ts#L454-L472",
+                    "version": "repo-lines-v1:sha256:56c94e40ea6702bd6d870e355c845f2953d8c78d803c9200b791f4a88a4c6907:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MGQ0ZjEzNDNjZjIxNWZjYTIwNWMxZmFkNmJkNWM0ZTBhZTRiYzcwZmZlMjBhZjFhMjUyMDkyNGMyMzRjZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjNjMzM2Y5MDJiOTdmMTMzNGY4MzZkNjMxNDUyZWY0ODEwYTdjNGM3OWYzYWQ0NzFiMGZiYTllOTM4M2E0YjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMTk5Zjg0YmFhODBkYjQxNjNmNDFkOGQyNWVlMDRiMDg5OTdiOTRmNzdiM2RjZTQ3OWZiYmY4NzdhYjZkMTMifQ"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-10-14T20:11:32.061Z"
+        "at": "2026-10-18T16:02:46.366Z"
     }
 }

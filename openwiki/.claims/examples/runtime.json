@@ -1,14 +1,14 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:83466006183168d0c5e6aaf1d162e28a3f8341d9593bbcfa89f91d576b20ff22",
+    "pageVersion": "sha256:6d66b1607da069cae46b6ecb9f5837f09a84c5a1ef918a9a45c7002867f00091",
     "claims": [
         {
             "id": "claim_7fa06695b9b5427cb753b5c109c92e12",
             "statement": "The example app boots `AudioEngine` with non-strict validation, loads demo audio banks and streams, and defers context unlocking and initial playback until a user `pointerup` interaction.",
             "evidence": [
                 {
-                    "resource": "repo://examples/main.ts#L34-L114",
-                    "version": "repo-lines-v1:sha256:93319c5b7cd4e3a1e74d7d38620687b17a8f245a662d27a24b6140f622467819:eyJzZWxlY3RlZExpbmVDb3VudCI6ODEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4YjY1MDNhNWM0OGYxOWFiNWVmNzk2NTgxMGY0MjFjMGEwZWY3ODFjNDlhMDg3ZGQ0YmEzMTE2Y2UxYjg2NjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0NTAwM2MxNTM0NmExMjNiN2I1YzUwYTY5ZWVhNTRmNjQwYjhlZjY1Yjg4YTk1ZGZmMjljMzg5MTE4OTlhYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcxYTQzMjZhOTVmMTFhNjQxYjNjNjIwNzMzYmMwZTEyMDVjZGJkNGEyODgzOGZlZjc1MTBjM2Q3MTRjMzgzMGMifQ"
+                    "resource": "repo://examples/main.ts#L34-L113",
+                    "version": "repo-lines-v1:sha256:afa408cfebfd93165d5e6d4393c5edecf9b8087ccbca0ef09906ea579145f5c3:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlNzk4ZjI2M2ViZWYxYmU3YzBhOTRmZTQ3NTBhNTVhOTZmM2JiNjRmNjRlOTZjMjM2NTMxNjNhYTdiZDcyNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllMTQ0YzY0YTIxNWUwOGQ5ZjAyY2FhMmY5ZGU5ZGRiODNiOGQ1YTAwMTUxNzUwMWYxYzE3ZWQ0ZDIwN2U3ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc5MTU0NzJjMjllNmNmNzM1ODg0ZGZkMzFlMWVhNTg4NzU4YzFjZDFhYjA0MzNmNGU2YTQ1ODI3ODY1MzAwNTYifQ"
                 }
             ]
         },
@@ -17,14 +17,14 @@
             "statement": "The example app listens for Vite HMR updates to `./audio-config/index.js` and applies modified bus, snapshot, sound map, and RTPC configs live via `audio._hotReloadConfig`.",
             "evidence": [
                 {
-                    "resource": "repo://examples/main.ts#L132-L151",
-                    "version": "repo-lines-v1:sha256:cc418d3e018ecfdb442283c9713ce9b7a55a5a69a3cd256b701e2ed91ddd1c78:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4ODk3MzcyNzMwNjI0MzI3NmMwYjYzMDQ0N2NjMzhjN2JkOWZiZGVhNzJjNjEwODVkMzViYWI0N2ZmZmYxNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5ZDM2NDZkMjZlZDk3Y2Y4YzMyOWI5ZTBiN2E4Y2Y5ZmFhYjZiNmQxZTA2NWFmZmU3MTFiODU5ZGJhNWIyMDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZmZmE2NTBmNDQ5MmVhYmU3NmE5MjEyM2ZmNTJiNDU1ODhmYzU1OTkzZmRiMGZiZjUwZDE2MGM5NzZkYjUxZTEifQ"
+                    "resource": "repo://examples/main.ts#L130-L150",
+                    "version": "repo-lines-v1:sha256:150f0faea1fa9f224cf2dd09898c8bfce483a26c3755acbc062cb37a95fddc44:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU3MTRlZjk1MjI3ZTY1MDUzMDc3MjBlMmY2MjYzMGRkNmVmYmNmZDIzYjk5ZGMyNjk4NmZiM2RmMGZjZDE5MDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2NmQzYTI2ZDhmYzVjNThlNGUzYTdlMzVjYWRhN2JmODcyZmY0MGU0MDM3ZWFhNjFiNDU4YmU1MGRlNWIxMzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0MTYxODBkMTgzNzI3Y2UyZjFkOGYyYjlkYTRkYjFkNjFkMzgyNDkzNWEwN2Y0ZTdiMmZlOWFhMzM5MjkyZWQifQ"
                 }
             ]
         }
     ],
     "verification": {
         "by": "openwiki/0.5.1",
-        "at": "2026-10-14T20:11:32.061Z"
+        "at": "2026-10-18T16:02:46.366Z"
     }
 }

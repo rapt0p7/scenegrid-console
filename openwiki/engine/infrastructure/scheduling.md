@@ -5,7 +5,7 @@ description: Engine ticker integration, playback scheduling, culling evaluation,
 tags: [engine, scheduling, culling]
 verified:
   - by: openwiki/0.5.1
-    at: 2026-10-14T20:11:32.061Z
+    at: 2026-10-18T16:02:46.366Z
 sources:
   - id: openwiki-source-4c5cf432a6783b64244bfe99
     resource: repo://packages/engine/src/Infrastructure/scheduling/EngineTicker.ts

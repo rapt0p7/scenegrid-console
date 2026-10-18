@@ -30,10 +30,10 @@ sources:
     resource: repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts
   - id: openwiki-source-6d4c48df67f3190c1aef57ee
     resource: repo://packages/engine/src/Infrastructure/loader/SoundController.ts
-generated: { by: "openwiki/0.5.0", at: "2026-09-21T16:32:27.121Z" }
+generated: { by: "antigravity", at: "2026-10-18T15:38:42.987Z" }
 verified:
   - by: openwiki/0.5.1
-    at: 2026-10-14T20:11:32.061Z
+    at: 2026-10-18T16:02:46.366Z
 ---
 
 # Configuration and Sound Registry
@@ -74,10 +74,10 @@ graph TD
 During initialization (`AudioEngine.init()`):
 1. **Validation**: The engine validates the aggregate configuration against strict or non-strict rules (`repo://packages/engine/src/Application/AudioEngine.ts`). In strict mode, validation failures emit an `engine:error` event with `INIT_FAILED` and halt initialization.
 2. **Sound Registry Creation**: A `SoundRegistry` is constructed from sprite-manifest URLs and supplied to the `SoundController`. Registry membership verifies descriptor presence but does not guarantee that decoded audio buffers are already loaded in memory.
-3. **Streaming Management**: `AudioEngine.streams.load(soundId)` fetches and caches `IStreamManifest` JSON payloads from sprite-manifest URLs (`repo://packages/engine/src/Application/AudioEngine.ts`). `SoundController` prioritizes cached stream manifests over decoded PCM buffers when playing stream-backed sound descriptors.
+3. **Streaming Management**: Stream sounds are declared in banks alongside PCM buffers. `BankManagerAdapter` fetches, validates, and caches `IStreamManifest` JSON payloads when loading banks containing stream sounds, and evicts them on bank unload. `SoundController` prioritizes cached stream manifests over decoded PCM buffers when playing stream-backed sound descriptors.
 
 ## Bank Management (`BankManagerAdapter`)
 
 `BankManagerAdapter` coordinates sound bank lifecycles (`repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts`):
-- **Loading**: Joins bank-owned sound IDs with sprite manifests to generate buffer load requests with correct priority and estimated asset size. Unknown IDs are skipped; banks with zero loadable entries instantly transition to `LOADED`.
-- **Unloading**: Stops active bank sounds immediately without audio tails, purges pooled instances and cached URLs, and transitions state to `UNLOADED`.
+- **Loading**: Joins bank-owned sound IDs with sprite manifests to generate buffer load requests or stream manifest fetch jobs with correct priority and estimated asset size. Unknown IDs are skipped; banks with zero loadable entries instantly transition to `LOADED`.
+- **Unloading**: Stops active bank sounds immediately without audio tails, purges pooled instances, cached URLs, and stream manifests, and transitions state to `UNLOADED`.
