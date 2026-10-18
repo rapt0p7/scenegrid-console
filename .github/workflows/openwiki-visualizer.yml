@@ -1,0 +1,44 @@
+name: OpenWiki Visualizer
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'openwiki/**'
+            - '.github/workflows/openwiki-visualizer.yml'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+# Prevent concurrent push conflicts on the gh-pages branch
+concurrency:
+    group: github-pages-deploy
+    cancel-in-progress: false
+
+jobs:
+    deploy-visualizer:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+
+            - name: Install OpenWiki CLI
+              run: npm install --global openwiki
+
+            - name: Build Static Visualizer
+              run: |
+                  openwiki visualize openwiki --export site/openwiki-visualizer
+
+            - name: Deploy to gh-pages branch
+              uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 #v4.1.0
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./site
+                  keep_files: true # CRITICAL: preserves dashboard, badges, and other content on gh-pages branch

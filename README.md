@@ -15,6 +15,7 @@
 [![Keep the Why](https://keepthewhy.com/assets/badge.svg)](https://keepthewhy.com)
 [![Keep the Why · live](https://rapt0p7.github.io/scenegrid-console/dashboard/live/badge-entries.svg)](https://rapt0p7.github.io/scenegrid-console/dashboard/live/)
 [![Ask DeepWiki](https://img.shields.io/badge/Ask%20DeepWiki-4B6BFB?logo=bookstack&logoColor=white)](https://deepwiki.com/rapt0p7/scenegrid-console)
+[![OpenWiki Visualizer](https://img.shields.io/badge/OpenWiki-Visualizer-blue?logo=diagram-project&logoColor=white)](https://rapt0p7.github.io/scenegrid-console/openwiki-visualizer/)
 [![Powered by Oxlint](https://img.shields.io/badge/powered%20by-Oxlint-blue)](https://oxc.rs)
 [![Formatted with Oxfmt](https://img.shields.io/badge/formatted%20with-Oxfmt-blue)](https://oxc.rs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
