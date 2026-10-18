@@ -5,6 +5,112 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-18
+
+### Added
+- Add soundhub to alternatives
+
+- Implement `SSRF` protection for `AudioBufferLoader`
+
+- Add repowise coverage upload to ci workflow
+
+- Add pull request labeler workflow
+
+- Add mock for console.log in shutdown tests
+
+- Add undefined to `validateTuple` test
+
+- Add `mutant-srvival-triage` skill
+
+- Add live dashboard badge
+
+- Add dependency review workflow
+
+- Add deepwiki badge
+
+- Add codacy configuration file
+
+- Add codacy coverage reporter
+
+- Add codecov upload and test results reporting
+
+- Add npm badges and update telemetry event names
+
+
+### Changed
+- Update `keep-the-why` skill
+
+- Update `repowise`
+
+- Decompose `AudioEngine.init` into focused subsystem
+
+- Flatten transition control flow in `Sequencer`
+
+- Decompose `SoundController` play and virtualization (#92)
+
+- Extract bus config and send transition helpers
+
+- Flatten stop() control flow
+
+- Simplify flow and reduce complexity in `StreamNode`
+
+- Refactor audio bus system update logic
+
+- Unify stream manifest loading into bank management
+
+- Updated 'openwiki'
+
+- Update `repowise`
+
+- Extract telemetry logger and restore cohesion
+
+- Refactor `AudioBus` recalculation logic
+
+- Bump @modelcontextprotocol/client
+
+- Bump the npm_and_yarn group across 1 directory with 4 updates
+
+- Bump source-map-js from 1.2.1 to 1.2.2 (#73)
+
+- Bump undici and release-it
+
+- Refactor sequencer target time calculation
+
+- Decompose `Sequencer` to reduce complexity
+
+- Keep the why - migrate context/ from schema 0.11.0 to 0.19.0
+
+- Revert "Keep the Why: migrate context/ from schema 0.11.0 to 0.19.0"
+
+- Keep the Why: migrate context/ from schema 0.11.0 to 0.19.0
+
+- Update codecov and codacy conditions for main branch
+
+- Pin github actions versions
+
+- Update deepwiki badge
+
+- Update project description and quick start guide
+
+- Update dependencies
+
+- Update openspec-badge workflow configuration
+
+- Update badges in root `README.md`
+
+
+### Fixed
+- Improve voice counting and display logic (#84)
+
+- Update mutation testing
+
+- Update mock implementation
+
+
+### Removed
+- Remove unused lint disable comments
+
+
 ## [0.2.2] - 2026-09-29
 
 ### Added
@@ -12,6 +118,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- Release v0.2.2
+
 - Update build script to build specific workspaces
 
 - Release v0.2.1
@@ -859,6 +967,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove audiomotion-analyzer
 
 
-[0.2.2]: 0.1.0..v0.2.2
+[0.3.0]: 0.2.2..v0.3.0
+[0.2.2]: 0.1.0..0.2.2
 [0.1.0]: ..0.1.0
 
