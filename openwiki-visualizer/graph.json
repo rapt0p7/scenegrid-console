@@ -1,0 +1,941 @@
+{
+  "root": "openwiki",
+  "generatedAt": "2026-10-18T17:14:09.238Z",
+  "types": [
+    "Reference",
+    "Section",
+    "architecture overview",
+    "domain",
+    "domain subsystem",
+    "infrastructure overview",
+    "infrastructure subsystem",
+    "inspector subsystem",
+    "package overview",
+    "quickstart",
+    "runtime entrypoint",
+    "runtime workflow"
+  ],
+  "nodes": [
+    {
+      "id": "architecture/index",
+      "title": "Architecture",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "# Files\n\n- [Repository architecture and runtime boundaries](overview.md) - Map of the SceneGrid workspace packages, their supported dependency directions, and the browser path from authored audio configuration through the engine, telemetry worker, inspector, and example host.\n",
+      "size": 277,
+      "links": [
+        "architecture/overview"
+      ],
+      "backlinks": []
+    },
+    {
+      "id": "architecture/overview",
+      "title": "Repository architecture and runtime boundaries",
+      "type": "architecture overview",
+      "description": "Map of the SceneGrid workspace packages, their supported dependency directions, and the browser path from authored audio configuration through the engine, telemetry worker, inspector, and example host.",
+      "tags": [
+        "architecture",
+        "monorepo",
+        "browser-runtime",
+        "audio",
+        "telemetry",
+        "inspector"
+      ],
+      "body": "\n# Repository architecture and runtime boundaries\n\nSceneGrid is an npm workspace for a browser audio runtime. Its production-facing package is `@scene-grid/engine`; `@scene-grid/shared` supplies the lowest-level cross-package utilities; `@scene-grid/debugger` provides embedded diagnostic and analyzer panels; `@scene-grid/inspector` is a React telemetry and visual inspector interface; and `@scene-grid/cli` provides Node command-line processing dependent on the engine. The `examples` workspace is the integration host dependent on the browser packages.\n\n## Workspace responsibilities and public surfaces\n\n| Workspace | Responsibility | Consumer-facing surface |\n| --- | --- | --- |\n| `@scene-grid/shared` | Dependency-free common types, utilities, telemetry contracts, and the shared-worker factory. | Root export provides branded/music/condition/culling and inspector-command types; memory, math, guard, immutability, and typed-object helpers; telemetry types; and `createTelemetryWorker()`. |\n| `@scene-grid/engine` | Browser audio application façade and its domain, kernel, and infrastructure implementation. | `AudioEngine`, configuration and registry types, selected domain types/enums, `WorkletLoader`, and infrastructure types. |\n| `@scene-grid/debugger` | Embedded in-game diagnostic and analyzer UI. | `attachDebugUI()` builds analyzer views from `audioEngine._debug`; `initAudioDebugPanel()` builds the interactive debug pane. |\n| `@scene-grid/inspector` | Optional telemetry and visual inspector UI. | React components and hooks for inspecting graph state and transmitting commands. |\n| `@scene-grid/cli` | Node command-line asset pipeline and alias preparation. | The `scenegrid` executable resolves configuration, runs the asset pipeline, and exits nonzero on failure. |\n| `examples` | Vite browser host and reference integration. | Owns authored audio configuration and creates, initializes, unlocks, loads, and drives an `AudioEngine`. |\n\nThe package manifests make `shared` a dependency of engine, debugger, and inspector. The inspector and debugger have no declared engine package dependency; they accept an engine-shaped object and its debug proxies at their integration boundary. The example workspace depends on the browser packages (`@scene-grid/debugger`, `@scene-grid/engine`, `@scene-grid/inspector`, and `@scene-grid/shared`), while the CLI depends on `@scene-grid/engine`.\n\n```mermaid\nflowchart LR\n    shared[\"@scene-grid/shared\"]\n    engine[\"@scene-grid/engine\"]\n    debugger[\"@scene-grid/debugger\"]\n    inspector[\"@scene-grid/inspector\"]\n    cli[\"@scene-grid/cli\"]\n    example[\"examples Vite host\"]\n\n    shared --> engine\n    shared --> debugger\n    shared --> inspector\n    engine --> cli\n    engine --> example\n    debugger --> example\n    inspector --> example\n    shared --> example\n```\n\nThis diagram shows declared workspace package dependencies, not runtime object ownership.\n\n## Internal dependency boundaries\n\nThe engine is deliberately layered rather than a collection of mutually reachable modules:\n\n- **Domain** expresses audio behavior and ports. It must not depend on `Infrastructure`, including its debug code.\n- **Kernel** contains low-level RTPC/core capabilities and must not depend on `Domain`, `Application`, or `Infrastructure`.\n- **Infrastructure** implements technical integrations such as Web Audio context and nodes, loading, scheduling, telemetry transports, and command reception. It may depend on domain and kernel code but must not depend on application orchestration.\n- **Application** is the composition root. `AudioEngine` may assemble the lower layers but may not import the package entrypoint, preventing a reverse public-API dependency.\n- **Shared** must not import engine or inspector implementation code. Circular dependencies are errors under the architecture lint configuration.\n\nThese restrictions are enforced by `npm run lint:architecture`, which runs dependency-cruiser over `packages/engine/src`; the root also provides build, test, typecheck, formatting, lint, and mutation-test commands.\n\n## Browser bootstrap and steady-state path\n\nThe example demonstrates the intended ownership boundary: the host authors manifests, buses, snapshots, sound map, RTPC manifest, events, banks, music FSM, size/quota, and voice-limit configuration. It augments `SceneGridRegistry` for application-specific identifier autocomplete, constructs `AudioEngine`, subscribes to lifecycle events, and calls `init({ isStrictValidation: false })`.\n\n```mermaid\nsequenceDiagram\n    participant Host as Examples host\n    participant Engine as AudioEngine\n    participant Worker as Shared telemetry worker\n    participant Audio as Web Audio runtime\n    participant Inspector as Optional inspector\n\n    Host->>Engine: construct with authored configuration\n    Host->>Engine: init with validation mode\n    Engine->>Worker: create worker and telemetry transport\n    Engine->>Engine: validate and assemble runtime graph\n    Engine->>Audio: create context buses scheduler and loaders\n    Engine->>Worker: dispatch configuration manifest\n    Engine-->>Host: engine ready event\n    Host->>Engine: load banks and stream manifests\n    Host->>Engine: unlock after pointer interaction\n    Host->>Engine: play and mixer calls\n    Host->>Inspector: dynamically import in non-production mode\n    Inspector->>Worker: open same named shared worker\n    Inspector->>Engine: inspect debug object or send commands\n```\n\nThis diagram covers the reference host's startup and the optional development inspection path. `unlock()` resumes the audio context, so the example defers it to its one-time `pointerup` handler. It also suspends on hidden documents and attempts to unlock again when visible.\n\n### `AudioEngine` lifecycle, configuration, and failure semantics\n\n`AudioEngine` deep-freezes a shallow copy of its initial configuration. Calling `init()` again after successful initialization is a no-op. On its first call, it creates a named `SharedWorker` and `WorkerTelemetryTransport`, validates configuration through console and telemetry reporters, then composes the context manager, ticker, automation, buffers, bus graph, router, controller, RTPC and instance binder, sequencer, mixer snapshots, bank manager, event/scatterer orchestration, culling, telemetry snapshotter, and—when configured—the music conductor. The ticker owns recurring work for telemetry, state snapshots, RTPC propagation, sound control, culling, mixer transitions, scatterers, events, and optional music.\n\nValidation deliberately has two paths:\n\n- With strict validation, an invalid configuration emits `engine:error` with `INIT_FAILED` and returns before building the audio graph.\n- Without strict validation, initialization logs a warning and continues. Any exception while assembling the graph emits `engine:error` and is rethrown; only a completed assembly sets the initialized flag, dispatches the manifest to telemetry, and emits `engine:ready`.\n\nThe façade groups public operations by domain: event subscription and posting, RTPC parameters, mixer states/modifiers, music sequencing, listener and sound spatialization, bank and stream management, and play/stop/pause/resume plus context unlock/suspend. Banks cannot load or unload before initialization, and their pre-init state is `UNLOADED`. Loading banks—not `init()`—drives the load lifecycle events; loader failures are surfaced as `engine:error` with `DECODE_ERROR`.\n\n### Telemetry worker and inspector bridge\n\n`createTelemetryWorker()` constructs a module `SharedWorker` from the shared package. It can send `INIT_CONFIG` when `remoteSyncUri` is configured. The worker shares the latest manifest, validation/RAM reports, snapshot, and up to 200 lifecycle/cause-chain logs with newly connected ports. If remote synchronization is configured, it forwards data over a WebSocket, replays buffered state after connection, relays received commands to ports, and reconnects with exponential backoff capped at 30 seconds.\n\nIn a non-production engine build, `init()` additionally makes an inspector command port and ticks a `CommandReceiver` on the engine ticker. That receiver can invoke event, snapshot, RTPC/switch override, global playback, loop, and music-transition actions against the assembled runtime. This is separate from direct UI integration: `@scene-grid/debugger`'s `attachDebugUI()` reads `audioEngine._debug`, while the React-oriented inspector hooks open the same named shared worker to consume telemetry and transmit commands. Neither the engine nor shared packages import the inspector or debugger packages.\n\n`AudioDebugger` (provided by `@scene-grid/debugger`) is intentionally resilient at the DOM boundary. It warns and returns if its wrapper selector finds no element; otherwise it clears the wrapper and creates spectrum and meter views for the master node and every active bus analyzer tap. `initAudioDebugPanel()` similarly warns when it cannot find an engine instance.\n\n## Change and operations guidance\n\n- Keep reusable types and helpers in `shared` only when they can remain isolated from engine and inspector implementations. A new shared-to-engine import violates the architecture policy.\n- Keep browser integration in infrastructure and have application wire it. Do not make domain or kernel code reach into Web Audio, telemetry, or debug implementation modules.\n- Treat `AudioEngine.config` as immutable normal-runtime input. The underscore-prefixed `_hotReloadConfig()` is an internal HMR API; it revalidates then updates selected bus, snapshot, RTPC, and sound-map state without stopping the context.\n- Load required banks and stream manifests after `init()` and before expecting buffer-backed playback. A missing sound buffer produces a warning and a reserved placeholder instance.\n- Run `npm run lint:architecture` when moving engine code across layers, and use root `test`, `typecheck`, `lint`, and `build` commands for integration changes. The focused `AudioEngine` tests cover repeated initialization, strict/non-strict validation, RTPC initialization, event subscription, and bank-load lifecycle behavior.\n\n## Related documentation\n\n- [Quickstart](../quickstart.md)\n- [Engine overview](../engine/overview.md)\n- [Inspector overview](../inspector/overview.md)\n- [Example runtime](../examples/runtime.md)\n",
+      "size": 10301,
+      "links": [
+        "quickstart",
+        "engine/overview",
+        "inspector/overview",
+        "examples/runtime"
+      ],
+      "backlinks": [
+        "architecture/index",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "cli/index",
+      "title": "Cli",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "# Files\n",
+      "size": 8,
+      "links": [],
+      "backlinks": []
+    },
+    {
+      "id": "engine/application/audio-engine",
+      "title": "AudioEngine facade and lifecycle",
+      "type": "Reference",
+      "description": "",
+      "tags": [],
+      "body": "\n\n# AudioEngine facade and lifecycle\n\n`AudioEngine` is the application-layer composition root exported by `@scene-grid/engine`. Consumers construct it with the aggregate `IAudioEngineConfig`, call `init()`, then use a deliberately high-level façade for playback, events, parameters, mixer state, music, spatial positioning, and asset banks (which manage both buffer and stream sounds). Internal Web Audio, routing, mixing, orchestration, loading, telemetry, and culling collaborators remain implementation details.\n\n## Construction and configuration\n\nThe constructor assigns `config` to `deepFreeze({ ...config })`. The top-level object is copied before freezing; nested values are shared with the input object and recursively frozen. Callers should therefore treat both the supplied configuration graph and `engine.config` as immutable after construction.\n\n`IAudioEngineConfig` requires the sound `manifest`, `buses`, `snapshots`, `soundMap`, `events`, and `banks`. It can additionally configure RTPCs, a music FSM, global voice count, deterministic seed, buffer RAM quota, precalculated asset sizes, sequencer PPQN, and a telemetry `remoteSyncUri`.\n\nThe engine barrel exports `AudioEngine` and the configuration and identifier types. Applications can extend `SceneGridRegistry` by declaration merging so façade identifiers are inferred from their authored configuration; the example application demonstrates that pattern.\n\n## Initialization contract and order\n\n`init(parameters?)` is the composition gate. A call made **after successful initialization** returns immediately because `#isInitialized` is set only near the end of the successful path. There is no initialization-in-progress lock: do not call `init()` concurrently. A strict-validation early return or a thrown initialization error leaves the flag false, so a later call can attempt setup again; there is no teardown or rollback of services already created before an exception.\n\nInitialization first creates a shared telemetry worker and dispatcher (passing `remoteSyncUri` when configured), then validates the frozen configuration with both console and telemetry consistency reporters. Invalid configuration has two modes:\n\n- with `isStrictValidation: true`, it emits `engine:error` with `INIT_FAILED` and `Strict validation failed`, then returns without constructing the runtime graph;\n- otherwise, it warns and continues building the graph.\n\nAfter validation, the façade creates the context at 44,100 Hz, forwards context state changes as lifecycle events, starts the `EngineTicker`, and builds the dependency graph in dependency order. This includes the PRNG, automation and spatial setup, buffer loader, master output and RTPC manager; sound registry/pool/controller and router; bus system; sequencer and mixer snapshot machinery; bank and event orchestration; optional music conductor; telemetry snapshotting; and culling. It then registers the tick-driven services, marks the engine initialized, publishes the configuration to telemetry, optionally installs development commands, and emits `engine:ready`.\n\n```mermaid\nsequenceDiagram\n    participant App as Application\n    participant Engine as AudioEngine\n    participant Validator as ConsistencyChecker\n    participant Runtime as Runtime services\n    participant Ticker as EngineTicker\n    participant Events as Engine events\n\n    App->>Engine: new AudioEngine(config)\n    App->>Engine: init(parameters)\n    Engine->>Validator: validate config with reporters\n    alt invalid and strict\n        Validator-->>Engine: false\n        Engine->>Events: engine:error INIT_FAILED\n        Engine-->>App: return\n    else valid or non-strict\n        Engine->>Runtime: create context telemetry routing mixer banks\n        Engine->>Ticker: start and register tickables\n        Engine->>Runtime: publish manifest and install dev receiver\n        Engine->>Events: engine:ready\n        Engine-->>App: resolve\n    end\n```\n\nCaption: startup validates before composing the runtime graph; strict invalid configuration is the only non-throwing early exit.\n\n### Ticker ownership\n\nThe ticker is started before most collaborators are assembled, but runtime tasks are added only after their dependencies exist. It drives telemetry dispatch, telemetry snapshots, RTPC updates, bus RTPC application, per-instance RTPC binding, sound control, culling, mixer transitions, scatterer and audio-event orchestration, and—when `musicFSM` is configured—the music conductor. A mixer transition start also forces an immediate culling tick. Streaming instances receive their own ticker task and remove/dispose themselves when they emit `ended`.\n\nThis façade wiring is the integration boundary between [scheduling and culling](../infrastructure/scheduling.md), [telemetry transports](../infrastructure/telemetry.md), and the domain services; those pages own the detailed behavior of the individual services.\n\n## Public controls\n\nThe interface is intentionally grouped rather than exposing the graph directly.\n\n| Surface | Behavior |\n| --- | --- |\n| `play`, `stop`, `pause`, `resume` | Delegate direct sound or playback-id control to `AudioRouter`. `play` returns one id, multiple ids, or `null` when playback is rejected. Prefer `postEvent()` when behavior should be data-driven. |\n| `postEvent(eventId)` | Delegates to `AudioEventOrchestrator` only after initialization. Before that it warns and has no side effect. |\n| `events` | Provides typed `on`, `off`, `once`, and `clear` subscription operations backed by the engine dispatcher. |\n| `params` | Gets and sets RTPC values through `RTPCManager`. |\n| `mixer` | `setState()` activates a snapshot on the base `scene_main` layer at `BASE` priority; modifiers activate and clear independent overlay layers. |\n| `music` and `conductor` | `music` delegates loops, stingers, and transitions to `Sequencer`. `conductor.start()` is a no-op unless a configured music FSM caused a conductor to be created. |\n| `spatial` | Updates listener position/orientation through the context manager. `setSoundPosition()` accepts one playback id or an array and applies the position to every id. |\n| `banks` | Loads, unloads, and queries `BankManagerAdapter`; operations before init are no-ops and `getState()` returns `UNLOADED`. Manages both buffer assets and stream manifest loading. |\n\n`unlock()` resumes the audio context for a user-gesture flow and `suspend()` suspends it. The example initializes non-strictly, loads banks (including streaming audio), then calls `unlock()` on `pointerup`; it maps document visibility changes to `suspend()` and `unlock()`.\n\n## Events, errors, and operational signals\n\nSubscribe before initialization if the application needs to observe startup failure or readiness. `engine:ready` is emitted only after `#isInitialized` is true and contains a `performance.now()` timestamp and the actual context sample rate. Context transitions are translated to `state:suspended` and `state:resumed`.\n\nBank callbacks are adapted into `load:start`, `load:progress`, `load:complete`, and `unload:complete`. Per-resource decode failure also emits `engine:error` with `DECODE_ERROR`; progress emits a RAM report through telemetry. The buffer-loader emergency-eviction callback logs the condition and emits a `CAUSE_CHAIN` telemetry packet identifying `RAM_QUOTA_MANAGER` and `OOM_CRITICAL_EVICTION`.\n\nAn exception during runtime construction emits `engine:error` with `INIT_FAILED`, including the original error in `details`, and is rethrown.\n\nSee [domain validation](../domain/validation.md) for rule and reporting detail, and [loaders and sound control](../infrastructure/loader.md) for bank state and asset cleanup behavior.\n\n## Development-only command bridge and diagnostics\n\nWhen `process.env.NODE_ENV !== 'production'`, initialization builds an `IInspectorDebugPort`, constructs a `CommandReceiver` on the telemetry worker's `MessagePort`, and ticks it with the engine. Incoming messages are queued and processed on the next tick rather than executed in the message listener. Supported inspector commands fire events, apply a base snapshot, override RTPCs or switches, stop/pause/resume all sounds, clear overrides, and control music loops and transitions. Command execution errors are caught and logged by the receiver.\n\n`_debug` exposes internal references—configuration, bus system, master output, RTPC manager, router, context manager, snapshot manager, pool manager, layer stack, and event orchestrator—for tests and inspection. It is not part of `IAudioEngine` and should not be application runtime code’s dependency boundary.\n\n## Hot configuration reload\n\n`_hotReloadConfig(newConfig)` is an internal HMR API, not a general reinitialization or transactional configuration API. It first returns if the engine is not initialized, then validates the candidate using the reporter instances created during `init()`. Failed validation logs an abort and does not change configuration.\n\nFor a valid candidate, it immediately replaces `config` with a frozen shallow copy, initializes RTPC definitions only if `rtpcManifest` is present, awaits `AudioBusSystem.updateConfig(newConfig.buses)`, updates snapshot definitions, and replaces the router's sound map. It deliberately does **not** recreate the audio context, ticker, bank manager, sound registry/pool, event orchestrator, sequencer, or music conductor. The example accordingly reloads only buses, snapshots, sound map, and RTPC manifest while retaining the rest of `audio.config`.\n\nThe apply sequence has no rollback. If bus update or a later step throws, the method catches and logs the error, but `config` may already reference the new graph and earlier subsystem changes may remain. Safe HMR changes must therefore be limited to the live-updated slices and must tolerate partial application; use a new `AudioEngine` instance for topology changes such as banks, events, manifests, or music FSM.\n\n## Focused tests\n\n`packages/engine/src/Application/__tests__/AudioEngine.test.ts` verifies the façade boundary rather than every collaborator’s implementation. Its high-value cases cover strict/non-strict validation, post-init idempotence, context and bank events, bank gating and state changes, direct-control delegation, RTPC setup, music-conductor conditional wiring, spatial fan-out, stream cache/error/lifecycle behavior, dev command-port wiring, ticker registrations, telemetry on memory eviction, and HMR validation/apply/error paths.\n\n## Related pages\n\n- [Engine package overview](../overview.md) maps the public package surface.\n- [Example app runtime](../../examples/runtime.md) shows the browser bootstrap, unlock, visibility, inspector, and HMR usage sequence.\n- [Domain validation](../domain/validation.md), [loaders and sound control](../infrastructure/loader.md), [scheduling and culling](../infrastructure/scheduling.md), and [telemetry transports](../infrastructure/telemetry.md) document the principal collaborators composed here.\n",
+      "size": 10944,
+      "links": [
+        "engine/infrastructure/scheduling",
+        "engine/infrastructure/telemetry",
+        "engine/domain/validation",
+        "engine/infrastructure/loader",
+        "engine/overview",
+        "examples/runtime"
+      ],
+      "backlinks": [
+        "engine/application/index",
+        "engine/overview",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "engine/application/index",
+      "title": "Application",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "# Files\n\n- [AudioEngine facade and lifecycle](audio-engine.md)\n",
+      "size": 63,
+      "links": [
+        "engine/application/audio-engine"
+      ],
+      "backlinks": []
+    },
+    {
+      "id": "engine/domain/configuration",
+      "title": "Configuration and Sound Registry",
+      "type": "domain",
+      "description": "Documents sound configuration ports, manifests (ISpriteSoundManifest, IStreamManifest), SoundRegistry, BankManagerAdapter, and aggregate audio engine configuration.",
+      "tags": [
+        "configuration",
+        "manifests",
+        "sound-registry",
+        "banks",
+        "audio-engine"
+      ],
+      "body": "\n# Configuration and Sound Registry\n\nThe configuration layer of the OpenWiki audio engine defines domain input contracts, asset manifests, sound registries, and bank management systems. It provides the structured foundation for authored sound behavior, event sequencing, parameter control (RTPC), music finite state machines (FSM), and audio asset streaming.\n\n## Domain Configuration Ports\n\nThe domain configuration layer specifies immutable TypeScript interfaces (`Ports`) modeling authored audio assets and game wiring:\n\n- **`IBankConfig` & `IBankManifest`**: Models sound banks as named collections of sound IDs. `IBankConfig` defines an identifier and a readonly array of `SoundId` values (`repo://packages/engine/src/Domain/Configuration/Ports/IBankConfig.ts`). `IBankManifest` maps bank name strings to bank configurations.\n- **`IEventConfig`**: Wraps an ordered readonly list of game audio actions (`repo://packages/engine/src/Domain/Configuration/Ports/IEventConfig.ts`). Actions cover sound playback triggers, RTPC parameter updates, music state transitions, mixer bus modifications, bank loading/unloading, and pending-action cancellations.\n- **`IMusicFSMConfig`**: Defines music hierarchical state machines containing an initial music state, global transition edges, and per-state nodes with dedicated sequencer regions, optional snapshots, and state-local edges (`repo://packages/engine/src/Domain/Configuration/Ports/IMusicFSMConfig.ts`).\n- **`IRTPCConfig`**: Binds game parameters to curve definitions or presets, supporting optional send targets, smoothing times, and target properties (`repo://packages/engine/src/Domain/Configuration/Ports/IRTPCConfig.ts`).\n- **`ISoundConfig` & `ISoundMap`**: `ISoundMap` indexes sound definitions by `SoundId`, resolving each to an `AnySoundConfig` union member (`repo://packages/engine/src/Domain/Configuration/Ports/ISoundMap.ts`, `repo://packages/engine/src/Domain/Configuration/Ports/ISoundConfig.ts`). The sound-config union supports basic, smart-loop, container, layered, switch, and scatterer variants that can reference other sound IDs.\n\n## Manifests and Registries\n\nAudio assets are registered and loaded via manifest abstractions:\n\n- **`ISpriteSoundManifest`**: Associates each `SoundId` with one or more asset URLs and optional loading priority (`repo://packages/engine/src/Domain/Configuration/Ports/ISpriteSoundManifest.ts`).\n- **`IStreamManifest`**: Defines streaming asset structures fetched dynamically for long audio files or adaptive streams (`repo://packages/engine/src/Domain/Configuration/Ports/IStreamManifest.ts`).\n- **`SoundRegistry`**: Maintains a private map of sound descriptors (`Map<SoundId, SoundDescriptor>`) built from sprite-manifest entries (`repo://packages/engine/src/Domain/Configuration/SoundRegistry.ts`). It exposes the registry map via `.registry` and throws an error (`Sound \"<id> not registered\"`) when an unregistered identifier is requested.\n\n```mermaid\ngraph TD\n    Manifest[ISpriteSoundManifest] -->|URL entries| Registry[SoundRegistry]\n    Registry -->|SoundDescriptor map| Engine[AudioEngine]\n    Engine -->|Buffer cache check| Controller[SoundController]\n    Bank[IBankConfig] -->|Sound IDs| BankManager[BankManagerAdapter]\n    BankManager -->|Buffer requests| Loader[Loader / Cache]\n```\n\n## Audio Engine Configuration and Initialization\n\n`IAudioEngineConfig` defines the aggregate authored configuration required by `AudioEngine`, including manifests, buses, snapshots, sound maps, events, and banks, alongside optional RTPCs, music FSMs, memory limits, and telemetry URIs (`repo://packages/engine/src/Application/Ports/IAudioEngineConfig.ts`).\n\nDuring initialization (`AudioEngine.init()`):\n1. **Validation**: The engine validates the aggregate configuration against strict or non-strict rules (`repo://packages/engine/src/Application/AudioEngine.ts`). In strict mode, validation failures emit an `engine:error` event with `INIT_FAILED` and halt initialization.\n2. **Sound Registry Creation**: A `SoundRegistry` is constructed from sprite-manifest URLs and supplied to the `SoundController`. Registry membership verifies descriptor presence but does not guarantee that decoded audio buffers are already loaded in memory.\n3. **Streaming Management**: Stream sounds are declared in banks alongside PCM buffers. `BankManagerAdapter` fetches, validates, and caches `IStreamManifest` JSON payloads when loading banks containing stream sounds, and evicts them on bank unload. `SoundController` prioritizes cached stream manifests over decoded PCM buffers when playing stream-backed sound descriptors.\n\n## Bank Management (`BankManagerAdapter`)\n\n`BankManagerAdapter` coordinates sound bank lifecycles (`repo://packages/engine/src/Infrastructure/loader/BankManagerAdapter.ts`):\n- **Loading**: Joins bank-owned sound IDs with sprite manifests to generate buffer load requests or stream manifest fetch jobs with correct priority and estimated asset size. Unknown IDs are skipped; banks with zero loadable entries instantly transition to `LOADED`.\n- **Unloading**: Stops active bank sounds immediately without audio tails, purges pooled instances, cached URLs, and stream manifests, and transitions state to `UNLOADED`.\n",
+      "size": 5213,
+      "links": [],
+      "backlinks": [
+        "engine/domain/index",
+        "engine/overview"
+      ]
+    },
+    {
+      "id": "engine/domain/index",
+      "title": "Domain",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "# Files\n\n- [Configuration and Sound Registry](configuration.md) - Documents sound configuration ports, manifests (ISpriteSoundManifest, IStreamManifest), SoundRegistry, BankManagerAdapter, and aggregate audio engine configuration.\n- [Domain Mixer and Snapshot Resolution](mixer.md) - Mixer snapshot layering, priority order, and the transition engine that resolves layered state into live bus updates and telemetry.\n- [Domain orchestration](orchestration.md) - Event dispatch, sequenced music control, music FSM evaluation, scatterer spawning, and quantized loop-transition coordination in the engine domain.\n- [Router and Playback Managers](router-and-managers.md) - Runtime routing and playback decision logic that selects concrete sounds, applies culling and playback policies, and wires ducking and RTPC state onto active voices.\n- [Domain Validation and Consistency Checking](validation.md) - The engine startup validation gate that checks configuration structure, cross-reference consistency, and routing safety before initialization completes.\n",
+      "size": 1051,
+      "links": [
+        "engine/domain/configuration",
+        "engine/domain/mixer",
+        "engine/domain/orchestration",
+        "engine/domain/router-and-managers",
+        "engine/domain/validation"
+      ],
+      "backlinks": []
+    },
+    {
+      "id": "engine/domain/mixer",
+      "title": "Domain Mixer and Snapshot Resolution",
+      "type": "domain subsystem",
+      "description": "Mixer snapshot layering, priority order, and the transition engine that resolves layered state into live bus updates and telemetry.",
+      "tags": [
+        "engine",
+        "mixer",
+        "snapshots",
+        "transitions"
+      ],
+      "body": "\n# Domain Mixer and Snapshot Resolution\n\nThe mixer domain owns how base mix state and overlay snapshots are layered, resolved, and applied to the live bus system.\nIt also records the snapshot-change telemetry that accompanies snapshot activation and clearing.\n\n## Core responsibilities\n\n- keep the authoritative base mixer state in the coordinator;\n- maintain a priority-ordered stack of mixer layers;\n- merge layered snapshots into a resolved mixer state;\n- drive the transition engine that applies the resolved state to buses, filters, sends, and RTPC bindings;\n- emit mixer snapshot telemetry when snapshots are activated or cleared.\n\n## Runtime architecture\n\n`MixerCoordinator` is the entrypoint that ties the layer stack to the transition engine.\nIt stores the current base state, asks the layer stack to compute a resolved state from that base, and forwards the result to `MixerTransitionEngine`.\n\n`MixerSnapshotManager` is the public snapshot-control surface used by the engine facade.\nIt looks up a named snapshot, injects metadata, adds or removes a layer, and then delegates recomputation through the coordinator.\nThe manager also emits mixer events for snapshot entry, exit, and transition boundaries, and dispatches telemetry packets for snapshot changes.\n\n`MixerLayerStack` owns the active layer collection and the priority ordering used during composition.\nLayers are keyed by `LayerId`, sorted from lowest to highest priority, and folded through the resolver one by one.\nThe exported `PRIORITY` constants provide the common bands used by callers: `BASE`, `OVERLAY`, `MODAL`, and `TRANSIENT`.\n\n`MixerStateResolver` performs the actual merge logic for a base state plus a snapshot patch.\nIt combines per-bus values, clamps gains to the configured ceiling, carries forward metadata timestamps, and applies explicit clearing semantics for filters, sends, and RTPC bindings.\n\n`MixerTransitionEngine` applies the resolved state to the live `IAudioBusSystem` and RTPC adapter.\nIt uses a two-phase transition model for non-instant updates and keeps the first application as a cold start.\n\n## Layering and priority model\n\nLayers are evaluated in ascending priority order, so lower-priority layers establish the starting state and higher-priority layers refine or override it.\nThat ordering matters for scenes such as a base layer plus an overlay UI layer, a modal layer, or a short-lived transient layer.\n\n```mermaid\nflowchart TD\n    Base[\"Base mixer state\"] --> Stack[\"Layer stack sorted by priority\"]\n    Overlay[\"Overlay layers\"] --> Stack\n    Modal[\"Modal layers\"] --> Stack\n    Transient[\"Transient layers\"] --> Stack\n    Stack --> Resolve[\"MixerStateResolver\"]\n    Resolve --> Resolved[\"Resolved mixer state\"]\n    Resolved --> Transition[\"MixerTransitionEngine\"]\n    Transition --> BusSystem[\"Live bus system\"]\n    Transition --> RTPC[\"RTPC adapter\"]\n```\n\nCaption: layered snapshots are folded from base to highest priority, then applied to the live audio graph.\n\n`clearByPrefix()` can remove multiple layers that share a naming prefix, which is useful for grouped overlays or scoped runtime effects.\nIt does not emit the stack change callback itself, so callers that rely on a recompute must trigger it separately.\n\n## Snapshot activation semantics\n\nSnapshot activation follows the same basic pattern regardless of source:\n\n1. resolve the snapshot name against the configured `ISnapshots` map;\n2. emit `snapshot:enter` and `transition:start` events;\n3. dispatch a telemetry cause chain that records the API method, snapshot id, fade time, and current sound-controller time;\n4. add the layer with the requested `LayerId` and priority;\n5. attach snapshot metadata containing the snapshot id and a fresh timestamp;\n6. emit `transition:end`.\n\nWhen a snapshot is cleared, the manager first checks that the layer exists, then emits `snapshot:exit` and `transition:start`, removes the layer, recomputes the mixer state with the supplied duration, dispatches `CLEAR` telemetry, and finally emits `transition:end`.\n\nThe snapshot metadata on each active layer is important for hot module replacement.\n`updateSnapshotsConfig()` can swap in a new snapshot table and refresh any active layer whose stored `snapshotId` still exists in the new configuration.\n\n## State resolution rules\n\n`MixerStateResolver` is responsible for the merge semantics that determine the next mixer state.\nImportant rules include:\n\n- bus gains multiply base and patch values, with a default base gain of `1` unless configured otherwise;\n- the resolved gain is clamped to the configured maximum gain limit;\n- a patch filter of `null` explicitly clears the filter, while an omitted filter keeps the base filter;\n- sends are merged per destination bus, and a `null` send entry removes that destination;\n- RTPC bindings are merged per target property, and `null` removes the binding;\n- the resolved snapshot metadata keeps the latest snapshot id and receives a fresh timestamp.\n\n## Transition engine behavior\n\n`MixerTransitionEngine.applyState()` first checks whether an active transition is locked against interruption.\nIf the engine is idle or the requested duration is zero or negative, it performs an instant transition: each bus receives immediate gain and filter updates, send routing is applied without fade, and the current mixer state is replaced immediately.\n\nFor timed transitions, the engine enters a filter-fade phase covering the first 25% of the duration.\nDuring that phase it replaces filters only when the new filter differs from the previous one, and it binds RTPCs for the target state.\nOnce the filter phase ends, it starts the main transition phase for the remaining time and animates gains and sends.\nMissing sends from the new target are explicitly cleared so stale routing does not remain active.\n\n`tick()` advances the finite-state machine and completes the transition when the total duration is reached.\n`cancelActiveTransition()` abandons the active transition immediately.\n\n```mermaid\nsequenceDiagram\n    participant Manager as MixerSnapshotManager\n    participant Stack as MixerLayerStack\n    participant Coord as MixerCoordinator\n    participant Resolver as MixerStateResolver\n    participant Engine as MixerTransitionEngine\n    participant Bus as AudioBusSystem\n\n    Manager->>Stack: addLayer or removeLayer\n    Stack-->>Coord: onChange callback\n    Coord->>Stack: computeState(baseState)\n    Stack->>Resolver: resolve(base, patch)\n    Resolver-->>Stack: resolved state\n    Stack-->>Coord: resolved state\n    Coord->>Engine: applyState(resolved, options)\n    Engine->>Bus: update gains, filters, sends, RTPC bindings\n```\n\nCaption: snapshot changes flow from layer mutation through resolution and into live bus updates.\n\n## Telemetry and events\n\nTelemetry is emitted from `MixerSnapshotManager`, not from the resolver or transition engine.\nThat keeps the state-composition code focused on mixer semantics while the manager records user-facing snapshot operations.\nThe telemetry packet records the API method name, the target snapshot id or `CLEAR`, the fade time, and the audio-context time converted to milliseconds.\n\nThe manager also exposes an event stream with the snapshot and transition lifecycle events that UI or diagnostics code can subscribe to.\n\n## Extension points and operational notes\n\n- Add new snapshot types by extending the snapshot config map; the manager will activate them without extra wiring.\n- Add new layer categories by assigning priorities between or beyond the existing bands.\n- Tune the resolver with custom default bus gain or max gain limit when the engine needs different mix normalization.\n- Preserve the current transition semantics when changing the transition engine, especially cold-start, locked-transition, and send-clearing behavior.\n\n## Representative tests\n\nThe behavior that matters most is covered by focused unit tests in the mixer domain:\n\n- `packages/engine/src/Domain/Mixer/__tests__/MixerLayer.test.ts`\n- `packages/engine/src/Domain/Mixer/__tests__/MixerSnapshotManager.test.ts`\n- `packages/engine/src/Domain/Mixer/__tests__/MixerStateResolver.test.ts`\n- `packages/engine/src/Domain/Mixer/__tests__/MixerTransitionEngine.test.ts`\n- `packages/engine/src/Domain/Mixer/__tests__/MixerCoordinator.test.ts`\n\nThese tests cover priority ordering, snapshot activation and clearing, telemetry dispatch, metadata refresh, merge semantics, cold-start behavior, interruptibility, filter-phase timing, and send cleanup.\n",
+      "size": 8458,
+      "links": [],
+      "backlinks": [
+        "engine/domain/index",
+        "engine/overview",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "engine/domain/orchestration",
+      "title": "Domain orchestration",
+      "type": "domain subsystem",
+      "description": "Event dispatch, sequenced music control, music FSM evaluation, scatterer spawning, and quantized loop-transition coordination in the engine domain.",
+      "tags": [
+        "engine",
+        "orchestration",
+        "music",
+        "sequencing"
+      ],
+      "body": "\n# Domain orchestration\n\nThis subsystem owns the runtime coordination layer that turns events, music-state changes, and scatter policies into concrete playback operations.\nIt is the domain bridge between authored configuration, the router and managers that select playback targets, and the mixer and telemetry surfaces that record or apply the result.\n\n## Owned modules\n\n- `AudioEventOrchestrator`\n- `AudioGrid`\n- `MusicConductor`\n- `MusicFsmEvaluator`\n- `ScattererOrchestrator`\n- `Sequencer`\n- `SmartLoopTransitionPolicy`\n\n## Runtime responsibilities\n\n- translate event actions into router, sequencer, mixer, RTPC, and bank operations;\n- evaluate music FSM edges and trigger loop transitions from RTPC-driven conditions;\n- keep loop playback, stingers, and snapshot changes aligned to musical time;\n- schedule scatter spawning, container selection, and positional placement over time;\n- encapsulate quantization, lookahead, and transition policy so callers do not hard-code timing rules.\n\n## Relationship to adjacent subsystems\n\nOrchestration depends on the router and manager pages for selection and playback-side effects, not for policy ownership.\n`AudioEventOrchestrator` posts event actions into the router, `Sequencer`, mixer snapshot manager, RTPC adapter, and bank manager after those collaborators are resolved elsewhere.\nLikewise, `ScattererOrchestrator` relies on `ContainerPlaybackPolicy` for source choice and on the sound controller for pause, stop, and position updates.\n\nTelemetry is also a cross-cutting concern: the orchestration layer can emit cause-chain or playback-related reporting through the supplied telemetry dispatcher, but the reporting format and transport belong to the application and shared layers.\n\n## Event orchestration\n\n`AudioEventOrchestrator` is the event-runtime entrypoint.\nIt accepts an authored event map and then executes each action either immediately or after a delay, based on the action configuration and current sound-controller time.\nConditions are evaluated before execution, probability gates can block the action, and delayed actions are queued until `tick()` reaches their scheduled time.\n\nThe supported actions show why this class is the orchestration hub rather than a thin dispatcher:\n\n- playback control through `router.play`, `router.stop`, `router.pause`, and `router.resume`;\n- RTPC writes through the adapter;\n- `Sequencer` calls for `playLoop`, `stopLoop`, `transitionTo`, and `playStinger`;\n- mixer snapshot operations for base state and modifier layers;\n- bank load and unload operations;\n- nested event triggering with a recursion guard to prevent runaway re-entry;\n- cancellation of scheduled actions by tag.\n\nTracked playback entries are cleaned up as the underlying voice or loop state ends, which keeps tagged action bookkeeping from growing indefinitely.\n\n```mermaid\nsequenceDiagram\n    participant App as AudioEngine facade\n    participant Event as AudioEventOrchestrator\n    participant Router as AudioRouter\n    participant Seq as Sequencer\n    participant Mix as MixerSnapshotManager\n    participant RTPC as IRTPCAdapter\n    participant Bank as IBankManager\n\n    App->>Event: postEvent(eventId)\n    Event->>Event: evaluate conditions and probability\n    alt action is immediate\n        Event->>Router: play or stop or pause or resume\n        Event->>RTPC: setValue\n        Event->>Seq: playLoop or transitionTo or playStinger\n        Event->>Mix: activateSnapshot or clearLayer\n        Event->>Bank: loadBank or unloadBank\n    else action is delayed\n        Event->>Event: queue scheduled action\n        Event->>Event: tick() later executes action\n    end\n```\nCaption: event actions fan out through orchestration collaborators, with delayed work re-entering through the tick loop.\n\n## Sequenced music control\n\n`Sequencer` manages loop playback as a stateful scheduler.\nIt maintains per-track contexts, schedules regions with a lookahead window, and interacts with the sound controller for immediate playback, fades, cancellation, and stop timing.\nThe sequencer depends on the router to resolve sound configuration and on the audio grid to convert between time, beats, bars, and pulses.\n\nImportant control-flow points:\n\n- `playLoop()` resets any existing track state before starting a new looping region;\n- `stopLoop()` cancels active regions and clears track bookkeeping;\n- `transitionTo()` rejects idle tracks and non-interruptible transitions already in flight;\n- quantized transitions use `AudioGrid` or a provided grid to align to the next beat, bar, grid division, or exact pulse;\n- crossfades, tails, and optional transition regions are assembled into a queue of region-start instructions;\n- stinger playback can be aligned to the same quantization source as the reference track.\n\nThe sequencer is also where smart-loop timing becomes runtime behavior.\n`SmartLoopTransitionPolicy` provides the decision logic that says whether a current region should transition to another region based on magnet conditions and hysteresis, while the sequencer performs the actual timing and playback work.\n\n## Music FSM coordination\n\n`MusicConductor` ties RTPC state, FSM edges, loop playback, and mixer snapshots together.\nIt is an `ITickable` runtime object that starts from a configured initial state, starts the associated loop when `start()` is called, and stops that loop when `stop()` is called.\nDuring `tick()`, it first applies any pending mixer snapshot activation whose scheduled execution time has arrived, then evaluates transition edges when the conductor is not already transitioning.\n\nEdge evaluation is delegated to `MusicFsmEvaluator`, which checks global edges before state-local edges and returns the first edge whose conditions all pass.\nThat keeps the conductor focused on lifecycle and execution, while the evaluator owns edge ordering.\n\nWhen a transition fires, the conductor:\n\n1. asks the sequencer to transition to the target region with the edge quantization, crossfade, and interruptibility settings;\n2. optionally schedules a stinger on the same sync rule;\n3. schedules a mixer snapshot activation for the target state, using the current time or a quantized target time;\n4. updates its internal state machine so it does not re-enter transition logic too early.\n\nThe conductor uses a dedicated mixer layer and priority for its FSM snapshot work, which keeps music-state mix changes separate from scene or modifier layers.\n\n## Scatterer behavior\n\n`ScattererOrchestrator` turns a scatterer sound config into repeated spawn sessions.\nEach session tracks its own next spawn time, spawned playback ids, and polyphony count.\nOn each tick, the orchestrator removes sessions whose source playback no longer exists, pauses spawn timing when the logical state is paused, and spawns new voices when the current time reaches the next scheduled time.\n\nSpawn behavior is policy-driven rather than ad hoc:\n\n- source selection comes from `ContainerPlaybackPolicy` in `random_no_repeat` mode;\n- positional scatter uses the configured distance range and a random angle on the X/Z plane;\n- sync-aware spawn timing can quantize the next spawn to the next beat or bar of a reference track using `Sequencer.getPlaybackInfo()`;\n- the configured polyphony cap prevents unbounded voice accumulation.\n\n## Timing model and grid helpers\n\n`AudioGrid` is the shared timing helper used by sequenced orchestration.\nIt converts the configured BPM, beats-per-bar, PPQN, and start time into musical navigation helpers for:\n\n- the next beat;\n- the next bar;\n- a specific pulse;\n- the pulse at a given time;\n- a specific grid division.\n\nThe same grid math underpins quantized sequence transitions, stinger alignment, and sync-aware scatter scheduling.\n\n## Important invariants and failure behavior\n\n- Event orchestration must guard against recursive `trigger_event` loops and should drop or log missing event ids rather than inventing actions.\n- Scheduled event actions and track sessions must be cleaned up as playback ends so stale work does not keep firing.\n- The sequencer should not transition idle tracks, and it should respect non-interruptible transitions already in progress.\n- Quantized transitions depend on playback-info availability; when reference playback cannot be resolved, the sequencer falls back to the current time path instead of crashing.\n- Music FSM edges are evaluated against current RTPC values, so state changes remain data-driven instead of UI-driven.\n- Scatter spawning must respect max polyphony and container-policy outcomes; if no sound is selected, the spawn attempt is a no-op.\n\n## Extension points and operations\n\n- Add new event actions by extending the event action switch in `AudioEventOrchestrator` and keeping delayed execution and telemetry behavior intact.\n- Add new musical quantization modes by extending `Sequencer.transitionTo()` and the time-grid helpers together.\n- Add new FSM behavior by extending the music config and `MusicFsmEvaluator` edge selection rules.\n- Add new scatter behaviors by changing spawn policy, sync quantization, or position calculation, while keeping the active-session lifecycle intact.\n- Preserve the conductor’s separation between edge evaluation, sequencer timing, and deferred mixer activation when altering its tick loop.\n\n## Representative tests\n\nThe focused tests that exercise the important orchestration behavior are:\n\n- `packages/engine/src/Domain/Orchestration/__tests__/MusicConductor.test.ts`\n- `packages/engine/src/Domain/Orchestration/__tests__/Sequencer.test.ts`\n- `packages/engine/src/Domain/Orchestration/__tests__/AudioEventOrchestrator.test.ts`\n- `packages/engine/src/Domain/Orchestration/__tests__/ScattererOrchestrator.test.ts`\n- `packages/engine/src/Domain/Orchestration/__tests__/SmartLoopTransitionPolicy.test.ts`\n- `packages/engine/src/Domain/Orchestration/__tests__/AudioGrid.test.ts`\n- `packages/engine/src/Domain/Orchestration/__tests__/MusicFsmEvaluator.test.ts`\n\nThese tests matter because they cover delayed event execution, recursion guarding, quantized sequencing, mixer snapshot timing, FSM edge ordering, smart-loop magnet decisions, sync-aware scatter spawning, and the musical math that keeps them aligned.\n",
+      "size": 10174,
+      "links": [],
+      "backlinks": [
+        "engine/domain/index",
+        "engine/overview",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "engine/domain/router-and-managers",
+      "title": "Router and Playback Managers",
+      "type": "domain subsystem",
+      "description": "Runtime routing and playback decision logic that selects concrete sounds, applies culling and playback policies, and wires ducking and RTPC state onto active voices.",
+      "tags": [
+        "engine",
+        "routing",
+        "playback",
+        "rtpc",
+        "culling"
+      ],
+      "body": "\n# Router and Playback Managers\n\nThis subsystem is the runtime decision layer between authored sound configuration and concrete playback.\nIt does not own config authoring or low-level sound transport; instead it resolves what should play, what should be vetoed, and which playback-side effects must be attached after selection.\n\n## Runtime role\n\nThe router and its managers sit in the middle of the engine's domain graph:\nconfiguration describes candidate sounds, state registries remember prior selections, and the sound controller executes the final play or stop operations.\nThat means this layer is stateful even when it looks like a pure selector: container history, switch history, active playbacks, and current RTPC values all influence the next decision.\n\n```mermaid\nflowchart TD\n    Config[\"Sound config\"] --> Router[\"AudioRouter\"]\n    Router --> Var[\"VariationResolver\"]\n    Router --> Cont[\"ContainerPlaybackPolicy\"]\n    Router --> Switch[\"SwitchPlaybackPolicy\"]\n    Router --> Duck[\"DuckingManager\"]\n    Router --> Bind[\"InstanceRTPCBinder\"]\n    Router --> Culling[\"VoiceCullingArbiter\"]\n    Cont --> Hist1[\"Container history registry\"]\n    Switch --> Hist2[\"Switch history registry\"]\n    Switch --> RTPC[\"RTPC adapter\"]\n    Bind --> Voice[\"Active voice lifecycle\"]\n    Duck --> Bus[\"Sidechain bus triggers\"]\n    Culling --> Voice\n    Router --> SC[\"Sound controller\"]\n```\nCaption: runtime routing fans out from `AudioRouter` into selection, side effects, and voice-management helpers.\n\n## Owned modules\n\n- `AudioRouter`\n- `VariationResolver`\n- `ContainerPlaybackPolicy`\n- `SwitchPlaybackPolicy`\n- `DuckingManager`\n- `InstanceRTPCBinder`\n- `VoiceCullingArbiter`\n\n## Responsibilities\n\n- resolve a `SoundId` into one or more concrete playback ids or reject it when the registry cannot supply a valid entry;\n- choose container sources using policy plus history so repeated plays can avoid or repeat candidates according to mode;\n- select switch targets from numeric thresholds or localized overrides, then persist the resolved switch state;\n- apply per-playback variation, ducking, RTPC binding, and bus routing after the target is selected;\n- keep voice culling separate from route resolution while still allowing bus pressure and voice state to suppress or restore playback.\n\n## Routing flow and veto paths\n\n`AudioRouter.play()` is the main entrypoint.\nIt first validates that the requested sound exists in the sound map, and it refuses to play missing ids rather than inventing a fallback.\nThe router then branches by authored sound shape:\n\n- containers delegate to `ContainerPlaybackPolicy` and update container history;\n- layered sounds expand into multiple child playbacks;\n- switch sounds resolve through `SwitchPlaybackPolicy` using the current RTPC value or a localized override plus switch history;\n- scatterers are handed to the scatterer orchestrator, and if that orchestrator is unavailable the router returns `null` and reports the failure;\n- ordinary sounds run through `VariationResolver` before being scheduled on the sound controller.\n\nThe tests show that these veto paths are not theoretical:\nmissing config yields a no-op, scatterer playback is blocked until the orchestrator exists, switch resolution can return `null` without falling back to an arbitrary asset, and recursion depth is capped so cyclic container definitions cannot loop forever.\n\n```mermaid\nsequenceDiagram\n    participant App as Call site\n    participant Router as AudioRouter\n    participant Hist as History registry\n    participant RTPC as RTPC adapter\n    participant Policy as Playback policy\n    participant SC as Sound controller\n\n    App->>Router: play(soundId)\n    Router->>Router: look up config\n    alt missing config\n        Router-->>App: null\n    else container\n        Router->>Hist: read previous selection\n        Router->>Policy: evaluateNext(config, state)\n        Policy-->>Router: selected source and next state\n        Router->>Hist: store next state\n        Router->>SC: play(selected source)\n    else switch\n        Router->>Hist: read switch history\n        Router->>RTPC: read current value or override\n        Router->>Policy: evaluateNext(config, value, state)\n        Policy-->>Router: selected source or null\n        alt policy returned null\n            Router-->>App: null\n        else selected source\n            Router->>Hist: store next state\n            Router->>SC: play(selected source)\n        end\n    end\n```\nCaption: routing depends on history and current state, and it can fail closed when selection cannot be resolved.\n\n## Selection policies\n\n`ContainerPlaybackPolicy` is responsible for choosing the next source inside a container, not for starting playback itself.\nIt supports three modes:\n\n- `sequence`, which advances by index and wraps around;\n- `random`, which uses weighted random selection;\n- `random_no_repeat`, which keeps resampling until the selected index is not in the recent-history window.\n\nThe policy also returns the next container state, which is why the router can persist history after selection and make the next play depend on the previous one.\nIf a container has no sources, the policy returns `soundId: null` and resets the state to `lastPlayedIndex: -1`.\n\n`SwitchPlaybackPolicy` follows a similar pattern for switch-based routing.\nNumeric values select the highest configured threshold at or below the current value, string values act as explicit keys, and the configured default switch is only used when the selected key has no explicit mapping.\nHysteresis makes the policy history-sensitive: if the current value sits near a boundary, the policy can preserve the previous switch key instead of flipping immediately.\nThat matters because the router persists the returned state back into the switch registry, so future evaluations can see the prior key.\n\n## Variation and playback wiring\n\n`VariationResolver` is a pure option transformer.\nIt does not choose the target sound, but it can perturb rate, volume, and seek offset when the source config carries variation settings.\nThe router applies the resolver before delegating to `SoundController.play()`, which means runtime variation is part of the play request and not an afterthought.\n\nAfter a playback is created, `AudioRouter.applyConfigToPlayback()` performs the post-selection wiring that the controller itself does not infer from the sound id alone:\n\n- route the voice to a bus when the config declares `busId`;\n- trigger ducking against one or more target buses when the config carries ducking metadata;\n- bind RTPC targets so voice parameters track game-parameter changes over time.\n\nThis division keeps selection policy separate from side effects while still ensuring that one play request can fan out into routing, ducking, and parameter binding.\n\n## Ducking, RTPC binding, and lifecycle cleanup\n\n`DuckingManager` is a thin sidechain trigger adapter.\nIt converts a single bus or a bus list into `addSidechainTrigger()` calls on the sound controller, and it falls back to intensity `1` when the intensity list is shorter than the bus list.\nThat makes ducking a configurable post-selection effect rather than a special case in the router.\n\n`InstanceRTPCBinder` manages per-voice RTPC bindings.\nIt accepts a config map for supported voice targets, creates active bindings, applies the mapped parameter value immediately, and re-applies them later in `tickRTPC()`.\nIt also registers an `onVoiceEnded()` cleanup hook so bindings are removed when the voice dies, which prevents stale instance state from accumulating across playback lifecycles.\n\n`VoiceCullingArbiter` watches active playbacks against bus volume and physical state.\nWhen a bus stays below the culling threshold long enough, it marks voices for virtualization after the hysteresis window; when the bus becomes audible again, it marks virtual voices for devirtualization if their logical state is still playing.\nGhost voices are skipped, and playbacks that disappear from the active list are removed from the mute timer map.\nThe arbiter therefore acts as a pressure-management gate around the router's output, not as part of sound selection itself.\n\n## Important invariants and failure behavior\n\n- Missing sound ids are rejected early, so the router does not synthesize fallback content.\n- Container and switch selection depend on history registries, so replay behavior is intentionally stateful.\n- Switch selection can legitimately return `null`, and the router treats that as a non-play result instead of forcing a default asset.\n- Recursion depth is capped to prevent self-referential container graphs from looping forever.\n- Ducking and RTPC binding only happen after a concrete playback target exists.\n- Culling decisions depend on active playback state and bus volume, which means voice management is reactive to runtime pressure rather than static config alone.\n\n## Extension points and operations\n\n- Add a new routing shape by extending `AudioRouter.play()` and preserving the existing fail-closed behavior for missing or unresolved configs.\n- Add new container behavior by extending `ContainerPlaybackPolicy` while continuing to return both the selected source and the next history state.\n- Add new switch behavior by extending `SwitchPlaybackPolicy` and keeping the registry-backed state update path intact.\n- Add new post-selection side effects by expanding `AudioRouter.applyConfigToPlayback()` rather than mixing those effects into selection policy.\n- Tune culling behavior by adjusting the threshold, hysteresis, or pool size in `VoiceCullingArbiter` without changing the router's selection logic.\n\n## Representative tests\n\nFocused tests document the behaviors that matter most here:\n\n- `packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts`\n- `packages/engine/src/Domain/Managers/__tests__/DuckingManager.test.ts`\n\nThose tests cover missing-config vetoes, switch fallbacks and null results, recursive container protection, tail playback behavior, multi-bus ducking, and the post-selection wiring that ties the router to the sound controller.\n",
+      "size": 10052,
+      "links": [],
+      "backlinks": [
+        "engine/domain/index",
+        "engine/overview",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "engine/domain/validation",
+      "title": "Domain Validation and Consistency Checking",
+      "type": "domain subsystem",
+      "description": "The engine startup validation gate that checks configuration structure, cross-reference consistency, and routing safety before initialization completes.",
+      "tags": [
+        "engine",
+        "validation",
+        "rules",
+        "startup"
+      ],
+      "body": "\n# Domain Validation and Consistency Checking\n\nThis subsystem is the engine's configuration gate. `ConsistencyChecker` runs before the runtime graph is fully activated and rejects malformed or inconsistent input early enough to stop startup when validation is strict.\n\n## What gets checked during init\n\nThe checker is fed the aggregated engine configuration payload: manifest, buses, snapshots, sound map, RTPC manifest, events, banks, music FSM, RAM quota, and precalculated sizes. `ValidationContext` normalizes missing sections to empty objects or safe defaults so rule code can inspect the same shape consistently.\n\n`ConsistencyChecker.validate()` also guards the most basic precondition up front: the payload must exist and must be an object. If that fails, it logs an error and returns `false` before any rule executes.\n\n```mermaid\nflowchart TD\n    Init[\"AudioEngine.init\"] --> Check[\"ConsistencyChecker.validate\"]\n    Check --> Guard{\"payload present and object?\"}\n    Guard -- no --> FailEarly[\"log error and return false\"]\n    Guard -- yes --> Context[\"ValidationContext normalizes config\"]\n    Context --> Rules[\"run rule families\"]\n    Rules --> Report[\"ValidationContext.report\"]\n    Report --> Console[\"ConsoleReporter\"]\n    Report --> Telemetry[\"TelemetryConsistencyReporter\"]\n    Rules --> Outcome{\"errors present?\"}\n    Outcome -- yes --> Invalid[\"startup can fail in strict mode\"]\n    Outcome -- no --> Ready[\"startup may continue\"]\n```\nCaption: validation runs before engine initialization completes, then fans findings out to reporters.\n\n## Validation flow\n\n`ConsistencyChecker` builds a reporter list, creates a `ValidationContext`, runs each rule in order, and then emits the accumulated report to every reporter. The default reporter is `ConsoleReporter` unless callers provide their own reporter list.\n\nRule execution is fail-fast for fatal exceptions: if a rule throws, the checker logs the exception message and returns `false` without reporting a successful result. Ordinary validation findings are accumulated on the context instead of throwing.\n\n`ValidationContext.report()` sends the final `errors`, `warnings`, and `isConsistent` flag to each reporter. That is the only fan-out point; reporters do not participate in validation logic itself.\n\n## Rule families\n\nThe checker wires together a broad set of rule families rather than individual one-off checks. The important groups are:\n\n- routing and bus structure, including cycle detection and send-target validity;\n- sound-map consistency, including bus references and per-shape subrules;\n- snapshot consistency;\n- event graph and event-action validation;\n- manifest cross-checks such as orphan detection and RTPC references;\n- music FSM and bank-system structure;\n- quota and policy checks such as RAM limits and multiplicative veto behavior.\n\nThese families are intentionally layered: `SoundMapRule` and `BusesRule` cover the high-value cross-reference checks that most directly affect startup safety, while the smaller subrules handle shape-specific constraints under those families.\n\n## Failure semantics\n\nValidation findings are split into errors and warnings.\n\n- Errors mark the configuration as inconsistent. They are reported, and strict startup paths can abort initialization because the engine treats invalid config as a startup gate failure.\n- Warnings are still reported, but they do not by themselves make the config inconsistent.\n- A routing cycle is treated as fatal by the cycle rule and aborts validation immediately by throwing an error that `ConsistencyChecker` catches.\n\nThis means the engine can distinguish between “allowed to continue with warnings” and “must not initialize with invalid config.” The application facade documents the startup consequence: strict validation converts invalid config into initialization failure, while non-strict startup can continue after reporting.\n\n## Reporters\n\n`ConsoleReporter` is the default human-facing sink. It groups errors and warnings in the console and prints an OK message only when the config is consistent.\n\n`TelemetryConsistencyReporter` wraps the same report data into a `CONSISTENCY_REPORT` packet with a `timestampMs` and dispatches it through the telemetry dispatcher. This is how validation results become observable outside the console path.\n\nReporters are additive: the checker can fan the same result set out to multiple sinks in one run.\n\n## Invariants and boundary checks\n\nThe context helpers enforce a few important invariants used by the rule set:\n\n- missing required fields become errors;\n- type mismatches become errors;\n- arrays are distinguished from generic objects;\n- tuples must have exactly two numeric entries in increasing order when validated through the tuple helper;\n- event references to missing sound targets become warnings rather than hard failures.\n\nThis boundary keeps rule code focused on domain policy instead of repeating primitive checks.\n\n## Representative flow\n\n1. `AudioEngine.init()` prepares telemetry reporters and invokes `ConsistencyChecker.validate()`.\n2. `ConsistencyChecker` rejects null, undefined, or non-object payloads immediately.\n3. `ValidationContext` fills in safe defaults and collects errors and warnings.\n4. The rule set checks buses, routing cycles, sound maps, snapshots, events, manifests, banks, music FSM, and RAM quota.\n5. The context reports the final result to the configured reporters.\n6. Strict startup paths can abort initialization; non-strict paths can continue after reporting.\n\n## Representative tests\n\n`packages/engine/src/Domain/Validation/__tests__/ConsistencyChecker.test.ts` covers the behaviors that matter most here:\n\n- valid configs pass and log an OK result;\n- null, undefined, and primitive payloads are rejected before rule execution;\n- empty bus sets fail;\n- routing cycles are detected and stop validation;\n- bus, sound-map, snapshot, event, RTPC, container, layered, smart-loop, orphan-manifest, and quota-related checks surface validation failures or warnings through the shared reporting path.\n\n## Relationship to adjacent pages\n\nThis page documents the validation gate itself. The configuration page describes the authored input contracts, the router and managers page covers runtime behavior after validation succeeds, and the application facade page explains how startup uses this subsystem as an initialization gate.\n",
+      "size": 6359,
+      "links": [],
+      "backlinks": [
+        "engine/application/audio-engine",
+        "engine/domain/index",
+        "engine/overview",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "engine/index",
+      "title": "Engine",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "# Files\n\n- [Engine package overview](overview.md) - Canonical map of the `@scene-grid/engine` package, its public API families, and the domain and infrastructure pages that own each workflow.\n\n# Directories\n\n- [application](application/)\n- [domain](domain/)\n- [infrastructure](infrastructure/)\n",
+      "size": 294,
+      "links": [
+        "engine/overview"
+      ],
+      "backlinks": []
+    },
+    {
+      "id": "engine/infrastructure/bus-system",
+      "title": "Bus system and analyzer taps",
+      "type": "infrastructure subsystem",
+      "description": "Bus graph construction, send routing, analyzer and ducker tap placement, and the Web Audio boundary that the engine exposes to mixers and inspector tooling.",
+      "tags": [
+        "engine",
+        "bus-system",
+        "routing",
+        "audio",
+        "analyzer"
+      ],
+      "body": "\n# Bus system and analyzer taps\n\nThe bus system owns the live audio-bus graph that sits between mixer state and concrete Web Audio nodes.\nIt creates bus objects from configuration, wires them into the master path, applies sends, and exposes the taps that other subsystems observe for ducking and analysis.\n\n## What the bus model represents\n\n`AudioBusSystem` is the graph owner. It keeps a map of `AudioBus` instances, one per configured bus id, and creates them from the bus configuration during initialization or hot reload.\nEach `AudioBus` owns its own input gain, a pre-filter ducker tap, and a post-filter analyzer tap.\n\n```mermaid\nflowchart LR\n    Config[\"Bus config\"] --> System[\"AudioBusSystem\"]\n    System --> Bus[\"AudioBus\"]\n    Bus --> Input[\"inputNode\"]\n    Input --> Ducker[\"duckerTapNode\"]\n    Ducker --> Analyzer[\"analyzerTapNode\"]\n    Analyzer --> Master[\"routerMasterGain\"]\n    Master --> Limiter[\"optional limiter\"]\n    Limiter --> Output[\"master output\"]\n```\n\nCaption: configuration becomes `AudioBus` instances, which expose internal tap points before the master output stage.\n\nThe important boundary is that `AudioBus` models routing and gain state, while Web Audio nodes are the physical implementation detail.\nThe bus object exposes the node handles needed for routing, but the system remains the owner of graph-wide composition.\n\n## Routing and graph construction\n\n`AudioBusSystem.initialize()` creates the master routing path, loads the optional limiter, initializes buses, and registers itself with the engine ticker.\nWhen limiter usage is enabled, the system first tries the plugin limiter path; if that path fails to load, it falls back to a native `DynamicsCompressorNode` with the expected limiter settings.\nIf limiter use is disabled, the system connects `routerMasterGain` directly to `postLimiterGain`.\n\nBuses are initialized from the configured `IBuses` map.\nFor each bus, the system:\n\n- constructs an `AudioBus` with the shared audio context, automation engine, plugin factory, and `masterBus` routing node;\n- binds RTPC configuration when present;\n- applies the configured filter state through a safe replacement path;\n- schedules sends to other buses;\n- creates or removes sidechains according to the current bus config.\n\nThe system also registers itself as a ticker task with id `audio-bus-system` and divider `2`, then drives hot-path buses from `tick()` and `tickRTPC()`.\nThose methods fan out across the cached hot-path bus array so the system can update gain/filter/send state and RTPC-driven values every frame.\n\n## Analyzer taps and sidechain taps\n\n`AudioBus` exposes two distinct tap points:\n\n- `duckerTapNode` is the pre-filter tap used when the system inserts sidechain lookahead;\n- `analyzerTapNode` is the post-filter tap used for observation after the bus filter stage.\n\nThe sidechain path is optional per bus.\nWhen enabled, `AudioBusSystem` creates a sidechain ducking plugin for the bus input node, waits for it to start, and inserts lookahead at the bus's ducker tap node.\nSidechain operations are isolated to buses that have an active sidechain entry; attempts to trigger a missing sidechain are ignored rather than crashing.\n\n## Send application semantics\n\nSends are owned as per-bus state inside `AudioBus`, but applied at system level.\n`AudioBusSystem.applySend()` looks up both buses, warns when the source exists but the target bus is missing, and forwards the update to the source bus.\nA send can also be cleared by passing `null` as the target gain; in that case the source bus is updated with a null target node and the send fades out before being removed.\n\n`AudioBus` keeps send state by target bus id and processes it during `processFrame()`.\nThat processing path is where logical gain, RTPC gain, filter frequency, pan, and send gain updates are actually ramped into the underlying Web Audio parameters.\n\n## Lifecycle and cold-start behavior\n\nEvery `AudioBus` performs a cold-start initialization on construction.\nThe cold-start tests verify that the system does not leak audible audio when a mixer transition changes state and playback begins immediately afterward.\nThat invariant matters because bus creation and initial gain staging are part of the observable audio boundary, not just internal bookkeeping.\n\n```mermaid\nsequenceDiagram\n    participant Config as Bus config\n    participant System as AudioBusSystem\n    participant Bus as AudioBus\n    participant Ticker as EngineTicker\n\n    Config->>System: initialize\n    System->>System: create limiter and buses\n    System->>Bus: bind RTPC, apply sends, create sidechains\n    System->>Ticker: add audio-bus-system\n    Ticker->>System: tick\n    System->>Bus: processFrame and tickRTPC\n```\n\nCaption: startup wires the graph once, then the ticker keeps the hot-path buses current.\n\n## Invariants supported by tests\n\nThe focused tests establish the following behavioral constraints:\n\n- custom limiter loading can fail and should fall back to the native compressor path;\n- disabling limiter use should connect the master routing path directly;\n- bus initialization should create the configured buses and register the system with the ticker;\n- `tick()` should process each hot-path bus, and `tickRTPC()` should fan out RTPC updates to those same buses;\n- sends warn when the source exists but the target bus does not, while clearing a send with `null` is allowed;\n- sidechain setup is optional, isolated per bus, and safe to call only when the sidechain exists;\n- the cold-start path should not leak audio when state changes and playback begins immediately afterward.\n\n## Extension points and operations\n\nThe main extension surface is configuration.\nAdding a new bus to the config causes the system to create a matching `AudioBus` during initialization or config reload.\nEnabling sidechain on a bus causes the system to create a corresponding ducking plugin and tap the bus's pre-filter node.\nChanging send mappings in the config updates routing without requiring a separate graph manager.\n\nThe page boundary is intentional:\n\n- bus-system documents routing, ownership, and tap placement;\n- `nodes.md` documents concrete node-chain composition and the final master-output boundary;\n- `telemetry.md` and inspector pages document how the resulting state is observed.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/busSystem/__tests__/AudioBus.test.ts`\n- `packages/engine/src/Infrastructure/busSystem/__tests__/AudioBusSystem.test.ts`\n- `packages/engine/src/Infrastructure/busSystem/__tests__/ColdStartAudioLeak.test.ts`\n",
+      "size": 6546,
+      "links": [],
+      "backlinks": [
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/context",
+      "title": "Audio Context and Unlock Lifecycle",
+      "type": "infrastructure subsystem",
+      "description": "Browser audio-context creation, unlock handling, listener control, and worklet loading for the engine runtime.",
+      "tags": [
+        "engine",
+        "audio-context",
+        "unlock",
+        "worklets",
+        "web-audio"
+      ],
+      "body": "\n# Audio Context and Unlock Lifecycle\n\nThis subsystem owns the browser audio-context boundary for the engine runtime. It is the first place the engine touches browser audio APIs directly, so it has to respect user-gesture gating, browser feature differences, and the lifecycle of the underlying `AudioContext`.\n\n## Owned modules\n\n- `AudioContextFactory` creates realtime and offline browser audio contexts.\n- `AudioContextManager` owns the realtime context, state observation, and high-level context operations.\n- `ListenerManager` updates listener position and orientation.\n- `UnlockManager` handles browser gesture-gated unlock behavior.\n- `WorkletLoader` loads audio worklet modules into a context.\n\n## Lifecycle and responsibilities\n\n`AudioContextFactory` is the creation boundary. It builds a realtime `AudioContext` with `latencyHint: 'interactive'` and passes through an optional sample rate. It also exposes an offline-context constructor for non-realtime use.\n\n`AudioContextManager` is the operational owner of the realtime context. It exposes the native context, current state, sample rate, and current time, and it forwards `statechange` events through `onStateChange` when a caller registers one. It also mediates context lifecycle calls:\n\n- `resume()` delegates to the unlock flow rather than calling the native context directly;\n- `suspend()` only suspends when the context is currently `running`;\n- `close()` only closes when the context is not already `closed`.\n\nThe manager also gates spatial control behind explicit initialization. Call `initSpatial(automation)` before setting listener position or orientation; otherwise it warns and does nothing.\n\n```mermaid\nflowchart TD\n    A[\"Create AudioContextManager\"] --> B[\"AudioContextFactory.createRealtime\"]\n    B --> C[\"install statechange listener\"]\n    C --> D[\"optional initSpatial\"]\n    D --> E[\"setListenerPosition or setListenerOrientation\"]\n    E --> F{\"listener manager ready?\"}\n    F -- no --> G[\"warn and return\"]\n    F -- yes --> H[\"update listener\"]\n    C --> I[\"resume()\"]\n    I --> J[\"UnlockManager.unlock\"]\n    J --> K[\"silent buffer probe if needed\"]\n    K --> L[\"context.resume()\"]\n```\n\nThe diagram shows the normal initialization and unlock path. The same manager also handles suspend and close as guarded terminal operations.\n\n## Listener responsibilities\n\n`ListenerManager` is responsible for translating spatial updates into the browser listener API. It uses `AutomationEngine.ramp()` with 50 ms smoothing when the browser exposes param-based listener fields such as `positionX` and `forwardX`.\n\nWhen param-based fields are not available, it falls back to the legacy synchronous methods `setPosition()` and `setOrientation()` if the listener exposes them. That makes spatial updates work across modern and older browser implementations without leaking compatibility logic into the rest of the engine.\n\n## Unlock behavior\n\n`UnlockManager` exists because browser audio often stays suspended until a user gesture allows audio playback. Its job is to make a best-effort unlock attempt and remember whether the context has already been unlocked.\n\nOperationally, it follows this sequence:\n\n1. If the context is already `running`, mark it unlocked and return.\n2. If this is the first unlock attempt, try to create and start a one-sample silent buffer source.\n3. Ignore errors from the silent-buffer probe.\n4. Call `context.resume()`.\n5. Mark the context unlocked.\n\nThat means unlock attempts are intentionally idempotent from the caller’s point of view: repeated `resume()` calls do not recreate the silent probe once the manager has already succeeded, and the code tolerates probe failures without aborting the resume attempt.\n\n## Worklet loading\n\n`WorkletLoader.loadModule(context, rawCode)` loads a transpiled `AudioWorkletProcessor` body into the target context. It first requires `context.audioWorklet` to exist, then tries a `blob:` URL created from the raw code. If that module load is rejected, it falls back to a base64 `data:` URI. If both fail, it throws a detailed error that includes both failure causes.\n\nThe blob URL is always revoked in a `finally` block, so temporary object URLs do not leak even when module loading fails.\n\n## Failure and operational boundaries\n\nThis subsystem is deliberately conservative:\n\n- it never assumes the browser can create or run audio without a real `AudioContext` implementation;\n- it separates spatial updates from context creation so callers must opt in to listener control;\n- it handles user-gesture unlock constraints without corrupting state on repeated attempts;\n- it treats worklet loading as a browser capability that can fail because of missing support or content-security-policy restrictions.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/context/__tests__/AudioContextFactory.test.ts`\n- `packages/engine/src/Infrastructure/context/__tests__/AudioContextManager.test.ts`\n- `packages/engine/src/Infrastructure/context/__tests__/ListenerManager.test.ts`\n- `packages/engine/src/Infrastructure/context/__tests__/UnlockManager.test.ts`\n- `packages/engine/src/Infrastructure/context/__tests__/WorkletLoader.test.ts`\n\n## Scope boundary\n\nThis page only covers the browser audio-context boundary. Bus routing, limiter setup, mixer transitions, and worklet processor internals belong on their own pages.\n",
+      "size": 5349,
+      "links": [],
+      "backlinks": [
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/index",
+      "title": "Infrastructure",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "# Files\n\n- [Bus system and analyzer taps](bus-system.md) - Bus graph construction, send routing, analyzer and ducker tap placement, and the Web Audio boundary that the engine exposes to mixers and inspector tooling.\n- [Audio Context and Unlock Lifecycle](context.md) - Browser audio-context creation, unlock handling, listener control, and worklet loading for the engine runtime.\n- [Sound Instances and Voice Pooling](instance.md) - Runtime sound-instance state and pool management for reusing voices safely without allocation churn.\n- [Loaders and Sound Control](loader.md) - Runtime asset loading, bank lifecycle management, and controller adapters that expose decoded buffers to playback code.\n- [Nodes and master output](nodes.md) - Audio node factories, node-chain composition, and the final master-output path used by the engine bus system.\n- [Engine infrastructure overview](overview.md) - Map of the Web Audio adapters, loaders, scheduling, telemetry, state, and worklet subsystems behind the engine package.\n- [Plugins, sidechain, and limiter](plugins.md) - Audio plugin implementations for filters, sidechain ducking, and the custom brickwall limiter used by the bus system.\n- [Scheduling and culling](scheduling.md) - Engine ticker integration, playback scheduling, culling evaluation, and context-driven frame processing for active voices.\n- [Runtime state registries](state.md) - History registries that preserve container and switch playback state across transitions and repeated selections.\n- [Telemetry transports](telemetry.md) - Engine-side telemetry dispatchers, snapshotters, and transport adapters for browser, worker, and broadcast channels.\n- [Worklets](worklets.md) - Audio-thread and inspector worklet processors used for ducking, limiting, and metering.\n",
+      "size": 1780,
+      "links": [
+        "engine/infrastructure/bus-system",
+        "engine/infrastructure/context",
+        "engine/infrastructure/instance",
+        "engine/infrastructure/loader",
+        "engine/infrastructure/nodes",
+        "engine/infrastructure/overview",
+        "engine/infrastructure/plugins",
+        "engine/infrastructure/scheduling",
+        "engine/infrastructure/state",
+        "engine/infrastructure/telemetry",
+        "engine/infrastructure/worklets"
+      ],
+      "backlinks": []
+    },
+    {
+      "id": "engine/infrastructure/instance",
+      "title": "Sound Instances and Voice Pooling",
+      "type": "infrastructure subsystem",
+      "description": "Runtime sound-instance state and pool management for reusing voices safely without allocation churn.",
+      "tags": [
+        "engine",
+        "pooling",
+        "sound-instance",
+        "voice-management"
+      ],
+      "body": "\n# Sound Instances and Voice Pooling\n\nThis subsystem owns the runtime object model for individual sound playbacks. It sits at the boundary where a logical sound request becomes a concrete voice that can be started, reused, and eventually cleaned up.\n\n## Owned modules\n\n- `SoundInstance` represents a live playback instance.\n- `SoundPoolManager` manages reuse and lifecycle of instances.\n\n## Runtime role\n\n`SoundInstance` is the per-voice state holder. Tests show it tracks the active source, knows whether the instance is playing, can be reused after a stop, and is responsible for releasing internal references when it is disposed.\n\n`SoundPoolManager` owns the pool of reusable voices. It hands out instances for playback, takes them back when they are no longer active, and keeps the pool from growing without bound by recycling or dropping instances according to capacity and lifecycle state.\n\n```mermaid\nstateDiagram-v2\n    [*] --> Pooled\n    Pooled --> Allocated: acquire instance\n    Allocated --> Playing: start playback\n    Playing --> Stopped: stop or end\n    Stopped --> Pooled: release for reuse\n    Playing --> Disposed: dispose or cleanup\n    Stopped --> Disposed: dispose or cleanup\n    Disposed --> [*]\n```\nCaption: a voice moves from pooled allocation to active playback and back, with disposal as the terminal cleanup boundary.\n\n## Responsibilities\n\n- create reusable playback instances;\n- connect and disconnect sound graphs safely;\n- avoid allocation churn during heavy gameplay;\n- keep per-instance state isolated enough for testing and reuse;\n- return finished voices to the pool so later playback can reuse the same allocation instead of creating a fresh one;\n- clear instance-owned references on stop or dispose so stale playback state does not leak into the next voice.\n\n## Ownership and lifecycle invariants\n\nThe key invariant is that a voice is owned by exactly one active lifecycle stage at a time. Once `SoundPoolManager` lends an instance to a caller, that caller owns the live playback until the instance is stopped or returned. After cleanup, the manager may recycle the instance, but it must not allow the same live voice to be shared concurrently across multiple playbacks.\n\nCleanup is the guardrail that protects GC stability. The pool manager only remains healthy if stopped or disposed instances release their graph links and internal references before reuse, because otherwise stale connections would keep old voices reachable and make later reuse unsafe.\n\n## Lifecycle boundaries\n\n- Acquisition is the only place where a new active playback instance should appear.\n- Active use is limited to the voice currently attached to playback.\n- Release happens when playback ends or a caller explicitly stops the instance.\n- Disposal is terminal for a voice that should no longer be reused.\n\nThe page intentionally stays at the instance/pool layer. Higher-level routing policy belongs to the domain router pages, while scheduling and pressure handling live on the scheduling page.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/instance/__tests__/SoundInstance.test.ts`\n- `packages/engine/src/Infrastructure/instance/__tests__/SoundPoolManager.test.ts`\n\nThe focused tests matter because they cover the behaviors that keep pooling safe: reuse after cleanup, state reset between playbacks, and lifecycle handling for returned or disposed voices.\n",
+      "size": 3390,
+      "links": [],
+      "backlinks": [
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/loader",
+      "title": "Loaders and Sound Control",
+      "type": "infrastructure subsystem",
+      "description": "Runtime asset loading, bank lifecycle management, and controller adapters that expose decoded buffers to playback code.",
+      "tags": [
+        "engine",
+        "loading",
+        "banks",
+        "sound-control"
+      ],
+      "body": "\n# Loaders and Sound Control\n\nThis subsystem owns the runtime path from manifest entries to decoded audio buffers and then into the sound controller that higher-level runtime code uses for playback.\nIt is concerned with asset availability, bank lifecycle, and the bridge between loaded data and voice control, not with file-system concerns.\n\n## Owned modules\n\n- `AudioBufferLoader` fetches, decodes, caches, and evicts audio buffers.\n- `BankManagerAdapter` coordinates bank loading, unloading, and load-state tracking.\n- `SoundController` resolves loaded buffers at play time and exposes the playback control surface used by orchestration code.\n\n## Runtime asset flow\n\nThe loader path is pull-based at the point of playback: the sound controller asks a resolver for the current buffer for a sound URL, and playback fails closed if no buffer is available.\nThat makes loaded assets a runtime dependency rather than a static reference; a sound can be registered while its bank is unloaded, but `SoundController.play()` returns `null` until the buffer resolver can supply a decoded buffer.\n\n```mermaid\nflowchart LR\n    A[\"Bank manifest entry\"] --> B[\"BankManagerAdapter.loadBank()\"]\n    B --> C[\"AudioBufferLoader.loadBatch()\"]\n    C --> D[\"decoded AudioBuffer cache\"]\n    D --> E[\"SoundController bufferResolver\"]\n    E --> F[\"SoundController.play()\"]\n    F --> G[\"SoundPoolManager acquire()\"]\n    F --> H[\"return null if buffer missing\"]\n```\n\nCaption: bank loading populates the buffer cache, and playback consumes that cache through a resolver instead of holding a permanent asset handle.\n\n## `AudioBufferLoader`\n\n`AudioBufferLoader` is the asset-backed cache and decoding boundary.\nIt resolves the first supported URL from a list of candidates, deduplicates concurrent loads for the same URL, and uses a `ConcurrencyThrottler` to limit simultaneous decode work.\nWhen a buffer is already cached, `load()` returns the cached `AudioBuffer` and refreshes its MRU position instead of decoding again.\n\nThe loader also tracks a RAM quota and evicts lower-priority entries first when it needs room for a new buffer.\nIf low-priority entries are exhausted, it can emergency-evict high-priority entries and report the eviction through the optional `onEmergencyEviction` callback.\nThis is the main operational safeguard for keeping the buffer cache inside its configured budget.\n\nBatch loading is explicit and observable:\n\n- `loadBatch()` accepts a keyed request map and returns the successfully loaded buffers as a keyed result map;\n- it returns immediately for an empty batch;\n- per-item progress and per-item errors are surfaced through callbacks;\n- failures do not abort the rest of the batch, because the method waits for all loads to settle and then returns the successful subset.\n\nThe loader also exposes cache-management entrypoints for runtime cleanup:\n\n- `clearCache()` with no URL resets the entire cache and internal free-list state;\n- `clearCache(url)` removes one cached entry;\n- `getBuffer()` performs lookup by URL or by supported URL candidate list;\n- `purgeUrls()` removes a set of URLs, which is the unload path used by bank management.\n\n## `BankManagerAdapter`\n\n`BankManagerAdapter` is the bank-lifecycle coordinator.\nIt keeps an internal `BankState` map and reports `UNLOADED` for unknown or not-yet-loaded banks.\n`loadBank()` is idempotent for the `LOADED` and `LOADING` states, so concurrent or repeated load requests do not re-enter the batch load path.\n\nFor a known bank, the adapter builds a request list from the bank manifest and the sound manifest, filling in per-sound priority and using a precomputed size when available, or `5.0` MB as the default size estimate.\nIt then drives `AudioBufferLoader.loadBatch()` and translates the loader callbacks into bank-level events:\n\n- `onStart(totalItems)` when a non-empty bank load begins;\n- `onProgress(loadedItems, totalItems, progress, lastKey)` as each item settles;\n- `onError(key, error)` for individual failures;\n- `onComplete(failedItems, durationMs)` after the batch finishes.\n\nIf a bank has no loadable sounds, the adapter marks it `LOADED` and completes immediately.\nIf `loadBatch()` throws, the adapter marks the bank `ERROR` and rethrows, so callers can observe the failure while the bank state also records it.\n\nUnload is the inverse path.\n`unloadBank()` stops each sound through the router with `allowTail: false`, purges the corresponding sounds from the pool, removes their URLs from the buffer cache, flips the bank state back to `UNLOADED`, and emits `onUnload(bankId)` when events are configured.\nThat sequencing matters because it prevents stale voices from surviving the bank unload and keeps playback, pooling, and cache state aligned.\n\n## `SoundController`\n\n`SoundController` is the runtime controller used by routing and orchestration code once a decoded buffer is available.\nIt stores sound registrations, asks the injected buffer resolver for the current `AudioBuffer` at play time, and refuses to start playback if the sound is unregistered, the buffer is missing, or the sound is still inside its cooldown window.\nOn successful play it acquires a pooled instance, builds the logical voice record, applies loop and rate settings, schedules playback, and emits lifecycle telemetry for the start action.\n\nThe controller also owns the control surface used by higher-level runtime code:\n\n- `register()` and `unregister()` manage sound definitions and pool cleanup;\n- `play()` creates playback instances on demand;\n- `setPosition()`, `getPosition()`, `routeToBus()`, `addSidechainTrigger()`, and `removeSidechainTrigger()` drive spatial and routing effects;\n- `stopById()`, `stopAll()`, `pauseById()`, `pauseAll()`, `resumeById()`, and `resumeAll()` manage voice lifecycle;\n- `tick()` handles virtual-voice timers and can force natural ends when timers expire.\n\nThat interface is what the router and application façade delegate to when they need to manipulate an already-created voice.\nThe controller is also explicit about missing resources: the tests show that unloaded banks produce a missing-buffer result, which causes play to return `null` instead of constructing a half-initialized voice.\n\n## Error handling and telemetry\n\nThe most visible error paths are operational rather than exceptional:\n\n- `BankManagerAdapter` warns and aborts when a bank id is absent from the manifest;\n- `AudioBufferLoader.loadBatch()` reports item-level errors through the supplied callback instead of failing the whole batch;\n- `SoundController.play()` emits a `CAUSE_CHAIN` telemetry event with a `BLOCKED` result when the pool rejects playback.\n\nThose behaviors keep load, decode, and playback failures observable without forcing the rest of the runtime to guess at partial state.\n\n## Extension points and operations\n\n- Add new asset resolution behavior in `AudioBufferLoader.resolveFirstSupportedUrl()`-style lookup paths without changing the controller API.\n- Add new bank-level reporting by extending `IBankLoadEvents` and translating loader events in `BankManagerAdapter`.\n- Add new runtime playback behaviors by extending `SoundController` while keeping unresolved buffers a fail-closed condition.\n- Tune buffer memory pressure by adjusting loader capacity, RAM quota, or emergency-eviction hooks.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/loader/__tests__/AudioBufferLoader.test.ts`\n- `packages/engine/src/Infrastructure/loader/__tests__/BankManagerAdapter.test.ts`\n- `packages/engine/src/Infrastructure/loader/__tests__/SoundController.test.ts`\n\nThe focused tests cover batch progress and error reporting, cache reset and purge behavior, bank-state transitions, unload cleanup, dynamic buffer resolution, cooldown gating, and telemetry emitted for blocked playback.\n",
+      "size": 7765,
+      "links": [],
+      "backlinks": [
+        "engine/application/audio-engine",
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/nodes",
+      "title": "Nodes and master output",
+      "type": "infrastructure subsystem",
+      "description": "Audio node factories, node-chain composition, and the final master-output path used by the engine bus system.",
+      "tags": [
+        "engine",
+        "audio-nodes",
+        "master-output"
+      ],
+      "body": "\n# Nodes and master output\n\nThis subsystem owns the concrete node objects and the final output path.\n\n## Owned modules\n\n- `AudioNodeFactory` creates node abstractions.\n- `NodeChain` composes nodes into processing chains.\n- `MasterOutput` owns the final output stage.\n\n## Responsibilities\n\n- create and connect audio nodes consistently;\n- build per-voice or per-bus chains;\n- expose the master input/output boundary that the bus system connects to;\n- keep node lifecycle operations safe and testable.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/nodes/__tests__/AudioNodeFactory.test.ts`\n- `packages/engine/src/Infrastructure/nodes/__tests__/NodeChain.test.ts`\n- `packages/engine/src/Infrastructure/nodes/__tests__/MasterOutput.test.ts`\n\n## Scope boundary\n\nThis page describes the node wiring layer only. Plugins, filters, and sidechain processors belong on the plugins page, and bus ownership belongs on the bus-system page.\n",
+      "size": 944,
+      "links": [],
+      "backlinks": [
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/overview",
+      "title": "Engine infrastructure overview",
+      "type": "infrastructure overview",
+      "description": "Map of the Web Audio adapters, loaders, scheduling, telemetry, state, and worklet subsystems behind the engine package.",
+      "tags": [
+        "engine",
+        "infrastructure",
+        "web-audio"
+      ],
+      "body": "\n# Engine infrastructure overview\n\nThis page maps the concrete runtime adapters behind the engine’s domain logic.\n\n## Subsystem pages\n\n- [Context and unlock management](./context.md)\n- [Bus system](./bus-system.md)\n- [Nodes and master output](./nodes.md)\n- [Plugins, sidechain, and limiter](./plugins.md)\n- [Scheduling and culling](./scheduling.md)\n- [Loaders and bank management](./loader.md)\n- [Sound instances and pooling](./instance.md)\n- [Runtime state registries](./state.md)\n- [Telemetry transports](./telemetry.md)\n- [Worklets](./worklets.md)\n\n## Responsibilities\n\n- translate domain decisions into Web Audio graph operations;\n- manage browser-specific capabilities and failure modes;\n- keep stateful runtime adapters testable in isolation;\n- expose the lower-level collaborators consumed by `AudioEngine`.\n\n## Representative tests\n\nThe subsystem pages list their own focused tests; the package-level anchor is the `packages/engine/src/Infrastructure/**/__tests__` suite.\n\n## Scope boundary\n\nThis page is only the map for engine infrastructure. The detailed behavior belongs to the linked subsystem pages.\n",
+      "size": 1114,
+      "links": [
+        "engine/infrastructure/context",
+        "engine/infrastructure/bus-system",
+        "engine/infrastructure/nodes",
+        "engine/infrastructure/plugins",
+        "engine/infrastructure/scheduling",
+        "engine/infrastructure/loader",
+        "engine/infrastructure/instance",
+        "engine/infrastructure/state",
+        "engine/infrastructure/telemetry",
+        "engine/infrastructure/worklets"
+      ],
+      "backlinks": [
+        "engine/infrastructure/index",
+        "engine/overview",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/plugins",
+      "title": "Plugins, sidechain, and limiter",
+      "type": "infrastructure subsystem",
+      "description": "Audio plugin implementations for filters, sidechain ducking, and the custom brickwall limiter used by the bus system.",
+      "tags": [
+        "engine",
+        "plugins",
+        "limiter",
+        "sidechain"
+      ],
+      "body": "\n# Plugins, sidechain, and limiter\n\nThis subsystem owns the concrete audio plugins that extend the bus graph beyond simple gain nodes.\n\n## Owned modules\n\n- `FiltersPlugin` creates the filter processing chain.\n- `SidechainDucker` implements lookahead ducking behavior.\n- `TinyLimiterNode` provides the custom limiter path used by master output.\n\n## Responsibilities\n\n- create filter processing adapters for buses;\n- manage sidechain sources and envelope behavior;\n- insert lookahead when ducking triggers are used;\n- provide a safe limiter fallback strategy when custom limiter loading fails.\n\n## Failure behavior\n\nThe tests show that limiter initialization must be resilient. If the custom limiter worklet fails, the system should fall back to the native compressor path rather than crashing initialization.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/plugins/__tests__/FiltersPlugin.test.ts`\n- `packages/engine/src/Infrastructure/plugins/__tests__/SidechainDucker.test.ts`\n- `packages/engine/src/Infrastructure/plugins/__tests__/TinyLimiterNode.test.ts`\n\n## Scope boundary\n\nThis page covers the plugin implementations themselves. The bus graph and master-output wiring are documented on the bus-system and nodes pages.\n",
+      "size": 1240,
+      "links": [],
+      "backlinks": [
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/scheduling",
+      "title": "Scheduling and culling",
+      "type": "infrastructure subsystem",
+      "description": "Engine ticker integration, playback scheduling, culling evaluation, and context-driven frame processing for active voices.",
+      "tags": [
+        "engine",
+        "scheduling",
+        "culling"
+      ],
+      "body": "\n# Scheduling and culling\n\nThis subsystem owns the timing loop that keeps the engine’s runtime graph moving.\n\n## Owned modules\n\n- `EngineTicker` is the global scheduling primitive.\n- `PlaybackScheduler` schedules playback checks and region timing.\n- `CullingRunner` drives culling decisions.\n- `CullingContextProvider` exposes the state needed to evaluate culling.\n\n## Responsibilities\n\n- register periodic tasks with the ticker;\n- process active buses and playbacks on a stable cadence;\n- evaluate whether voices should remain active, virtualize, or resume;\n- keep culling decisions separated from router or mixer responsibilities.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/scheduling/__tests__/EngineTicker.test.ts`\n- `packages/engine/src/Infrastructure/scheduling/__tests__/PlaybackScheduler.test.ts`\n- `packages/engine/src/Infrastructure/scheduling/__tests__/CullingRunner.test.ts`\n- `packages/engine/src/Infrastructure/scheduling/__tests__/CullingContextProvider.test.ts`\n\n## Scope boundary\n\nThis page documents runtime scheduling and voice pressure handling only. It does not cover playback selection policy, which is owned by the domain manager pages.\n",
+      "size": 1181,
+      "links": [],
+      "backlinks": [
+        "engine/application/audio-engine",
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/state",
+      "title": "Runtime state registries",
+      "type": "infrastructure subsystem",
+      "description": "History registries that preserve container and switch playback state across transitions and repeated selections.",
+      "tags": [
+        "engine",
+        "state",
+        "history"
+      ],
+      "body": "\n# Runtime state registries\n\nThis subsystem preserves playback history for routing policies that depend on previous choices.\n\n## Owned modules\n\n- `ContainerHistoryRegistry`\n- `SwitchHistoryRegistry`\n\n## Responsibilities\n\n- remember previous container selection decisions;\n- remember switch-state history across repeated playback requests;\n- give policy objects a stable memory surface without forcing them to own persistence themselves.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/state/__tests__/ContainerHistoryRegistry.test.ts`\n- `packages/engine/src/Infrastructure/state/__tests__/SwitchHistoryRegistry.test.ts`\n\n## Scope boundary\n\nThis page is intentionally narrow: it documents history storage, not selection policy. Selection rules belong to the router/managers page.\n",
+      "size": 795,
+      "links": [],
+      "backlinks": [
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/telemetry",
+      "title": "Telemetry transports",
+      "type": "infrastructure subsystem",
+      "description": "Engine-side telemetry dispatchers, snapshotters, and transport adapters for browser, worker, and broadcast channels.",
+      "tags": [
+        "engine",
+        "telemetry",
+        "transport"
+      ],
+      "body": "\n# Telemetry transports\n\nThis subsystem owns engine-side telemetry publication and transport adaptation.\n\n## Owned modules\n\n- `TelemetryDispatcher`\n- `TelemetrySnapshotter`\n- `CommandReceiver`\n- `BroadcastTelemetryTransport`\n- `BrowserTelemetryTransport`\n- `WorkerTelemetryTransport`\n- `BroadcastIpcAdapter`\n\n## Responsibilities\n\n- serialize and ship engine telemetry;\n- snapshot runtime state for debugger consumption;\n- receive incoming commands where supported;\n- adapt telemetry across browser, worker, and broadcast transport surfaces.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/telemetry/__tests__/TelemetryDispatcher.test.ts`\n- `packages/engine/src/Infrastructure/telemetry/__tests__/TelemetrySnapshotter.test.ts`\n- `packages/engine/src/Infrastructure/telemetry/__tests__/CommandReceiver.test.ts`\n\n## Scope boundary\n\nThis page covers transport and snapshot plumbing only. The inspector UI and command producer side live in the inspector pages.\n",
+      "size": 972,
+      "links": [],
+      "backlinks": [
+        "engine/application/audio-engine",
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/infrastructure/worklets",
+      "title": "Worklets",
+      "type": "infrastructure subsystem",
+      "description": "Audio-thread and inspector worklet processors used for ducking, limiting, and metering.",
+      "tags": [
+        "engine",
+        "worklets",
+        "audio-thread"
+      ],
+      "body": "\n# Worklets\n\nThis subsystem owns the worklet processors used by the runtime engine.\n\n## Owned modules\n\n- `ducker.processor`\n- `lookahead-brickwall-limiter.processor`\n- related worklet tests\n\n## Responsibilities\n\n- run DSP logic on the audio thread;\n- support lookahead ducking behavior;\n- implement limiter processing with predictable timing;\n- remain isolated from UI code and easy to test as processors.\n\n## Representative tests\n\n- `packages/engine/src/Infrastructure/worklets/__tests__/ducker.processor.test.ts`\n- `packages/engine/src/Infrastructure/worklets/__tests__/lookahead-brickwall-limiter.processor.test.ts`\n\n## Scope boundary\n\nInspector worklets live in the inspector package, while engine worklets live here.\n",
+      "size": 722,
+      "links": [],
+      "backlinks": [
+        "engine/infrastructure/index",
+        "engine/infrastructure/overview"
+      ]
+    },
+    {
+      "id": "engine/overview",
+      "title": "Engine package overview",
+      "type": "package overview",
+      "description": "Canonical map of the `@scene-grid/engine` package, its public API families, and the domain and infrastructure pages that own each workflow.",
+      "tags": [
+        "engine",
+        "package",
+        "api"
+      ],
+      "body": "\n# Engine package overview\n\n`@scene-grid/engine` is the runtime package that turns authored audio configuration into live playback, mix-state, and telemetry behavior.\n\n## Public entry surface\n\nThe engine barrel exposes:\n\n- `AudioEngine`\n- `WorkletLoader`\n- `ConsistencyChecker`\n- the package-wide type surface for configuration, buses, snapshots, manifests, RTPC, events, and music FSM\n\n## Public API families\n\n- [Audio engine façade](./application/audio-engine.md)\n- [Validation pipeline](./domain/validation.md)\n- [Mixer state and transitions](./domain/mixer.md)\n- [Orchestration and music control](./domain/orchestration.md)\n- [Routing and playback managers](./domain/router-and-managers.md)\n- [Configuration and sound registry](./domain/configuration.md)\n- [Infrastructure overview](./infrastructure/overview.md)\n\n## Responsibilities\n\n- own the package-level runtime facade;\n- validate and freeze configuration on initialization;\n- wire domain logic to infrastructure adapters;\n- provide a stable export surface for downstream consumers and the example app.\n\n## Representative tests\n\n- `packages/engine/src/Application/__tests__/AudioEngine.test.ts`\n- domain, manager, and infrastructure tests linked from the subsystem pages\n\n## Scope boundary\n\nThis page is the package boundary map. The public API families and runtime behaviors are documented on the linked pages.\n",
+      "size": 1371,
+      "links": [
+        "engine/application/audio-engine",
+        "engine/domain/validation",
+        "engine/domain/mixer",
+        "engine/domain/orchestration",
+        "engine/domain/router-and-managers",
+        "engine/domain/configuration",
+        "engine/infrastructure/overview"
+      ],
+      "backlinks": [
+        "architecture/overview",
+        "engine/application/audio-engine",
+        "engine/index",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "examples/index",
+      "title": "Examples",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "# Files\n\n- [Example app runtime](runtime.md) - The demo bootstrap in `examples/main.ts` and `examples/inspector.tsx`, including bank loading, unlock-on-gesture, suspend/resume, dev-only inspector attach, and HMR config reload.\n",
+      "size": 227,
+      "links": [
+        "examples/runtime"
+      ],
+      "backlinks": []
+    },
+    {
+      "id": "examples/runtime",
+      "title": "Example app runtime",
+      "type": "runtime workflow",
+      "description": "The demo bootstrap in `examples/main.ts` and `examples/inspector.tsx`, including bank loading, unlock-on-gesture, suspend/resume, dev-only inspector attach, and HMR config reload.",
+      "tags": [
+        "examples",
+        "runtime",
+        "demo"
+      ],
+      "body": "\n# Example app runtime\n\nThis page is the canonical home for the repository’s demo and runtime consumption workflow.\n\n## Entrypoints\n\n- `examples/main.ts`\n- `examples/inspector.tsx`\n\n## Runtime sequence\n\n1. Build `AudioEngine` from the example audio config.\n2. Subscribe to load and error events for user feedback.\n3. Call `audio.init({ isStrictValidation: false })`.\n4. Load the demo banks.\n5. Wait for a user gesture and unlock the audio context.\n6. Start playback and, in development, attach the inspector overlay.\n7. Pause and resume with `visibilitychange`.\n8. Apply hot-module config updates through `audio._hotReloadConfig`.\n\n```mermaid\nsequenceDiagram\n    participant App as examples/main.ts\n    participant Engine as AudioEngine\n    participant Inspector as @scene-grid/inspector\n    participant Browser as document/window\n\n    App->>Engine: init, load banks, unlock, play\n    Browser->>Engine: visibilitychange => suspend/unlock\n    App-->>Inspector: dev-only dynamic import\n    App->>Engine: _hotReloadConfig(updatedConfig)\n```\n\n## Important behaviors\n\n- bootstrap should fail softly and log if init throws;\n- the demo keeps the inspector out of production builds;\n- visibility changes map to engine suspend/unlock behavior;\n- HMR updates only replace the config slices that are expected to change live.\n\n## Representative source evidence\n\n- `examples/main.ts` for the full runtime lifecycle\n- `examples/inspector.tsx` for the inspector mount hook\n\n## Scope boundary\n\nThis page documents the example workspace only. Package internals live on the engine, inspector, and shared pages.\n",
+      "size": 1593,
+      "links": [],
+      "backlinks": [
+        "architecture/overview",
+        "engine/application/audio-engine",
+        "examples/index",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "index",
+      "title": "Home",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "\n# Files\n\n- [OpenWiki quickstart](quickstart.md) - Entry map for the repository wiki, with the canonical pages for each package, runtime workflow, and the minimal validation path for common change intents.\n\n# Directories\n\n- [architecture](architecture/)\n- [cli](cli/)\n- [engine](engine/)\n- [examples](examples/)\n- [inspector](inspector/)\n- [shared](shared/)\n",
+      "size": 358,
+      "links": [
+        "quickstart"
+      ],
+      "backlinks": []
+    },
+    {
+      "id": "inspector/debugger",
+      "title": "Inspector debugger runtime",
+      "type": "runtime entrypoint",
+      "description": "The `AudioDebugger` and `attachDebugUI` entrypoints that attach live bus visualizations to an initialized engine instance.",
+      "tags": [
+        "inspector",
+        "runtime",
+        "debugger"
+      ],
+      "body": "\n# Inspector debugger runtime\n\nThis page documents the runtime entry that turns engine debug state into a visible panel.\n\n## Entrypoints\n\n- `AudioDebugger` in `packages/debugger/src/AudioDebugger.ts`\n- `attachDebugUI` in `packages/debugger/src/index.ts`\n- `initAudioDebugPanel` in `packages/debugger/src/AudioDebugPanel.ts`\n\n## Responsibilities\n\n- validate that the engine exposes the expected debug surface;\n- attach live bus, master, and visualizer columns to the DOM;\n- delegate deeper control-surface construction to the debug panel;\n- keep failure behavior soft when the wrapper element or engine debug object is missing.\n\n```mermaid\nsequenceDiagram\n    participant App as example app\n    participant Inspector as attachDebugUI\n    participant Debugger as AudioDebugger\n    participant DOM as document wrapper\n    participant Visualizers as visualizer helpers\n\n    App->>Inspector: attachDebugUI(audioEngine, options)\n    Inspector->>Debugger: init(context, busSystem, masterNode)\n    Debugger->>DOM: build columns and containers\n    Debugger->>Visualizers: createFrequencyCurveWithRMS / createMeters\n```\n\n## Important invariants\n\n- a missing wrapper element should warn and return instead of throwing;\n- the master bus is always included first in the analysis view;\n- each active bus with an analyzer tap gets its own column and meter/curve widgets;\n- the runtime should stay mockable in tests by accepting a worklet-loader contract.\n\n## Representative tests\n\n- `packages/debugger/src/__tests__/AudioDebugger.test.ts`\n\n## Scope boundary\n\nThe control panel, profiler, and meter/graph helpers are documented on the UI-and-hooks page.\n",
+      "size": 1638,
+      "links": [],
+      "backlinks": [
+        "inspector/index",
+        "inspector/overview",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "inspector/index",
+      "title": "Inspector",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "# Files\n\n- [Inspector debugger runtime](debugger.md) - The `AudioDebugger` and `attachDebugUI` entrypoints that attach live bus visualizations to an initialized engine instance.\n- [Inspector package overview](overview.md) - Canonical map of the `@scene-grid/inspector` and `@scene-grid/debugger` packages, browser-debugger entrypoints, and the UI, hook, and worklet subsystems that power the live overlay.\n- [Inspector UI and hooks](ui-and-hooks.md) - Tweakpane control panels, profiler widgets, telemetry hooks, visualizer helpers, and the meter worklet used by the inspector and debugger packages.\n",
+      "size": 600,
+      "links": [
+        "inspector/debugger",
+        "inspector/overview",
+        "inspector/ui-and-hooks"
+      ],
+      "backlinks": []
+    },
+    {
+      "id": "inspector/overview",
+      "title": "Inspector package overview",
+      "type": "package overview",
+      "description": "Canonical map of the `@scene-grid/inspector` and `@scene-grid/debugger` packages, browser-debugger entrypoints, and the UI, hook, and worklet subsystems that power the live overlay.",
+      "tags": [
+        "inspector",
+        "package",
+        "debugger"
+      ],
+      "body": "\n# Inspector package overview\n\n`@scene-grid/inspector` and `@scene-grid/debugger` serve as the browser-side debug and observability companions for the engine. They read engine state and render live mixer, telemetry, and control UIs.\n\n## Public export surface\n\nThe `@scene-grid/debugger` package barrel exports:\n\n- `AudioDebugger`\n- `initAudioDebugPanel`\n- `attachDebugUI`\n\n## Runtime shape\n\n- `AudioDebugger` builds the bus/meter/spectrum view from engine debug objects.\n- `AudioDebugPanel` builds the tweakpane-driven control surface.\n- `AudioProfiler` computes the values shown in the panel.\n- hooks and worklets provide live telemetry and visual meters.\n\n## Relationship to other pages\n\n- See [Inspector debugger runtime](./debugger.md) for the DOM and panel entry flow.\n- See [Inspector UI and hooks](./ui-and-hooks.md) for the visualizer and control subsystems.\n\n## Representative tests\n\n- `packages/debugger/src/__tests__/AudioDebugger.test.ts`\n- `packages/debugger/src/__tests__/visualizers.test.ts`\n- `packages/debugger/src/worklets/__tests__/meter.processor.test.ts`\n\n## Scope boundary\n\nThis page maps the package boundary only. Detailed behavior for the debugger entry and UI subsystems belongs in the linked pages.\n",
+      "size": 1226,
+      "links": [
+        "inspector/debugger",
+        "inspector/ui-and-hooks"
+      ],
+      "backlinks": [
+        "architecture/overview",
+        "inspector/index",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "inspector/ui-and-hooks",
+      "title": "Inspector UI and hooks",
+      "type": "inspector subsystem",
+      "description": "Tweakpane control panels, profiler widgets, telemetry hooks, visualizer helpers, and the meter worklet used by the inspector and debugger packages.",
+      "tags": [
+        "inspector",
+        "ui",
+        "hooks",
+        "worklet"
+      ],
+      "body": "\n# Inspector UI and hooks\n\nThis page covers the debugger and inspector UI components, widgets, and reactive telemetry hooks.\n\n## Owned modules\n\n- `AudioDebugPanel` in `packages/debugger/src/AudioDebugPanel.ts`\n- `AudioProfiler` in `packages/debugger/src/AudioProfiler.ts`\n- `visualizers.ts` in `packages/debugger/src/visualizers.ts`\n- hooks: `useCommandTransmitter`, `useSnapshotTimeline`, `useTelemetryBus` in `packages/inspector/src/hooks/`\n- UI widgets such as `VoiceMeterWidget` and `VoiceListWidget` in `packages/debugger/src/ui/`\n- `worklets/meter.processor.ts` in `packages/debugger/src/worklets/`\n\n## Responsibilities\n\n- provide the tweakpane control surface for runtime experimentation;\n- compute live telemetry and bus metrics for the panel;\n- render graphs, meters, and timeline information;\n- move commands and telemetry between the browser UI and engine transport layer;\n- keep the meter worklet isolated so it can be tested independently.\n\n## Important invariants\n\n- the panel must tolerate a missing engine instance by warning instead of crashing;\n- visualizer helpers must degrade safely when browser capabilities are not present;\n- the hooks should preserve transport contracts rather than inventing new command shapes;\n- the worklet should remain deterministic and testable as a processor.\n\n## Representative tests\n\n- `packages/debugger/src/__tests__/visualizers.test.ts`\n- `packages/debugger/src/worklets/__tests__/meter.processor.test.ts`\n- `packages/debugger/src/__tests__/AudioDebugger.test.ts` for the live DOM integration path\n\n## Scope boundary\n\nThis page owns UI composition and telemetry plumbing. The runtime attachment sequence is documented on the debugger runtime page.\n",
+      "size": 1701,
+      "links": [],
+      "backlinks": [
+        "inspector/index",
+        "inspector/overview",
+        "quickstart"
+      ]
+    },
+    {
+      "id": "quickstart",
+      "title": "OpenWiki quickstart",
+      "type": "quickstart",
+      "description": "Entry map for the repository wiki, with the canonical pages for each package, runtime workflow, and the minimal validation path for common change intents.",
+      "tags": [
+        "openwiki",
+        "quickstart",
+        "navigation"
+      ],
+      "body": "\n# OpenWiki quickstart\n\nThis wiki explains the repository as a set of runtime packages and workflows:\n\n- `@scene-grid/engine` owns the audio runtime.\n- `@scene-grid/inspector` owns the browser debugger.\n- `@scene-grid/shared` owns the reusable contracts, math, and worker bridge.\n- `examples` shows how the packages are consumed together in a browser app.\n\n## Start here\n\n- [Repository architecture overview](./architecture/overview.md)\n- [Engine package overview](./engine/overview.md)\n- [Inspector package overview](./inspector/overview.md)\n- [Shared package contract](./shared/index.md)\n- [Example app runtime](./examples/runtime.md)\n\n## How to navigate the wiki\n\n- Open the package overview for the boundary you want to change.\n- Follow the linked subsystem page for the runtime or domain owned by that boundary.\n- Use the representative tests listed on each page to find the narrowest validation suite.\n- Prefer the minimal command that exercises the behavior you changed before running a broader workspace check.\n\n## Task-routing table\n\n| Change intent | Canonical wiki page | Source entrypoint / symbols | Focused tests | Minimal validation |\n| --- | --- | --- | --- | --- |\n| Change demo bootstrap, HMR, or dev-only inspector attach | [Example app runtime](./examples/runtime.md) | `examples/main.ts`, `examples/inspector.tsx` | Example runtime tests if added; engine/inspector integration tests | `npm run dev --workspace=examples` |\n| Change the engine public API or startup sequence | [Audio engine façade](./engine/application/audio-engine.md) | `packages/engine/src/Application/AudioEngine.ts`, `packages/engine/src/index.ts` | `packages/engine/src/Application/__tests__/AudioEngine.test.ts` | `npm test -- --runInBand packages/engine/src/Application/__tests__/AudioEngine.test.ts` |\n| Change startup validation or config gating | [Validation pipeline](./engine/domain/validation.md) | `packages/engine/src/Domain/Validation/ConsistencyChecker.ts` | `packages/engine/src/Domain/Validation/__tests__/ConsistencyChecker.test.ts` | `npm test -- --runInBand packages/engine/src/Domain/Validation/__tests__/ConsistencyChecker.test.ts` |\n| Change mix snapshots or transition timing | [Mixer state and transitions](./engine/domain/mixer.md) | `packages/engine/src/Domain/Mixer/MixerTransitionEngine.ts` | `packages/engine/src/Domain/Mixer/__tests__/MixerTransitionEngine.test.ts` | `npm test -- --runInBand packages/engine/src/Domain/Mixer/__tests__/MixerTransitionEngine.test.ts` |\n| Change music looping, stingers, or quantization | [Orchestration and music control](./engine/domain/orchestration.md) | `packages/engine/src/Domain/Orchestration/Sequencer.ts`, `MusicFsmEvaluator.ts`, `SmartLoopTransitionPolicy.ts` | `packages/engine/src/Domain/Orchestration/__tests__/Sequencer.test.ts` | `npm test -- --runInBand packages/engine/src/Domain/Orchestration/__tests__/Sequencer.test.ts` |\n| Change routing, playback policies, or RTPC binding | [Routing and playback managers](./engine/domain/router-and-managers.md) | `packages/engine/src/Domain/Router/AudioRouter.ts`, `ContainerPlaybackPolicy.ts`, `SwitchPlaybackPolicy.ts` | `packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts` | `npm test -- --runInBand packages/engine/src/Domain/Router/__tests__/AudioRouter.test.ts` |\n| Change Web Audio adapter plumbing, buses, or limiter behavior | [Engine infrastructure overview](./engine/infrastructure/overview.md) | `packages/engine/src/Infrastructure/**` | Subsystem tests linked from the infrastructure pages | Targeted subsystem test file |\n| Change shared math, memory, or worker contracts | [Shared package contract](./shared/index.md) | `packages/shared/src/index.ts`, `createTelemetryWorker`, `evaluateRTPCCurve`, `ConcurrencyThrottler` | `packages/shared/src/Math/__tests__/rtpcMath.test.ts`, `packages/shared/src/Memory/__tests__/ConcurrencyThrottler.test.ts` | `npm test -- --runInBand packages/shared/src/Math/__tests__/rtpcMath.test.ts` |\n| Change the inspector runtime overlay or panel | [Inspector debugger runtime](./inspector/debugger.md) | `packages/debugger/src/AudioDebugger.ts`, `attachDebugUI` | `packages/debugger/src/__tests__/AudioDebugger.test.ts` | `npm test -- --runInBand packages/debugger/src/__tests__/AudioDebugger.test.ts` |\n| Change inspector controls, hooks, or meters | [Inspector UI and hooks](./inspector/ui-and-hooks.md) | `AudioDebugPanel.ts`, `AudioProfiler.ts`, `visualizers.ts`, hooks | `packages/debugger/src/__tests__/visualizers.test.ts`, `packages/debugger/src/worklets/__tests__/meter.processor.test.ts` | `npm test -- --runInBand packages/debugger/src/__tests__/visualizers.test.ts` |\n\n## Main concepts\n\n- [Package boundaries and runtime flow](./architecture/overview.md)\n- [Engine startup and runtime façade](./engine/application/audio-engine.md)\n- [Engine validation pipeline](./engine/domain/validation.md)\n- [Engine mix and music control](./engine/domain/mixer.md), [Orchestration and music control](./engine/domain/orchestration.md)\n- [Engine routing and playback policies](./engine/domain/router-and-managers.md)\n- [Inspector debugger runtime](./inspector/debugger.md)\n- [Inspector UI and hooks](./inspector/ui-and-hooks.md)\n- [Shared contract and worker bridge](./shared/index.md)\n- [Example app runtime](./examples/runtime.md)\n\n## Backlog\n\n- The wiki does not document every auxiliary script or generated artifact. Start from the pages above and the repository root scripts when you need a broad build or release workflow.\n- If you need changelog or release automation details, use the root `package.json` scripts and the repository changelog files as the source anchor.\n",
+      "size": 5643,
+      "links": [
+        "architecture/overview",
+        "engine/overview",
+        "inspector/overview",
+        "shared/index",
+        "examples/runtime",
+        "engine/application/audio-engine",
+        "engine/domain/validation",
+        "engine/domain/mixer",
+        "engine/domain/orchestration",
+        "engine/domain/router-and-managers",
+        "engine/infrastructure/overview",
+        "inspector/debugger",
+        "inspector/ui-and-hooks"
+      ],
+      "backlinks": [
+        "architecture/overview",
+        "index"
+      ]
+    },
+    {
+      "id": "shared/index",
+      "title": "Shared",
+      "type": "Section",
+      "description": "",
+      "tags": [],
+      "body": "# Files\n",
+      "size": 8,
+      "links": [],
+      "backlinks": [
+        "quickstart"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "architecture/index",
+      "target": "architecture/overview"
+    },
+    {
+      "source": "architecture/overview",
+      "target": "quickstart"
+    },
+    {
+      "source": "architecture/overview",
+      "target": "engine/overview"
+    },
+    {
+      "source": "architecture/overview",
+      "target": "inspector/overview"
+    },
+    {
+      "source": "architecture/overview",
+      "target": "examples/runtime"
+    },
+    {
+      "source": "engine/application/audio-engine",
+      "target": "engine/infrastructure/scheduling"
+    },
+    {
+      "source": "engine/application/audio-engine",
+      "target": "engine/infrastructure/telemetry"
+    },
+    {
+      "source": "engine/application/audio-engine",
+      "target": "engine/domain/validation"
+    },
+    {
+      "source": "engine/application/audio-engine",
+      "target": "engine/infrastructure/loader"
+    },
+    {
+      "source": "engine/application/audio-engine",
+      "target": "engine/overview"
+    },
+    {
+      "source": "engine/application/audio-engine",
+      "target": "examples/runtime"
+    },
+    {
+      "source": "engine/application/index",
+      "target": "engine/application/audio-engine"
+    },
+    {
+      "source": "engine/domain/index",
+      "target": "engine/domain/configuration"
+    },
+    {
+      "source": "engine/domain/index",
+      "target": "engine/domain/mixer"
+    },
+    {
+      "source": "engine/domain/index",
+      "target": "engine/domain/orchestration"
+    },
+    {
+      "source": "engine/domain/index",
+      "target": "engine/domain/router-and-managers"
+    },
+    {
+      "source": "engine/domain/index",
+      "target": "engine/domain/validation"
+    },
+    {
+      "source": "engine/index",
+      "target": "engine/overview"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/bus-system"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/context"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/instance"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/loader"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/nodes"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/overview"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/plugins"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/scheduling"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/state"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/telemetry"
+    },
+    {
+      "source": "engine/infrastructure/index",
+      "target": "engine/infrastructure/worklets"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/context"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/bus-system"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/nodes"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/plugins"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/scheduling"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/loader"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/instance"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/state"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/telemetry"
+    },
+    {
+      "source": "engine/infrastructure/overview",
+      "target": "engine/infrastructure/worklets"
+    },
+    {
+      "source": "engine/overview",
+      "target": "engine/application/audio-engine"
+    },
+    {
+      "source": "engine/overview",
+      "target": "engine/domain/validation"
+    },
+    {
+      "source": "engine/overview",
+      "target": "engine/domain/mixer"
+    },
+    {
+      "source": "engine/overview",
+      "target": "engine/domain/orchestration"
+    },
+    {
+      "source": "engine/overview",
+      "target": "engine/domain/router-and-managers"
+    },
+    {
+      "source": "engine/overview",
+      "target": "engine/domain/configuration"
+    },
+    {
+      "source": "engine/overview",
+      "target": "engine/infrastructure/overview"
+    },
+    {
+      "source": "examples/index",
+      "target": "examples/runtime"
+    },
+    {
+      "source": "index",
+      "target": "quickstart"
+    },
+    {
+      "source": "inspector/index",
+      "target": "inspector/debugger"
+    },
+    {
+      "source": "inspector/index",
+      "target": "inspector/overview"
+    },
+    {
+      "source": "inspector/index",
+      "target": "inspector/ui-and-hooks"
+    },
+    {
+      "source": "inspector/overview",
+      "target": "inspector/debugger"
+    },
+    {
+      "source": "inspector/overview",
+      "target": "inspector/ui-and-hooks"
+    },
+    {
+      "source": "quickstart",
+      "target": "architecture/overview"
+    },
+    {
+      "source": "quickstart",
+      "target": "engine/overview"
+    },
+    {
+      "source": "quickstart",
+      "target": "inspector/overview"
+    },
+    {
+      "source": "quickstart",
+      "target": "shared/index"
+    },
+    {
+      "source": "quickstart",
+      "target": "examples/runtime"
+    },
+    {
+      "source": "quickstart",
+      "target": "engine/application/audio-engine"
+    },
+    {
+      "source": "quickstart",
+      "target": "engine/domain/validation"
+    },
+    {
+      "source": "quickstart",
+      "target": "engine/domain/mixer"
+    },
+    {
+      "source": "quickstart",
+      "target": "engine/domain/orchestration"
+    },
+    {
+      "source": "quickstart",
+      "target": "engine/domain/router-and-managers"
+    },
+    {
+      "source": "quickstart",
+      "target": "engine/infrastructure/overview"
+    },
+    {
+      "source": "quickstart",
+      "target": "inspector/debugger"
+    },
+    {
+      "source": "quickstart",
+      "target": "inspector/ui-and-hooks"
+    }
+  ]
+}
