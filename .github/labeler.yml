@@ -105,6 +105,9 @@
       - 'oxlint.json'
       - 'eslint.config.*'
       - '.prettierrc*'
+      - '.oxlintrc.json'
+      - '.oxfmtrc.json'
+      - '.oxlintignore'
 
 "tooling:specs":
   - changed-files:
