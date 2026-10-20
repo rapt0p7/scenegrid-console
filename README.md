@@ -18,6 +18,7 @@
 [![OpenWiki Visualizer](https://img.shields.io/badge/OpenWiki-Visualizer-blue?logo=diagram-project&logoColor=white)](https://rapt0p7.github.io/scenegrid-console/openwiki-visualizer/)
 [![Powered by Oxlint](https://img.shields.io/badge/powered%20by-Oxlint-blue)](https://oxc.rs)
 [![Formatted with Oxfmt](https://img.shields.io/badge/formatted%20with-Oxfmt-blue)](https://oxc.rs)
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/rapt0p7/badge.svg)](https://hub.xerj.org/contributors/rapt0p7)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
 > **Understand your audio system before it plays.**
 > _Independent research project started ~mid 2025._
