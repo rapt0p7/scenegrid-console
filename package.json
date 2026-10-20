@@ -86,6 +86,7 @@
         "oxlint-tsgolint": "7.0.2001",
         "release-it": "21.1.1",
         "repomix": "1.17.0",
+        "rollup-plugin-visualizer": "7.1.1",
         "standardized-audio-context-mock": "10.0.0",
         "ts-json-schema-generator": "2.9.0",
         "ts-node": "10.9.2",
