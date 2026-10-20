@@ -6,7 +6,7 @@ import dts from 'vite-plugin-dts';
 
 // oxlint-disable-next-line typescript/ban-ts-comment typescript/prefer-ts-expect-error
 // @ts-ignore
-import { audioWorkletIsolator } from '../../scripts/vite-worklet-isolator';
+import { audioWorkletIsolator } from '../../scripts/vite-worklet-isolator.ts';
 
 void import('dotenv');
 

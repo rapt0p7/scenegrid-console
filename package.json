@@ -70,7 +70,7 @@
         "dotenv-cli": "11.0.0",
         "eslint": "9.39.4",
         "eslint-import-resolver-typescript": "4.4.4",
-        "eslint-plugin-boundaries": "7.1.0",
+        "eslint-plugin-boundaries": "7.2.0",
         "eslint-plugin-import": "2.32.0",
         "eslint-plugin-markdownlint": "^0.8.1",
         "eslint-plugin-oxlint": "1.76.0",
@@ -85,7 +85,7 @@
         "oxlint": "1.76.0",
         "oxlint-tsgolint": "7.0.2001",
         "release-it": "21.1.1",
-        "repomix": "1.17.0",
+        "repomix": "1.18.1",
         "rollup-plugin-visualizer": "7.1.1",
         "standardized-audio-context-mock": "10.0.0",
         "ts-json-schema-generator": "2.9.0",
@@ -95,7 +95,7 @@
         "typedoc": "0.28.20",
         "typescript": "6.0.2",
         "typescript-eslint": "8.60.1",
-        "vite": "8.0.16",
+        "vite": "8.3.4",
         "vite-plugin-checker": "0.14.1",
         "vite-plugin-dts": "5.0.2",
         "vite-plugin-static-copy": "4.1.0",
@@ -103,7 +103,7 @@
     },
     "overrides": {
         "@codecov/vite-plugin": {
-            "vite": "8.0.16"
+            "vite": "8.3.4"
         },
         "@fast-check/vitest": {
             "vitest": "5.0.0"
