@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+title: "SceneGrid: Audio Observability & Runtime Platform"
+message: "If you use SceneGrid in your research or software, please cite it using the metadata from this file."
+type: software
+authors:
+  - given-names: Igor
+    family-names: Zabrodin
+    alias: rapt0p7
+repository-code: "https://github.com/rapt0p7/scenegrid-console"
+url: "https://github.com/rapt0p7/scenegrid-console"
+abstract: >-
+  SceneGrid is an enterprise-grade, observability-first runtime audio engine and
+  middleware platform for the web. Built on Hexagonal Architecture (Ports and
+  Adapters) and Data-Oriented Design (DOD), it provides zero-allocation voice
+  pooling, deterministic polyphony culling with hysteresis, VCA-based mixer
+  snapshots, predictive AudioWorklet sidechain ducking, gapless chunked audio
+  streaming, ahead-of-time (AOT) static signal-graph validation, and real-time
+  visual telemetry via an isolated inspector and Model Context Protocol (MCP)
+  server.
+keywords:
+  - web-audio-api
+  - audio-engine
+  - game-audio
+  - audio-middleware
+  - audio-observability
+  - audioworklet
+  - data-oriented-design
+  - hexagonal-architecture
+  - typescript
+  - model-context-protocol
+license: MIT
+version: 0.3.0
+date-released: "2026-10-18"
