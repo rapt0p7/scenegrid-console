@@ -5,6 +5,7 @@
 [![CI Checks](https://github.com/rapt0p7/scenegrid-console/actions/workflows/ci.yml/badge.svg)](https://github.com/rapt0p7/scenegrid-console/actions/workflows/ci.yml)
 [![Publish to NPM](https://github.com/rapt0p7/scenegrid-console/actions/workflows/publish.yml/badge.svg)](https://github.com/rapt0p7/scenegrid-console/actions/workflows/publish.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+<br>
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Frapt0p7%2Fscenegrid-console%2Fmain)](https://dashboard.stryker-mutator.io/reports/github.com/rapt0p7/scenegrid-console/main)
 [![codecov](https://codecov.io/gh/rapt0p7/scenegrid-console/graph/badge.svg?token=3KQ9G3APV4)](https://codecov.io/gh/rapt0p7/scenegrid-console)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/0810c1db16c74c96b41c5e4008c5ee43)](https://app.codacy.com/gh/rapt0p7/scenegrid-console/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
