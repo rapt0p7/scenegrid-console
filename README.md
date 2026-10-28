@@ -1,25 +1,24 @@
+<div align="center">
+
 # SceneGrid: Audio Observability & Runtime Platform
 
 [![CI Checks](https://github.com/rapt0p7/scenegrid-console/actions/workflows/ci.yml/badge.svg)](https://github.com/rapt0p7/scenegrid-console/actions/workflows/ci.yml)
 [![Publish to NPM](https://github.com/rapt0p7/scenegrid-console/actions/workflows/publish.yml/badge.svg)](https://github.com/rapt0p7/scenegrid-console/actions/workflows/publish.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Web Audio API](https://img.shields.io/badge/Web_Audio-API-ffb244.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
-[![Tested with Vitest](https://img.shields.io/badge/tested_with-Vitest-729B1B.svg?style=flat-square&logo=vitest)](https://vitest.dev/)
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Frapt0p7%2Fscenegrid-console%2Fmain)](https://dashboard.stryker-mutator.io/reports/github.com/rapt0p7/scenegrid-console/main)
 [![codecov](https://codecov.io/gh/rapt0p7/scenegrid-console/graph/badge.svg?token=3KQ9G3APV4)](https://codecov.io/gh/rapt0p7/scenegrid-console)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/0810c1db16c74c96b41c5e4008c5ee43)](https://app.codacy.com/gh/rapt0p7/scenegrid-console/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Code health](https://api.repowise.dev/badge/health/rapt0p7/scenegrid-console.svg)](https://repowise.dev/repo/rapt0p7/scenegrid-console)
-[![repowise](https://api.repowise.dev/badge/wiki/rapt0p7/scenegrid-console.svg)](https://repowise.dev/repo/rapt0p7/scenegrid-console)
 ![specs](https://raw.githubusercontent.com/rapt0p7/scenegrid-console/gh-pages/badges/number_of_specs.svg)
 ![requirements](https://raw.githubusercontent.com/rapt0p7/scenegrid-console/gh-pages/badges/number_of_requirements.svg)
-[![Keep the Why](https://keepthewhy.com/assets/badge.svg)](https://keepthewhy.com)
-[![Keep the Why · live](https://rapt0p7.github.io/scenegrid-console/dashboard/live/badge-entries.svg)](https://rapt0p7.github.io/scenegrid-console/dashboard/live/)
+<br>
+[![keep the why](https://rapt0p7.github.io/scenegrid-console/dashboard/live/badge-entries-flat.svg)](https://rapt0p7.github.io/scenegrid-console/dashboard/live/)
 [![Ask DeepWiki](https://img.shields.io/badge/Ask%20DeepWiki-4B6BFB?logo=bookstack&logoColor=white)](https://deepwiki.com/rapt0p7/scenegrid-console)
 [![OpenWiki Visualizer](https://img.shields.io/badge/OpenWiki-Visualizer-blue?logo=diagram-project&logoColor=white)](https://rapt0p7.github.io/scenegrid-console/openwiki-visualizer/)
-[![Powered by Oxlint](https://img.shields.io/badge/powered%20by-Oxlint-blue)](https://oxc.rs)
-[![Formatted with Oxfmt](https://img.shields.io/badge/formatted%20with-Oxfmt-blue)](https://oxc.rs)
 [![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/rapt0p7/badge.svg)](https://hub.xerj.org/contributors/rapt0p7)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
+</div>
+
 > **Understand your audio system before it plays.**
 > _Independent research project started ~mid 2025._
 
