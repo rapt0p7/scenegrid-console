@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" font-family="system-ui, -apple-system, sans-serif">
+    <style>
+        a .lbl {
+            cursor: pointer;
+        }
+        a:hover .lbl {
+            text-decoration: underline;
+        }
+        a:hover .num {
+            fill: #f3f4f6;
+        }
+    </style>
+    <rect width="1200" height="650" fill="#0B0F19" />
+    <line x1="215" y1="40" x2="985" y2="40" stroke="#374151" stroke-width="4" stroke-dasharray="8 8" />
+    <defs>
+        <clipPath id="c0"><rect x="0" y="0" width="330" height="550" rx="12" /></clipPath>
+        <clipPath id="c1"><rect x="0" y="0" width="330" height="550" rx="12" /></clipPath>
+        <clipPath id="c2"><rect x="0" y="0" width="330" height="550" rx="12" /></clipPath>
+    </defs>
+    <g transform="translate(50, 70)">
+        <circle cx="165" cy="-30" r="10" fill="#0B0F19" stroke="#EF4444" stroke-width="4" />
+        <g clip-path="url(#c0)">
+            <rect width="330" height="550" fill="#111827" />
+            <rect width="330" height="5" fill="#EF4444" />
+        </g>
+        <text x="30" y="50" font-size="22" font-weight="700" fill="#F3F4F6">Phase 1 (v1.1 – v1.2)</text>
+        <text x="30" y="75" font-size="14" fill="#EF4444">Observability, Safety &amp; Asset Pipeline</text>
+        <g transform="translate(30, 125)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/3" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="#10B981" fill-opacity="0.1" stroke="#10B981" stroke-width="2" />
+                <path d="M 6 -5 L 9 -1 L 14 -8" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" />
+                <text x="35" y="0" font-size="14" fill="#D1D5DB">
+                    <tspan class="lbl">In-Game Inspector 2.0</tspan>
+                    <tspan class="num" fill="#EAB308" font-size="12">#3</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 157)">
+            <circle cx="10" cy="-5" r="9" fill="#10B981" fill-opacity="0.1" stroke="#10B981" stroke-width="2" />
+            <path d="M 6 -5 L 9 -1 L 14 -8" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" />
+            <text x="35" y="0" font-size="14" fill="#D1D5DB">Anti-Flutter Voice Culling &amp; Lifecycle</text>
+        </g>
+        <g transform="translate(30, 189)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/60" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="#10B981" fill-opacity="0.1" stroke="#10B981" stroke-width="2" />
+                <path d="M 6 -5 L 9 -1 L 14 -8" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" />
+                <text x="35" y="0" font-size="14" fill="#D1D5DB">
+                    <tspan class="lbl">Live Bridge &amp; MCP Server</tspan>
+                    <tspan class="num" fill="#EAB308" font-size="12">#60</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 221)">
+            <circle cx="10" cy="-5" r="9" fill="#10B981" fill-opacity="0.1" stroke="#10B981" stroke-width="2" />
+            <path d="M 6 -5 L 9 -1 L 14 -8" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" />
+            <text x="35" y="0" font-size="14" fill="#D1D5DB">AOT Asset Pipeline &amp; Hybrid Streaming</text>
+        </g>
+        <g transform="translate(30, 253)">
+            <circle cx="10" cy="-5" r="9" fill="#10B981" fill-opacity="0.1" stroke="#10B981" stroke-width="2" />
+            <path d="M 6 -5 L 9 -1 L 14 -8" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" />
+            <text x="35" y="0" font-size="14" fill="#D1D5DB">Zero-Crash Architecture &amp; Memory</text>
+        </g>
+    </g>
+    <g transform="translate(435, 70)">
+        <circle cx="165" cy="-30" r="10" fill="#0B0F19" stroke="#EAB308" stroke-width="4" />
+        <g clip-path="url(#c1)">
+            <rect width="330" height="550" fill="#111827" />
+            <rect width="330" height="5" fill="#EAB308" />
+        </g>
+        <text x="30" y="50" font-size="22" font-weight="700" fill="#F3F4F6">Phase 2 (v1.3 – v1.4)</text>
+        <text x="30" y="75" font-size="14" fill="#EAB308">Ecosystem, Advanced Systems &amp; Pro-Audio</text>
+        <g transform="translate(30, 125)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/65" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="#EAB308" fill-opacity="0.1" stroke="#EAB308" stroke-width="2" />
+                <circle cx="10" cy="-5" r="3" fill="#EAB308" />
+                <text x="35" y="0" font-size="14" fill="#D1D5DB">
+                    <tspan class="lbl">Docs &amp; Interactive Sandboxes</tspan>
+                    <tspan class="num" fill="#EAB308" font-size="12">#65</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 157)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/66" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="#EAB308" fill-opacity="0.1" stroke="#EAB308" stroke-width="2" />
+                <circle cx="10" cy="-5" r="3" fill="#EAB308" />
+                <text x="35" y="0" font-size="14" fill="#D1D5DB">
+                    <tspan class="lbl">Engine Integration Examples</tspan>
+                    <tspan class="num" fill="#EAB308" font-size="12">#66</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 189)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/8" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="none" stroke="#4B5563" stroke-width="2" />
+                <text x="35" y="0" font-size="14" fill="#9CA3AF">
+                    <tspan class="lbl">Semantic Music States</tspan>
+                    <tspan class="num" fill="#EAB308" font-size="12">#8</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 221)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/9" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="none" stroke="#4B5563" stroke-width="2" />
+                <text x="35" y="0" font-size="14" fill="#9CA3AF">
+                    <tspan class="lbl">Internal Modulators &amp; Synthesis</tspan>
+                    <tspan class="num" fill="#EAB308" font-size="12">#9</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 253)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/41" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="none" stroke="#4B5563" stroke-width="2" />
+                <text x="35" y="0" font-size="14" fill="#9CA3AF">
+                    <tspan class="lbl">DAW Live Sync (Logic Pro / Ableton)</tspan>
+                    <tspan class="num" fill="#EAB308" font-size="12">#41</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 285)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/42" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="none" stroke="#4B5563" stroke-width="2" />
+                <text x="35" y="0" font-size="14" fill="#9CA3AF">
+                    <tspan class="lbl">FMOD / Wwise Project Converters</tspan>
+                    <tspan class="num" fill="#EAB308" font-size="12">#42</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 317)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/54" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="none" stroke="#4B5563" stroke-width="2" />
+                <text x="35" y="0" font-size="14" fill="#9CA3AF">
+                    <tspan class="lbl">OS MediaSession Integration</tspan>
+                    <tspan class="num" fill="#EAB308" font-size="12">#54</tspan>
+                </text>
+            </a>
+        </g>
+    </g>
+    <g transform="translate(820, 70)">
+        <circle cx="165" cy="-30" r="10" fill="#0B0F19" stroke="#22C55E" stroke-width="4" />
+        <g clip-path="url(#c2)">
+            <rect width="330" height="550" fill="#111827" />
+            <rect width="330" height="5" fill="#22C55E" />
+        </g>
+        <text x="30" y="50" font-size="22" font-weight="700" fill="#F3F4F6">Phase 3 (v2.0)</text>
+        <text x="30" y="75" font-size="14" fill="#22C55E">Offline Simulation &amp; SceneGrid Studio</text>
+        <g transform="translate(30, 125)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/39" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="none" stroke="#4B5563" stroke-width="2" />
+                <text x="35" y="0" font-size="14" fill="#9CA3AF">
+                    <tspan class="lbl">SceneGrid Studio</tspan>
+                    <tspan class="num" fill="#22C55E" font-size="12">#39</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 157)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/86" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="none" stroke="#4B5563" stroke-width="2" />
+                <text x="35" y="0" font-size="14" fill="#9CA3AF">
+                    <tspan class="lbl">Offline Simulation API</tspan>
+                    <tspan class="num" fill="#22C55E" font-size="12">#86</tspan>
+                </text>
+            </a>
+        </g>
+        <g transform="translate(30, 189)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/40" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="none" stroke="#4B5563" stroke-width="2" />
+                <text x="35" y="0" font-size="14" fill="#9CA3AF">
+                    <tspan class="lbl">Advanced Procedural Audio</tspan>
+                    <tspan class="num" fill="#22C55E" font-size="12">#40</tspan>
+                </text>
+            </a>
+        </g>
+		 <g transform="translate(30, 221)">
+            <a href="https://github.com/rapt0p7/scenegrid-console/issues/11" target="_blank">
+                <circle cx="10" cy="-5" r="9" fill="none" stroke="#4B5563" stroke-width="2" />
+                <text x="35" y="0" font-size="14" fill="#9CA3AF">
+                    <tspan class="lbl">Environment System &amp; Aux Zones</tspan>
+                    <tspan class="num" fill="#22C55E" font-size="12">#11</tspan>
+                </text>
+            </a>
+        </g>
+    </g>
+</svg>
