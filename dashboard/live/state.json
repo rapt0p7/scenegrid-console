@@ -1,8 +1,8 @@
 {
  "state-json": 2,
- "generated": "2026-10-29T16:58:43Z",
- "dashboard": "0.11.15",
- "linter": "0.20.3.0",
+ "generated": "2026-11-08T00:26:27Z",
+ "dashboard": "0.11.44",
+ "linter": "0.20.3.1",
  "project": {
   "id": "rapt0p7---scenegrid-console",
   "name": "scenegrid-console",
@@ -28,8 +28,8 @@
   "family_badge": null,
   "git": {
    "available": true,
-   "head": "86d8e16",
-   "head_full": "86d8e169f45393e0c4abfd79e7054ddb9414354f",
+   "head": "8ae88b6",
+   "head_full": "8ae88b6029756f0f32f107b9efea7d5faf8f6710",
    "branch": "main",
    "remote": "github.com/rapt0p7/scenegrid-console",
    "upstream": "",
@@ -112,7 +112,7 @@
  ],
  "entries": [
   {
-   "id": "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture-codec-padding",
+   "id": "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture--codec-padding",
    "uuid": "b2096d38-e415-486c-8631-e22612afe05d",
    "file": "chunked-audio-streaming.md",
    "line": 3,
@@ -155,7 +155,7 @@
    "findings": []
   },
   {
-   "id": "chunked-audio-streaming.md#pause-resume-mechanics-composite-math",
+   "id": "chunked-audio-streaming.md#pause--resume-mechanics-composite-math",
    "uuid": "68db2236-b8de-4c00-b897-f2aabb3cca24",
    "file": "chunked-audio-streaming.md",
    "line": 17,
@@ -198,7 +198,7 @@
    "findings": []
   },
   {
-   "id": "chunked-audio-streaming.md#cache-eviction-policy-os-context-death",
+   "id": "chunked-audio-streaming.md#cache-eviction-policy--os-context-death",
    "uuid": "dec9173e-732d-4714-bacb-edc28066ac74",
    "file": "chunked-audio-streaming.md",
    "line": 29,
@@ -241,7 +241,7 @@
    "findings": []
   },
   {
-   "id": "chunked-audio-streaming.md#gc-pressure-zero-allocation-exceptions",
+   "id": "chunked-audio-streaming.md#gc-pressure--zero-allocation-exceptions",
    "uuid": "6c26540b-d512-43b9-99a2-527f7a2a3ce9",
    "file": "chunked-audio-streaming.md",
    "line": 41,

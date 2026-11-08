@@ -1,8 +1,8 @@
 {
  "state-json": 2,
- "generated": "2026-10-29T16:58:43Z",
+ "generated": "2026-11-08T00:26:27Z",
  "bodies": {
-  "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture-codec-padding": {
+  "chunked-audio-streaming.md#the-streamnode-flip-flop-architecture--codec-padding": {
    "text": "We wrap at least two `AudioBufferSourceNode`s in a \"flip-flop\" scheduling pattern (overlapping lifecycles, NOT signal crossfade) using `AudioBufferSourceNode.start(when, offset, duration)`.\n\n**Reason:** Calling `start` with explicit `offset` and `duration` bypasses browser-injected decoder padding (priming samples) making gapless playback possible. However, this doesn't fix MDCT windowing ringing, which strictly mandates that the asset pipeline slices chunks from a single continuously-encoded bitstream.\n\n**Rejected alternative:** Using a standard HTML5 `<audio>` element. Rejected because the streaming pipeline must fit into the existing Web Audio DSP graph natively so that all routing, buses, VCAs, and limiters continue to work exactly as they do for fully-loaded tracks.",
    "reason": "Calling `start` with explicit `offset` and `duration` bypasses browser-injected decoder padding (priming samples) making gapless playback possible. However, this doesn't fix MDCT windowing ringing, which strictly mandates that the asset pipeline slices chunks from a single continuously-encoded bitstream.",
    "rejected": [
@@ -12,7 +12,7 @@
    "considered": null,
    "why_open": null
   },
-  "chunked-audio-streaming.md#pause-resume-mechanics-composite-math": {
+  "chunked-audio-streaming.md#pause--resume-mechanics-composite-math": {
    "text": "On `pause()`, the `StreamNode` records the exact physical elapsed time. On `resume()`, it calculates the required inner-chunk `offset` using the composite formula: `resumeOffset = trimStartSamples + logicalElapsedSincePauseWithinChunk`.\n\n**Reason:** `AudioBufferSourceNode` does not support resuming once `stop()` is called. Tracking the absolute physical time ensures we can seamlessly reconstruct the flip-flop queue. Double-precision floating-point math makes strict equality (`===`) unsafe for boundary checks, necessitating the EPSILON tolerance.",
    "reason": "`AudioBufferSourceNode` does not support resuming once `stop()` is called. Tracking the absolute physical time ensures we can seamlessly reconstruct the flip-flop queue. Double-precision floating-point math makes strict equality (`===`) unsafe for boundary checks, necessitating the EPSILON tolerance.",
    "rejected": [],
@@ -20,7 +20,7 @@
    "considered": null,
    "why_open": null
   },
-  "chunked-audio-streaming.md#cache-eviction-policy-os-context-death": {
+  "chunked-audio-streaming.md#cache-eviction-policy--os-context-death": {
    "text": "When the `ChunkedLoader` is paused, it preserves the decoded queue up to a strict TTL (e.g., 5 minutes). If the TTL is exceeded, or if the OS reclaims hardware (`AudioContext.state === 'closed'`), or if a watchdog detects a \"zombie\" state (`state === 'running'` but `currentTime` fails to progress), the queue is flushed and must be re-fetched upon resume.\n\n**Reason:** Short pauses preserve the ready-state queue for gapless resumes, but indefinitely holding decoded PCM contradicts our \"near-zero RAM\" goal. Furthermore, hardware reclamation (common in iOS Safari backgrounding) invalidates decoded buffers. Relying solely on `state === 'closed'` is unsafe because iOS often leaves the context in a \"zombie\" `running` state without advancing the hardware clock. The watchdog heuristic ensures a clean re-initialization rather than blindly reusing dead memory.",
    "reason": "Short pauses preserve the ready-state queue for gapless resumes, but indefinitely holding decoded PCM contradicts our \"near-zero RAM\" goal. Furthermore, hardware reclamation (common in iOS Safari backgrounding) invalidates decoded buffers. Relying solely on `state === 'closed'` is unsafe because iOS often leaves the context in a \"zombie\" `running` state without advancing the hardware clock. The watchdog heuristic ensures a clean re-initialization rather than blindly reusing dead memory.",
    "rejected": [],
@@ -28,7 +28,7 @@
    "considered": null,
    "why_open": null
   },
-  "chunked-audio-streaming.md#gc-pressure-zero-allocation-exceptions": {
+  "chunked-audio-streaming.md#gc-pressure--zero-allocation-exceptions": {
    "text": "We accept \"macro-allocations\" (allocating one large `Float32Array` via `decodeAudioData` every N seconds when a new chunk is fetched).\n\n**Reason:** While the engine enforces strict frame-by-frame zero-allocation constraints in the data plane (DOD), decoding compressed audio inherently requires buffer allocation. This macro-allocation happens infrequently in the background and is an acceptable trade-off for stream decoding.",
    "reason": "While the engine enforces strict frame-by-frame zero-allocation constraints in the data plane (DOD), decoding compressed audio inherently requires buffer allocation. This macro-allocation happens infrequently in the background and is an acceptable trade-off for stream decoding.",
    "rejected": [],
