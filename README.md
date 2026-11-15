@@ -25,7 +25,7 @@
 
 <br>
 
-<img src="./docs/Inspector.png" alt="SceneGrid Audio Debugger & Live Signal Inspector" width="850">
+<img src="./docs/Inspector.png?v=2" alt="SceneGrid Audio Debugger & Live Signal Inspector" width="850">
 
 </div>
 
