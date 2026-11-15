@@ -1,0 +1,15 @@
+{
+    "tokenSetOrder": [
+        "global",
+        "SceneGrid / Semantic Colors/Dark",
+        "SceneGrid / Semantic Colors/Dark (Slate)",
+        "SceneGrid / Semantic Colors (Light)/Light",
+        "SceneGrid / Semantic Colors (Light)/Light (Paper)",
+        "SceneGrid / Radix Primitives/Palette",
+        "SceneGrid / Radix Primitives/Value",
+        "SceneGrid / Typography/Medeo (Active)",
+        "SceneGrid / Typography/Medeo (DNFDEVS)",
+        "SceneGrid / Typography (Medeo Alt)/Medeo (DNFDEVS)",
+        "SceneGrid / Geometry/Default"
+    ]
+}

@@ -43,16 +43,22 @@
         }
     },
     "scripts": {
+        "build:tokens": "node scripts/build-tokens.mjs",
         "build": "vite build"
     },
     "dependencies": {
-        "@radix-ui/colors": "3.0.0",
+        "@phosphor-icons/react": "2.1.10",
         "@scene-grid/shared": "*",
         "@xyflow/react": "12.11.0",
         "clsx": "2.1.1",
         "elkjs": "0.11.1",
+        "medeo-font": "1.1.0",
         "tailwind-merge": "3.6.0",
         "uplot": "1.6.32"
+    },
+    "devDependencies": {
+        "@tokens-studio/sd-transforms": "2.0.3",
+        "style-dictionary": "5.8.0"
     },
     "peerDependencies": {
         "react": "19.2.7",

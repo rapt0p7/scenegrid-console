@@ -1,18 +1,8 @@
 @import "tailwindcss";
-@import '@radix-ui/colors/slate.css';
-@import '@radix-ui/colors/slate-dark.css';
-@import '@radix-ui/colors/blue.css';
-@import '@radix-ui/colors/blue-dark.css';
-@import '@radix-ui/colors/green.css';
-@import '@radix-ui/colors/green-dark.css';
-@import '@radix-ui/colors/amber.css';
-@import '@radix-ui/colors/amber-dark.css';
-@import '@radix-ui/colors/red.css';
-@import '@radix-ui/colors/red-dark.css';
-@import '@radix-ui/colors/violet.css';
-@import '@radix-ui/colors/violet-dark.css';
-@import '@radix-ui/colors/teal.css';
-@import '@radix-ui/colors/teal-dark.css';
+@import "medeo-font/sans.css";
+@import "medeo-font/mono.css";
+@import "./variables.css";
+@import "./variables-dark.css";
 
 @theme {
     --color-border: var(--border-color);
@@ -49,85 +39,57 @@
     --color-node-master-border: var(--node-master-border);
     --color-node-master-header: var(--node-master-header);
 
-    --radius-sm: var(--radius-sm);
-    --radius-md: var(--radius-md);
-    --radius-lg: var(--radius-lg);
+    --radius-sm: var(--radius-control);
+    --radius-md: var(--radius-node);
+    --radius-lg: var(--radius-panel);
+
+    --font-sans: var(--font-family-sans), system-ui, sans-serif;
+    --font-mono: var(--font-family-mono), monospace;
 }
 
 @layer base {
     :root {
-        /* TYPOGRAPHY */
-        --font-family: 'Inter', system-ui, sans-serif;
-        --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        /* TYPOGRAPHY (sourced from Figma variables.css) */
+        --font-family: var(--font-family-sans), system-ui, sans-serif;
+        --font-family-mono: var(--font-family-mono), monospace;
         --line-height: 1.5;
 
-        /* GEOMETRY */
-        --radius-sm: 0.25rem;
-        --radius-md: 0.375rem;
-        --radius-lg: 0.5rem;
-        --border: 1px;
+        /* GEOMETRY (sourced from Figma variables.css) */
+        --radius-sm: var(--radius-control);
+        --radius-md: var(--radius-node);
+        --radius-lg: var(--radius-panel);
+        --border: var(--border-width-hairline);
         --animation-duration: 200ms;
         --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
 
-        /* LIGHT THEME */
-        --background: var(--slate-1);
-        --surface: var(--slate-2);
-        --surface-hover: var(--slate-3);
-        --surface-active: var(--slate-4);
-        --foreground: var(--slate-12);
-        --foreground-muted: var(--slate-11);
-        --border-color: var(--slate-6);
-        --ring: var(--slate-7);
-        --primary: var(--blue-9);
-        --primary-foreground: white;
-        --success: var(--green-9);
-        --warning: var(--amber-9);
-        --danger: var(--red-9);
-        --info: var(--blue-9);
+        /* SEMANTIC THEME ALIASES (Light in :root, Dark overridden by .dark in variables-dark.css) */
+        --background: var(--color-bg-canvas);
+        --surface: var(--color-bg-surface);
+        --surface-hover: var(--color-bg-surface-hover);
+        --surface-active: var(--color-bg-surface-active);
+        --foreground: var(--color-text-primary);
+        --foreground-muted: var(--color-text-muted);
+        --border-color: var(--color-border-default);
+        --ring: var(--color-border-ring);
+        --primary: var(--color-accent-primary);
+        --primary-foreground: var(--color-text-on-accent);
+        --success: var(--color-status-success);
+        --warning: var(--color-status-warning);
+        --danger: var(--color-status-danger);
+        --info: var(--color-accent-primary);
 
-        --node-source-bg: var(--slate-2);
-        --node-source-border: var(--slate-7);
-        --node-source-header: var(--blue-4);
-        --node-bus-bg: var(--slate-2);
-        --node-bus-border: var(--slate-7);
-        --node-bus-header: var(--teal-4);
-        --node-fx-bg: var(--slate-2);
-        --node-fx-border: var(--slate-7);
-        --node-fx-header: var(--amber-4);
-        --node-master-bg: var(--slate-3);
-        --node-master-border: var(--red-7);
-        --node-master-header: var(--red-5);
-    }
-
-    .dark {
-        /* DARK THEME (Radix Slate Dark) */
-        --background: var(--slate-1);
-        --surface: var(--slate-2);
-        --surface-hover: var(--slate-3);
-        --surface-active: var(--slate-4);
-        --foreground: var(--slate-12);
-        --foreground-muted: var(--slate-11);
-        --border-color: var(--slate-6);
-        --ring: var(--slate-7);
-        --primary: var(--blue-9);
-        --primary-foreground: white;
-        --success: var(--green-9);
-        --warning: var(--amber-9);
-        --danger: var(--red-9);
-        --info: var(--blue-9);
-
-        --node-source-bg: var(--slate-3);
-        --node-source-border: var(--blue-8);
-        --node-source-header: var(--blue-6);
-        --node-bus-bg: var(--slate-3);
-        --node-bus-border: var(--teal-8);
-        --node-bus-header: var(--teal-6);
-        --node-fx-bg: var(--slate-2);
-        --node-fx-border: var(--amber-7);
-        --node-fx-header: var(--amber-9);
-        --node-master-bg: var(--slate-3);
-        --node-master-border: var(--red-8);
-        --node-master-header: var(--red-6);
+        --node-source-bg: var(--color-node-source-bg);
+        --node-source-border: var(--color-node-source-border);
+        --node-source-header: var(--color-node-source-header);
+        --node-bus-bg: var(--color-node-bus-bg);
+        --node-bus-border: var(--color-node-bus-border);
+        --node-bus-header: var(--color-node-bus-header);
+        --node-fx-bg: var(--color-node-fx-bg);
+        --node-fx-border: var(--color-node-fx-border);
+        --node-fx-header: var(--color-node-fx-header);
+        --node-master-bg: var(--color-node-master-bg);
+        --node-master-border: var(--color-node-master-border);
+        --node-master-header: var(--color-node-master-header);
     }
 
     * {
@@ -182,7 +144,7 @@
 
     .node--master {
         @apply bg-node-master-bg border-node-master-border;
-        border-width: 2px;
+        border-width: var(--border-width-node);
     }
     .node--master .node-header {
         @apply bg-node-master-header text-primary-foreground;
@@ -191,4 +153,19 @@
     .panel {
         @apply rounded-lg shadow-md bg-surface border border-border;
     }
+}
+
+.react-flow__node-audio .react-flow__handle.audio-node-handle {
+    width: 12px;
+    height: 12px;
+    border-radius: 9999px;
+    border: var(--border-width-node) solid var(--background);
+}
+
+.react-flow__node-audio .react-flow__handle.audio-node-handle--target {
+    background-color: var(--border-color);
+}
+
+.react-flow__node-audio .react-flow__handle.audio-node-handle--source {
+    background-color: var(--primary);
 }

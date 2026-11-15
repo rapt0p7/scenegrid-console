@@ -1,8 +1,8 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import React, { useEffect, useRef } from 'react';
 import { Handle, Position } from '@xyflow/react';
+import React, { useEffect, useRef } from 'react';
 
 export const AudioNodeComponent = ({ id, data }: any) => {
     const { title, type, registerNode, unregisterNode } = data;
@@ -52,30 +52,30 @@ export const AudioNodeComponent = ({ id, data }: any) => {
     return (
         <div
             ref={containerRef}
-            className={`flex flex-col min-w-[250px] ${nodeTypeBg} border-2 ${nodeTypeBorder} rounded-md shadow-xl font-mono text-xs select-none overflow-hidden`}
+            className={`flex min-w-[250px] flex-col ${nodeTypeBg} border-2 ${nodeTypeBorder} rounded-md font-mono text-xs shadow-xl select-none`}
         >
             <div
-                className={`px-2 py-1 font-bold text-primary-foreground uppercase ${headerColor} flex justify-between items-center`}
+                className={`px-2 py-1 font-bold text-primary-foreground uppercase ${headerColor} flex items-center justify-between rounded-t-[4px]`}
             >
                 <span>{title}</span>
                 {!isVoice && !isMaster && (
-                    <div className="w-16 h-1.5 bg-background rounded-sm overflow-hidden flex justify-end">
-                        <div ref={grBarRef} className="h-full bg-danger w-0 transition-none" />
+                    <div className="flex h-1.5 w-16 justify-end overflow-hidden rounded-sm bg-background">
+                        <div ref={grBarRef} className="h-full w-0 bg-danger transition-none" />
                     </div>
                 )}
             </div>
 
-            <div className="flex relative min-h-[50px]">
+            <div className="relative flex min-h-[50px]">
                 {!isVoice && (
                     <Handle
                         type="target"
                         position={Position.Left}
-                        className="w-3 h-3 bg-border border-2 border-background"
+                        className="audio-node-handle audio-node-handle--target"
                         isConnectable={true}
                     />
                 )}
 
-                <div ref={textRef} className="flex-1 px-3 py-2 text-foreground-muted whitespace-pre-wrap leading-tight">
+                <div ref={textRef} className="flex-1 px-3 py-2 leading-tight whitespace-pre-wrap text-foreground-muted">
                     Waiting...
                 </div>
 
@@ -83,7 +83,7 @@ export const AudioNodeComponent = ({ id, data }: any) => {
                     <Handle
                         type="source"
                         position={Position.Right}
-                        className="w-3 h-3 bg-primary border-2 border-background"
+                        className="audio-node-handle audio-node-handle--source"
                         isConnectable={true}
                     />
                 )}

@@ -3,7 +3,7 @@
 
 import type { ITelemetrySnapshot } from '@scene-grid/shared';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 // oxlint-disable-next-line import/no-unassigned-import
 import 'uplot/dist/uPlot.min.css';
 import uPlot from 'uplot';
@@ -14,19 +14,76 @@ interface Props {
 
 const HISTORY_SIZE = 300;
 
+const toTranslucent = (color: string, alpha = 0.2): string => {
+    const trimmed = color.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+        const a = Math.round(alpha * 255)
+            .toString(16)
+            .padStart(2, '0');
+        return `${trimmed}${a}`;
+    }
+    const rgbMatch = trimmed.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
+        return `rgba(${rgbMatch[1]}, ${rgbMatch[2]}, ${rgbMatch[3]}, ${alpha})`;
+    }
+    return trimmed;
+};
+
+const readChartPalette = (el: HTMLElement) => {
+    const styles = getComputedStyle(el);
+    const getVar = (name: string, fallback: string) => styles.getPropertyValue(name).trim() || fallback;
+    const total = getVar('--color-chart-total-voices', '#4fd6e0');
+    const virtual = getVar('--color-chart-virtual-voices', '#f5b800');
+    return {
+        axisLabel: getVar('--color-chart-axis-label', '#ababa5'),
+        gridline: getVar('--color-chart-gridline', '#2a2a27'),
+        total,
+        totalFill: toTranslucent(total, 0.2),
+        virtual,
+        virtualFill: toTranslucent(virtual, 0.2)
+    };
+};
+
 export const PerformanceGraph: React.FC<Props> = ({ snapshotRef }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const plotRef = useRef<uPlot | null>(null);
+    const dataRef = useRef<[Float32Array, Float32Array, Float32Array] | null>(null);
+    const [themeTick, setThemeTick] = useState(0);
+
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setThemeTick(t => t + 1);
+        });
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class', 'data-theme', 'style']
+        });
+        if (document.body) {
+            observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme', 'style'] });
+        }
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
 
     useEffect(() => {
         if (!containerRef.current) return;
 
-        const data = [new Float32Array(HISTORY_SIZE), new Float32Array(HISTORY_SIZE), new Float32Array(HISTORY_SIZE)];
-
-        const now = performance.now() / 1000;
-        for (let i = 0; i < HISTORY_SIZE; i++) {
-            data[0][i] = now - (HISTORY_SIZE - i) * (1 / 60);
+        if (!dataRef.current) {
+            const init = [
+                new Float32Array(HISTORY_SIZE),
+                new Float32Array(HISTORY_SIZE),
+                new Float32Array(HISTORY_SIZE)
+            ] as [Float32Array, Float32Array, Float32Array];
+            const now = performance.now() / 1000;
+            for (let i = 0; i < HISTORY_SIZE; i++) {
+                init[0][i] = now - (HISTORY_SIZE - i) * (1 / 60);
+            }
+            dataRef.current = init;
         }
+
+        const data = dataRef.current;
+        const palette = readChartPalette(containerRef.current);
 
         const opts: uPlot.Options = {
             width: containerRef.current.clientWidth,
@@ -34,8 +91,8 @@ export const PerformanceGraph: React.FC<Props> = ({ snapshotRef }) => {
             axes: [
                 { show: false },
                 {
-                    stroke: '#52525b',
-                    grid: { stroke: '#27272a' },
+                    stroke: palette.axisLabel,
+                    grid: { stroke: palette.gridline },
                     values: (u, splits) => splits.map(v => (Number.isInteger(v) ? v : ''))
                 }
             ],
@@ -43,15 +100,15 @@ export const PerformanceGraph: React.FC<Props> = ({ snapshotRef }) => {
                 {},
                 {
                     label: 'Total',
-                    stroke: '#3b82f6',
-                    fill: '#3b82f633',
+                    stroke: palette.total,
+                    fill: palette.totalFill,
                     width: 2,
                     value: (u, v) => (v == null ? data[1][HISTORY_SIZE - 1].toFixed(0) : v.toFixed(0))
                 },
                 {
                     label: 'Virtual',
-                    stroke: '#f59e0b',
-                    fill: '#f59e0b33',
+                    stroke: palette.virtual,
+                    fill: palette.virtualFill,
                     width: 2,
                     value: (u, v) => (v == null ? data[2][HISTORY_SIZE - 1].toFixed(0) : v.toFixed(0))
                 }
@@ -114,7 +171,7 @@ export const PerformanceGraph: React.FC<Props> = ({ snapshotRef }) => {
             window.removeEventListener('resize', handleResize);
             plotRef.current?.destroy();
         };
-    }, [snapshotRef]);
+    }, [snapshotRef, themeTick]);
 
-    return <div ref={containerRef} className="h-full w-full" />;
+    return <div ref={containerRef} className="h-full w-full bg-[var(--color-bg-chart)] text-foreground" />;
 };

@@ -1,0 +1,63 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+.dark {
+  --color-bg-canvas: var(--slate-dark-1);
+  --color-bg-surface: var(--slate-dark-2);
+  --color-bg-surface-hover: var(--slate-dark-3);
+  --color-bg-surface-active: var(--slate-dark-4);
+  --color-bg-sidebar: var(--surface-sidebar-dark);
+  --color-bg-chart: var(--surface-chart-dark);
+  --color-bg-sequencer: var(--surface-sequencer-dark);
+  --color-bg-sequencer-alt: var(--surface-sequencer-alt-dark);
+  --color-bg-board: var(--surface-board-dark);
+  --color-bg-backdrop: var(--surface-backdrop-dark);
+  --color-border-default: var(--slate-dark-6);
+  --color-border-ring: var(--slate-dark-7);
+  --color-text-primary: var(--slate-dark-12);
+  --color-text-muted: var(--slate-dark-11);
+  --color-text-on-accent: var(--ink-white);
+  --color-text-on-warning: var(--ink-dark);
+  --color-accent-primary: var(--blue-9);
+  --color-status-success: var(--green-9);
+  --color-status-warning: var(--amber-9);
+  --color-status-danger: var(--red-9);
+  --color-node-source-bg: var(--slate-dark-3);
+  --color-node-source-border: var(--blue-8);
+  --color-node-source-header: var(--blue-6);
+  --color-node-bus-bg: var(--slate-dark-3);
+  --color-node-bus-border: var(--teal-8);
+  --color-node-bus-header: var(--teal-6);
+  --color-node-fx-bg: var(--slate-dark-2);
+  --color-node-fx-border: var(--amber-7);
+  --color-node-fx-header: var(--amber-9);
+  --color-node-master-bg: var(--slate-dark-3);
+  --color-node-master-border: var(--red-8);
+  --color-node-master-header: var(--red-6);
+  --color-chart-total-voices: var(--chart-total);
+  --color-chart-virtual-voices: var(--amber-9);
+  --color-chart-gridline: var(--chart-gridline-dark);
+  --color-chart-axis-label: var(--chart-axis);
+  --color-graph-edge-wire: var(--graph-wire-dark);
+  --color-graph-edge-voice: var(--blue-9);
+  --color-graph-edge-bus: var(--graph-bus);
+  --color-graph-edge-send: var(--graph-send);
+  --color-graph-edge-sidechain: var(--graph-sidechain);
+  --color-tint-snapshot-active: var(--tint-snapshot-dark);
+  --color-tint-snapshot-bg: var(--tint-snapshot-subtle-dark);
+  --color-tint-primary-subtle: var(--tint-primary-dark);
+  --color-tint-primary-cta: var(--tint-cta-dark);
+  --color-tint-danger-row: var(--tint-danger-row-dark);
+  --color-tint-danger-subtle: var(--tint-danger-dark);
+  --color-tint-danger-control: var(--tint-danger-btn-dark);
+  --color-tint-danger-chip: var(--tint-danger-chip-dark);
+  --color-tint-danger-border: var(--tint-danger-border-dark);
+  --color-tint-warning-control: var(--tint-warning-btn-dark);
+  --color-tint-warning-subtle: var(--tint-warning-dark);
+  --color-tint-warning-border: var(--tint-warning-border-dark);
+  --color-tint-warning-badge: var(--tint-warning-badge-dark);
+  --color-tint-success-control: var(--tint-success-btn-dark);
+  --color-tint-success-subtle: var(--tint-success-dark);
+  --color-tint-success-border: var(--tint-success-border-dark);
+}
