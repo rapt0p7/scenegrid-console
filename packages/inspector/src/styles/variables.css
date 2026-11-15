@@ -1,0 +1,328 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --slate-dark-1: #0e0e0d;
+  --slate-dark-2: #151513;
+  --slate-dark-3: #222220;
+  --slate-dark-4: #2a2a27;
+  --slate-dark-6: #2a2a27;
+  --slate-dark-7: #3d3d38;
+  --slate-dark-11: #ababa5;
+  --slate-dark-12: #f6f6f4;
+  --blue-3: #ffe8d9;
+  --blue-6: #9a3e0d;
+  --blue-8: #3fa9f5;
+  --blue-9: #ff6a1a;
+  --teal-3: #ccf3ea;
+  --teal-6: #0f7f89;
+  --teal-8: #2fc4a0;
+  --amber-3: #fef3c7;
+  --amber-7: #b38600;
+  --amber-9: #ffd54a;
+  --green-9: #5ee07a;
+  --red-3: #fee2e2;
+  --red-4: #fca5a5;
+  --red-6: #9e2a25;
+  --red-8: #f0362d;
+  --red-9: #ff5a52;
+  --surface-sidebar: #141416;
+  --surface-chart: #16171a;
+  --surface-sequencer: #1f2124;
+  --surface-board: #0c0c0e;
+  --surface-backdrop: #09090b;
+  --surface-sequencer-alt: #202226;
+  --surface-sidebar-dark: #151513;
+  --surface-sidebar-light: #ffffff;
+  --surface-chart-dark: #151513;
+  --surface-chart-light: #ffffff;
+  --surface-sequencer-dark: #222220;
+  --surface-sequencer-light: #f7f7f5;
+  --surface-sequencer-alt-dark: #242422;
+  --surface-sequencer-alt-light: #ecece8;
+  --surface-board-dark: #0b0b0a;
+  --surface-board-light: #e6e6e1;
+  --surface-backdrop-dark: #080807;
+  --surface-backdrop-light: #dcdcd6;
+  --tint-snapshot: #112233;
+  --tint-cta-fill: #0d2847;
+  --tint-danger-row: #2e1618;
+  --tint-danger-btn: #2b1619;
+  --tint-danger-border: #69282d;
+  --tint-warning-btn: #2b2210;
+  --tint-warning-row: #2b2211;
+  --tint-warning-border: #664c18;
+  --tint-warning-badge: #382c12;
+  --tint-success-btn: #132d21;
+  --tint-success-border: #20573e;
+  --tint-snapshot-subtle: #142334;
+  --tint-primary-20: #14283a;
+  --tint-danger-20: #2c1518;
+  --tint-success-20: #153226;
+  --tint-snapshot-dark: #3a1e0e;
+  --tint-snapshot-light: #ffe8d9;
+  --tint-snapshot-subtle-dark: #26150b;
+  --tint-snapshot-subtle-light: #fff3eb;
+  --tint-primary-dark: #3a1e0e;
+  --tint-primary-light: #ffe8d9;
+  --tint-cta-dark: #3a1e0e;
+  --tint-cta-light: #ffe8d9;
+  --tint-danger-row-dark: #2e1615;
+  --tint-danger-row-light: #fee2e2;
+  --tint-danger-dark: #2c1514;
+  --tint-danger-light: #fecaca;
+  --tint-danger-btn-dark: #2b1615;
+  --tint-danger-btn-light: #fee2e2;
+  --tint-danger-chip-dark: #2a1312;
+  --tint-danger-chip-light: #fee2e2;
+  --tint-danger-border-dark: #7a2b27;
+  --tint-danger-border-light: #fca5a5;
+  --tint-warning-btn-dark: #2b2310;
+  --tint-warning-btn-light: #fef3c7;
+  --tint-warning-dark: #2b2311;
+  --tint-warning-light: #fef3c7;
+  --tint-warning-border-dark: #755c14;
+  --tint-warning-border-light: #fcd34d;
+  --tint-warning-badge-dark: #382e12;
+  --tint-warning-badge-light: #fde68a;
+  --tint-success-btn-dark: #132b1a;
+  --tint-success-btn-light: #dcfce7;
+  --tint-success-dark: #15301d;
+  --tint-success-light: #bbf7d0;
+  --tint-success-border-dark: #1b8a35;
+  --tint-success-border-light: #86efac;
+  --chart-total: #4fd6e0;
+  --chart-virtual: #f5b800;
+  --chart-gridline: #27272a;
+  --chart-axis: #ababa5;
+  --chart-gridline-dark: #2a2a27;
+  --chart-gridline-light: #cfcfc9;
+  --graph-wire: #52525b;
+  --graph-send: #7b6cf6;
+  --graph-sidechain: #f0362d;
+  --graph-wire-dark: #52524d;
+  --graph-wire-light: #9a9a93;
+  --graph-bus: #2fc4a0;
+  --ink-white: #ffffff;
+  --ink-dark: #0e0e0d;
+  --slate-light-1: #ecece8;
+  --slate-light-2: #ffffff;
+  --slate-light-3: #ffffff;
+  --slate-light-4: #e0e0db;
+  --slate-light-6: #cfcfc9;
+  --slate-light-7: #b8b8b1;
+  --slate-light-11: #63635e;
+  --slate-light-12: #0e0e0d;
+  --indigo-9: #7b6cf6;
+  --primitive-font-family-jetbrains-mono: JetBrains Mono;
+  --primitive-font-family-inter: Inter;
+  --primitive-font-family-medeo-mono: Medeo Mono;
+  --primitive-font-family-medeo-sans: Medeo Sans;
+  --primitive-font-family-medeo-serif: Medeo Serif;
+  --primitive-font-family-medeo-pixel: Medeo Pixel;
+  --primitive-font-style-regular: Regular;
+  --primitive-font-style-medium: Medium;
+  --primitive-font-style-semibold: Regular;
+  --primitive-font-style-bold: Bold;
+  --primitive-font-style-semibold-sans: Semi Bold;
+  --primitive-font-weight-400: 400;
+  --primitive-font-weight-500: 500;
+  --primitive-font-weight-600: 600;
+  --primitive-font-weight-700: 700;
+  --primitive-font-size-9: 9px;
+  --primitive-font-size-10: 10px;
+  --primitive-font-size-11: 11px;
+  --primitive-font-size-12: 12px;
+  --primitive-font-size-18: 18px;
+  --primitive-font-size-22: 22px;
+  --primitive-font-size-9-5: 9.5px;
+  --primitive-font-size-10-5: 10.5px;
+  --primitive-font-size-8-5: 8.5px;
+  --primitive-line-height-12: 12px;
+  --primitive-line-height-14: 14px;
+  --primitive-line-height-15: 15px;
+  --primitive-line-height-16: 16px;
+  --primitive-line-height-24: 24px;
+  --primitive-line-height-28: 28px;
+  --primitive-tracking-tight: -0.2px;
+  --primitive-tracking-normal: 0px;
+  --primitive-tracking-wide: 0.4px;
+  --primitive-tracking-wider: 0.6px;
+  --primitive-tracking-widest: 0.8px;
+  --primitive-space-0: 0px;
+  --primitive-space-1: 1px;
+  --primitive-space-2: 2px;
+  --primitive-space-3: 3px;
+  --primitive-space-4: 4px;
+  --primitive-space-6: 6px;
+  --primitive-space-8: 8px;
+  --primitive-space-10: 10px;
+  --primitive-space-12: 12px;
+  --primitive-space-16: 16px;
+  --primitive-space-20: 20px;
+  --primitive-space-24: 24px;
+  --primitive-space-32: 32px;
+  --primitive-space-40: 40px;
+  --primitive-space-48: 48px;
+  --primitive-size-sidebar-left: 450px;
+  --primitive-size-sidebar-right: 300px;
+  --primitive-size-drawer-simulator: 400px;
+  --primitive-size-node-width-voice: 170px;
+  --primitive-size-node-width-bus: 190px;
+  --primitive-size-node-width-master: 158px;
+  --color-bg-canvas: var(--slate-light-1);
+  --color-bg-surface: var(--slate-light-2);
+  --color-bg-surface-hover: var(--slate-light-3);
+  --color-bg-surface-active: var(--slate-light-4);
+  --color-bg-sidebar: var(--surface-sidebar-light);
+  --color-bg-chart: var(--surface-chart-light);
+  --color-bg-sequencer: var(--surface-sequencer-light);
+  --color-bg-sequencer-alt: var(--surface-sequencer-alt-light);
+  --color-bg-board: var(--surface-board-light);
+  --color-bg-backdrop: var(--surface-backdrop-light);
+  --color-border-default: var(--slate-light-6);
+  --color-border-ring: var(--slate-light-7);
+  --color-text-primary: var(--slate-light-12);
+  --color-text-muted: var(--slate-light-11);
+  --color-text-on-accent: var(--ink-white);
+  --color-text-on-warning: var(--ink-dark);
+  --color-accent-primary: var(--blue-9);
+  --color-status-success: var(--tint-success-border-dark);
+  --color-status-warning: var(--amber-7);
+  --color-status-danger: var(--red-8);
+  --color-node-source-bg: var(--slate-light-2);
+  --color-node-source-border: var(--slate-light-7);
+  --color-node-source-header: var(--blue-3);
+  --color-node-bus-bg: var(--slate-light-2);
+  --color-node-bus-border: var(--slate-light-7);
+  --color-node-bus-header: var(--teal-3);
+  --color-node-fx-bg: var(--slate-light-2);
+  --color-node-fx-border: var(--slate-light-7);
+  --color-node-fx-header: var(--amber-3);
+  --color-node-master-bg: var(--slate-light-3);
+  --color-node-master-border: var(--red-4);
+  --color-node-master-header: var(--red-3);
+  --color-chart-total-voices: var(--teal-6);
+  --color-chart-virtual-voices: var(--chart-virtual);
+  --color-chart-gridline: var(--chart-gridline-light);
+  --color-chart-axis-label: var(--slate-light-11);
+  --color-graph-edge-wire: var(--graph-wire-light);
+  --color-graph-edge-voice: var(--blue-9);
+  --color-graph-edge-bus: var(--graph-bus);
+  --color-graph-edge-send: var(--graph-send);
+  --color-graph-edge-sidechain: var(--graph-sidechain);
+  --color-tint-snapshot-active: var(--tint-snapshot-light);
+  --color-tint-snapshot-bg: var(--tint-snapshot-subtle-light);
+  --color-tint-primary-subtle: var(--tint-primary-light);
+  --color-tint-primary-cta: var(--tint-cta-light);
+  --color-tint-danger-row: var(--tint-danger-row-light);
+  --color-tint-danger-subtle: var(--tint-danger-light);
+  --color-tint-danger-control: var(--tint-danger-btn-light);
+  --color-tint-danger-chip: var(--tint-danger-chip-light);
+  --color-tint-danger-border: var(--tint-danger-border-light);
+  --color-tint-warning-control: var(--tint-warning-btn-light);
+  --color-tint-warning-subtle: var(--tint-warning-light);
+  --color-tint-warning-border: var(--tint-warning-border-light);
+  --color-tint-warning-badge: var(--tint-warning-badge-light);
+  --color-tint-success-control: var(--tint-success-btn-light);
+  --color-tint-success-subtle: var(--tint-success-light);
+  --color-tint-success-border: var(--tint-success-border-light);
+  --font-family-mono: var(--primitive-font-family-medeo-mono); /** Primary monospace UI & telemetry font (--font-mono). Aliases JetBrains Mono (Default) or Medeo Mono (DNFDEVS). */
+  --font-family-sans: var(--primitive-font-family-medeo-sans); /** Primary UI sans-serif font (--font-family). Aliases Medeo Sans (DNFDEVS). */
+  --font-family-medeo-mono: var(--primitive-font-family-medeo-mono); /** Medeo Mono by DNFDEVS (https://github.com/DNFDEVS/medeo-font) for code & tabular audio telemetry. */
+  --font-family-medeo-sans: var(--primitive-font-family-medeo-sans); /** Medeo Sans by DNFDEVS (https://github.com/DNFDEVS/medeo-font) variable UI sans-serif. */
+  --font-family-medeo-serif: var(--primitive-font-family-medeo-serif); /** Medeo Serif companion from https://github.com/DNFDEVS/medeo-font. */
+  --font-family-medeo-pixel: var(--primitive-font-family-medeo-pixel); /** Medeo Pixel companion from https://github.com/DNFDEVS/medeo-font. */
+  --font-family-jetbrains-mono: var(--primitive-font-family-jetbrains-mono);
+  --font-family-inter: var(--primitive-font-family-inter);
+  --typography-style-body: var(--primitive-font-style-regular);
+  --typography-style-medium: var(--primitive-font-style-medium);
+  --typography-style-label: var(--primitive-font-style-semibold);
+  --typography-style-heading: var(--primitive-font-style-bold);
+  --typography-style-label-sans: var(--primitive-font-style-semibold-sans);
+  --typography-weight-body: var(--primitive-font-weight-400);
+  --typography-weight-medium: var(--primitive-font-weight-500);
+  --typography-weight-label: var(--primitive-font-weight-600);
+  --typography-weight-heading: var(--primitive-font-weight-700);
+  --typography-weight-metric: var(--primitive-font-weight-700);
+  --typography-size-display-title: var(--primitive-font-size-22); /** Design System banner title (22px) */
+  --typography-size-metric-value: var(--primitive-font-size-18); /** KPI & Gain Chain display metric (18px) */
+  --typography-size-body-base: var(--primitive-font-size-12); /** Base UI, header title & event stream rows (12px) */
+  --typography-size-control-label: var(--primitive-font-size-11); /** Drawer controls, node titles & issue rows (11px) */
+  --typography-size-field-value: var(--primitive-font-size-10-5); /** Sequencer dropdowns & live track values (10.5px) */
+  --typography-size-section-header: var(--primitive-font-size-10); /** Uppercase pane titles, badges & buttons (10px) */
+  --typography-size-token-spec: var(--primitive-font-size-9-5); /** Compact token spec labels (9.5px) */
+  --typography-size-micro-badge: var(--primitive-font-size-9); /** Micro badges, RAM meter & sequencer field headers (9px) */
+  --typography-line-height-micro: var(--primitive-line-height-12);
+  --typography-line-height-header: var(--primitive-line-height-14);
+  --typography-line-height-control: var(--primitive-line-height-15);
+  --typography-line-height-body: var(--primitive-line-height-16);
+  --typography-line-height-display: var(--primitive-line-height-24);
+  --typography-tracking-tight: var(--primitive-tracking-tight);
+  --typography-tracking-body: var(--primitive-tracking-normal);
+  --typography-tracking-badge: var(--primitive-tracking-wide);
+  --typography-tracking-button: var(--primitive-tracking-wider);
+  --typography-tracking-section-header: var(--primitive-tracking-widest);
+  --radius-none: var(--primitive-space-0); /** Sharp edge (0px) */
+  --radius-badge: var(--primitive-space-3); /** Micro badge & checkbox radius (3px) */
+  --radius-control: var(--primitive-space-4); /** Buttons, inputs & event cards (4px) */
+  --radius-node: var(--primitive-space-6); /** Audio graph nodes & token rows (6px) */
+  --radius-panel: var(--primitive-space-8); /** Popovers, specimen cards & drawers (8px) */
+  --radius-board: var(--primitive-space-12); /** Master canvas & design system boards (12px) */
+  --spacing-inline-xs: var(--primitive-space-4);
+  --spacing-stack-sm: var(--primitive-space-8);
+  --spacing-panel-md: var(--primitive-space-12);
+  --spacing-section-lg: var(--primitive-space-16);
+  --spacing-board-xl: var(--primitive-space-24);
+  --border-width-hairline: var(--primitive-space-1); /** Default 1px structural hairline border */
+  --border-width-node: var(--primitive-space-2); /** Audio graph node border & active focus ring (2px) */
+  --border-width-accent-bar: var(--primitive-space-4); /** Event stream status accent bar (4px) */
+  --layout-header-height: var(--primitive-space-40);
+  --layout-pane-bar-height: var(--primitive-space-32);
+  --layout-scrubber-height: var(--primitive-space-48);
+  --layout-sidebar-left-width: var(--primitive-size-sidebar-left);
+  --layout-sidebar-right-width: var(--primitive-size-sidebar-right);
+  --layout-simulator-drawer-width: var(--primitive-size-drawer-simulator);
+  --layout-node-voice-width: var(--primitive-size-node-width-voice);
+  --layout-node-bus-width: var(--primitive-size-node-width-bus);
+  --layout-node-master-width: var(--primitive-size-node-width-master);
+  --font-family-code: var(--font-family-mono); /** Code & DSP parameter token font */
+  --font-family-telemetry: var(--font-family-mono); /** Event stream & tabular audio metric font */
+  --font-family-display: var(--font-family-mono); /** Banner & numeric KPI display font */
+  --font-family-ui-body: var(--font-family-sans); /** Design system body & metadata sans font */
+  --font-style-regular: var(--typography-style-body);
+  --font-style-medium: var(--typography-style-medium);
+  --font-style-semibold: var(--typography-style-label);
+  --font-style-bold: var(--typography-style-heading);
+  --font-weight-regular: var(--typography-weight-body);
+  --font-weight-medium: var(--typography-weight-medium);
+  --font-weight-semibold: var(--typography-weight-label);
+  --font-weight-bold: var(--typography-weight-heading);
+  --font-size-xs: var(--typography-size-micro-badge); /** Alias -> typography/size/micro-badge */
+  --font-size-sm: var(--typography-size-section-header); /** Alias -> typography/size/section-header */
+  --font-size-md: var(--typography-size-control-label); /** Alias -> typography/size/control-label */
+  --font-size-base: var(--typography-size-body-base); /** Alias -> typography/size/body-base */
+  --font-size-lg: var(--typography-size-metric-value); /** Alias -> typography/size/metric-value */
+  --font-size-xl: var(--typography-size-display-title); /** Alias -> typography/size/display-title */
+  --font-size-xs-plus: var(--typography-size-token-spec); /** Alias -> typography/size/token-spec */
+  --font-size-sm-plus: var(--typography-size-field-value); /** Alias -> typography/size/field-value */
+  --font-line-height-xs: var(--typography-line-height-micro);
+  --font-line-height-sm: var(--typography-line-height-header);
+  --font-line-height-md: var(--typography-line-height-control);
+  --font-line-height-base: var(--typography-line-height-body);
+  --font-line-height-lg: var(--typography-line-height-display);
+  --font-tracking-tight: var(--typography-tracking-tight);
+  --font-tracking-normal: var(--typography-tracking-body);
+  --font-tracking-wide: var(--typography-tracking-badge);
+  --font-tracking-wider: var(--typography-tracking-button);
+  --font-tracking-widest: var(--typography-tracking-section-header);
+  --radius-sm: var(--radius-control);
+  --radius-md: var(--radius-node);
+  --radius-lg: var(--radius-panel);
+  --spacing-xs: var(--spacing-inline-xs);
+  --spacing-sm: var(--spacing-stack-sm);
+  --spacing-md: var(--spacing-panel-md);
+  --spacing-lg: var(--spacing-section-lg);
+  --spacing-xl: var(--spacing-board-xl);
+}

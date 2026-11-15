@@ -1,0 +1,787 @@
+{
+    "slate-dark": {
+        "1": {
+            "$type": "color",
+            "$value": "#0e0e0d"
+        },
+        "2": {
+            "$type": "color",
+            "$value": "#151513"
+        },
+        "3": {
+            "$type": "color",
+            "$value": "#222220"
+        },
+        "4": {
+            "$type": "color",
+            "$value": "#2a2a27"
+        },
+        "6": {
+            "$type": "color",
+            "$value": "#2a2a27"
+        },
+        "7": {
+            "$type": "color",
+            "$value": "#3d3d38"
+        },
+        "11": {
+            "$type": "color",
+            "$value": "#ababa5"
+        },
+        "12": {
+            "$type": "color",
+            "$value": "#f6f6f4"
+        }
+    },
+    "blue": {
+        "3": {
+            "$type": "color",
+            "$value": "#ffe8d9"
+        },
+        "6": {
+            "$type": "color",
+            "$value": "#9a3e0d"
+        },
+        "8": {
+            "$type": "color",
+            "$value": "#3fa9f5"
+        },
+        "9": {
+            "$type": "color",
+            "$value": "#ff6a1a"
+        }
+    },
+    "teal": {
+        "3": {
+            "$type": "color",
+            "$value": "#ccf3ea"
+        },
+        "6": {
+            "$type": "color",
+            "$value": "#0f7f89"
+        },
+        "8": {
+            "$type": "color",
+            "$value": "#2fc4a0"
+        }
+    },
+    "amber": {
+        "3": {
+            "$type": "color",
+            "$value": "#fef3c7"
+        },
+        "7": {
+            "$type": "color",
+            "$value": "#b38600"
+        },
+        "9": {
+            "$type": "color",
+            "$value": "#ffd54a"
+        }
+    },
+    "green": {
+        "9": {
+            "$type": "color",
+            "$value": "#5ee07a"
+        }
+    },
+    "red": {
+        "3": {
+            "$type": "color",
+            "$value": "#fee2e2"
+        },
+        "4": {
+            "$type": "color",
+            "$value": "#fca5a5"
+        },
+        "6": {
+            "$type": "color",
+            "$value": "#9e2a25"
+        },
+        "8": {
+            "$type": "color",
+            "$value": "#f0362d"
+        },
+        "9": {
+            "$type": "color",
+            "$value": "#ff5a52"
+        }
+    },
+    "surface": {
+        "sidebar": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#141416"
+        },
+        "chart": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#16171a"
+        },
+        "sequencer": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#1f2124"
+        },
+        "board": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#0c0c0e"
+        },
+        "backdrop": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#09090b"
+        },
+        "sequencer-alt": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#202226"
+        },
+        "sidebar-dark": {
+            "$type": "color",
+            "$value": "#151513"
+        },
+        "sidebar-light": {
+            "$type": "color",
+            "$value": "#ffffff"
+        },
+        "chart-dark": {
+            "$type": "color",
+            "$value": "#151513"
+        },
+        "chart-light": {
+            "$type": "color",
+            "$value": "#ffffff"
+        },
+        "sequencer-dark": {
+            "$type": "color",
+            "$value": "#222220"
+        },
+        "sequencer-light": {
+            "$type": "color",
+            "$value": "#f7f7f5"
+        },
+        "sequencer-alt-dark": {
+            "$type": "color",
+            "$value": "#242422"
+        },
+        "sequencer-alt-light": {
+            "$type": "color",
+            "$value": "#ecece8"
+        },
+        "board-dark": {
+            "$type": "color",
+            "$value": "#0b0b0a"
+        },
+        "board-light": {
+            "$type": "color",
+            "$value": "#e6e6e1"
+        },
+        "backdrop-dark": {
+            "$type": "color",
+            "$value": "#080807"
+        },
+        "backdrop-light": {
+            "$type": "color",
+            "$value": "#dcdcd6"
+        }
+    },
+    "tint": {
+        "snapshot": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#112233"
+        },
+        "cta-fill": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#0d2847"
+        },
+        "danger-row": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#2e1618"
+        },
+        "danger-btn": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#2b1619"
+        },
+        "danger-border": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#69282d"
+        },
+        "warning-btn": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#2b2210"
+        },
+        "warning-row": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#2b2211"
+        },
+        "warning-border": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#664c18"
+        },
+        "warning-badge": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#382c12"
+        },
+        "success-btn": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#132d21"
+        },
+        "success-border": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#20573e"
+        },
+        "snapshot-subtle": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#142334"
+        },
+        "primary-20": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#14283a"
+        },
+        "danger-20": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#2c1518"
+        },
+        "success-20": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#153226"
+        },
+        "snapshot-dark": {
+            "$type": "color",
+            "$value": "#3a1e0e"
+        },
+        "snapshot-light": {
+            "$type": "color",
+            "$value": "#ffe8d9"
+        },
+        "snapshot-subtle-dark": {
+            "$type": "color",
+            "$value": "#26150b"
+        },
+        "snapshot-subtle-light": {
+            "$type": "color",
+            "$value": "#fff3eb"
+        },
+        "primary-dark": {
+            "$type": "color",
+            "$value": "#3a1e0e"
+        },
+        "primary-light": {
+            "$type": "color",
+            "$value": "#ffe8d9"
+        },
+        "cta-dark": {
+            "$type": "color",
+            "$value": "#3a1e0e"
+        },
+        "cta-light": {
+            "$type": "color",
+            "$value": "#ffe8d9"
+        },
+        "danger-row-dark": {
+            "$type": "color",
+            "$value": "#2e1615"
+        },
+        "danger-row-light": {
+            "$type": "color",
+            "$value": "#fee2e2"
+        },
+        "danger-dark": {
+            "$type": "color",
+            "$value": "#2c1514"
+        },
+        "danger-light": {
+            "$type": "color",
+            "$value": "#fecaca"
+        },
+        "danger-btn-dark": {
+            "$type": "color",
+            "$value": "#2b1615"
+        },
+        "danger-btn-light": {
+            "$type": "color",
+            "$value": "#fee2e2"
+        },
+        "danger-chip-dark": {
+            "$type": "color",
+            "$value": "#2a1312"
+        },
+        "danger-chip-light": {
+            "$type": "color",
+            "$value": "#fee2e2"
+        },
+        "danger-border-dark": {
+            "$type": "color",
+            "$value": "#7a2b27"
+        },
+        "danger-border-light": {
+            "$type": "color",
+            "$value": "#fca5a5"
+        },
+        "warning-btn-dark": {
+            "$type": "color",
+            "$value": "#2b2310"
+        },
+        "warning-btn-light": {
+            "$type": "color",
+            "$value": "#fef3c7"
+        },
+        "warning-dark": {
+            "$type": "color",
+            "$value": "#2b2311"
+        },
+        "warning-light": {
+            "$type": "color",
+            "$value": "#fef3c7"
+        },
+        "warning-border-dark": {
+            "$type": "color",
+            "$value": "#755c14"
+        },
+        "warning-border-light": {
+            "$type": "color",
+            "$value": "#fcd34d"
+        },
+        "warning-badge-dark": {
+            "$type": "color",
+            "$value": "#382e12"
+        },
+        "warning-badge-light": {
+            "$type": "color",
+            "$value": "#fde68a"
+        },
+        "success-btn-dark": {
+            "$type": "color",
+            "$value": "#132b1a"
+        },
+        "success-btn-light": {
+            "$type": "color",
+            "$value": "#dcfce7"
+        },
+        "success-dark": {
+            "$type": "color",
+            "$value": "#15301d"
+        },
+        "success-light": {
+            "$type": "color",
+            "$value": "#bbf7d0"
+        },
+        "success-border-dark": {
+            "$type": "color",
+            "$value": "#1b8a35"
+        },
+        "success-border-light": {
+            "$type": "color",
+            "$value": "#86efac"
+        }
+    },
+    "chart": {
+        "total": {
+            "$type": "color",
+            "$value": "#4fd6e0"
+        },
+        "virtual": {
+            "$type": "color",
+            "$value": "#f5b800"
+        },
+        "gridline": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#27272a"
+        },
+        "axis": {
+            "$type": "color",
+            "$value": "#ababa5"
+        },
+        "gridline-dark": {
+            "$type": "color",
+            "$value": "#2a2a27"
+        },
+        "gridline-light": {
+            "$type": "color",
+            "$value": "#cfcfc9"
+        }
+    },
+    "graph": {
+        "wire": {
+            "$extensions": {
+                "com.figma.scopes": ["ALL_FILLS", "STROKE_COLOR"]
+            },
+            "$type": "color",
+            "$value": "#52525b"
+        },
+        "send": {
+            "$type": "color",
+            "$value": "#7b6cf6"
+        },
+        "sidechain": {
+            "$type": "color",
+            "$value": "#f0362d"
+        },
+        "wire-dark": {
+            "$type": "color",
+            "$value": "#52524d"
+        },
+        "wire-light": {
+            "$type": "color",
+            "$value": "#9a9a93"
+        },
+        "bus": {
+            "$type": "color",
+            "$value": "#2fc4a0"
+        }
+    },
+    "ink": {
+        "white": {
+            "$type": "color",
+            "$value": "#ffffff"
+        },
+        "dark": {
+            "$type": "color",
+            "$value": "#0e0e0d"
+        }
+    },
+    "slate-light": {
+        "1": {
+            "$type": "color",
+            "$value": "#ecece8"
+        },
+        "2": {
+            "$type": "color",
+            "$value": "#ffffff"
+        },
+        "3": {
+            "$type": "color",
+            "$value": "#ffffff"
+        },
+        "4": {
+            "$type": "color",
+            "$value": "#e0e0db"
+        },
+        "6": {
+            "$type": "color",
+            "$value": "#cfcfc9"
+        },
+        "7": {
+            "$type": "color",
+            "$value": "#b8b8b1"
+        },
+        "11": {
+            "$type": "color",
+            "$value": "#63635e"
+        },
+        "12": {
+            "$type": "color",
+            "$value": "#0e0e0d"
+        }
+    },
+    "indigo": {
+        "9": {
+            "$type": "color",
+            "$value": "#7b6cf6"
+        }
+    },
+    "primitive": {
+        "font-family": {
+            "jetbrains-mono": {
+                "$type": "text",
+                "$value": "JetBrains Mono"
+            },
+            "inter": {
+                "$type": "text",
+                "$value": "Inter"
+            },
+            "medeo-mono": {
+                "$type": "text",
+                "$value": "Medeo Mono"
+            },
+            "medeo-sans": {
+                "$type": "text",
+                "$value": "Medeo Sans"
+            },
+            "medeo-serif": {
+                "$type": "text",
+                "$value": "Medeo Serif"
+            },
+            "medeo-pixel": {
+                "$type": "text",
+                "$value": "Medeo Pixel"
+            }
+        },
+        "font-style": {
+            "regular": {
+                "$type": "text",
+                "$value": "Regular"
+            },
+            "medium": {
+                "$type": "text",
+                "$value": "Medium"
+            },
+            "semibold": {
+                "$type": "text",
+                "$value": "Regular"
+            },
+            "bold": {
+                "$type": "text",
+                "$value": "Bold"
+            },
+            "semibold-sans": {
+                "$type": "text",
+                "$value": "Semi Bold"
+            }
+        },
+        "font-weight": {
+            "400": {
+                "$type": "number",
+                "$value": 400
+            },
+            "500": {
+                "$type": "number",
+                "$value": 500
+            },
+            "600": {
+                "$type": "number",
+                "$value": 600
+            },
+            "700": {
+                "$type": "number",
+                "$value": 700
+            }
+        },
+        "font-size": {
+            "9": {
+                "$type": "number",
+                "$value": 9
+            },
+            "10": {
+                "$type": "number",
+                "$value": 10
+            },
+            "11": {
+                "$type": "number",
+                "$value": 11
+            },
+            "12": {
+                "$type": "number",
+                "$value": 12
+            },
+            "18": {
+                "$type": "number",
+                "$value": 18
+            },
+            "22": {
+                "$type": "number",
+                "$value": 22
+            },
+            "9-5": {
+                "$type": "number",
+                "$value": 9.5
+            },
+            "10-5": {
+                "$type": "number",
+                "$value": 10.5
+            },
+            "8-5": {
+                "$type": "number",
+                "$value": 8.5
+            }
+        },
+        "line-height": {
+            "12": {
+                "$type": "number",
+                "$value": 12
+            },
+            "14": {
+                "$type": "number",
+                "$value": 14
+            },
+            "15": {
+                "$type": "number",
+                "$value": 15
+            },
+            "16": {
+                "$type": "number",
+                "$value": 16
+            },
+            "24": {
+                "$type": "number",
+                "$value": 24
+            },
+            "28": {
+                "$type": "number",
+                "$value": 28
+            }
+        },
+        "tracking": {
+            "tight": {
+                "$type": "number",
+                "$value": -0.2
+            },
+            "normal": {
+                "$type": "number",
+                "$value": 0
+            },
+            "wide": {
+                "$type": "number",
+                "$value": 0.4
+            },
+            "wider": {
+                "$type": "number",
+                "$value": 0.6
+            },
+            "widest": {
+                "$type": "number",
+                "$value": 0.8
+            }
+        },
+        "space": {
+            "0": {
+                "$type": "number",
+                "$value": 0
+            },
+            "1": {
+                "$type": "number",
+                "$value": 1
+            },
+            "2": {
+                "$type": "number",
+                "$value": 2
+            },
+            "3": {
+                "$type": "number",
+                "$value": 3
+            },
+            "4": {
+                "$type": "number",
+                "$value": 4
+            },
+            "6": {
+                "$type": "number",
+                "$value": 6
+            },
+            "8": {
+                "$type": "number",
+                "$value": 8
+            },
+            "10": {
+                "$type": "number",
+                "$value": 10
+            },
+            "12": {
+                "$type": "number",
+                "$value": 12
+            },
+            "16": {
+                "$type": "number",
+                "$value": 16
+            },
+            "20": {
+                "$type": "number",
+                "$value": 20
+            },
+            "24": {
+                "$type": "number",
+                "$value": 24
+            },
+            "32": {
+                "$type": "number",
+                "$value": 32
+            },
+            "40": {
+                "$type": "number",
+                "$value": 40
+            },
+            "48": {
+                "$type": "number",
+                "$value": 48
+            }
+        },
+        "size": {
+            "sidebar-left": {
+                "$type": "number",
+                "$value": 450
+            },
+            "sidebar-right": {
+                "$type": "number",
+                "$value": 300
+            },
+            "drawer-simulator": {
+                "$type": "number",
+                "$value": 400
+            },
+            "node-width-voice": {
+                "$type": "number",
+                "$value": 170
+            },
+            "node-width-bus": {
+                "$type": "number",
+                "$value": 190
+            },
+            "node-width-master": {
+                "$type": "number",
+                "$value": 158
+            }
+        }
+    }
+}

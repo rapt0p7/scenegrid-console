@@ -1,6 +1,8 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
+import { WarningIcon } from '@phosphor-icons/react/dist/csr/Warning';
+import { WarningOctagonIcon } from '@phosphor-icons/react/dist/csr/WarningOctagon';
 import clsx from 'clsx';
 import React, { useState } from 'react';
 
@@ -60,8 +62,18 @@ export const InspectorApp: React.FC = () => {
                     setIsIssuesPanelOpen(!isIssuesPanelOpen);
                 }}
             >
-                {errorCount > 0 && <span className="text-xs font-bold text-danger">🛑 {errorCount}</span>}
-                {warningCount > 0 && <span className="text-xs font-bold text-warning">⚠️ {warningCount}</span>}
+                {errorCount > 0 && (
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-danger">
+                        <WarningOctagonIcon size={14} weight="bold" aria-hidden="true" />
+                        {errorCount}
+                    </span>
+                )}
+                {warningCount > 0 && (
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-warning">
+                        <WarningIcon size={14} weight="bold" aria-hidden="true" />
+                        {warningCount}
+                    </span>
+                )}
             </div>
         );
     };

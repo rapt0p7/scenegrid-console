@@ -1,10 +1,8 @@
 // oxlint-disable max-lines-per-function
 // noinspection D
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { clsx } from 'clsx';
-import { useCommandTransmitter } from '../hooks/useCommandTransmitter';
-import type { IEngineManifestDTO } from '../types/ManifestDTO';
+import { LightningIcon } from '@phosphor-icons/react/dist/csr/Lightning';
+import { MusicNotesIcon } from '@phosphor-icons/react/dist/csr/MusicNotes';
 import {
     EventId,
     GameParamId,
@@ -15,6 +13,12 @@ import {
     Seconds,
     Beats
 } from '@scene-grid/shared';
+import { clsx } from 'clsx';
+import React, { useState, useMemo, useEffect } from 'react';
+
+import type { IEngineManifestDTO } from '../types/ManifestDTO';
+
+import { useCommandTransmitter } from '../hooks/useCommandTransmitter';
 
 interface SimulatorDrawerProps {
     manifest: IEngineManifestDTO;
@@ -174,9 +178,9 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
     };
 
     return (
-        <div className="absolute top-10 right-0 w-[400px] h-[calc(100vh-40px)] bg-surface border-l border-border shadow-2xl z-40 flex flex-col overflow-hidden">
-            <div className="flex-none h-10 bg-surface-hover/50 border-b border-border flex items-center justify-between px-4">
-                <span className="font-bold text-foreground tracking-wider uppercase text-[11px]">
+        <div className="absolute top-10 right-0 z-40 flex h-[calc(100vh-40px)] w-[400px] flex-col overflow-hidden border-l border-border bg-surface shadow-2xl">
+            <div className="flex h-10 flex-none items-center justify-between border-b border-border bg-surface-hover/50 px-4">
+                <span className="text-[11px] font-bold tracking-wider text-foreground uppercase">
                     What-If Simulator
                 </span>
                 <button onClick={onClose} className="text-foreground-muted hover:text-foreground">
@@ -184,10 +188,10 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            <div className="flex-1 space-y-6 overflow-y-auto p-4">
                 {/* GLOBAL TRANSPORT */}
                 <section>
-                    <div className="text-[10px] uppercase text-foreground-muted font-bold mb-2 flex justify-between">
+                    <div className="mb-2 flex justify-between text-[10px] font-bold text-foreground-muted uppercase">
                         <span>Global Transport</span>
                         <button onClick={handleClearAll} className="text-danger hover:underline">
                             Clear Overrides
@@ -198,7 +202,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                             onClick={() => {
                                 handleGlobalAction('STOP_ALL');
                             }}
-                            className="flex-1 py-1.5 bg-danger/20 hover:bg-danger/30 text-danger border border-danger/50 rounded font-bold"
+                            className="flex-1 rounded border border-danger/50 bg-danger/20 py-1.5 font-bold text-danger hover:bg-danger/30"
                         >
                             STOP ALL
                         </button>
@@ -206,7 +210,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                             onClick={() => {
                                 handleGlobalAction('PAUSE_ALL');
                             }}
-                            className="flex-1 py-1.5 bg-warning/20 hover:bg-warning/30 text-warning border border-warning/50 rounded font-bold"
+                            className="flex-1 rounded border border-warning/50 bg-warning/20 py-1.5 font-bold text-warning hover:bg-warning/30"
                         >
                             PAUSE
                         </button>
@@ -214,7 +218,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                             onClick={() => {
                                 handleGlobalAction('RESUME_ALL');
                             }}
-                            className="flex-1 py-1.5 bg-success/20 hover:bg-success/30 text-success border border-success/50 rounded font-bold"
+                            className="flex-1 rounded border border-success/50 bg-success/20 py-1.5 font-bold text-success hover:bg-success/30"
                         >
                             RESUME
                         </button>
@@ -224,7 +228,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                 {/* EVENTS */}
                 {events.length > 0 && (
                     <section>
-                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-2">Events</div>
+                        <div className="mb-2 text-[10px] font-bold text-foreground-muted uppercase">Events</div>
                         <div className="grid grid-cols-2 gap-2">
                             {events.map(ev => (
                                 <button
@@ -232,10 +236,11 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                     onClick={() => {
                                         handleFireEvent(ev);
                                     }}
-                                    className="px-2 py-1.5 bg-surface-active hover:bg-surface-hover border border-border rounded text-left truncate text-foreground transition-colors"
+                                    className="flex min-w-0 items-center gap-1.5 rounded border border-border bg-surface-active px-2 py-1.5 text-left text-foreground transition-colors hover:bg-surface-hover"
                                     title={ev}
                                 >
-                                    ⚡ {ev}
+                                    <LightningIcon size={13} weight="bold" className="shrink-0" aria-hidden="true" />
+                                    <span className="truncate">{ev}</span>
                                 </button>
                             ))}
                         </div>
@@ -245,7 +250,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                 {/* RTPC OVERRIDES */}
                 {rtpcs.length > 0 && (
                     <section>
-                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-2">RTPC Overrides</div>
+                        <div className="mb-2 text-[10px] font-bold text-foreground-muted uppercase">RTPC Overrides</div>
                         <div className="space-y-2">
                             {rtpcs.map(rtpc => {
                                 const isActive = activeRtpcs.has(rtpc.id);
@@ -255,7 +260,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                     <div
                                         key={rtpc.id}
                                         className={clsx(
-                                            'p-2 border rounded flex items-center gap-3',
+                                            'flex items-center gap-3 rounded border p-2',
                                             isActive
                                                 ? 'border-primary bg-primary/5'
                                                 : 'border-border/50 bg-surface-active'
@@ -272,7 +277,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                                 setActiveRtpcs(newSet);
                                                 handleRtpcOverride(rtpc.id, val, checked);
                                             }}
-                                            className="w-4 h-4 cursor-pointer"
+                                            className="h-4 w-4 cursor-pointer"
                                         />
                                         <span className="flex-1 truncate" title={rtpc.id}>
                                             {rtpc.id}
@@ -285,7 +290,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                                 setRtpcValues(prev => ({ ...prev, [rtpc.id]: newVal }));
                                                 if (isActive) handleRtpcOverride(rtpc.id, newVal, true);
                                             }}
-                                            className="w-20 px-1 py-0.5 bg-background border border-border rounded text-right"
+                                            className="w-20 rounded border border-border bg-background px-1 py-0.5 text-right"
                                             disabled={!isActive}
                                         />
                                     </div>
@@ -298,7 +303,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                 {/* SWITCH OVERRIDES */}
                 {switches.length > 0 && (
                     <section>
-                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-2">
+                        <div className="mb-2 text-[10px] font-bold text-foreground-muted uppercase">
                             Switch Overrides
                         </div>
                         <div className="space-y-2">
@@ -310,7 +315,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                     <div
                                         key={sw.id}
                                         className={clsx(
-                                            'p-2 border rounded flex items-center gap-3',
+                                            'flex items-center gap-3 rounded border p-2',
                                             isActive
                                                 ? 'border-primary bg-primary/5'
                                                 : 'border-border/50 bg-surface-active'
@@ -327,7 +332,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                                 setActiveSwitches(newSet);
                                                 handleSwitchOverride(sw.id, val, checked);
                                             }}
-                                            className="w-4 h-4 cursor-pointer"
+                                            className="h-4 w-4 cursor-pointer"
                                         />
                                         <span className="flex-1 truncate" title={sw.id}>
                                             {sw.id}
@@ -339,7 +344,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                                 setSwitchValues(prev => ({ ...prev, [sw.id]: newVal }));
                                                 if (isActive) handleSwitchOverride(sw.id, newVal, true);
                                             }}
-                                            className="w-28 px-1 py-0.5 bg-background border border-border rounded outline-none"
+                                            className="w-28 rounded border border-border bg-background px-1 py-0.5 outline-none"
                                             disabled={!isActive}
                                         >
                                             {sw.keys.map(k => (
@@ -357,52 +362,60 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
 
                 {/* ADVANCED SEQUENCER CONTROL */}
                 {musicConfigs.length > 0 && (
-                    <section className="border-t border-border/50 pt-4 space-y-4">
-                        <div className="text-[10px] uppercase text-foreground-muted font-bold tracking-wider">
+                    <section className="space-y-4 border-t border-border/50 pt-4">
+                        <div className="text-[10px] font-bold tracking-wider text-foreground-muted uppercase">
                             Interactive Music Sequencer
                         </div>
 
-                        <div className="p-3 bg-surface-active/40 border border-border/60 rounded space-y-4 font-mono text-xs">
+                        <div className="space-y-4 rounded border border-border/60 bg-surface-active/40 p-3 font-mono text-xs">
                             <div className="space-y-1.5">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-[9px] uppercase font-bold text-foreground-muted">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[9px] font-bold text-foreground-muted uppercase">
                                         Sound / Music Container
                                     </label>
                                     <span
                                         className={clsx(
-                                            'px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase',
+                                            'rounded px-1.5 py-0.5 text-[9px] font-bold tracking-wide uppercase',
                                             liveTrackState?.state === 'LOOPING' && 'bg-success/20 text-success',
                                             liveTrackState?.state === 'TRANSITIONING' &&
-                                                'bg-warning/20 text-warning animate-pulse',
+                                                'animate-pulse bg-warning/20 text-warning',
                                             !liveTrackState && 'bg-background text-foreground-muted'
                                         )}
                                     >
                                         {liveTrackState ? liveTrackState.state : 'IDLE'}
                                     </span>
                                 </div>
-                                <select
-                                    value={loopSoundId}
-                                    onChange={e => {
-                                        setLoopSoundId(e.target.value);
-                                    }}
-                                    className="w-full px-2 py-1 bg-background border border-border rounded text-[11px] outline-none text-primary font-bold"
-                                >
-                                    {musicConfigs.map(m => (
-                                        <option key={m.id} value={m.id}>
-                                            🎵 {m.id} ({m.bpm} BPM)
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="flex items-center gap-1.5">
+                                    <MusicNotesIcon
+                                        size={14}
+                                        weight="bold"
+                                        className="shrink-0 text-primary"
+                                        aria-hidden="true"
+                                    />
+                                    <select
+                                        value={loopSoundId}
+                                        onChange={e => {
+                                            setLoopSoundId(e.target.value);
+                                        }}
+                                        className="w-full min-w-0 flex-1 rounded border border-border bg-background px-2 py-1 text-[11px] font-bold text-primary outline-none"
+                                    >
+                                        {musicConfigs.map(m => (
+                                            <option key={m.id} value={m.id}>
+                                                {m.id} ({m.bpm} BPM)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             {liveTrackState && (
-                                <div className="bg-background/80 p-2 rounded border border-border/40 text-[11px] space-y-1">
+                                <div className="space-y-1 rounded border border-border/40 bg-background/80 p-2 text-[11px]">
                                     <div className="flex justify-between">
                                         <span className="text-foreground-muted">Current Region:</span>
                                         <span className="text-info font-bold">{liveTrackState.currentRegion}</span>
                                     </div>
                                     {liveTrackState.targetRegion && (
-                                        <div className="flex justify-between items-center text-warning font-semibold">
+                                        <div className="flex items-center justify-between font-semibold text-warning">
                                             <span>Pending Cut (Queue: {liveTrackState.queueLength}):</span>
                                             <span className="animate-pulse">➔ {liveTrackState.targetRegion}</span>
                                         </div>
@@ -411,9 +424,9 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                             )}
 
                             <div className="space-y-1.5 border-t border-border/30 pt-3">
-                                <div className="grid grid-cols-2 gap-2 items-end">
+                                <div className="grid grid-cols-2 items-end gap-2">
                                     <div className="space-y-1">
-                                        <label className="text-[9px] uppercase font-bold text-foreground-muted">
+                                        <label className="text-[9px] font-bold text-foreground-muted uppercase">
                                             Start Region
                                         </label>
                                         <select
@@ -421,7 +434,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                             onChange={e => {
                                                 setLoopRegion(e.target.value);
                                             }}
-                                            className="w-full px-1.5 py-1 bg-background border border-border rounded text-[11px] outline-none"
+                                            className="w-full rounded border border-border bg-background px-1.5 py-1 text-[11px] outline-none"
                                         >
                                             {regions.map(r => (
                                                 <option key={r} value={r}>
@@ -434,14 +447,14 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                         <button
                                             onClick={handlePlayLoop}
                                             disabled={!loopRegion}
-                                            className="flex-1 py-1 bg-success/20 hover:bg-success/30 text-success border border-success/40 font-bold rounded text-[10px] uppercase transition-colors"
+                                            className="flex-1 rounded border border-success/40 bg-success/20 py-1 text-[10px] font-bold text-success uppercase transition-colors hover:bg-success/30"
                                         >
                                             Play Loop
                                         </button>
                                         <button
                                             onClick={handleStopLoop}
                                             disabled={!liveTrackState}
-                                            className="flex-1 py-1 bg-background hover:bg-surface-active text-foreground-muted border border-border font-bold rounded text-[10px] uppercase transition-colors"
+                                            className="flex-1 rounded border border-border bg-background py-1 text-[10px] font-bold text-foreground-muted uppercase transition-colors hover:bg-surface-active"
                                         >
                                             Stop
                                         </button>
@@ -450,13 +463,13 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                             </div>
 
                             <div className="space-y-3 border-t border-border/30 pt-3">
-                                <div className="text-[9px] uppercase font-bold text-foreground-muted tracking-wider">
+                                <div className="text-[9px] font-bold tracking-wider text-foreground-muted uppercase">
                                     Transition Options
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
-                                        <label className="text-[9px] uppercase font-bold text-foreground-muted">
+                                        <label className="text-[9px] font-bold text-foreground-muted uppercase">
                                             Target
                                         </label>
                                         <select
@@ -464,7 +477,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                             onChange={e => {
                                                 setTargetRegion(e.target.value);
                                             }}
-                                            className="w-full px-1.5 py-1 bg-background border border-border rounded text-[11px] outline-none"
+                                            className="w-full rounded border border-border bg-background px-1.5 py-1 text-[11px] outline-none"
                                         >
                                             {regions.map(r => (
                                                 <option key={r} value={r}>
@@ -474,7 +487,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                         </select>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-[9px] uppercase font-bold text-foreground-muted">
+                                        <label className="text-[9px] font-bold text-foreground-muted uppercase">
                                             Transition Region
                                         </label>
                                         <select
@@ -482,7 +495,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                             onChange={e => {
                                                 setTransitionRegion(e.target.value);
                                             }}
-                                            className="w-full px-1.5 py-1 bg-background border border-border rounded text-[11px] outline-none"
+                                            className="w-full rounded border border-border bg-background px-1.5 py-1 text-[11px] outline-none"
                                         >
                                             <option value="">— None —</option>
                                             {regions.map(r => (
@@ -496,7 +509,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
-                                        <label className="text-[9px] uppercase font-bold text-foreground-muted">
+                                        <label className="text-[9px] font-bold text-foreground-muted uppercase">
                                             Quantize Mode
                                         </label>
                                         <select
@@ -504,7 +517,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                             onChange={e => {
                                                 setQuantize(e.target.value as any);
                                             }}
-                                            className="w-full px-1.5 py-1 bg-background border border-border rounded text-[11px] outline-none"
+                                            className="w-full rounded border border-border bg-background px-1.5 py-1 text-[11px] outline-none"
                                         >
                                             <option value="Immediate">Immediate</option>
                                             <option value="NextBeat">Next Beat</option>
@@ -513,7 +526,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="text-[9px] uppercase font-bold text-foreground-muted">
+                                        <label className="text-[9px] font-bold text-foreground-muted uppercase">
                                             Interval ({quantizeInterval})
                                         </label>
                                         <div className="grid grid-cols-4 gap-1">
@@ -526,10 +539,10 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                                     }}
                                                     disabled={quantize === 'Immediate'}
                                                     className={clsx(
-                                                        'py-0.5 text-[10px] font-bold border rounded transition-colors',
+                                                        'rounded border py-0.5 text-[10px] font-bold transition-colors',
                                                         quantizeInterval === v
-                                                            ? 'bg-primary text-background border-primary'
-                                                            : 'bg-background border-border hover:bg-surface-active disabled:opacity-20'
+                                                            ? 'border-primary bg-primary text-background'
+                                                            : 'border-border bg-background hover:bg-surface-active disabled:opacity-20'
                                                     )}
                                                 >
                                                     {v}
@@ -539,9 +552,9 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-2 items-center">
+                                <div className="grid grid-cols-3 items-center gap-2">
                                     <div className="space-y-1">
-                                        <label className="text-[9px] uppercase font-bold text-foreground-muted">
+                                        <label className="text-[9px] font-bold text-foreground-muted uppercase">
                                             Blend Mode
                                         </label>
                                         <select
@@ -549,14 +562,14 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                             onChange={e => {
                                                 setBlendMode(e.target.value as any);
                                             }}
-                                            className="w-full px-1.5 py-1 bg-background border border-border rounded text-[11px] outline-none"
+                                            className="w-full rounded border border-border bg-background px-1.5 py-1 text-[11px] outline-none"
                                         >
                                             <option value="overlap">Overlap</option>
                                             <option value="crossfade">Crossfade</option>
                                         </select>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-[9px] uppercase font-bold text-foreground-muted">
+                                        <label className="text-[9px] font-bold text-foreground-muted uppercase">
                                             Fade (s)
                                         </label>
                                         <input
@@ -568,10 +581,10 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                             onChange={e => {
                                                 setCrossfadeSec(parseFloat(e.target.value) || 0);
                                             }}
-                                            className="w-full px-1.5 py-1 bg-background border border-border rounded text-[11px] text-right"
+                                            className="w-full rounded border border-border bg-background px-1.5 py-1 text-right text-[11px]"
                                         />
                                     </div>
-                                    <div className="flex items-center gap-2 justify-end h-full pt-4">
+                                    <div className="flex h-full items-center justify-end gap-2 pt-4">
                                         <input
                                             type="checkbox"
                                             id="interruptable_chk"
@@ -579,11 +592,11 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                             onChange={e => {
                                                 setInterruptable(e.target.checked);
                                             }}
-                                            className="w-4 h-4 cursor-pointer"
+                                            className="h-4 w-4 cursor-pointer"
                                         />
                                         <label
                                             htmlFor="interruptable_chk"
-                                            className="text-[10px] font-bold uppercase cursor-pointer text-foreground-muted"
+                                            className="cursor-pointer text-[10px] font-bold text-foreground-muted uppercase"
                                         >
                                             Int.
                                         </label>
@@ -593,7 +606,7 @@ export const SimulatorDrawer: React.FC<SimulatorDrawerProps> = ({ manifest, snap
                                 <button
                                     onClick={handleExecuteTransition}
                                     disabled={!liveTrackState}
-                                    className="w-full py-2 bg-primary/20 hover:bg-primary/30 disabled:opacity-30 disabled:hover:bg-primary/20 border border-primary/40 font-bold rounded text-[11px] tracking-wider uppercase transition-colors"
+                                    className="w-full rounded border border-primary/40 bg-primary/20 py-2 text-[11px] font-bold tracking-wider uppercase transition-colors hover:bg-primary/30 disabled:opacity-30 disabled:hover:bg-primary/20"
                                 >
                                     ➔ Execute Transition
                                 </button>

@@ -1,0 +1,331 @@
+{
+    "radius": {
+        "sm": {
+            "$extensions": {
+                "com.figma.scopes": ["CORNER_RADIUS"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--radius-sm)"
+                }
+            },
+            "$type": "number",
+            "$value": "{radius.control}"
+        },
+        "md": {
+            "$extensions": {
+                "com.figma.scopes": ["CORNER_RADIUS"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--radius-md)"
+                }
+            },
+            "$type": "number",
+            "$value": "{radius.node}"
+        },
+        "lg": {
+            "$extensions": {
+                "com.figma.scopes": ["CORNER_RADIUS"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--radius-lg)"
+                }
+            },
+            "$type": "number",
+            "$value": "{radius.panel}"
+        },
+        "none": {
+            "$extensions": {
+                "com.figma.scopes": ["CORNER_RADIUS"],
+                "com.figma.codeSyntax": {
+                    "Web": "0px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.0}",
+            "$description": "Sharp edge (0px)"
+        },
+        "badge": {
+            "$extensions": {
+                "com.figma.scopes": ["CORNER_RADIUS"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--radius-badge)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.3}",
+            "$description": "Micro badge & checkbox radius (3px)"
+        },
+        "control": {
+            "$extensions": {
+                "com.figma.scopes": ["CORNER_RADIUS"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--radius-sm)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.4}",
+            "$description": "Buttons, inputs & event cards (4px)"
+        },
+        "node": {
+            "$extensions": {
+                "com.figma.scopes": ["CORNER_RADIUS"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--radius-md)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.6}",
+            "$description": "Audio graph nodes & token rows (6px)"
+        },
+        "panel": {
+            "$extensions": {
+                "com.figma.scopes": ["CORNER_RADIUS"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--radius-lg)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.8}",
+            "$description": "Popovers, specimen cards & drawers (8px)"
+        },
+        "board": {
+            "$extensions": {
+                "com.figma.scopes": ["CORNER_RADIUS"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--radius-board)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.12}",
+            "$description": "Master canvas & design system boards (12px)"
+        }
+    },
+    "spacing": {
+        "xs": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-inline-xs)"
+                }
+            },
+            "$type": "number",
+            "$value": "{spacing.inline-xs}"
+        },
+        "sm": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-stack-sm)"
+                }
+            },
+            "$type": "number",
+            "$value": "{spacing.stack-sm}"
+        },
+        "md": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-panel-md)"
+                }
+            },
+            "$type": "number",
+            "$value": "{spacing.panel-md}"
+        },
+        "lg": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-section-lg)"
+                }
+            },
+            "$type": "number",
+            "$value": "{spacing.section-lg}"
+        },
+        "inline-xs": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-inline-xs)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.4}"
+        },
+        "stack-sm": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-stack-sm)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.8}"
+        },
+        "panel-md": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-panel-md)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.12}"
+        },
+        "section-lg": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-section-lg)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.16}"
+        },
+        "board-xl": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-board-xl)"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.24}"
+        },
+        "xl": {
+            "$extensions": {
+                "com.figma.scopes": ["GAP"],
+                "com.figma.codeSyntax": {
+                    "Web": "var(--spacing-board-xl)"
+                }
+            },
+            "$type": "number",
+            "$value": "{spacing.board-xl}"
+        }
+    },
+    "border": {
+        "width": {
+            "hairline": {
+                "$extensions": {
+                    "com.figma.scopes": ["STROKE_FLOAT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "var(--border-width-hairline)"
+                    }
+                },
+                "$type": "number",
+                "$value": "{primitive.space.1}",
+                "$description": "Default 1px structural hairline border"
+            },
+            "node": {
+                "$extensions": {
+                    "com.figma.scopes": ["STROKE_FLOAT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "var(--border-width-node)"
+                    }
+                },
+                "$type": "number",
+                "$value": "{primitive.space.2}",
+                "$description": "Audio graph node border & active focus ring (2px)"
+            },
+            "accent-bar": {
+                "$extensions": {
+                    "com.figma.scopes": ["STROKE_FLOAT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "var(--border-width-accent-bar)"
+                    }
+                },
+                "$type": "number",
+                "$value": "{primitive.space.4}",
+                "$description": "Event stream status accent bar (4px)"
+            }
+        }
+    },
+    "layout": {
+        "header-height": {
+            "$extensions": {
+                "com.figma.scopes": ["WIDTH_HEIGHT"],
+                "com.figma.codeSyntax": {
+                    "Web": "40px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.40}"
+        },
+        "pane-bar-height": {
+            "$extensions": {
+                "com.figma.scopes": ["WIDTH_HEIGHT"],
+                "com.figma.codeSyntax": {
+                    "Web": "32px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.32}"
+        },
+        "scrubber-height": {
+            "$extensions": {
+                "com.figma.scopes": ["WIDTH_HEIGHT"],
+                "com.figma.codeSyntax": {
+                    "Web": "48px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.space.48}"
+        },
+        "sidebar-left-width": {
+            "$extensions": {
+                "com.figma.scopes": ["WIDTH_HEIGHT"],
+                "com.figma.codeSyntax": {
+                    "Web": "450px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.size.sidebar-left}"
+        },
+        "sidebar-right-width": {
+            "$extensions": {
+                "com.figma.scopes": ["WIDTH_HEIGHT"],
+                "com.figma.codeSyntax": {
+                    "Web": "300px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.size.sidebar-right}"
+        },
+        "simulator-drawer-width": {
+            "$extensions": {
+                "com.figma.scopes": ["WIDTH_HEIGHT"],
+                "com.figma.codeSyntax": {
+                    "Web": "400px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.size.drawer-simulator}"
+        },
+        "node-voice-width": {
+            "$extensions": {
+                "com.figma.scopes": ["WIDTH_HEIGHT"],
+                "com.figma.codeSyntax": {
+                    "Web": "170px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.size.node-width-voice}"
+        },
+        "node-bus-width": {
+            "$extensions": {
+                "com.figma.scopes": ["WIDTH_HEIGHT"],
+                "com.figma.codeSyntax": {
+                    "Web": "190px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.size.node-width-bus}"
+        },
+        "node-master-width": {
+            "$extensions": {
+                "com.figma.scopes": ["WIDTH_HEIGHT"],
+                "com.figma.codeSyntax": {
+                    "Web": "158px"
+                }
+            },
+            "$type": "number",
+            "$value": "{primitive.size.node-width-master}"
+        }
+    }
+}

@@ -1,0 +1,370 @@
+{
+    "font": {
+        "family": {
+            "mono": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_FAMILY"],
+                    "com.figma.codeSyntax": {
+                        "Web": "var(--font-mono)"
+                    }
+                },
+                "$type": "text",
+                "$value": "Medeo Mono",
+                "$description": "Primary monospace UI & telemetry font (--font-mono). Default: JetBrains Mono; Alt: Medeo Mono (https://github.com/DNFDEVS/medeo-font)."
+            },
+            "sans": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_FAMILY"],
+                    "com.figma.codeSyntax": {
+                        "Web": "var(--font-family)"
+                    }
+                },
+                "$type": "text",
+                "$value": "Medeo Sans",
+                "$description": "Fallback UI sans-serif font (--font-family). Default: Inter; Alt: Medeo Sans (https://github.com/DNFDEVS/medeo-font)."
+            },
+            "medeo-mono": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_FAMILY"],
+                    "com.figma.codeSyntax": {
+                        "Web": "Medeo Mono, var(--font-mono)"
+                    }
+                },
+                "$type": "text",
+                "$value": "Medeo Mono",
+                "$description": "Medeo Mono by DNFDEVS (https://github.com/DNFDEVS/medeo-font) for code & tabular audio telemetry."
+            },
+            "medeo-sans": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_FAMILY"],
+                    "com.figma.codeSyntax": {
+                        "Web": "Medeo Sans, var(--font-family)"
+                    }
+                },
+                "$type": "text",
+                "$value": "Medeo Sans",
+                "$description": "Medeo Sans by DNFDEVS (https://github.com/DNFDEVS/medeo-font) variable UI sans-serif."
+            },
+            "medeo-serif": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_FAMILY"],
+                    "com.figma.codeSyntax": {
+                        "Web": "Medeo Serif, serif"
+                    }
+                },
+                "$type": "text",
+                "$value": "Medeo Serif",
+                "$description": "Medeo Serif companion from https://github.com/DNFDEVS/medeo-font."
+            },
+            "medeo-pixel": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_FAMILY"],
+                    "com.figma.codeSyntax": {
+                        "Web": "Medeo Pixel, monospace"
+                    }
+                },
+                "$type": "text",
+                "$value": "Medeo Pixel",
+                "$description": "Medeo Pixel companion from https://github.com/DNFDEVS/medeo-font."
+            },
+            "jetbrains-mono": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_FAMILY"],
+                    "com.figma.codeSyntax": {
+                        "Web": "JetBrains Mono, monospace"
+                    }
+                },
+                "$type": "text",
+                "$value": "JetBrains Mono"
+            },
+            "inter": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_FAMILY"],
+                    "com.figma.codeSyntax": {
+                        "Web": "Inter, system-ui, sans-serif"
+                    }
+                },
+                "$type": "text",
+                "$value": "Inter"
+            }
+        },
+        "style": {
+            "regular": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_STYLE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "normal"
+                    }
+                },
+                "$type": "fontWeights",
+                "$value": "Regular"
+            },
+            "medium": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_STYLE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "500"
+                    }
+                },
+                "$type": "fontWeights",
+                "$value": "Medium"
+            },
+            "semibold": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_STYLE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "600"
+                    }
+                },
+                "$type": "fontWeights",
+                "$value": "Semi Bold"
+            },
+            "bold": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_STYLE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "700"
+                    }
+                },
+                "$type": "fontWeights",
+                "$value": "Bold"
+            }
+        },
+        "weight": {
+            "regular": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_WEIGHT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "400"
+                    }
+                },
+                "$type": "fontWeights",
+                "$value": "400"
+            },
+            "medium": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_WEIGHT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "500"
+                    }
+                },
+                "$type": "fontWeights",
+                "$value": "500"
+            },
+            "semibold": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_WEIGHT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "600"
+                    }
+                },
+                "$type": "fontWeights",
+                "$value": "600"
+            },
+            "bold": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_WEIGHT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "700"
+                    }
+                },
+                "$type": "fontWeights",
+                "$value": "700"
+            }
+        },
+        "size": {
+            "xs": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_SIZE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "9px"
+                    }
+                },
+                "$type": "number",
+                "$value": 9,
+                "$description": "Micro Label / RAM"
+            },
+            "sm": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_SIZE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "10px"
+                    }
+                },
+                "$type": "number",
+                "$value": 10,
+                "$description": "Section Header / Badge"
+            },
+            "md": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_SIZE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "11px"
+                    }
+                },
+                "$type": "number",
+                "$value": 11,
+                "$description": "Drawer / Issue / Log Text"
+            },
+            "base": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_SIZE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "12px"
+                    }
+                },
+                "$type": "number",
+                "$value": 12,
+                "$description": "Base UI / Body"
+            },
+            "lg": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_SIZE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "18px"
+                    }
+                },
+                "$type": "number",
+                "$value": 18,
+                "$description": "Display / Metric"
+            },
+            "xl": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_SIZE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "22px"
+                    }
+                },
+                "$type": "number",
+                "$value": 22,
+                "$description": "Design System Title"
+            },
+            "xs-plus": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_SIZE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "9.5px"
+                    }
+                },
+                "$type": "number",
+                "$value": 9.5,
+                "$description": "Micro Compact Token Label"
+            },
+            "sm-plus": {
+                "$extensions": {
+                    "com.figma.scopes": ["FONT_SIZE"],
+                    "com.figma.codeSyntax": {
+                        "Web": "10.5px"
+                    }
+                },
+                "$type": "number",
+                "$value": 10.5,
+                "$description": "Sequencer Field Label"
+            }
+        },
+        "line-height": {
+            "xs": {
+                "$extensions": {
+                    "com.figma.scopes": ["LINE_HEIGHT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "12px"
+                    }
+                },
+                "$type": "number",
+                "$value": 12
+            },
+            "sm": {
+                "$extensions": {
+                    "com.figma.scopes": ["LINE_HEIGHT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "14px"
+                    }
+                },
+                "$type": "number",
+                "$value": 14
+            },
+            "md": {
+                "$extensions": {
+                    "com.figma.scopes": ["LINE_HEIGHT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "15px"
+                    }
+                },
+                "$type": "number",
+                "$value": 15
+            },
+            "base": {
+                "$extensions": {
+                    "com.figma.scopes": ["LINE_HEIGHT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "16px"
+                    }
+                },
+                "$type": "number",
+                "$value": 16
+            },
+            "lg": {
+                "$extensions": {
+                    "com.figma.scopes": ["LINE_HEIGHT"],
+                    "com.figma.codeSyntax": {
+                        "Web": "24px"
+                    }
+                },
+                "$type": "number",
+                "$value": 24
+            }
+        },
+        "tracking": {
+            "tight": {
+                "$extensions": {
+                    "com.figma.scopes": ["LETTER_SPACING"],
+                    "com.figma.codeSyntax": {
+                        "Web": "-0.2px"
+                    }
+                },
+                "$type": "number",
+                "$value": -0.2
+            },
+            "normal": {
+                "$extensions": {
+                    "com.figma.scopes": ["LETTER_SPACING"],
+                    "com.figma.codeSyntax": {
+                        "Web": "0px"
+                    }
+                },
+                "$type": "number",
+                "$value": 0
+            },
+            "wide": {
+                "$extensions": {
+                    "com.figma.scopes": ["LETTER_SPACING"],
+                    "com.figma.codeSyntax": {
+                        "Web": "0.4px"
+                    }
+                },
+                "$type": "number",
+                "$value": 0.4
+            },
+            "wider": {
+                "$extensions": {
+                    "com.figma.scopes": ["LETTER_SPACING"],
+                    "com.figma.codeSyntax": {
+                        "Web": "0.6px"
+                    }
+                },
+                "$type": "number",
+                "$value": 0.6
+            },
+            "widest": {
+                "$extensions": {
+                    "com.figma.scopes": ["LETTER_SPACING"],
+                    "com.figma.codeSyntax": {
+                        "Web": "0.8px"
+                    }
+                },
+                "$type": "number",
+                "$value": 0.8
+            }
+        }
+    }
+}
