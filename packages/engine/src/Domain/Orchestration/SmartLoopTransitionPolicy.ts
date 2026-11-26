@@ -1,8 +1,9 @@
 import type { IMagnetConfig, ISmartLoopSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { IRTPCAdapter } from '@domain/Managers/Ports/IRTPCAdapter.js';
 import type { RegionId, QuantizeType, IConditionTrace, Milliseconds } from '@scene-grid/shared';
-import { isAbsent } from '@scene-grid/shared';
+
 import { ConditionEvaluator } from '@domain/Shared/Evaluators/ConditionEvaluator.js';
+import { isAbsent } from '@scene-grid/shared';
 
 export interface ITransitionDecision {
     readonly targetRegion: RegionId;
@@ -12,6 +13,7 @@ export interface ITransitionDecision {
         readonly crossfadeDuration?: Milliseconds;
         readonly tailDuration?: Milliseconds;
         readonly interruptable: boolean;
+        readonly offsetMode?: 'None' | 'Relative' | 'Inverted';
     };
     readonly trace: IConditionTrace;
 }
@@ -56,7 +58,8 @@ export default class SmartLoopTransitionPolicy {
                         quantize: magnet.quantize,
                         crossfadeDuration: magnet.crossfadeDuration,
                         tailDuration: magnet.tailDuration,
-                        interruptable: true
+                        interruptable: true,
+                        ...(magnet.offsetMode === undefined ? {} : { offsetMode: magnet.offsetMode })
                     },
                     trace: {
                         param: magnet.condition.param,

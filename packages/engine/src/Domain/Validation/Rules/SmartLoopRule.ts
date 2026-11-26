@@ -1,11 +1,15 @@
 // noinspection D
 
-import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
-import type { ISoundValidationRule } from '@domain/Validation/Ports/ISoundValidationRule.js';
 import type { AnySoundConfig, ISmartLoopSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { ISoundValidationRule } from '@domain/Validation/Ports/ISoundValidationRule.js';
+import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
+
+import QuantizeRule from '@domain/Validation/Rules/QuantizeRule.js';
 import { type DeepReadonly, isAbsent, isDefined, typedEntries } from '@scene-grid/shared';
 
 export default class SmartLoopRule implements ISoundValidationRule {
+    constructor(private readonly quantizeRule = new QuantizeRule()) {}
+
     validate(soundId: string, cfg: AnySoundConfig, context: IValidationContext): void {
         if (context.isSmartLoop(cfg)) {
             if (!context.assertRequiredType(`soundMap.${soundId}.smartLoop`, cfg.smartLoop, 'object')) return;
@@ -67,7 +71,7 @@ export default class SmartLoopRule implements ISoundValidationRule {
             if (!context.assertRequiredType(magnetPath, magnet, 'object')) continue;
             context.assertRequiredType(`${magnetPath}.region`, magnet.region, 'string');
             context.assertRequiredType(`${magnetPath}.targetRegion`, magnet.targetRegion, 'string');
-            context.assertRequiredType(`${magnetPath}.quantize`, magnet.quantize, 'string');
+            this.quantizeRule.validate(context, `${magnetPath}.quantize`, magnet.quantize, { required: true });
 
             context.assertOptionalType(`${magnetPath}.transitionRegionName`, magnet.transitionRegionName, 'string');
             context.assertOptionalType(`${magnetPath}.crossfadeDuration`, magnet.crossfadeDuration, 'number');

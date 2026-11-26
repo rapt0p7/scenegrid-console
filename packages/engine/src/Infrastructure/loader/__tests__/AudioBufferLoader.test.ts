@@ -133,6 +133,36 @@ describe('AudioBufferLoader', () => {
             await loader.load({ url: ['weird.unknown', 'valid.mp3'], priority: 'low', expectedSizeMb: 1 });
             expect(mockFetch).toHaveBeenCalledWith('valid.mp3');
         });
+
+        it('should resolve .webm first from a CLI codec ladder when audio/webm is supported', async () => {
+            mockAudioElement.canPlayType.mockImplementation((mime: string) =>
+                mime === 'audio/webm' ? 'probably' : ''
+            );
+
+            await loader.load({
+                url: ['/assets/sfx.webm', '/assets/sfx.mp3', '/assets/sfx.m4a'],
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+
+            expect(mockAudioElement.canPlayType).toHaveBeenCalledWith('audio/webm');
+            expect(mockFetch).toHaveBeenCalledWith('/assets/sfx.webm');
+        });
+
+        it('should skip .webm and pick .mp3 when audio/webm is not supported', async () => {
+            mockAudioElement.canPlayType.mockImplementation((mime: string) =>
+                mime === 'audio/mpeg' ? 'probably' : ''
+            );
+
+            await loader.load({
+                url: ['/assets/sfx.webm', '/assets/sfx.mp3', '/assets/sfx.m4a'],
+                priority: 'low',
+                expectedSizeMb: 1
+            });
+
+            expect(mockAudioElement.canPlayType).toHaveBeenCalledWith('audio/webm');
+            expect(mockFetch).toHaveBeenCalledWith('/assets/sfx.mp3');
+        });
     });
 
     describe('Caching & Clear Mechanisms', () => {

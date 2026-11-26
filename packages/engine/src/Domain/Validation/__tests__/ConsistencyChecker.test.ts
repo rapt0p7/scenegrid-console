@@ -213,16 +213,34 @@ describe('ConsistencyChecker', () => {
                 expect(ConsistencyChecker.validate(config)).toBe(false);
             });
 
-            it('should validate spatial position arrays strictly requiring 3 numbers', () => {
-                const config: any = {
+            it('should accept boolean and valid ISpatialConfig spatial settings and reject invalid types', () => {
+                const validConfig: any = {
                     buses: { master: {} },
                     soundMap: {
-                        '3d_good': { busId: 'master', spatial: { position: [1, 2, 3] } },
-                        '3d_bad_type': { busId: 'master', spatial: { position: [1, 'two', 3] } },
-                        '3d_bad_len': { busId: 'master', spatial: { position: [1, 2] } }
+                        '3d_bool_true': { busId: 'master', spatial: true },
+                        '3d_bool_false': { busId: 'master', spatial: false },
+                        '3d_config': {
+                            busId: 'master',
+                            spatial: {
+                                distanceModel: 'inverse',
+                                panningModel: 'HRTF',
+                                refDistance: 1,
+                                maxDistance: 100,
+                                rolloffFactor: 1
+                            }
+                        }
                     }
                 };
-                expect(ConsistencyChecker.validate(config)).toBe(false);
+                expect(ConsistencyChecker.validate(validConfig)).toBe(true);
+
+                const invalidConfig: any = {
+                    buses: { master: {} },
+                    soundMap: {
+                        '3d_bad_type': { busId: 'master', spatial: 123 },
+                        '3d_bad_panning': { busId: 'master', spatial: { panningModel: 'surround' } }
+                    }
+                };
+                expect(ConsistencyChecker.validate(invalidConfig)).toBe(false);
             });
 
             it('should catch non-string ducking targets safely', () => {
@@ -1793,6 +1811,64 @@ describe('ConsistencyChecker', () => {
                 );
             });
 
+            it('should pass object QuantizeType forms across SmartLoop magnets, Events, and Scatterer', () => {
+                const config: any = {
+                    buses: { master: {} },
+                    rtpcManifest: { intensity: { defaultValue: 0 } },
+                    manifest: { sfx_stinger: { url: 'stinger.ogg' }, chirp: { url: 'chirp.ogg' } },
+                    banks: { main: { id: 'main', sounds: ['bgm_loop', 'sfx_stinger', 'chirp'] } },
+                    soundMap: {
+                        bgm_loop: {
+                            busId: 'master',
+                            smartLoop: {
+                                bpm: 120,
+                                regions: { intro: [0, 1000], main: [1000, 2000] },
+                                magnets: [
+                                    {
+                                        region: 'intro',
+                                        targetRegion: 'main',
+                                        quantize: { type: 'NextGridDivision', division: '1/16' },
+                                        offsetMode: 'Relative',
+                                        condition: { param: 'intensity', operator: '>', value: 0.5 }
+                                    }
+                                ]
+                            }
+                        },
+                        sfx_stinger: { busId: 'master' },
+                        chirp: { busId: 'master' },
+                        ambience_scatterer: {
+                            isScatterer: true,
+                            busId: 'master',
+                            sources: ['chirp'],
+                            spawnRate: [1000, 2000],
+                            sync: {
+                                quantize: { type: 'ExactPulse', pulseOffset: 480 },
+                                referenceTrackId: 'bgm_loop'
+                            }
+                        }
+                    },
+                    events: {
+                        evt_quantized: {
+                            actions: [
+                                {
+                                    type: 'play_stinger',
+                                    target: 'sfx_stinger',
+                                    quantize: { type: 'ExactPulse', pulseOffset: 240 }
+                                },
+                                {
+                                    type: 'music_transition',
+                                    target: 'bgm_loop',
+                                    targetRegion: 'main',
+                                    options: { quantize: { type: 'NextGridDivision', division: '1/8' } }
+                                }
+                            ]
+                        }
+                    }
+                };
+
+                expect(ConsistencyChecker.validate(config)).toBe(true);
+            });
+
             it('should catch invalid enum values in quantize and offsetMode', () => {
                 const config: any = {
                     buses: { master: {} },
@@ -1821,7 +1897,7 @@ describe('ConsistencyChecker', () => {
 
                 expect(console.error).toHaveBeenCalledWith(
                     expect.stringContaining(
-                        "has invalid value \"NextFrame\". Expected 'Immediate', 'NextBeat', or 'NextBar'"
+                        "Invalid quantize value \"NextFrame\" at \"events.typo_events.actions[0].quantize\". Expected 'Immediate', 'NextBeat', 'NextBar', NextGridDivision, or ExactPulse."
                     )
                 );
                 expect(console.error).toHaveBeenCalledWith(
@@ -1829,6 +1905,33 @@ describe('ConsistencyChecker', () => {
                         "has invalid value \"Absolute\". Expected 'None', 'Relative', or 'Inverted'"
                     )
                 );
+            });
+
+            it('should validate examples/verticalLayeringSnapshot.json with smoothing and no smoothingMs', async () => {
+                const fs = await import('node:fs');
+                const path = await import('node:path');
+                const snapshotPath = path.resolve(process.cwd(), 'examples/verticalLayeringSnapshot.json');
+                const snapshots = JSON.parse(fs.readFileSync(snapshotPath, 'utf-8'));
+
+                expect(snapshots.idle.buses.music_strings.rtpc.gain.smoothing).toBe(150);
+                expect(snapshots.idle.buses.music_strings.rtpc.gain.smoothingMs).toBeUndefined();
+                expect(snapshots.idle.buses.music_perc.rtpc.gain.smoothing).toBe(150);
+                expect(snapshots.idle.buses.music_perc.rtpc.gain.smoothingMs).toBeUndefined();
+
+                const isValid = ConsistencyChecker.validate({
+                    buses: {
+                        music_base: { gain: 1 },
+                        music_strings: { gain: 1 },
+                        music_perc: { gain: 1 },
+                        sfx: { gain: 1 }
+                    },
+                    rtpcManifest: {
+                        game_intensity: { defaultValue: 0.5, min: 0, max: 1 }
+                    },
+                    snapshots
+                } as any);
+
+                expect(isValid).toBe(true);
             });
         });
 

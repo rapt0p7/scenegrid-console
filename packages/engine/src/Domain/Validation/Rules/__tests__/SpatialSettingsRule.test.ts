@@ -72,76 +72,42 @@ describe('SpatialSettingsRule', () => {
             expect(context.getErrors()).toHaveLength(0);
         });
 
-        it('should accept valid 3D position [x, y, z] and assert exact indexed element paths (Lines 38-41)', () => {
+        it('should accept boolean spatial values (true and false) without errors', () => {
             const rule = new SpatialSettingsRule();
             const context = createStubContext({});
-            const assertRequiredTypeSpy = vi.spyOn(context, 'assertRequiredType');
-            const assertArraySpy = vi.spyOn(context, 'assertArray');
 
-            const soundConfig = {
-                spatial: {
-                    position: [10.5, 0.0, -5.2]
-                }
-            };
+            rule.validate('sfx_spatial_on', { spatial: true }, context);
+            rule.validate('sfx_spatial_off', { spatial: false }, context);
 
-            rule.validate('laser_emitter', soundConfig as any, context);
-
-            expect(assertArraySpy).toHaveBeenCalledWith(
-                'soundMap.laser_emitter.spatial.position',
-                [10.5, 0.0, -5.2],
-                false
-            );
-            expect(assertRequiredTypeSpy).toHaveBeenCalledWith(
-                'soundMap.laser_emitter.spatial.position[0]',
-                10.5,
-                'number'
-            );
-            expect(assertRequiredTypeSpy).toHaveBeenCalledWith(
-                'soundMap.laser_emitter.spatial.position[1]',
-                0.0,
-                'number'
-            );
-            expect(assertRequiredTypeSpy).toHaveBeenCalledWith(
-                'soundMap.laser_emitter.spatial.position[2]',
-                -5.2,
-                'number'
-            );
             expect(context.getErrors()).toHaveLength(0);
         });
 
-        it('should reject position vectors with length !== 3 with verbatim error (Lines 38 & 43)', () => {
+        it('should reject non-boolean, non-object spatial values (string, number, array)', () => {
             const rule = new SpatialSettingsRule();
             const context = createStubContext({});
 
-            const sound2D = { spatial: { position: [10, 20] } };
-            const sound4D = { spatial: { position: [10, 20, 30, 40] } };
+            rule.validate('s_str', { spatial: 'invalid' as any }, context);
+            rule.validate('s_num', { spatial: 123 as any }, context);
+            rule.validate('s_arr', { spatial: [1, 2, 3] as any }, context);
 
-            rule.validate('sound_2d', sound2D as any, context);
-            rule.validate('sound_4d', sound4D as any, context);
-
-            expect(context.getErrors()).toContain('Sound "sound_2d" spatial.position must be [x, y, z] (3 numbers)');
-            expect(context.getErrors()).toContain('Sound "sound_4d" spatial.position must be [x, y, z] (3 numbers)');
+            expect(context.getErrors()).toEqual([
+                'Type Error at "soundMap.s_str.spatial": expected boolean or object, got string',
+                'Type Error at "soundMap.s_num.spatial": expected boolean or object, got number',
+                'Type Error at "soundMap.s_arr.spatial": expected boolean or object, got array'
+            ]);
         });
 
-        it('should not perform position array checks when position is omitted (Line 35)', () => {
+        it('should accept valid panningModel values and reject invalid ones', () => {
             const rule = new SpatialSettingsRule();
-            const context = createStubContext({});
-            const assertArraySpy = vi.spyOn(context, 'assertArray');
+            const validContext = createStubContext({});
 
-            const soundConfig = {
-                spatial: {
-                    refDistance: 1.0
-                }
-            };
+            rule.validate('s_hrtf', { spatial: { panningModel: 'HRTF' } }, validContext);
+            rule.validate('s_eq', { spatial: { panningModel: 'equalpower' } }, validContext);
+            expect(validContext.getErrors()).toHaveLength(0);
 
-            rule.validate('sound_no_pos', soundConfig, context);
-
-            expect(assertArraySpy).not.toHaveBeenCalledWith(
-                'soundMap.sound_no_pos.spatial.position',
-                expect.anything(),
-                expect.anything()
-            );
-            expect(context.getErrors()).toHaveLength(0);
+            const badContext = createStubContext({});
+            rule.validate('s_bad_pan', { spatial: { panningModel: 'binaural' as any } }, badContext);
+            expect(badContext.getErrors()).toEqual(['Sound "s_bad_pan" has invalid panningModel: "binaural"']);
         });
     });
 });

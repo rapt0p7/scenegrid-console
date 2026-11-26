@@ -1,8 +1,9 @@
 // noinspection D
 
-import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
-import type { ISoundValidationRule } from '@domain/Validation/Ports/ISoundValidationRule.js';
 import type { AnySoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
+import type { ISoundValidationRule } from '@domain/Validation/Ports/ISoundValidationRule.js';
+import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
+
 import { isAbsent, isDefined } from '@scene-grid/shared';
 
 export default class SpatialSettingsRule implements ISoundValidationRule {
@@ -11,38 +12,33 @@ export default class SpatialSettingsRule implements ISoundValidationRule {
             const spatial = cfg.spatial;
 
             if (isAbsent(spatial)) return;
+            if (typeof spatial === 'boolean') return;
 
-            if (!context.assertOptionalType(`soundMap.${soundId}.spatial`, spatial, 'object')) return;
+            if (typeof spatial !== 'object' || Array.isArray(spatial)) {
+                const actualType = Array.isArray(spatial) ? 'array' : typeof spatial;
+                context.addError(
+                    `Type Error at "soundMap.${soundId}.spatial": expected boolean or object, got ${actualType}`
+                );
+                return;
+            }
 
-            if (typeof spatial === 'object' && isDefined(spatial.distanceModel)) {
+            if (isDefined(spatial.distanceModel)) {
                 const validModels = ['linear', 'inverse', 'exponential'];
                 if (!validModels.includes(spatial.distanceModel)) {
                     context.addError(`Sound "${soundId}" has invalid distanceModel: "${spatial.distanceModel}"`);
                 }
             }
 
-            if (typeof spatial === 'object') {
-                context.assertOptionalType(`soundMap.${soundId}.spatial.refDistance`, spatial.refDistance, 'number');
-                context.assertOptionalType(`soundMap.${soundId}.spatial.maxDistance`, spatial.maxDistance, 'number');
-                context.assertOptionalType(
-                    `soundMap.${soundId}.spatial.rolloffFactor`,
-                    spatial.rolloffFactor,
-                    'number'
-                );
-            }
-
-            if (
-                isDefined((spatial as any).position) &&
-                context.assertArray(`soundMap.${soundId}.spatial.position`, (spatial as any).position, false)
-            ) {
-                if ((spatial as any).position.length === 3) {
-                    (spatial as any).position.forEach((value: any, index: number) => {
-                        context.assertRequiredType(`soundMap.${soundId}.spatial.position[${index}]`, value, 'number');
-                    });
-                } else {
-                    context.addError(`Sound "${soundId}" spatial.position must be [x, y, z] (3 numbers)`);
+            if (isDefined(spatial.panningModel)) {
+                const validPanningModels = ['equalpower', 'HRTF'];
+                if (!validPanningModels.includes(spatial.panningModel)) {
+                    context.addError(`Sound "${soundId}" has invalid panningModel: "${spatial.panningModel}"`);
                 }
             }
+
+            context.assertOptionalType(`soundMap.${soundId}.spatial.refDistance`, spatial.refDistance, 'number');
+            context.assertOptionalType(`soundMap.${soundId}.spatial.maxDistance`, spatial.maxDistance, 'number');
+            context.assertOptionalType(`soundMap.${soundId}.spatial.rolloffFactor`, spatial.rolloffFactor, 'number');
         }
     }
 }

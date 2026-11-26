@@ -120,7 +120,7 @@ describe('EventsRule', () => {
                 `Action at "events.evt_1.actions[0].options.offsetMode" has invalid value "BadMode". Expected 'None', 'Relative', or 'Inverted'.`
             );
             expect(context.getErrors()).toContain(
-                `Action at "events.evt_1.actions[1].quantize" has invalid value "BadQuantize". Expected 'Immediate', 'NextBeat', or 'NextBar'.`
+                `Invalid quantize value "BadQuantize" at "events.evt_1.actions[1].quantize". Expected 'Immediate', 'NextBeat', 'NextBar', NextGridDivision, or ExactPulse.`
             );
         });
 
@@ -448,8 +448,51 @@ describe('EventsRule', () => {
                     `Action at "events.evt_bad_enums.actions[0].options.offsetMode" has invalid value "InvalidMode". Expected 'None', 'Relative', or 'Inverted'.`
                 );
                 expect(context.getErrors()).toContain(
-                    `Action at "events.evt_bad_enums.actions[1].quantize" has invalid value "InvalidQuantize". Expected 'Immediate', 'NextBeat', or 'NextBar'.`
+                    `Invalid quantize value "InvalidQuantize" at "events.evt_bad_enums.actions[1].quantize". Expected 'Immediate', 'NextBeat', 'NextBar', NextGridDivision, or ExactPulse.`
                 );
+            });
+
+            it('should accept object QuantizeType forms for music_transition and play_stinger and reject invalid ones', () => {
+                const rule = new EventsRule();
+                const context = createStubContext({
+                    soundMap: { bgm_loop: {} as any },
+                    manifest: { sfx_stinger: {} as any },
+                    events: {
+                        evt_object_quantize: {
+                            actions: [
+                                {
+                                    type: 'music_transition',
+                                    target: 'bgm_loop',
+                                    targetRegion: 'r1',
+                                    options: { quantize: { type: 'NextGridDivision', division: '1/8' } }
+                                },
+                                {
+                                    type: 'play_stinger',
+                                    target: 'sfx_stinger',
+                                    quantize: { type: 'ExactPulse', pulseOffset: 240 }
+                                },
+                                {
+                                    type: 'music_transition',
+                                    target: 'bgm_loop',
+                                    targetRegion: 'r1',
+                                    options: { quantize: { type: 'NextGridDivision', division: '1/64' } as any }
+                                },
+                                {
+                                    type: 'play_stinger',
+                                    target: 'sfx_stinger',
+                                    quantize: { type: 'ExactPulse', pulseOffset: -1 } as any
+                                }
+                            ]
+                        }
+                    }
+                } as unknown as Partial<IConsistencyCheckerPayload>);
+
+                rule.validate(context);
+
+                expect(context.getErrors()).toEqual([
+                    `Invalid grid division "1/64" at "events.evt_object_quantize.actions[2].options.quantize.division". Expected '1/4', '1/8', '1/16', or '1/32'.`,
+                    `Invalid pulseOffset at "events.evt_object_quantize.actions[3].quantize.pulseOffset": must be a finite non-negative number.`
+                ]);
             });
         });
 
@@ -830,11 +873,6 @@ describe('EventsRule', () => {
                     'object'
                 );
                 expect(assertOptionalTypeSpy).toHaveBeenCalledWith(
-                    'events.evt_music.actions[2].options.quantize',
-                    'NextBar',
-                    'string'
-                );
-                expect(assertOptionalTypeSpy).toHaveBeenCalledWith(
                     'events.evt_music.actions[2].options.crossfadeDuration',
                     500,
                     'number'
@@ -890,11 +928,6 @@ describe('EventsRule', () => {
                 expect(assertRequiredTypeSpy).toHaveBeenCalledWith(
                     'events.evt_stinger_and_mod.actions[0].target',
                     'sfx_stinger',
-                    'string'
-                );
-                expect(assertOptionalTypeSpy).toHaveBeenCalledWith(
-                    'events.evt_stinger_and_mod.actions[0].quantize',
-                    'NextBeat',
                     'string'
                 );
                 expect(assertOptionalTypeSpy).toHaveBeenCalledWith(

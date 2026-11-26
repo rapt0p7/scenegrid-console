@@ -4,9 +4,12 @@
 import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
 import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
 
+import QuantizeRule from '@domain/Validation/Rules/QuantizeRule.js';
 import { isAbsent, isDefined, typedEntries } from '@scene-grid/shared';
 
 export default class EventsRule implements IValidationRule {
+    constructor(private readonly quantizeRule = new QuantizeRule()) {}
+
     public validate(context: IValidationContext) {
         if (isAbsent(context.config.events)) return;
         if (!context.assertOptionalType('events', context.config.events, 'object')) return;
@@ -176,7 +179,9 @@ export default class EventsRule implements IValidationRule {
                             const optsPath = `${actionPath}.options`;
                             const opts = transitionAction.options as Record<string, any>;
 
-                            context.assertOptionalType(`${optsPath}.quantize`, opts.quantize, 'string');
+                            this.quantizeRule.validate(context, `${optsPath}.quantize`, opts.quantize, {
+                                required: false
+                            });
                             context.assertOptionalType(
                                 `${optsPath}.crossfadeDuration`,
                                 opts.crossfadeDuration,
@@ -204,17 +209,9 @@ export default class EventsRule implements IValidationRule {
                         const stingerAction = action;
                         context.assertRequiredType(`${actionPath}.target`, stingerAction.target, 'string');
 
-                        if (
-                            isDefined(stingerAction.quantize) &&
-                            context.assertOptionalType(`${actionPath}.quantize`, stingerAction.quantize, 'string')
-                        ) {
-                            const q = stingerAction.quantize as string;
-                            if (q !== 'Immediate' && q !== 'NextBeat' && q !== 'NextBar') {
-                                context.addError(
-                                    `Action at "${actionPath}.quantize" has invalid value "${q}". Expected 'Immediate', 'NextBeat', or 'NextBar'.`
-                                );
-                            }
-                        }
+                        this.quantizeRule.validate(context, `${actionPath}.quantize`, stingerAction.quantize, {
+                            required: false
+                        });
                         context.assertOptionalType(
                             `${actionPath}.referenceTrackId`,
                             stingerAction.referenceTrackId,

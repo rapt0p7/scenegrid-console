@@ -244,6 +244,61 @@ describe('ScattererOrchestrator', () => {
 
             expect((bareOrchestrator as any).activeSessions[0].nextSpawnTime).toBe(1500);
         });
+
+        it('should return raw spawn time without snapping when quantize is Immediate', () => {
+            const syncConfig: IScattererSoundConfig = {
+                ...dummyConfig,
+                sync: { quantize: 'Immediate', referenceTrackId: 'bgm' as SoundId }
+            };
+
+            const mockGrid = {
+                getNextBeatTime: vi.fn().mockReturnValue(2),
+                getNextBarTime: vi.fn().mockReturnValue(4)
+            };
+            mockSequencer.getPlaybackInfo.mockReturnValue({ grid: mockGrid } as any);
+
+            orchestrator.start(99 as PlaybackId, syncConfig, 0 as ContextTime);
+
+            expect(mockGrid.getNextBeatTime).not.toHaveBeenCalled();
+            expect(mockGrid.getNextBarTime).not.toHaveBeenCalled();
+            expect((orchestrator as any).activeSessions[0].nextSpawnTime).toBe(1500);
+        });
+
+        it('should snap spawn time using getNextDivisionTime when quantize is NextGridDivision', () => {
+            const syncConfig: IScattererSoundConfig = {
+                ...dummyConfig,
+                sync: { quantize: { type: 'NextGridDivision', division: '1/8' }, referenceTrackId: 'bgm' as SoundId }
+            };
+
+            const mockGrid = {
+                getNextDivisionTime: vi.fn().mockReturnValue(1.75)
+            };
+            mockSequencer.getPlaybackInfo.mockReturnValue({ grid: mockGrid } as any);
+
+            orchestrator.start(99 as PlaybackId, syncConfig, 0 as ContextTime);
+
+            expect(mockGrid.getNextDivisionTime).toHaveBeenCalledWith(1.5, '1/8');
+            expect((orchestrator as any).activeSessions[0].nextSpawnTime).toBe(1750);
+        });
+
+        it('should snap spawn time using pulse math when quantize is ExactPulse', () => {
+            const syncConfig: IScattererSoundConfig = {
+                ...dummyConfig,
+                sync: { quantize: { type: 'ExactPulse', pulseOffset: 240 as any }, referenceTrackId: 'bgm' as SoundId }
+            };
+
+            const mockGrid = {
+                getPulseAtTime: vi.fn().mockReturnValue(960),
+                getTimeAtPulse: vi.fn().mockReturnValue(2.25)
+            };
+            mockSequencer.getPlaybackInfo.mockReturnValue({ grid: mockGrid } as any);
+
+            orchestrator.start(99 as PlaybackId, syncConfig, 0 as ContextTime);
+
+            expect(mockGrid.getPulseAtTime).toHaveBeenCalledWith(1.5);
+            expect(mockGrid.getTimeAtPulse).toHaveBeenCalledWith(1200);
+            expect((orchestrator as any).activeSessions[0].nextSpawnTime).toBe(2250);
+        });
     });
 
     describe('Mutation gaps (separating inputs)', () => {

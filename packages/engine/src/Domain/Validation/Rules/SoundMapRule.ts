@@ -40,7 +40,7 @@ export default class SoundMapRule implements IValidationRule {
                 if (!validBuses.includes(baseCfg.busId)) {
                     context.addError(`Sound "${soundId}" references unknown bus "${baseCfg.busId}"`);
                 }
-            } else if (!('isContainer' in baseCfg) && !('smartLoop' in baseCfg) && !('isLayered' in baseCfg)) {
+            } else if (!context.isContainer(baseCfg)) {
                 context.addError(`Sound "${soundId}" has no busId`);
             }
 

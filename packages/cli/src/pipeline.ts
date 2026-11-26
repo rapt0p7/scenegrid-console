@@ -113,7 +113,8 @@ export async function processAssets(options: ProcessOptions) {
             for (const alias of aliases) {
                 soundMap[alias] = {
                     url: `${cleanBaseUrl}/${basename}${hashSuffix}.json`,
-                    priority: streamPriority
+                    priority: streamPriority,
+                    isStream: true
                 };
             }
         } else {
@@ -156,27 +157,27 @@ export async function processAssets(options: ProcessOptions) {
         precalculatedSizes: {},
         ramQuotaMb: quotaMb,
         manifest: {},
-        buses: { master: { volume: 1, routing: [] } },
-        banks: { main: { isPreloaded: true, type: 'Memory', sounds: [] } },
+        buses: { master: { gain: 1 } },
+        banks: { main: { id: 'main', sounds: [] } },
         soundMap: {}
     };
 
     for (const [key, value] of Object.entries(sortedSoundMap)) {
         payload.manifest[key] = {
             url: value.url,
-            priority: value.priority || 'high'
+            priority: value.priority || 'high',
+            ...(value.isStream ? { isStream: true } : {})
         };
         payload.soundMap[key] = {
-            busId: 'master',
-            bankId: 'main',
-            manifestId: key
+            busId: 'master'
         };
         payload.banks.main.sounds.push(key);
 
         const primaryUrl = Array.isArray(value.url) ? value.url[0] : value.url;
+        const fileName = primaryUrl.split('/').pop()?.split('.')[0];
         const basenameMatch = primaryUrl.match(/\/([^/]+?)(?:\.[a-f0-9]{6})?\.(?:json|mp3|webm|m4a|ogg)$/);
-        if (basenameMatch && precalculatedSizes[basenameMatch[1]]) {
-            payload.precalculatedSizes[primaryUrl] = precalculatedSizes[basenameMatch[1]];
+        if (fileName && basenameMatch && precalculatedSizes[basenameMatch[1]] !== undefined) {
+            payload.precalculatedSizes[fileName] = precalculatedSizes[basenameMatch[1]];
         }
     }
 

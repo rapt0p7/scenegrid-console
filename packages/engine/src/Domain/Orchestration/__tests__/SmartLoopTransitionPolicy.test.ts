@@ -229,4 +229,21 @@ describe('SmartLoopTransitionPolicy (Magnet Regions)', () => {
             }
         });
     });
+
+    it('should forward magnet.offsetMode into transition decision options when specified', () => {
+        const config = createConfig([
+            {
+                region: 'main' as RegionId,
+                targetRegion: 'outro' as RegionId,
+                quantize: 'NextBar',
+                offsetMode: 'Relative',
+                condition: { param: 'intensity' as GameParamId, operator: '>', value: 0.5 }
+            }
+        ]);
+
+        mockRtpcAdapter.getValue.mockReturnValue(1);
+        const result = policy.evaluate(config, 'main' as RegionId, []);
+
+        expect(result?.options.offsetMode).toBe('Relative');
+    });
 });
