@@ -605,6 +605,10 @@
                 },
                 "tailDuration": {
                     "$ref": "#/definitions/Milliseconds"
+                },
+                "offsetMode": {
+                    "type": "string",
+                    "enum": ["None", "Relative", "Inverted"]
                 }
             },
             "required": ["region", "targetRegion", "condition", "quantize"]
