@@ -1874,6 +1874,10 @@
                                                         },
                                                         "tailDuration": {
                                                             "type": "number"
+                                                        },
+                                                        "offsetMode": {
+                                                            "type": "string",
+                                                            "enum": ["None", "Relative", "Inverted"]
                                                         }
                                                     },
                                                     "required": ["region", "targetRegion", "condition", "quantize"]
@@ -8642,6 +8646,10 @@
                                                 },
                                                 "tailDuration": {
                                                     "type": "number"
+                                                },
+                                                "offsetMode": {
+                                                    "type": "string",
+                                                    "enum": ["None", "Relative", "Inverted"]
                                                 }
                                             },
                                             "required": ["region", "targetRegion", "condition", "quantize"]
@@ -11100,6 +11108,10 @@
                                             },
                                             "tailDuration": {
                                                 "type": "number"
+                                            },
+                                            "offsetMode": {
+                                                "type": "string",
+                                                "enum": ["None", "Relative", "Inverted"]
                                             }
                                         },
                                         "required": ["region", "targetRegion", "condition", "quantize"]
@@ -13527,6 +13539,10 @@
                                     },
                                     "tailDuration": {
                                         "type": "number"
+                                    },
+                                    "offsetMode": {
+                                        "type": "string",
+                                        "enum": ["None", "Relative", "Inverted"]
                                     }
                                 },
                                 "required": ["region", "targetRegion", "condition", "quantize"]
@@ -13626,6 +13642,10 @@
                 },
                 "tailDuration": {
                     "type": "number"
+                },
+                "offsetMode": {
+                    "type": "string",
+                    "enum": ["None", "Relative", "Inverted"]
                 }
             },
             "required": ["region", "targetRegion", "condition", "quantize"]
@@ -21329,6 +21349,10 @@
                                                 },
                                                 "tailDuration": {
                                                     "type": "number"
+                                                },
+                                                "offsetMode": {
+                                                    "type": "string",
+                                                    "enum": ["None", "Relative", "Inverted"]
                                                 }
                                             },
                                             "required": ["region", "targetRegion", "condition", "quantize"]
