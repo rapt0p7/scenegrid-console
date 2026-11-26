@@ -13,28 +13,28 @@ export default {
     'drumsLoop80bpm': { busId: 'musicLounge', isLoop: true },
     '120bpmDrumLoop': { busId: 'musicLounge', isLoop: true },
 
-    'kickDrum': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 } },
-    'punchyKick': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 } },
-    'epicSynth': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 0.2, duration: 1500 } },
-    'explosion': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 } },
-    'explosion2': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 } },
-    'heavyKick': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 } },
+    'kickDrum': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 } },
+    'punchyKick': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 } },
+    'epicSynth': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 0.2 } },
+    'explosion': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 } },
+    'explosion2': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 } },
+    'heavyKick': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 } },
     'kbKickMetallic': {
         busId: 'sfx',
-        ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 }
+        ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 }
     },
     'hardstyleKick': {
         busId: 'sfx',
-        ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 }
+        ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 }
     },
     'collectPoints': {
         busId: 'SFX_COINS',
-        ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 }
+        ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 }
     },
-    'kickDrum2': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 } },
+    'kickDrum2': { busId: 'sfx', ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 } },
     'collectRing': {
         busId: 'SFX_COINS',
-        ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1, duration: 1500 }
+        ducking: { target: ['musicCombat', 'musicLounge'], intensity: 1 }
     },
 
     'tick': { busId: 'sfx', variation: { pitchVar: 0.1, volumeVar: 0.1, randomOffset: 0.01 } },

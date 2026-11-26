@@ -148,13 +148,58 @@ describe('ScattererSoundRule', () => {
                 scatterer.sync,
                 'object'
             );
-            expect(assertRequiredTypeSpy).toHaveBeenCalledWith(
-                'soundMap.chimes_bad_quantize.sync.quantize',
-                'NextMeasure',
-                'string'
-            );
             expect(context.getErrors()).toContain(
-                'Scatterer "chimes_bad_quantize" sync.quantize has invalid value "NextMeasure".'
+                "Invalid quantize value \"NextMeasure\" at \"soundMap.chimes_bad_quantize.sync.quantize\". Expected 'Immediate', 'NextBeat', 'NextBar', NextGridDivision, or ExactPulse."
+            );
+        });
+
+        it('should accept object QuantizeType forms (NextGridDivision and ExactPulse) in sync.quantize and reject invalid objects', () => {
+            const rule = new ScattererSoundRule();
+            const validQuantizes = [
+                { type: 'NextGridDivision', division: '1/8' },
+                { type: 'ExactPulse', pulseOffset: 240 }
+            ] as const;
+
+            for (const q of validQuantizes) {
+                const context = createStubContext({
+                    soundMap: {
+                        bgm_grid: { smartLoop: { regions: {} } } as any
+                    }
+                } as unknown as Partial<IConsistencyCheckerPayload>);
+
+                const scatterer = {
+                    isScatterer: true,
+                    sources: ['sfx_chime'],
+                    spawnRate: [1000, 2000] as [number, number],
+                    sync: { quantize: q, referenceTrackId: 'bgm_grid' }
+                };
+
+                rule.validate('chimes', scatterer as any, context);
+                expect(context.getErrors()).toHaveLength(0);
+            }
+
+            const badContext = createStubContext({
+                soundMap: {
+                    bgm_grid: { smartLoop: { regions: {} } } as any
+                }
+            } as unknown as Partial<IConsistencyCheckerPayload>);
+
+            rule.validate(
+                'chimes_bad_obj',
+                {
+                    isScatterer: true,
+                    sources: ['sfx_chime'],
+                    spawnRate: [1000, 2000] as [number, number],
+                    sync: {
+                        quantize: { type: 'NextGridDivision', division: '1/12' } as any,
+                        referenceTrackId: 'bgm_grid'
+                    }
+                } as any,
+                badContext
+            );
+
+            expect(badContext.getErrors()).toContain(
+                "Invalid grid division \"1/12\" at \"soundMap.chimes_bad_obj.sync.quantize.division\". Expected '1/4', '1/8', '1/16', or '1/32'."
             );
         });
 

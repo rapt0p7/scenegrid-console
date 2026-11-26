@@ -1907,5 +1907,44 @@ describe('Sequencer (Interactive Music)', () => {
 
             expect(mockController.play).toHaveBeenCalledWith('battle_music', expect.objectContaining({ offset: 1 }));
         });
+
+        it('should forward magnet offsetMode from transitionPolicy.evaluate during tick()', () => {
+            mockRouter.getSoundConfig.mockReturnValue({
+                busId: 'music',
+                smartLoop: {
+                    bpm: 120,
+                    regions: {
+                        source_region: [0, 88_200],
+                        target_region: [44_100, 220_500]
+                    }
+                }
+            });
+
+            manager.playLoop('battle_music' as SoundId, 'source_region' as RegionId);
+            const track = (manager as any).tracks.get('battle_music');
+            track.gridStartTime = 0;
+            simulatedTime = 0.5 as ContextTime;
+            mockController.play.mockClear();
+
+            mockTransitionPolicy.evaluate.mockReturnValueOnce({
+                targetRegion: 'target_region' as RegionId,
+                options: {
+                    quantize: 'Immediate',
+                    offsetMode: 'Relative',
+                    interruptable: true
+                },
+                trace: {
+                    param: 'intensity',
+                    operator: '>',
+                    threshold: 0.5,
+                    actualValue: 1,
+                    passed: true
+                }
+            });
+
+            triggerTick();
+
+            expect(mockController.play).toHaveBeenCalledWith('battle_music', expect.objectContaining({ offset: 2 }));
+        });
     });
 });

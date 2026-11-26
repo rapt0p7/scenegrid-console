@@ -7,7 +7,7 @@ import type { ISequencer } from '@domain/Orchestration/Ports/ISequencer.js';
 import type { IAudioRouter } from '@domain/Router/Ports/IAudioRouter.js';
 import type { ISoundController } from '@domain/Shared/Ports/ISoundController.js';
 import type { ITickable } from '@domain/Shared/Ports/ITickable.js';
-import type { PlaybackId, IPRNG, ContextTime, Milliseconds } from '@scene-grid/shared';
+import type { PlaybackId, IPRNG, ContextTime, Milliseconds, Pulses } from '@scene-grid/shared';
 
 import { isDefined, isAbsent } from '@scene-grid/shared';
 import { TimeMath } from '@scene-grid/shared';
@@ -114,21 +114,27 @@ export class ScattererOrchestrator implements ITickable {
         const [minMs, maxMs] = config.spawnRate;
         const rawNextTime = (currentTime + this.prng.nextRange(minMs, maxMs)) as Milliseconds;
 
-        if (isDefined(config.sync)) {
+        if (isDefined(config.sync) && config.sync.quantize !== 'Immediate') {
             const gridInfo = this.sequencer.getPlaybackInfo?.(config.sync.referenceTrackId);
 
             if (isDefined(gridInfo)) {
-                return TimeMath.secondsToMilliseconds(
-                    TimeMath.castToSeconds(
-                        config.sync.quantize === 'NextBar'
-                            ? gridInfo.grid.getNextBarTime(
-                                  TimeMath.castToContextTime(TimeMath.msToSeconds(rawNextTime))
-                              )
-                            : gridInfo.grid.getNextBeatTime(
-                                  TimeMath.castToContextTime(TimeMath.msToSeconds(rawNextTime))
-                              )
-                    )
-                );
+                const rawContextTime = TimeMath.castToContextTime(TimeMath.msToSeconds(rawNextTime));
+                const quantize = config.sync.quantize;
+                let snappedTime: ContextTime;
+
+                if (typeof quantize === 'string') {
+                    snappedTime =
+                        quantize === 'NextBar'
+                            ? gridInfo.grid.getNextBarTime(rawContextTime)
+                            : gridInfo.grid.getNextBeatTime(rawContextTime);
+                } else if (quantize.type === 'NextGridDivision') {
+                    snappedTime = gridInfo.grid.getNextDivisionTime(rawContextTime, quantize.division);
+                } else {
+                    const currentPulse = gridInfo.grid.getPulseAtTime(rawContextTime);
+                    snappedTime = gridInfo.grid.getTimeAtPulse((currentPulse + quantize.pulseOffset) as Pulses);
+                }
+
+                return TimeMath.secondsToMilliseconds(TimeMath.castToSeconds(snappedTime));
             }
         }
 

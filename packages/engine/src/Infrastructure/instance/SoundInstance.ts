@@ -2,11 +2,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // noinspection D,JSUnusedLocalSymbols
 
-import mitt from 'mitt';
-
-import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
-
-import type { SoundId, ContextTime, Seconds, Milliseconds } from '@scene-grid/shared';
 import type AutomationEngine from '@infrastructure/automation/AutomationEngine.js';
 import type AudioContextManager from '@infrastructure/context/AudioContextManager.js';
 import type { AudioNodeFactory, PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
@@ -20,7 +15,11 @@ import type {
 } from '@infrastructure/types/IAudioContext.js';
 import type { PlaybackState } from '@infrastructure/types/IPlaybackController.js';
 import type { InstanceParameterTarget, ISoundInstance } from '@infrastructure/types/ISoundInstance.js';
+import type { SoundId, ContextTime, Seconds, Milliseconds } from '@scene-grid/shared';
 import type { Emitter } from 'mitt';
+
+import { NodeChain } from '@infrastructure/nodes/NodeChain.js';
+import mitt from 'mitt';
 
 export type SoundInstanceEvents = {
     ended: ISoundInstance;
@@ -128,7 +127,7 @@ export class SoundInstance implements ISoundInstance {
     public rebind(
         newId: SoundId,
         buffer: AudioBuffer,
-        options?: { spatial?: PannerConfig; hasPanner?: boolean }
+        options?: { spatial?: PannerConfig | boolean; hasPanner?: boolean }
     ): void {
         if (this.#state === 'playing' || this.#state === 'virtual') {
             this.stop(0 as ContextTime);
@@ -183,9 +182,8 @@ export class SoundInstance implements ISoundInstance {
             }
 
             default: {
-                // eslint-disable-next-line, no-underscore-dangle
                 // oxlint-disable-next-line no-underscore-dangle
-                const _exhaustiveCheck: never = target;
+                const _exhaustiveCheck: never = target; // eslint-disable-line no-underscore-dangle
             }
         }
     }

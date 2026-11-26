@@ -89,7 +89,7 @@ describe('SoundMapRule', () => {
             expect(context.getErrors()).toEqual(['Sound "leaf_no_bus" has no busId']);
         });
 
-        it('should exempt smartLoop, isLayered, and isContainer sounds from root busId requirement (Line 42)', () => {
+        it('should exempt only isContainer from root busId requirement and require busId on smartLoop and isLayered', () => {
             const rule = new SoundMapRule();
             const context = createStubContext({
                 buses: { master: {} },
@@ -112,7 +112,7 @@ describe('SoundMapRule', () => {
             rule.validate(context);
 
             const noBusErrors = context.getErrors().filter(e => e.includes('has no busId'));
-            expect(noBusErrors).toHaveLength(0);
+            expect(noBusErrors).toEqual(['Sound "smart_sound" has no busId', 'Sound "layered_sound" has no busId']);
         });
     });
 });

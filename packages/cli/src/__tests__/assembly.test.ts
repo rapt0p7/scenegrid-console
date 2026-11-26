@@ -118,26 +118,28 @@ describe('Pipeline Assembly', () => {
 
         const manifestJsonStr = mockFs.writeFileSync.mock.calls[1][1];
         expect(manifestJsonStr).toMatch(/\n$/);
+        const manifestJson = JSON.parse(manifestJsonStr);
+        expect(manifestJson.dummy1.isStream).toBeUndefined();
 
         const payload = mockValidate.mock.calls[0][0];
         expect(payload.manifest.dummy1.priority).toBe('high');
+        expect(payload.manifest.dummy1.isStream).toBeUndefined();
 
         expect(mockValidate).toHaveBeenCalledWith(
             expect.objectContaining({
                 precalculatedSizes: {
-                    '/assets/dummy1.webm': 20,
-                    '/assets/dummy2.webm': 20,
-                    '/assets/dummy3.webm': 20,
-                    '/assets/dummy4.webm': 20,
-                    '/assets/dummy5.webm': 20,
-                    '/assets/dummy6.webm': 20
+                    dummy1: 20,
+                    dummy2: 20,
+                    dummy3: 20,
+                    dummy4: 20,
+                    dummy5: 20,
+                    dummy6: 20
                 },
                 ramQuotaMb: 50.0,
-                buses: { master: { volume: 1, routing: [] } },
+                buses: { master: { gain: 1 } },
                 banks: {
                     main: {
-                        isPreloaded: true,
-                        type: 'Memory',
+                        id: 'main',
                         sounds: ['dummy1', 'dummy2', 'dummy3', 'dummy4', 'dummy5', 'dummy6']
                     }
                 }
@@ -195,7 +197,7 @@ describe('Pipeline Assembly', () => {
         expect(mockValidate).toHaveBeenCalledWith(
             expect.objectContaining({
                 soundMap: {
-                    placeholder1: { busId: 'master', bankId: 'main', manifestId: 'placeholder1' }
+                    placeholder1: { busId: 'master' }
                 }
             }),
             expect.anything()
@@ -238,6 +240,13 @@ describe('Pipeline Assembly', () => {
         const payload = mockValidate.mock.calls[0][0];
         expect(payload.precalculatedSizes).toEqual({});
         expect(payload.manifest.dummy.url).toEqual('/assets/dummy.json');
+        expect(payload.manifest.dummy.isStream).toBe(true);
+
+        const soundManifestCall = mockFs.writeFileSync.mock.calls.find((c: any[]) =>
+            String(c[0]).includes('sound-manifest')
+        );
+        const manifestContent = JSON.parse(soundManifestCall![1] as string);
+        expect(manifestContent.dummy.isStream).toBe(true);
 
         expect(mockFs.writeFileSync).toHaveBeenCalledWith(
             expect.stringMatching(/dummy\.json$/),
@@ -301,11 +310,10 @@ describe('Pipeline Assembly', () => {
 
         await processAssets({ ...DEFAULT_PROCESS_OPTS, hash: true });
 
-        const expectedHash = require('crypto').createHash('md5').update('audio-data').digest('hex').slice(0, 6);
         expect(mockValidate).toHaveBeenCalledWith(
             expect.objectContaining({
                 precalculatedSizes: {
-                    [`/assets/dummy.${expectedHash}.webm`]: 20
+                    dummy: 20
                 }
             }),
             expect.anything()

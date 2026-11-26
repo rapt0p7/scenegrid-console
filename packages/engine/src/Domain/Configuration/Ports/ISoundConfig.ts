@@ -66,6 +66,7 @@ export interface IMagnetConfig {
     readonly transitionRegionName?: RegionId;
     readonly crossfadeDuration?: Milliseconds;
     readonly tailDuration?: Milliseconds;
+    readonly offsetMode?: 'None' | 'Relative' | 'Inverted';
 }
 
 export interface ISmartLoopSoundConfig {

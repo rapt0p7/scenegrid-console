@@ -1,14 +1,19 @@
 // oxlint-disable max-depth max-lines-per-function
 // noinspection D
 
-import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
-import type { ISoundValidationRule } from '@domain/Validation/Ports/ISoundValidationRule.js';
 import type { AnySoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
-import { isDefined } from '@scene-grid/shared';
+import type { ISoundValidationRule } from '@domain/Validation/Ports/ISoundValidationRule.js';
+import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
+
 import ContainerSourcesRule from '@domain/Validation/Rules/ContainerSourcesRule.js';
+import QuantizeRule from '@domain/Validation/Rules/QuantizeRule.js';
+import { isDefined } from '@scene-grid/shared';
 
 export default class ScattererSoundRule implements ISoundValidationRule {
-    constructor(private readonly sourceRule = new ContainerSourcesRule()) {}
+    constructor(
+        private readonly sourceRule = new ContainerSourcesRule(),
+        private readonly quantizeRule = new QuantizeRule()
+    ) {}
 
     validate(soundId: string, cfg: AnySoundConfig, context: IValidationContext): void {
         if (context.isScatterer(cfg)) {
@@ -34,31 +39,24 @@ export default class ScattererSoundRule implements ISoundValidationRule {
                     const syncPath = `${path}.sync`;
                     const syncObj = cfg.sync;
 
-                    if (context.assertRequiredType(`${syncPath}.quantize`, syncObj.quantize, 'string')) {
-                        const q = syncObj.quantize;
-                        // oxlint-disable-next-line max-depth
-                        if (q !== 'Immediate' && q !== 'NextBeat' && q !== 'NextBar') {
-                            // oxlint-disable-next-line typescript/no-base-to-string typescript/restrict-template-expressions
-                            context.addError(`Scatterer "${soundId}" sync.quantize has invalid value "${q}".`);
-                        }
-                    }
+                    this.quantizeRule.validate(context, `${syncPath}.quantize`, syncObj.quantize, { required: true });
 
                     if (
                         context.assertRequiredType(`${syncPath}.referenceTrackId`, syncObj.referenceTrackId, 'string')
                     ) {
                         const refId = syncObj.referenceTrackId;
 
-                        if (!context.config.soundMap[refId as any]) {
-                            context.addError(
-                                `Scatterer sync reference track "${refId}" at "${syncPath}" does not exist in soundMap.`
-                            );
-                        } else {
+                        if (context.config.soundMap[refId as any]) {
                             const refCfg = context.config.soundMap[refId as any];
                             if (!context.isSmartLoop(refCfg)) {
                                 context.addError(
                                     `Scatterer sync reference track "${refId}" at "${syncPath}" must be a smartLoop sound to provide a music grid.`
                                 );
                             }
+                        } else {
+                            context.addError(
+                                `Scatterer sync reference track "${refId}" at "${syncPath}" does not exist in soundMap.`
+                            );
                         }
                     }
                 }

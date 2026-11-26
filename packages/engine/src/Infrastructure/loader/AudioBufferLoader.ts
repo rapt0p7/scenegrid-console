@@ -7,10 +7,11 @@ import { ConcurrencyThrottler, Result, Ok, Err } from '@scene-grid/shared';
 
 import { validateAudioUrl } from './AudioUrlValidator.js';
 
-type Extension = 'mp3' | 'ogg' | 'wav' | 'm4a';
+type Extension = 'webm' | 'mp3' | 'ogg' | 'wav' | 'm4a';
 
 export class AudioBufferLoader implements IAudioBufferLoader {
     private static readonly mimeMap: Record<Extension, string> = {
+        webm: 'audio/webm',
         mp3: 'audio/mpeg',
         ogg: 'audio/ogg',
         wav: 'audio/wav',

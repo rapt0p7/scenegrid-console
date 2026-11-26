@@ -1,17 +1,18 @@
-import type { Milliseconds, SoundId } from '@scene-grid/shared';
 import type { PannerConfig } from '@infrastructure/nodes/AudioNodeFactory.js';
+import type { IPlaybackController } from '@infrastructure/types/IPlaybackController.js';
+import type { Milliseconds, SoundId } from '@scene-grid/shared';
+
 import {
     type AudioNodeLike,
     AudioParamLike,
     PannerNodeLike,
     StereoPannerNodeLike
 } from '@infrastructure/types/IAudioContext.js';
-import type { IPlaybackController } from '@infrastructure/types/IPlaybackController.js';
 
 export type InstanceParameterTarget = 'gain' | 'pitch' | 'pan' | 'filterFrequency';
 
 export interface ISoundConfig {
-    spatial?: PannerConfig;
+    spatial?: PannerConfig | boolean;
     hasPanner?: boolean;
 }
 

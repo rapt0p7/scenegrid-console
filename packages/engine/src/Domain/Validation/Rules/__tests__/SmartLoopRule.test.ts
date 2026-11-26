@@ -291,5 +291,86 @@ describe('SmartLoopRule', () => {
                 'SmartLoop "bgm2" uses unknown RTPC param "unknown_param" in magnet condition.'
             );
         });
+
+        it('should accept object QuantizeType forms (NextGridDivision and ExactPulse) in magnets', () => {
+            const rule = new SmartLoopRule();
+            const context = createStubContext({});
+
+            const smartLoopConfig = {
+                smartLoop: {
+                    regions: { r1: [0, 1000] as [number, number], r2: [1000, 2000] as [number, number] },
+                    magnets: [
+                        {
+                            region: 'r1',
+                            targetRegion: 'r2',
+                            quantize: { type: 'NextGridDivision', division: '1/16' },
+                            condition: { param: 'intensity', operator: '>', value: 0.5 }
+                        },
+                        {
+                            region: 'r2',
+                            targetRegion: 'r1',
+                            quantize: { type: 'ExactPulse', pulseOffset: 480 },
+                            condition: { param: 'intensity', operator: '<', value: 0.2 }
+                        }
+                    ]
+                }
+            };
+
+            rule.validate('bgm', smartLoopConfig as any, context);
+
+            expect(context.getErrors()).toHaveLength(0);
+        });
+
+        it('should reject invalid string and object QuantizeType values in magnets', () => {
+            const rule = new SmartLoopRule();
+            const context = createStubContext({});
+
+            const smartLoopConfig = {
+                smartLoop: {
+                    regions: { r1: [0, 1000] as [number, number] },
+                    magnets: [
+                        {
+                            region: 'r1',
+                            targetRegion: 'r1',
+                            quantize: 'NextMeasure',
+                            condition: { param: 'p', operator: '==', value: 1 }
+                        },
+                        {
+                            region: 'r1',
+                            targetRegion: 'r1',
+                            quantize: { type: 'NextGridDivision', division: '1/3' },
+                            condition: { param: 'p', operator: '==', value: 1 }
+                        },
+                        {
+                            region: 'r1',
+                            targetRegion: 'r1',
+                            quantize: { type: 'ExactPulse', pulseOffset: -10 },
+                            condition: { param: 'p', operator: '==', value: 1 }
+                        },
+                        {
+                            region: 'r1',
+                            targetRegion: 'r1',
+                            quantize: { type: 'BogusQuantize' },
+                            condition: { param: 'p', operator: '==', value: 1 }
+                        }
+                    ]
+                }
+            };
+
+            rule.validate('bgm', smartLoopConfig as any, context);
+
+            expect(context.getErrors()).toContain(
+                "Invalid quantize value \"NextMeasure\" at \"soundMap.bgm.smartLoop.magnets[0].quantize\". Expected 'Immediate', 'NextBeat', 'NextBar', NextGridDivision, or ExactPulse."
+            );
+            expect(context.getErrors()).toContain(
+                "Invalid grid division \"1/3\" at \"soundMap.bgm.smartLoop.magnets[1].quantize.division\". Expected '1/4', '1/8', '1/16', or '1/32'."
+            );
+            expect(context.getErrors()).toContain(
+                'Invalid pulseOffset at "soundMap.bgm.smartLoop.magnets[2].quantize.pulseOffset": must be a finite non-negative number.'
+            );
+            expect(context.getErrors()).toContain(
+                'Invalid quantize type "BogusQuantize" at "soundMap.bgm.smartLoop.magnets[3].quantize.type". Expected \'NextGridDivision\' or \'ExactPulse\'.'
+            );
+        });
     });
 });
