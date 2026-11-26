@@ -1,7 +1,7 @@
 editor_files:
   agents_md: true
 provider: gemini
-model: gemini-3.7-flash
+model: gemini-4-hydrogen
 embedder: gemini
 reasoning: auto
 distill:
@@ -10,3 +10,5 @@ distill:
 hooks:
   read_skeleton: false
   search_digest: false
+exclude_patterns:
+  - examples/audio-config/index.ts
