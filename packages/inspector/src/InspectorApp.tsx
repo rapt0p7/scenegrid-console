@@ -227,7 +227,7 @@ export const InspectorApp: React.FC = () => {
                 <main className="flex min-w-0 flex-1 flex-col">
                     <div className="relative flex flex-1 flex-col border-b border-border bg-surface-active/20">
                         <div className="flex h-8 flex-none items-center border-b border-border bg-surface-hover/50 px-3 text-[10px] font-semibold tracking-wider text-foreground-muted uppercase">
-                            Performance & Polyphony
+                            Performance &amp; Polyphony
                         </div>
                         <div className="relative flex-1 overflow-hidden">
                             <PerformanceGraph snapshotRef={displayRef} />
@@ -236,7 +236,7 @@ export const InspectorApp: React.FC = () => {
 
                     <div className="relative flex flex-[1.5] flex-col bg-background">
                         <div className="flex h-8 flex-none items-center border-b border-border bg-surface-hover/50 px-3 text-[10px] font-semibold tracking-wider text-foreground-muted uppercase">
-                            Routing & Mix State
+                            Routing &amp; Mix State
                         </div>
                         <div className="relative flex-1">
                             {manifest ? (
