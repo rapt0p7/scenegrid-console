@@ -484,19 +484,23 @@ describe('initAudioDebugPanel', () => {
         expect(warnSpy).not.toHaveBeenCalled();
     });
 
-    it('wires icons, renderLoop, keydown toggle, master, buses, snapshots, sfx trigger, and ducking monitor', () => {
+    const findGraphBinding = (folder: IMockFolderRecord, key: string): IMockBindingRecord =>
+        folder.bindings.find(b => b.key === key && b.opts.view === 'graph')!;
+
+    const findFormattedBinding = (folder: IMockFolderRecord, key: string): IMockBindingRecord =>
+        folder.bindings.find(b => b.key === key && typeof b.opts.format === 'function')!;
+
+    it('applies icons, runs renderLoop when visible, and toggles visibility on backtick/tilde keydown', () => {
         const engine = createFullEngine();
         initAudioDebugPanel(engine);
 
         const pane = mockTweakpaneState.panes[0];
 
-        // Flush first RAF: applies SVG icons and executes renderLoop + pollAndUpdateUI
         flushRafOnce();
         expect(pane.element.querySelector('.tp-rotv_t')?.innerHTML).toContain('AUDIO SYSTEM DEBUG');
         const profileFolder = findFolder(pane, 'PERFORMANCE PROFILER');
         expect(profileFolder.refresh).toHaveBeenCalledTimes(1);
 
-        // Keydown backtick hides pane; subsequent renderLoop flush skips profiler refresh; unrelated key does nothing
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }));
         expect(pane.hidden).toBe(false);
 
@@ -506,11 +510,15 @@ describe('initAudioDebugPanel', () => {
         flushRafOnce();
         expect(profileFolder.refresh).toHaveBeenCalledTimes(1);
 
-        // Keydown tilde unhides pane again
         document.dispatchEvent(new KeyboardEvent('keydown', { key: '~' }));
         expect(pane.hidden).toBe(false);
+    });
 
-        // Master Mute & Volume
+    it('wires master control mute/volume and bus monitoring getters and formatters', () => {
+        const engine = createFullEngine();
+        initAudioDebugPanel(engine);
+
+        const pane = mockTweakpaneState.panes[0];
         const masterFolder = findFolder(pane, 'MASTER CONTROL');
         const muteBinding = masterFolder.bindings.find(b => b.key === 'masterMute')!;
         muteBinding.emitChange(true);
@@ -521,31 +529,38 @@ describe('initAudioDebugPanel', () => {
         masterFolder.bindings.find(b => b.key === 'globalVolume')!.emitChange(0.45);
         expect(engine._debug.masterOutput.setVolume).toHaveBeenCalledWith(0.45);
 
-        // Bus Monitoring getters & value formatters
         const busFolder = findFolder(pane, 'BUS MONITORING');
-        const sfxGraphBinding = busFolder.bindings.find(b => b.key === 'sfx' && b.opts.view === 'graph')!;
-        const masterGraphBinding = busFolder.bindings.find(b => b.key === 'master' && b.opts.view === 'graph')!;
-        const sfxFormattedBinding = busFolder.bindings.find(
-            b => b.key === 'sfx' && typeof b.opts.format === 'function'
-        )!;
+        const sfxGraphBinding = findGraphBinding(busFolder, 'sfx');
+        const masterGraphBinding = findGraphBinding(busFolder, 'master');
+        const sfxFormattedBinding = findFormattedBinding(busFolder, 'sfx');
         expect(sfxGraphBinding.target['sfx']).toBe(0.75);
         expect(masterGraphBinding.target['master']).toBe(0);
         expect(sfxFormattedBinding.opts.format(0.75)).toBe('Vol: 0.75');
+    });
 
-        // Mixer Snapshots
+    it('wires mixer snapshots and sfx sound trigger buttons', () => {
+        const engine = createFullEngine();
+        initAudioDebugPanel(engine);
+
+        const pane = mockTweakpaneState.panes[0];
         findButton(pane, 'Activate Snapshot').click();
         expect(engine.mixer.setState).toHaveBeenCalledWith('combat_mode');
+
         findButton(pane, 'Clear Debug Override').click();
         expect(engine.mixer.removeModifier).toHaveBeenCalledWith('debug_override_layer');
 
-        // SFX trigger button
         findButton(pane, 'Play Sound').click();
         expect(engine.play).toHaveBeenCalledWith('gun_shot');
+    });
 
-        // Ducking Monitor getter & formatter (including undefined getSidechain fallback)
+    it('wires ducking monitor getters, formatters, and undefined sidechain fallback', () => {
+        const engine = createFullEngine();
+        initAudioDebugPanel(engine);
+
+        const pane = mockTweakpaneState.panes[0];
         const duckFolder = findFolder(pane, 'DUCKING MONITOR');
-        const musicDuckBinding = duckFolder.bindings.find(b => b.key === 'music' && b.opts.view === 'graph')!;
-        const musicDuckFmt = duckFolder.bindings.find(b => b.key === 'music' && typeof b.opts.format === 'function')!;
+        const musicDuckBinding = findGraphBinding(duckFolder, 'music');
+        const musicDuckFmt = findFormattedBinding(duckFolder, 'music');
         expect(musicDuckBinding.target['music']).toBe(0.42);
         expect(musicDuckFmt.opts.format(0.42)).toBe('Duck: 42%');
 

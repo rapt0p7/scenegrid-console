@@ -56,7 +56,7 @@ vi.mock('@scene-grid/engine', () => ({
 }));
 
 import * as pcmModule from '../pcm.js';
-import { processAssets, prepareAliases } from '../pipeline.js';
+import { parseAliasEntry, processAssets, prepareAliases } from '../pipeline.js';
 
 const DEFAULT_PROCESS_OPTS = {
     inputDir: 'input',
@@ -402,6 +402,57 @@ describe('Pipeline Assembly', () => {
         mockFs.readFileSync.mockReturnValueOnce(JSON.stringify({ bad_entry: 123 }));
         await expect(processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' })).rejects.toThrow(
             'Invalid alias entry for "bad_entry": expected string or { file, priority? }.'
+        );
+
+        mockFs.readFileSync.mockReturnValueOnce(JSON.stringify({ blank_string: '   ' }));
+        await expect(processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' })).rejects.toThrow(
+            'Invalid alias entry for "blank_string": physical filename must be a non-empty string.'
+        );
+
+        mockFs.readFileSync.mockReturnValueOnce(JSON.stringify({ missing_file: { priority: 'high' } }));
+        await expect(processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' })).rejects.toThrow(
+            'Invalid alias entry for "missing_file": expected non-empty string "file".'
+        );
+    });
+});
+
+describe('parseAliasEntry', () => {
+    it('parses shorthand strings and structured alias objects', () => {
+        expect(parseAliasEntry('kick', 'kick_raw')).toEqual({
+            file: 'kick_raw',
+            alias: { logicalId: 'kick' }
+        });
+        expect(parseAliasEntry('explosion', { file: 'boom_raw' })).toEqual({
+            file: 'boom_raw',
+            alias: { logicalId: 'explosion' }
+        });
+        expect(parseAliasEntry('explosion_high', { file: 'boom_raw', priority: 'high' })).toEqual({
+            file: 'boom_raw',
+            alias: { logicalId: 'explosion_high', priority: 'high' }
+        });
+    });
+
+    it('rejects empty string, missing/blank file, invalid priority, null, and array entries', () => {
+        expect(() => parseAliasEntry('empty_str', '')).toThrow(
+            'Invalid alias entry for "empty_str": physical filename must be a non-empty string.'
+        );
+        expect(() => parseAliasEntry('blank_str', ' \t ')).toThrow(
+            'Invalid alias entry for "blank_str": physical filename must be a non-empty string.'
+        );
+        expect(() => parseAliasEntry('non_str_file', { file: 42 })).toThrow(
+            'Invalid alias entry for "non_str_file": expected non-empty string "file".'
+        );
+        expect(() => parseAliasEntry('blank_file', { file: '   ' })).toThrow(
+            'Invalid alias entry for "blank_file": expected non-empty string "file".'
+        );
+        expect(() => parseAliasEntry('bad_prio', { file: 'dummy', priority: 'urgent' })).toThrow(
+            'Invalid alias priority for "bad_prio": expected "high" or "low".'
+        );
+        expect(() => parseAliasEntry('null_entry', null)).toThrow(
+            'Invalid alias entry for "null_entry": expected string or { file, priority? }.'
+        );
+        expect(() => parseAliasEntry('array_entry', ['dummy'])).toThrow(
+            'Invalid alias entry for "array_entry": expected string or { file, priority? }.'
         );
     });
 });
