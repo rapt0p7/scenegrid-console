@@ -56,7 +56,7 @@ vi.mock('@scene-grid/engine', () => ({
 }));
 
 import * as pcmModule from '../pcm.js';
-import { processAssets, prepareAliases } from '../pipeline.js';
+import { parseAliasEntry, processAssets, prepareAliases } from '../pipeline.js';
 
 const DEFAULT_PROCESS_OPTS = {
     inputDir: 'input',
@@ -122,7 +122,7 @@ describe('Pipeline Assembly', () => {
         expect(manifestJson.dummy1.isStream).toBeUndefined();
 
         const payload = mockValidate.mock.calls[0][0];
-        expect(payload.manifest.dummy1.priority).toBe('high');
+        expect(payload.manifest.dummy1.priority).toBe('low');
         expect(payload.manifest.dummy1.isStream).toBeUndefined();
 
         expect(mockValidate).toHaveBeenCalledWith(
@@ -335,6 +335,125 @@ describe('Pipeline Assembly', () => {
         const promise = processAssets({ ...DEFAULT_PROCESS_OPTS, hash: true });
 
         await expect(promise).rejects.toThrow('disk read failure');
+    });
+
+    it('preserves per-sound priority from structured alias entries for ladder assets', async () => {
+        const aliasMap = {
+            hero_explosion: { file: 'dummy', priority: 'high' },
+            ambient_tick: { file: 'dummy', priority: 'low' }
+        };
+        mockFs.readFileSync.mockReturnValue(JSON.stringify(aliasMap));
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
+
+        await processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' });
+
+        const soundManifestCall = mockFs.writeFileSync.mock.calls.find((c: any[]) =>
+            String(c[0]).includes('sound-manifest')
+        );
+        const manifestContent = JSON.parse(soundManifestCall![1] as string);
+        expect(manifestContent.hero_explosion).toEqual({
+            url: ['/assets/dummy.webm'],
+            priority: 'high'
+        });
+        expect(manifestContent.ambient_tick).toEqual({
+            url: ['/assets/dummy.webm'],
+            priority: 'low'
+        });
+
+        const payload = mockValidate.mock.calls[0][0];
+        expect(payload.manifest.hero_explosion.priority).toBe('high');
+        expect(payload.manifest.ambient_tick.priority).toBe('low');
+    });
+
+    it('supports mixed shorthand string and structured aliases across repeated CLI runs', async () => {
+        const aliasMap = {
+            fx_shorthand: 'dummy',
+            fx_critical: { file: 'dummy', priority: 'high' }
+        };
+        mockFs.readFileSync.mockReturnValue(JSON.stringify(aliasMap));
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
+
+        await processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' });
+        await processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' });
+
+        const soundManifestCalls = mockFs.writeFileSync.mock.calls.filter((c: any[]) =>
+            String(c[0]).includes('sound-manifest')
+        );
+        expect(soundManifestCalls).toHaveLength(2);
+        for (const call of soundManifestCalls) {
+            const parsed = JSON.parse(call[1] as string);
+            expect(parsed.fx_shorthand).toEqual({ url: ['/assets/dummy.webm'] });
+            expect(parsed.fx_critical).toEqual({ url: ['/assets/dummy.webm'], priority: 'high' });
+        }
+
+        expect(mockValidate.mock.calls[0][0].manifest.fx_shorthand.priority).toBe('low');
+        expect(mockValidate.mock.calls[0][0].manifest.fx_critical.priority).toBe('high');
+        expect(mockValidate.mock.calls[1][0].manifest.fx_critical.priority).toBe('high');
+    });
+
+    it('rejects invalid alias priority or malformed structured alias entry', async () => {
+        mockFs.readdirSync.mockReturnValue(['dummy.wav']);
+
+        mockFs.readFileSync.mockReturnValueOnce(JSON.stringify({ bad_prio: { file: 'dummy', priority: 'urgent' } }));
+        await expect(processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' })).rejects.toThrow(
+            'Invalid alias priority for "bad_prio": expected "high" or "low".'
+        );
+
+        mockFs.readFileSync.mockReturnValueOnce(JSON.stringify({ bad_entry: 123 }));
+        await expect(processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' })).rejects.toThrow(
+            'Invalid alias entry for "bad_entry": expected string or { file, priority? }.'
+        );
+
+        mockFs.readFileSync.mockReturnValueOnce(JSON.stringify({ blank_string: '   ' }));
+        await expect(processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' })).rejects.toThrow(
+            'Invalid alias entry for "blank_string": physical filename must be a non-empty string.'
+        );
+
+        mockFs.readFileSync.mockReturnValueOnce(JSON.stringify({ missing_file: { priority: 'high' } }));
+        await expect(processAssets({ ...DEFAULT_PROCESS_OPTS, aliases: 'aliases.json' })).rejects.toThrow(
+            'Invalid alias entry for "missing_file": expected non-empty string "file".'
+        );
+    });
+});
+
+describe('parseAliasEntry', () => {
+    it('parses shorthand strings and structured alias objects', () => {
+        expect(parseAliasEntry('kick', 'kick_raw')).toEqual({
+            file: 'kick_raw',
+            alias: { logicalId: 'kick' }
+        });
+        expect(parseAliasEntry('explosion', { file: 'boom_raw' })).toEqual({
+            file: 'boom_raw',
+            alias: { logicalId: 'explosion' }
+        });
+        expect(parseAliasEntry('explosion_high', { file: 'boom_raw', priority: 'high' })).toEqual({
+            file: 'boom_raw',
+            alias: { logicalId: 'explosion_high', priority: 'high' }
+        });
+    });
+
+    it('rejects empty string, missing/blank file, invalid priority, null, and array entries', () => {
+        expect(() => parseAliasEntry('empty_str', '')).toThrow(
+            'Invalid alias entry for "empty_str": physical filename must be a non-empty string.'
+        );
+        expect(() => parseAliasEntry('blank_str', ' \t ')).toThrow(
+            'Invalid alias entry for "blank_str": physical filename must be a non-empty string.'
+        );
+        expect(() => parseAliasEntry('non_str_file', { file: 42 })).toThrow(
+            'Invalid alias entry for "non_str_file": expected non-empty string "file".'
+        );
+        expect(() => parseAliasEntry('blank_file', { file: '   ' })).toThrow(
+            'Invalid alias entry for "blank_file": expected non-empty string "file".'
+        );
+        expect(() => parseAliasEntry('bad_prio', { file: 'dummy', priority: 'urgent' })).toThrow(
+            'Invalid alias priority for "bad_prio": expected "high" or "low".'
+        );
+        expect(() => parseAliasEntry('null_entry', null)).toThrow(
+            'Invalid alias entry for "null_entry": expected string or { file, priority? }.'
+        );
+        expect(() => parseAliasEntry('array_entry', ['dummy'])).toThrow(
+            'Invalid alias entry for "array_entry": expected string or { file, priority? }.'
+        );
     });
 });
 

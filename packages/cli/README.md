@@ -39,19 +39,44 @@ Because web browsers have strict limitations on RAM usage, loading massive uncom
 ## Configuration Options
 
 You can configure the CLI via cosmiconfig (`.scenegridrc`, etc) or via flags:
-* `--input <path>`: Directory containing raw audio.
-* `--output <path>`: Output directory for processed assets.
-* `--manifests <path>`: Output directory for JSON manifests.
-* `--baseUrl <url>`: Base URL prefix used in generated manifests.
-* `--quotaMb <number>`: RAM quota (in MB) before triggering stream chunking (default: 15).
-* `--streamRules <regexes...>`: Patterns to force streaming routing regardless of size.
-* `--hash`: Append MD5 hash to generated file names.
+
+- `--input <path>`: Directory containing raw audio.
+- `--output <path>`: Output directory for processed assets.
+- `--manifests <path>`: Output directory for JSON manifests.
+- `--baseUrl <url>`: Base URL prefix used in generated manifests.
+- `--quotaMb <number>`: RAM quota (in MB) before triggering stream chunking (default: 15).
+- `--streamRules <regexes...>`: Patterns to force streaming routing regardless of size.
+- `--streamExclusions <regexes...>`: Patterns to exclude from stream routing.
+- `--streamPriority <priority>`: Priority for chunk-routed streams (`"high"` or `"low"`, default: `"high"`).
+- `--hash`: Append MD5 hash to generated file names.
+- `-a, --aliases <path>`: Path to JSON file mapping logical SoundIds to source physical basenames and optional manifest priority metadata.
+
+## Aliases & Manifest Priority Metadata
+
+`aliases.json` supports both shorthand string mappings and structured entries that preserve per-sound manifest/asset routing priority (`"high" | "low"`, runtime default `"low"`):
+
+```json
+{
+    "kickDrum": "11325622-tr909-kick-drum-241402",
+    "explosion": {
+        "file": "freesound_community-explosion-42132",
+        "priority": "high"
+    }
+}
+```
+
+Manifest `priority` (`"high" | "low"`) governs preloading and RAM-quota accounting separately from game voice-stealing priority (`IVoiceConfig.priority`).
+
+## Hand-off Boundary (Studio / Host Application)
+
+`@scene-grid/cli` produces processed audio assets (codec ladders and stream chunks), `sound-manifest.json`, `audio-sizes.json`, and stream manifests. Combining authored configuration (`soundMap`, `banks`, `buses`, `snapshots`, `events`) with CLI-generated asset manifests remains the responsibility of Studio or the host application (for example as a combined JSON file, split JSON files, or ES/TypeScript modules).
 
 ## Constraints & Requirements
 
-* **Node.js Environment**: The CLI requires Node.js and relies heavily on native APIs. It strictly cannot be run inside a web browser.
-* **FFmpeg/FFprobe Requirement**: The CLI heavily relies on `ffprobe` to parse audio durations, channels, and sample rates. **You must have FFmpeg installed on your system PATH**.
-* **AOT Execution**: Designed exclusively for Ahead-Of-Time execution during your CI/CD pipeline or build step. It does not dynamically process live audio.
+- **Node.js Environment**: The CLI requires Node.js and relies heavily on native APIs. It strictly cannot be run inside a web browser.
+- **FFmpeg/FFprobe Requirement**: The CLI heavily relies on `ffprobe` to parse audio durations, channels, and sample rates. **You must have FFmpeg installed on your system PATH**.
+- **AOT Execution**: Designed exclusively for Ahead-Of-Time execution during your CI/CD pipeline or build step. It does not dynamically process live audio.
 
 ## License
+
 MIT © Igor Zabrodin

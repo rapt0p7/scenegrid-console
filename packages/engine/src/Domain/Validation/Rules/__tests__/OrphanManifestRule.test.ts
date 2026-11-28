@@ -15,7 +15,7 @@ describe('OrphanManifestRule', () => {
                     corruptedNull: null as any,
                     corruptedNumber: 123 as any,
                     corruptedString: 'invalid' as any,
-                    sfx_valid: { src: 'sfx_valid' }
+                    sfx_valid: { busId: 'master' } as any
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
 
@@ -116,7 +116,7 @@ describe('OrphanManifestRule', () => {
             expect(context.getWarnings()).toEqual(['Manifest sound "orphan_manifest" is not referenced in SoundMap']);
         });
 
-        it('should mark smartLoop keys, sound.src values, and direct matching keys as referenced (Lines 46-51)', () => {
+        it('should mark smartLoop keys and direct matching keys as referenced, without treating leaf src as indirection', () => {
             const rule = new OrphanManifestRule();
             const context = createStubContext({
                 manifest: {
@@ -130,15 +130,19 @@ describe('OrphanManifestRule', () => {
                         smartLoop: { regions: { r1: [0, 1000] } }
                     } as any,
                     sfx_gunshot: {
+                        busId: 'master',
                         src: 'audio_asset_file'
-                    },
-                    direct_key_match: {} as any
+                    } as any,
+                    direct_key_match: { busId: 'master' } as any
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
 
             rule.validate(context);
 
-            expect(context.getWarnings()).toEqual(['Manifest sound "orphan_unused" is not referenced in SoundMap']);
+            expect(context.getWarnings()).toEqual([
+                'Manifest sound "audio_asset_file" is not referenced in SoundMap',
+                'Manifest sound "orphan_unused" is not referenced in SoundMap'
+            ]);
         });
 
         it('should safely skip when layered.layers is an object dictionary instead of an array (Line 18)', () => {

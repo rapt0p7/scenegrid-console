@@ -66,7 +66,7 @@ describe('BankSystemRule', () => {
                 banks: {
                     ['bank1' as BankId]: { id: 'bank1' as BankId, sounds: ['sfx_ghost' as SoundId] }
                 },
-                soundMap: { ['sfx_real' as SoundId]: { src: 'real.ogg' } as any },
+                soundMap: { ['sfx_real' as SoundId]: { busId: 'master' as any } as any },
                 manifest: {}
             });
 
@@ -82,7 +82,7 @@ describe('BankSystemRule', () => {
                     ['bank1' as BankId]: { id: 'bank1' as BankId, sounds: ['sfx_audio' as SoundId] }
                 },
                 soundMap: {
-                    ['sfx_audio' as SoundId]: { src: 'audio.ogg' } as any,
+                    ['sfx_audio' as SoundId]: { busId: 'master' as any } as any,
                     ['container_sound' as SoundId]: { isContainer: true, sources: ['sfx_audio'] } as any,
                     ['scatterer_sound' as SoundId]: { isScatterer: true, sources: ['sfx_audio'] } as any,
                     ['switch_sound' as SoundId]: { isSwitch: true, switches: { state1: 'sfx_audio' } } as any
@@ -101,8 +101,8 @@ describe('BankSystemRule', () => {
                     ['bank1' as BankId]: { id: 'bank1' as BankId, sounds: ['sfx_included' as SoundId] }
                 },
                 soundMap: {
-                    ['sfx_included' as SoundId]: { src: 'included.ogg' } as any,
-                    ['sfx_forgotten' as SoundId]: { src: 'forgotten.ogg' } as any
+                    ['sfx_included' as SoundId]: { busId: 'master' as any } as any,
+                    ['sfx_forgotten' as SoundId]: { busId: 'master' as any } as any
                 }
             });
 
@@ -268,7 +268,7 @@ describe('BankSystemRule', () => {
                     bankA: { sounds: ['sfx_assigned'] }
                 },
                 soundMap: {
-                    sfx_assigned: { src: 'assigned.ogg' } as any,
+                    sfx_assigned: { busId: 'master' } as any,
                     comboContainer: {
                         isContainer: true,
                         sources: ['sfx_assigned', 'sfx_unassigned']
@@ -280,6 +280,29 @@ describe('BankSystemRule', () => {
 
             const crossBankWarnings = context.getWarnings().filter(w => w.includes('uses sounds from different banks'));
             expect(crossBankWarnings).toHaveLength(0);
+        });
+
+        it('should validate banks by map key without error when IBankConfig.id is omitted or differs from the map key', () => {
+            const rule = new BankSystemRule();
+            const context = createStubContext({
+                banks: {
+                    ['bank_no_id' as BankId]: { sounds: ['sfx_a' as SoundId] },
+                    ['bank_map_key' as BankId]: { id: 'legacy_other_id' as BankId, sounds: ['sfx_b' as SoundId] }
+                },
+                soundMap: {
+                    ['sfx_a' as SoundId]: { busId: 'master' as any },
+                    ['sfx_b' as SoundId]: { busId: 'master' as any }
+                },
+                manifest: {
+                    ['sfx_a' as SoundId]: { url: 'a.ogg' },
+                    ['sfx_b' as SoundId]: { url: 'b.ogg' }
+                }
+            });
+
+            rule.validate(context);
+
+            expect(context.getErrors()).toHaveLength(0);
+            expect(context.getWarnings()).toHaveLength(0);
         });
     });
 });

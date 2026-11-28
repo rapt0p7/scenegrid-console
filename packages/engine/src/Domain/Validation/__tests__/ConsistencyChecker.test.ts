@@ -21,13 +21,13 @@ describe('ConsistencyChecker', () => {
     describe('ConsistencyChecker.validate', () => {
         it('should pass with a perfectly valid config and log OK', () => {
             const validConfig: IConsistencyCheckerPayload = {
-                manifest: { ['shoot' as SoundId]: { url: 'sfx/shoot.mp3' } },
+                manifest: { ['gun_fire' as SoundId]: { url: 'sfx/shoot.mp3' } },
                 buses: {
                     master: { gain: 1 },
                     sfx: { gain: 0.8, sends: { ['master' as BusId]: 1 } }
                 },
                 soundMap: {
-                    ['gun_fire' as SoundId]: { busId: 'sfx' as BusId, src: 'shoot' }
+                    ['gun_fire' as SoundId]: { busId: 'sfx' as BusId }
                 },
                 snapshots: {},
                 banks: {
@@ -198,8 +198,8 @@ describe('ConsistencyChecker', () => {
                 const config: any = {
                     buses: { master: {} },
                     soundMap: {
-                        boom: { busId: 'unknown', src: 'b' },
-                        orphan: { src: 'b' }
+                        boom: { busId: 'unknown' },
+                        orphan: {}
                     }
                 };
                 expect(ConsistencyChecker.validate(config)).toBe(false);
@@ -1838,7 +1838,6 @@ describe('ConsistencyChecker', () => {
                         chirp: { busId: 'master' },
                         ambience_scatterer: {
                             isScatterer: true,
-                            busId: 'master',
                             sources: ['chirp'],
                             spawnRate: [1000, 2000],
                             sync: {
@@ -2062,7 +2061,6 @@ describe('ConsistencyChecker', () => {
                         bird_chirp: { busId: 'sfx' },
                         forest_scatterer: {
                             isScatterer: true,
-                            busId: 'sfx',
                             sources: ['bird_chirp', { id: 'bird_chirp', weight: 5 }],
                             spawnRate: [1000, 2000],
                             scatterDistance: [10, 30],
@@ -2078,7 +2076,7 @@ describe('ConsistencyChecker', () => {
                 expect(ConsistencyChecker.validate(config)).toBe(true);
             });
 
-            it('should fail if scatterer sources reference unknown sounds', () => {
+            it('should warn if scatterer sources reference unknown sounds without requiring busId', () => {
                 const config: any = {
                     buses: { sfx: {} },
                     rtpcManifest: {},
@@ -2094,11 +2092,69 @@ describe('ConsistencyChecker', () => {
                     }
                 };
 
-                expect(ConsistencyChecker.validate(config)).toBe(false);
+                expect(ConsistencyChecker.validate(config)).toBe(true);
                 expect(console.warn).toHaveBeenCalledWith(
                     expect.stringContaining(
                         'Source item at "soundMap.bad_scatterer.sources[0]" references missing sound "ghost_sound".'
                     )
+                );
+            });
+
+            it('should fail if a scatterer defines busId', () => {
+                const config: any = {
+                    buses: { sfx: {} },
+                    soundMap: {
+                        bird_chirp: { busId: 'sfx' },
+                        bad_scatterer: {
+                            isScatterer: true,
+                            busId: 'sfx',
+                            sources: ['bird_chirp'],
+                            spawnRate: [100, 200]
+                        }
+                    }
+                };
+
+                expect(ConsistencyChecker.validate(config)).toBe(false);
+                expect(console.error).toHaveBeenCalledWith(
+                    expect.stringContaining(
+                        'Scatterer "bad_scatterer" does not support "busId"; scatterer voices inherit routing from child sounds.'
+                    )
+                );
+            });
+
+            it('should allow switch without busId and validate busId when supplied', () => {
+                const validSwitchConfig: any = {
+                    buses: { sfx: {} },
+                    rtpcManifest: { surface: { defaultValue: 0 } },
+                    soundMap: {
+                        wood: { busId: 'sfx' },
+                        footstep_inherited: {
+                            isSwitch: true,
+                            switchGroup: 'surface',
+                            switches: { 0: 'wood' }
+                        }
+                    }
+                };
+
+                expect(ConsistencyChecker.validate(validSwitchConfig)).toBe(true);
+
+                const invalidSwitchConfig: any = {
+                    buses: { sfx: {} },
+                    rtpcManifest: { surface: { defaultValue: 0 } },
+                    soundMap: {
+                        wood: { busId: 'sfx' },
+                        footstep_bad_bus: {
+                            isSwitch: true,
+                            busId: 'ghost_bus',
+                            switchGroup: 'surface',
+                            switches: { 0: 'wood' }
+                        }
+                    }
+                };
+
+                expect(ConsistencyChecker.validate(invalidSwitchConfig)).toBe(false);
+                expect(console.error).toHaveBeenCalledWith(
+                    expect.stringContaining('Sound "footstep_bad_bus" references unknown bus "ghost_bus"')
                 );
             });
 

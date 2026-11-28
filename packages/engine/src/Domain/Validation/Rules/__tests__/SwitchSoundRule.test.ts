@@ -1,4 +1,5 @@
 import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload';
+import type { BusId } from '@scene-grid/shared';
 
 import { describe, expect, it, vi } from 'vitest';
 
@@ -11,7 +12,7 @@ describe('SwitchSoundRule', () => {
             const rule = new SwitchSoundRule();
             const context = createStubContext({});
 
-            rule.validate('sfx', { src: 'audio.ogg' }, context);
+            rule.validate('sfx', { busId: 'master' as BusId }, context);
 
             expect(context.getErrors()).toHaveLength(0);
         });

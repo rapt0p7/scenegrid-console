@@ -35,12 +35,18 @@ export default class SoundMapRule implements IValidationRule {
 
             const baseCfg = cfg;
 
-            if ('busId' in baseCfg && isDefined(baseCfg.busId)) {
+            if (context.isScatterer(baseCfg)) {
+                if ('busId' in baseCfg && isDefined((baseCfg as Record<string, unknown>).busId)) {
+                    context.addError(
+                        `Scatterer "${soundId}" does not support "busId"; scatterer voices inherit routing from child sounds.`
+                    );
+                }
+            } else if ('busId' in baseCfg && isDefined(baseCfg.busId)) {
                 context.assertOptionalType(`soundMap.${soundId}.busId`, baseCfg.busId, 'string');
                 if (!validBuses.includes(baseCfg.busId)) {
                     context.addError(`Sound "${soundId}" references unknown bus "${baseCfg.busId}"`);
                 }
-            } else if (!context.isContainer(baseCfg)) {
+            } else if (!context.isContainer(baseCfg) && !context.isSwitch(baseCfg)) {
                 context.addError(`Sound "${soundId}" has no busId`);
             }
 

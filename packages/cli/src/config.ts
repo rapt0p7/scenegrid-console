@@ -33,7 +33,10 @@ export async function resolveConfig(readonlyArgv: readonly string[]): Promise<CL
         .option('--streamExclusions <regexes...>', 'Regex patterns to exclude from stream routing')
         .option('--streamPriority <priority>', 'Priority for streams ("high" or "low")')
         .option('--hash', 'Append MD5 hash to generated file names')
-        .option('-a, --aliases <path>', 'Path to JSON file mapping physical basenames to logical SoundIds');
+        .option(
+            '-a, --aliases <path>',
+            'Path to JSON file mapping logical SoundIds to physical basenames or { file, priority } entries'
+        );
 
     program.parse([...readonlyArgv]);
     const cliOptions = program.opts() as Record<string, unknown>;

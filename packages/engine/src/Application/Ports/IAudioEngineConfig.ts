@@ -11,9 +11,11 @@ import type { IRTPCManifest } from '@kernel/RTPC/Ports/IRTPCManifest.js';
 export interface IAudioEngineConfig {
     readonly manifest: ISpriteSoundManifest;
     readonly buses: IBuses;
+    /** Mixer snapshots keyed by snapshot ID. An empty object `{}` is valid for minimal projects; no default snapshot is assumed at runtime. */
     readonly snapshots: ISnapshots;
     readonly soundMap: ISoundMap;
     readonly rtpcManifest?: IRTPCManifest;
+    /** Event definitions keyed by event ID. An empty object `{}` is valid for minimal projects. */
     readonly events: IEventMap;
     readonly musicFSM?: IMusicFSMConfig;
     readonly banks: IBankManifest;

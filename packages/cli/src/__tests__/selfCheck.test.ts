@@ -103,7 +103,7 @@ describe('Pipeline Real ConsistencyChecker Self-Check', () => {
         expect(console.log).toHaveBeenCalledWith('\nConsistency Check Passed!');
     });
 
-    it('detects RAM Quota Breach via real RamQuotaRule when precalculatedSizes exceeds quotaMb', async () => {
+    it('defaults ladder assets without priority metadata to low in self-check so they do not breach high-priority RAM quota', async () => {
         mockFs.readdirSync.mockReturnValue(['fx_heavy.wav']);
         vi.mocked(pcmModule.calculatePCMSize).mockReturnValueOnce(12.0);
 
@@ -117,6 +117,33 @@ describe('Pipeline Real ConsistencyChecker Self-Check', () => {
             streamExclusions: ['fx_heavy'],
             streamPriority: 'high',
             hash: false
+        });
+
+        expect(console.error).not.toHaveBeenCalled();
+        expect(console.warn).not.toHaveBeenCalledWith(expect.stringContaining('Consistency Check reported errors'));
+        expect(console.log).toHaveBeenCalledWith('\nConsistency Check Passed!');
+    });
+
+    it('detects RAM Quota Breach via real RamQuotaRule when high-priority precalculatedSizes exceeds quotaMb', async () => {
+        mockFs.readdirSync.mockReturnValue(['fx_heavy.wav']);
+        mockFs.readFileSync.mockReturnValue(
+            JSON.stringify({
+                fx_heavy: { file: 'fx_heavy', priority: 'high' }
+            })
+        );
+        vi.mocked(pcmModule.calculatePCMSize).mockReturnValueOnce(12.0);
+
+        await processAssets({
+            inputDir: 'input',
+            outputDir: 'output',
+            manifestsDir: 'manifests',
+            baseUrl: '/assets',
+            quotaMb: 8.0,
+            streamRules: [],
+            streamExclusions: ['fx_heavy'],
+            streamPriority: 'high',
+            hash: false,
+            aliases: 'aliases.json'
         });
 
         expect(console.error).toHaveBeenCalledWith(

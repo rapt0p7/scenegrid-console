@@ -11,7 +11,7 @@ describe('DuckingTargetRule', () => {
         it('should ignore sounds without ducking configuration', () => {
             const rule = new DuckingTargetRule();
             const context = createStubContext({ buses: { master: {} } });
-            const soundConfig: AnySoundConfig = { src: 'audio/fx.ogg' };
+            const soundConfig: AnySoundConfig = { busId: 'master' as BusId };
 
             rule.validate('sfx_ambient', soundConfig, context);
 
@@ -22,6 +22,7 @@ describe('DuckingTargetRule', () => {
             const rule = new DuckingTargetRule();
             const context = createStubContext({ buses: { master: {} } });
             const soundConfig: AnySoundConfig = {
+                busId: 'master' as BusId,
                 ducking: { intensity: 0.5 }
             };
 
@@ -34,6 +35,7 @@ describe('DuckingTargetRule', () => {
             const rule = new DuckingTargetRule();
             const context = createStubContext({ buses: { master: {} } });
             const soundConfig: AnySoundConfig = {
+                busId: 'master' as BusId,
                 ducking: { target: 123 as any }
             };
 
@@ -48,6 +50,7 @@ describe('DuckingTargetRule', () => {
                 buses: { master: {}, sfx: {} }
             });
             const soundConfig: AnySoundConfig = {
+                busId: 'sfx' as BusId,
                 ducking: { target: 'ghost_bus' as BusId }
             };
 
@@ -65,8 +68,8 @@ describe('DuckingTargetRule', () => {
                 }
             });
 
-            const soundA: AnySoundConfig = { ducking: { target: 'music' as BusId } };
-            const soundB: AnySoundConfig = { ducking: { target: 'ambience' as BusId } };
+            const soundA: AnySoundConfig = { busId: 'music' as BusId, ducking: { target: 'music' as BusId } };
+            const soundB: AnySoundConfig = { busId: 'ambience' as BusId, ducking: { target: 'ambience' as BusId } };
 
             rule.validate('vo_intro', soundA, context);
             rule.validate('vo_outro', soundB, context);
@@ -89,6 +92,7 @@ describe('DuckingTargetRule', () => {
             });
 
             const soundConfig: AnySoundConfig = {
+                busId: 'music' as BusId,
                 ducking: {
                     target: ['music', 'ambience'] as BusId[]
                 }

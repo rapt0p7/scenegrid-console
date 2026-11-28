@@ -72,62 +72,79 @@ const applyIcon = (component: any, iconId: string, text: string) => {
     return component;
 };
 
-export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
-    const audio: IDebuggableEngine = engineInstance ?? (window as any).AudioEngine;
+const isSfxBusId = (busId: unknown): boolean => typeof busId === 'string' && busId.toLowerCase().includes('sfx');
 
-    if (!audio) {
-        console.warn('[Debug] AudioEngine is not available.');
-        return;
-    }
+const extractSourceId = (source: unknown): string | undefined => {
+    if (typeof source === 'string') return source;
+    const candidate = (source as { id?: unknown } | null)?.id;
+    return typeof candidate === 'string' ? candidate : undefined;
+};
 
-    const { busSystem, masterOutput, rtpcManager, config } = audio._debug ?? {};
+const hasSfxScattererSource = (
+    soundMap: Record<string, any>,
+    cfg: Record<string, any>,
+    visited: Set<string>
+): boolean => {
+    if (cfg.isScatterer !== true || !Array.isArray(cfg.sources)) return false;
 
-    const BUS_IDS = config?.buses ? Object.keys(config.buses) : [];
-    const SNAPSHOT_IDS = config?.snapshots ? Object.keys(config.snapshots) : [];
-    const SOUND_KEYS = config?.soundMap ? Object.keys(config.soundMap) : [];
-    const SFX_SOUNDS = SOUND_KEYS.filter(id => config.soundMap[id].busId.toLowerCase().includes('sfx'));
-    const TEST_SOUND_EVENTS = SFX_SOUNDS.length > 0 ? SFX_SOUNDS : ['none'];
+    return cfg.sources.some((source: unknown) => {
+        const sourceId = extractSourceId(source);
+        return sourceId !== undefined && isSfxSound(soundMap, sourceId, visited);
+    });
+};
 
-    const PARAMS: IDebugParams = {
-        masterMute: false,
-        globalVolume: 1.0,
-        activeSnapshot: SNAPSHOT_IDS[0] || '',
-        testSound: TEST_SOUND_EVENTS[0],
-        loopSoundId: '',
-        loopRegion: '',
-        targetRegion: '',
-        transitionRegion: '',
-        quantize: 'NextBeat',
-        quantizeInterval: 1,
-        blendMode: 'crossfade',
-        crossfade: 3.0,
-        interruptable: true,
-        busesMonitor: {},
-        duckingMonitor: {},
-        rtpc: {},
-        spatialSoundId: '',
-        spatialPos: { x: 0, y: 0 }
-    };
+export function isSfxSound(
+    soundMap: Record<string, any> | undefined,
+    id: string,
+    visited: Set<string> = new Set()
+): boolean {
+    if (!soundMap || visited.has(id)) return false;
 
-    const pane = new Pane({ title: 'AUDIO SYSTEM DEBUG', expanded: true });
-    pane.registerPlugin(EssentialsPlugin);
-    applyIcon(pane, 'fad-speaker', 'AUDIO SYSTEM DEBUG');
+    visited.add(id);
 
-    // --- 0. PERFORMANCE & MATH PROFILER ---
+    const cfg = soundMap[id];
+    if (!cfg) return false;
+
+    if (isSfxBusId(cfg.busId)) return true;
+
+    return hasSfxScattererSource(soundMap, cfg, visited);
+}
+
+const resolveGlobalVoiceLimit = (debug: IDebuggableEngine['_debug']): number =>
+    debug?.config?.globalVoiceLimit ??
+    debug?.poolManager?.globalVoiceLimit ??
+    debug?.router?.soundController?.debugPool?.globalVoiceLimit ??
+    32;
+
+const createDebugParams = (snapshotIds: string[], testSoundEvents: string[]): IDebugParams => ({
+    masterMute: false,
+    globalVolume: 1.0,
+    activeSnapshot: snapshotIds[0] || '',
+    testSound: testSoundEvents[0],
+    loopSoundId: '',
+    loopRegion: '',
+    targetRegion: '',
+    transitionRegion: '',
+    quantize: 'NextBeat',
+    quantizeInterval: 1,
+    blendMode: 'crossfade',
+    crossfade: 3.0,
+    interruptable: true,
+    busesMonitor: {},
+    duckingMonitor: {},
+    rtpc: {},
+    spatialSoundId: '',
+    spatialPos: { x: 0, y: 0 }
+});
+
+function setupProfilerSection(pane: Pane, audio: IDebuggableEngine): void {
     const profiler = new AudioProfiler(audio as any);
     const fProfile = pane.addFolder({ title: 'PERFORMANCE PROFILER', expanded: true });
     applyIcon(fProfile, 'fad-tachometer-alt', 'PERFORMANCE PROFILER');
 
     const fVoice = fProfile.addFolder({ title: 'VOICE MONITOR', expanded: true });
-
     const voiceContainer = fVoice.element.querySelector('.tp-fldv_c') ?? fVoice.element;
-    const globalVoiceLimit =
-        audio._debug?.config?.globalVoiceLimit ??
-        audio._debug?.poolManager?.globalVoiceLimit ??
-        audio._debug?.router?.soundController?.debugPool?.globalVoiceLimit ??
-        32;
-
-    const voiceMeter = new VoiceMeterWidget(voiceContainer as HTMLElement, globalVoiceLimit);
+    const voiceMeter = new VoiceMeterWidget(voiceContainer as HTMLElement, resolveGlobalVoiceLimit(audio._debug));
     const voiceList = new VoiceListWidget(voiceContainer as HTMLElement);
 
     const originalTick = profiler.tick.bind(profiler);
@@ -154,18 +171,18 @@ export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
         requestAnimationFrame(renderLoop);
     };
     requestAnimationFrame(renderLoop);
+}
 
-    // --- 1. MASTER CONTROL ---
+function setupMasterControlSection(pane: Pane, PARAMS: IDebugParams, masterOutput: any): void {
     const fMaster = pane.addFolder({ title: 'MASTER CONTROL' });
     applyIcon(fMaster, 'fad-stereo', 'MASTER CONTROL');
 
     fMaster.addBinding(PARAMS, 'masterMute', { label: 'Mute All' }).on('change', event => {
-        if (masterOutput) {
-            if (event.value) {
-                masterOutput.mute();
-            } else {
-                masterOutput.unmute();
-            }
+        if (!masterOutput) return;
+        if (event.value) {
+            masterOutput.mute();
+        } else {
+            masterOutput.unmute();
         }
     });
     fMaster
@@ -173,53 +190,66 @@ export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
         .on('change', event => {
             if (masterOutput) masterOutput.setVolume(event.value);
         });
+}
 
-    // --- 2. BUS MONITORING ---
-    if (BUS_IDS.length > 0) {
-        const fMonitor = pane.addFolder({ title: 'BUS MONITORING', expanded: false });
-        applyIcon(fMonitor, 'fad-waveform', 'BUS MONITORING');
+function setupBusMonitoringSection(pane: Pane, PARAMS: IDebugParams, busSystem: any, BUS_IDS: string[]): void {
+    if (BUS_IDS.length === 0) return;
 
-        BUS_IDS.forEach(busId => {
-            Object.defineProperty(PARAMS.busesMonitor, busId, {
-                get: () => busSystem?.getCurrentRealGain(busId) ?? 0
-            });
+    const fMonitor = pane.addFolder({ title: 'BUS MONITORING', expanded: false });
+    applyIcon(fMonitor, 'fad-waveform', 'BUS MONITORING');
 
-            fMonitor.addBinding(PARAMS.busesMonitor, busId, {
-                readonly: true,
-                view: 'graph',
-                min: 0,
-                max: 1,
-                label: busId.toUpperCase()
-            });
-            fMonitor.addBinding(PARAMS.busesMonitor, busId, {
-                readonly: true,
-                label: ' ',
-                format: (v: unknown) => `Vol: ${Number(v).toFixed(2)}`
-            });
-            fMonitor.addBlade({ view: 'separator' });
-        });
-    }
-
-    // --- 3. MIXER SNAPSHOTS ---
-    if (SNAPSHOT_IDS.length > 0) {
-        const fSnap = pane.addFolder({ title: 'MIXER SNAPSHOTS', expanded: false });
-        applyIcon(fSnap, 'fad-preset-a', 'MIXER SNAPSHOTS');
-
-        fSnap.addBinding(PARAMS, 'activeSnapshot', { label: 'State', options: toOptions(SNAPSHOT_IDS) });
-
-        const btnSnap = fSnap.addButton({ title: 'Activate Snapshot' });
-        applyIcon(btnSnap, 'fad-next', 'Activate Snapshot');
-        btnSnap.on('click', () => {
-            audio.mixer.setState(PARAMS.activeSnapshot);
+    BUS_IDS.forEach(busId => {
+        Object.defineProperty(PARAMS.busesMonitor, busId, {
+            get: () => busSystem?.getCurrentRealGain(busId) ?? 0
         });
 
-        const btnClear = fSnap.addButton({ title: 'Clear Debug Override' });
-        btnClear.on('click', () => {
-            audio.mixer.removeModifier('debug_override_layer');
+        fMonitor.addBinding(PARAMS.busesMonitor, busId, {
+            readonly: true,
+            view: 'graph',
+            min: 0,
+            max: 1,
+            label: busId.toUpperCase()
         });
-    }
+        fMonitor.addBinding(PARAMS.busesMonitor, busId, {
+            readonly: true,
+            label: ' ',
+            format: (v: unknown) => `Vol: ${Number(v).toFixed(2)}`
+        });
+        fMonitor.addBlade({ view: 'separator' });
+    });
+}
 
-    // --- 4. SOUND TRIGGER TEST (SFX) ---
+function setupSnapshotsSection(
+    pane: Pane,
+    audio: IDebuggableEngine,
+    PARAMS: IDebugParams,
+    SNAPSHOT_IDS: string[]
+): void {
+    if (SNAPSHOT_IDS.length === 0) return;
+
+    const fSnap = pane.addFolder({ title: 'MIXER SNAPSHOTS', expanded: false });
+    applyIcon(fSnap, 'fad-preset-a', 'MIXER SNAPSHOTS');
+
+    fSnap.addBinding(PARAMS, 'activeSnapshot', { label: 'State', options: toOptions(SNAPSHOT_IDS) });
+
+    const btnSnap = fSnap.addButton({ title: 'Activate Snapshot' });
+    applyIcon(btnSnap, 'fad-next', 'Activate Snapshot');
+    btnSnap.on('click', () => {
+        audio.mixer.setState(PARAMS.activeSnapshot);
+    });
+
+    const btnClear = fSnap.addButton({ title: 'Clear Debug Override' });
+    btnClear.on('click', () => {
+        audio.mixer.removeModifier('debug_override_layer');
+    });
+}
+
+function setupSoundTriggerSection(
+    pane: Pane,
+    audio: IDebuggableEngine,
+    PARAMS: IDebugParams,
+    TEST_SOUND_EVENTS: string[]
+): void {
     const fTest = pane.addFolder({ title: 'SOUND TRIGGER TEST (SFX)', expanded: false });
     applyIcon(fTest, 'fad-drumpad', 'SOUND TRIGGER TEST');
 
@@ -230,15 +260,45 @@ export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
     btnPlay.on('click', () => {
         if (PARAMS.testSound !== 'none') audio.play(PARAMS.testSound);
     });
+}
 
+function registerVisibilityToggle(pane: Pane): void {
+    document.addEventListener('keydown', e => {
+        if (e.key === '`' || e.key === '~') pane.hidden = !pane.hidden;
+    });
+}
+
+export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
+    const audio: IDebuggableEngine = engineInstance ?? (window as any).AudioEngine;
+
+    if (!audio) {
+        console.warn('[Debug] AudioEngine is not available.');
+        return;
+    }
+
+    const { busSystem, masterOutput, rtpcManager, config } = audio._debug ?? {};
+
+    const BUS_IDS = config?.buses ? Object.keys(config.buses) : [];
+    const SNAPSHOT_IDS = config?.snapshots ? Object.keys(config.snapshots) : [];
+    const SOUND_KEYS = config?.soundMap ? Object.keys(config.soundMap) : [];
+    const SFX_SOUNDS = SOUND_KEYS.filter(id => isSfxSound(config?.soundMap, id));
+    const TEST_SOUND_EVENTS = SFX_SOUNDS.length > 0 ? SFX_SOUNDS : ['none'];
+    const PARAMS = createDebugParams(SNAPSHOT_IDS, TEST_SOUND_EVENTS);
+
+    const pane = new Pane({ title: 'AUDIO SYSTEM DEBUG', expanded: true });
+    pane.registerPlugin(EssentialsPlugin);
+    applyIcon(pane, 'fad-speaker', 'AUDIO SYSTEM DEBUG');
+
+    setupProfilerSection(pane, audio);
+    setupMasterControlSection(pane, PARAMS, masterOutput);
+    setupBusMonitoringSection(pane, PARAMS, busSystem, BUS_IDS);
+    setupSnapshotsSection(pane, audio, PARAMS, SNAPSHOT_IDS);
+    setupSoundTriggerSection(pane, audio, PARAMS, TEST_SOUND_EVENTS);
     setupSmartLoopSection(pane, audio, PARAMS, config);
     setupDuckingMonitor(pane, PARAMS, busSystem, BUS_IDS);
     setupRTPCSection(pane, PARAMS, rtpcManager);
     setupSpatialSection(pane, audio, PARAMS, config);
-
-    document.addEventListener('keydown', e => {
-        if (e.key === '`' || e.key === '~') pane.hidden = !pane.hidden;
-    });
+    registerVisibilityToggle(pane);
 }
 
 function setupDuckingMonitor(pane: Pane, PARAMS: IDebugParams, busSystem: any, BUS_IDS: string[]) {

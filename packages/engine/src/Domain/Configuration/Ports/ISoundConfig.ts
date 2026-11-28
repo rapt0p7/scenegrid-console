@@ -42,6 +42,7 @@ export interface IVariationConfig {
 }
 
 export interface IVoiceConfig {
+    /** Game voice-stealing priority (higher values win limited voice slots). Separate from manifest/asset routing priority. */
     readonly priority?: number;
     readonly virtualization?: 'kill' | 'virtualize';
 }
@@ -51,9 +52,9 @@ export type ContainerMode = 'random' | 'random_no_repeat' | 'sequence';
 export type ContainerSourceItem = SoundId | { id: SoundId; weight: number };
 
 export interface ISoundConfig extends IBaseSoundConfig {
+    readonly busId: BusId;
     readonly isLoop?: boolean;
     readonly voice?: IVoiceConfig;
-    readonly src?: string;
     readonly spatial?: ISpatialConfig | boolean;
     readonly hasPanner?: boolean;
 }
@@ -86,11 +87,16 @@ export interface ISmartLoopSoundConfig {
 export interface IContainerSoundConfig extends IBaseSoundConfig {
     readonly isContainer: true;
     readonly mode: ContainerMode;
-    readonly sources: ContainerSourceItem[];
-    readonly volumeRange?: [min: number, max: number];
-    readonly pitchRange?: [min: number, max: number];
+    readonly sources: readonly ContainerSourceItem[];
+    readonly volumeRange?: readonly [min: number, max: number];
+    readonly pitchRange?: readonly [min: number, max: number];
 }
 
+/**
+ * Conditional switch container routing playback to a selected child sound.
+ * When `busId` is omitted, playback follows the selected child sound's effective bus.
+ * When `busId` is supplied, it acts as an explicit routing override that the child does not override.
+ */
 export interface ISwitchSoundConfig extends IBaseSoundConfig {
     readonly isSwitch: true;
     readonly switchGroup: GameParamId;
@@ -110,7 +116,7 @@ export interface ILayeredSoundConfig {
     readonly isLayered: true;
     readonly busId: BusId;
     readonly ducking?: IDuckingConfig;
-    readonly layers: ILayerConfig[];
+    readonly layers: readonly ILayerConfig[];
 }
 
 export interface IPlayOptions {
@@ -127,7 +133,11 @@ export interface IScattererSyncConfig {
     readonly referenceTrackId: SoundId;
 }
 
-export interface IScattererSoundConfig extends IBaseSoundConfig {
+/**
+ * Periodic spatial emitter container.
+ * Scatterers do not support scatterer-level `busId` routing overrides; spawned voices inherit routing from their child sound configurations.
+ */
+export interface IScattererSoundConfig extends Omit<IBaseSoundConfig, 'busId'> {
     readonly isScatterer: true;
     readonly sources: readonly ContainerSourceItem[];
     readonly spawnRate: readonly [min: Milliseconds, max: Milliseconds];

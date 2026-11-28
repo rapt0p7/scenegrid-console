@@ -9,7 +9,7 @@ import type { Mocked } from 'vitest';
 import { AnySoundConfig } from '@domain/Configuration/Ports/ISoundConfig';
 import { ISwitchHistoryRegistry } from '@domain/Managers/Ports/ISwitchHistoryRegistry.js';
 import AudioRouter from '@domain/Router/AudioRouter.js';
-import { PlaybackId, SoundId, IPRNG, TimeMath, Seconds } from '@scene-grid/shared';
+import { PlaybackId, SoundId, BusId, IPRNG, TimeMath, Seconds } from '@scene-grid/shared';
 import { ContextTime, Milliseconds, SeededPRNG } from '@scene-grid/shared';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -729,7 +729,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
         });
 
         it('should allow playback when recursion depth is exactly 10', () => {
-            vi.spyOn(router, 'getSoundConfig').mockReturnValue({});
+            vi.spyOn(router, 'getSoundConfig').mockReturnValue({ busId: 'sfx' as BusId });
             const result = router.play('test-sound' as SoundId, {}, 10);
 
             expect(result).toBe(1);
@@ -752,7 +752,7 @@ describe('AudioRouter (Command Dispatcher)', () => {
     describe('applyConfigToPlayback edge cases', () => {
         it('should not route to bus when busId is undefined in config', () => {
             const playbackId = 10 as PlaybackId;
-            const config: AnySoundConfig = {};
+            const config: AnySoundConfig = { isContainer: true, mode: 'random', sources: [] };
 
             router.applyConfigToPlayback(playbackId, config);
 
@@ -1274,6 +1274,72 @@ describe('AudioRouter (Command Dispatcher)', () => {
 
             expect(result).toBeNull();
             expect(applyConfigSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('Switch and Scatterer Bus Routing Contracts', () => {
+        it('should follow child effective bus when switch busId is omitted', () => {
+            testSoundMap['music_child'] = { busId: 'music' };
+            testSoundMap['switch_no_bus'] = {
+                isSwitch: true,
+                switchGroup: 'surface',
+                switches: { 0: 'music_child' }
+            };
+            mockRtpcAdapter.getValue.mockReturnValue(0);
+            mockSwitchPolicy.evaluateNext.mockReturnValue({
+                soundId: 'music_child',
+                nextState: { currentSwitchKey: 0 }
+            });
+
+            const result = router.play('switch_no_bus' as SoundId);
+
+            expect(result).toBe(1);
+            expect(mockController.routeToBus).toHaveBeenCalledTimes(1);
+            expect(mockController.routeToBus).toHaveBeenCalledWith(1, 'music');
+        });
+
+        it('should override child bus when switch busId is supplied', () => {
+            testSoundMap['music_child'] = { busId: 'music' };
+            testSoundMap['switch_override_bus'] = {
+                isSwitch: true,
+                busId: 'sfx',
+                switchGroup: 'surface',
+                switches: { 0: 'music_child' }
+            };
+            mockRtpcAdapter.getValue.mockReturnValue(0);
+            mockSwitchPolicy.evaluateNext.mockReturnValue({
+                soundId: 'music_child',
+                nextState: { currentSwitchKey: 0 }
+            });
+
+            const result = router.play('switch_override_bus' as SoundId);
+
+            expect(result).toBe(1);
+            expect(mockController.routeToBus.mock.calls).toEqual([
+                [1, 'music'],
+                [1, 'sfx']
+            ]);
+        });
+
+        it('should not route scatterer voice directly and instead route spawned child via child config', () => {
+            router.setScattererOrchestrator(mockScattererOrchestrator);
+            const virtualId = 77 as PlaybackId;
+            mockController.playVirtual.mockReturnValue(virtualId);
+
+            const scatterResult = router.play('scatterer_sound' as SoundId);
+
+            expect(scatterResult).toBe(virtualId);
+            expect(mockController.playVirtual).toHaveBeenCalledWith('scatterer_sound');
+            expect(mockScattererOrchestrator.start).toHaveBeenCalledWith(
+                virtualId,
+                testSoundMap['scatterer_sound'],
+                expect.anything()
+            );
+            expect(mockController.routeToBus).not.toHaveBeenCalled();
+
+            // When ScattererOrchestrator triggers the selected child source, routing follows child config
+            router.play('step_wood' as SoundId);
+            expect(mockController.routeToBus).toHaveBeenCalledWith(1, 'sfx');
         });
     });
 });

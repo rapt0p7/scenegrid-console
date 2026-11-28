@@ -135,7 +135,7 @@ describe('MusicFSMRule', () => {
             const rule = new MusicFSMRule();
             const context = createStubContext({
                 soundMap: {
-                    s_standard: { src: 'audio.ogg' } as any
+                    s_standard: { busId: 'master' } as any
                 },
                 musicFSM: {
                     initialState: 'StateA',
@@ -227,7 +227,7 @@ describe('MusicFSMRule', () => {
             const context = createStubContext({
                 soundMap: {
                     s_smart: { smartLoop: { regions: { intro: [0, 1000] } } } as any,
-                    s_standard: { src: 'audio.ogg' } as any
+                    s_standard: { busId: 'master' } as any
                 },
                 musicFSM: {
                     initialState: 'StateA',
@@ -538,7 +538,7 @@ describe('MusicFSMRule', () => {
                     rtpcManifest: { intensity: {} as any },
                     soundMap: {
                         s1: { smartLoop: { regions: { r1: [0, 1000] } } } as any,
-                        s_stinger: { src: 'stinger.ogg' } as any
+                        s_stinger: { busId: 'master' } as any
                     },
                     musicFSM: {
                         initialState: 'StateA',

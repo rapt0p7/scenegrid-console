@@ -1,8 +1,9 @@
 // oxlint-disable max-depth max-lines-per-function
 // noinspection D
 
-import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
 import type { IValidationContext } from '@domain/Validation/Ports/IValidationContext.js';
+import type { IValidationRule } from '@domain/Validation/Ports/IValidationRule.js';
+
 import { isDefined, typedEntries } from '@scene-grid/shared';
 
 export default class OrphanManifestRule implements IValidationRule {
@@ -45,8 +46,6 @@ export default class OrphanManifestRule implements IValidationRule {
                 }
             } else if (context.isSmartLoop(cfg)) {
                 referenced.add(key);
-            } else if ('src' in cfg && isDefined(cfg.src)) {
-                referenced.add(cfg.src);
             } else if (key in (context.config.manifest || {})) {
                 referenced.add(key);
             }

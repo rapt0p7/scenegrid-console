@@ -30,7 +30,8 @@ export class CullingContextProvider implements ICullingContext {
     }
 
     public resolveBusId(id: SoundId): BusId | undefined {
-        return this.soundMap[id]?.busId;
+        const config = this.soundMap[id];
+        return config && 'busId' in config ? config.busId : undefined;
     }
 
     public isGhostVoice(id: PlaybackId): boolean {

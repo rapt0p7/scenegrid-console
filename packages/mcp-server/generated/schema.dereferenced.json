@@ -24,7 +24,8 @@
                             },
                             "priority": {
                                 "type": "string",
-                                "enum": ["high", "low"]
+                                "enum": ["high", "low"],
+                                "description": "Asset loading and RAM-quota routing priority (`'high' | 'low'`, runtime default `'low'`). Separate from game voice-stealing priority in `IVoiceConfig.priority`."
                             },
                             "isStream": {
                                 "type": "boolean"
@@ -570,6 +571,7 @@
                     }
                 },
                 "snapshots": {
+                    "description": "Mixer snapshots keyed by snapshot ID. An empty object `{}` is valid for minimal projects; no default snapshot is assumed at runtime.",
                     "type": "object",
                     "additionalProperties": {
                         "type": "object",
@@ -1704,16 +1706,14 @@
                                         "type": "object",
                                         "properties": {
                                             "priority": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "description": "Game voice-stealing priority (higher values win limited voice slots). Separate from manifest/asset routing priority."
                                             },
                                             "virtualization": {
                                                 "type": "string",
                                                 "enum": ["kill", "virtualize"]
                                             }
                                         }
-                                    },
-                                    "src": {
-                                        "type": "string"
                                     },
                                     "spatial": {
                                         "anyOf": [
@@ -1747,7 +1747,8 @@
                                     "hasPanner": {
                                         "type": "boolean"
                                     }
-                                }
+                                },
+                                "required": ["busId"]
                             },
                             {
                                 "type": "object",
@@ -3105,14 +3106,12 @@
                                         "type": "number"
                                     }
                                 },
-                                "required": ["isSwitch", "switchGroup", "switches"]
+                                "required": ["isSwitch", "switchGroup", "switches"],
+                                "description": "Conditional switch container routing playback to a selected child sound. When `busId` is omitted, playback follows the selected child sound's effective bus. When `busId` is supplied, it acts as an explicit routing override that the child does not override."
                             },
                             {
                                 "type": "object",
                                 "properties": {
-                                    "busId": {
-                                        "type": "string"
-                                    },
                                     "variation": {
                                         "type": "object",
                                         "properties": {
@@ -3758,7 +3757,8 @@
                                         "required": ["quantize", "referenceTrackId"]
                                     }
                                 },
-                                "required": ["isScatterer", "sources", "spawnRate"]
+                                "required": ["isScatterer", "sources", "spawnRate"],
+                                "description": "Periodic spatial emitter container. Scatterers do not support scatterer-level `busId` routing overrides; spawned voices inherit routing from their child sound configurations."
                             }
                         ]
                     }
@@ -3781,6 +3781,7 @@
                     }
                 },
                 "events": {
+                    "description": "Event definitions keyed by event ID. An empty object `{}` is valid for minimal projects.",
                     "type": "object",
                     "additionalProperties": {
                         "type": "object",
@@ -4875,6 +4876,7 @@
                         "type": "object",
                         "properties": {
                             "id": {
+                                "description": "Optional informational/legacy bank identifier; runtime bank loading, events, and validation use the  {@link  IBankManifest }  map key.",
                                 "type": "string"
                             },
                             "sounds": {
@@ -4884,8 +4886,10 @@
                                 }
                             }
                         },
-                        "required": ["id", "sounds"]
-                    }
+                        "required": ["sounds"],
+                        "description": "Configuration for a single audio bank. Bank identity is defined authoritatively by the map key in  {@link  IBankManifest } ."
+                    },
+                    "description": "Map of authoritative  {@link  BankId }  keys to bank configurations."
                 },
                 "globalVoiceLimit": {
                     "type": "number"
@@ -4971,7 +4975,8 @@
                     },
                     "priority": {
                         "type": "string",
-                        "enum": ["high", "low"]
+                        "enum": ["high", "low"],
+                        "description": "Asset loading and RAM-quota routing priority (`'high' | 'low'`, runtime default `'low'`). Separate from game voice-stealing priority in `IVoiceConfig.priority`."
                     },
                     "isStream": {
                         "type": "boolean"
@@ -8476,16 +8481,14 @@
                                 "type": "object",
                                 "properties": {
                                     "priority": {
-                                        "type": "number"
+                                        "type": "number",
+                                        "description": "Game voice-stealing priority (higher values win limited voice slots). Separate from manifest/asset routing priority."
                                     },
                                     "virtualization": {
                                         "type": "string",
                                         "enum": ["kill", "virtualize"]
                                     }
                                 }
-                            },
-                            "src": {
-                                "type": "string"
                             },
                             "spatial": {
                                 "anyOf": [
@@ -8519,7 +8522,8 @@
                             "hasPanner": {
                                 "type": "boolean"
                             }
-                        }
+                        },
+                        "required": ["busId"]
                     },
                     {
                         "type": "object",
@@ -9817,14 +9821,12 @@
                                 "type": "number"
                             }
                         },
-                        "required": ["isSwitch", "switchGroup", "switches"]
+                        "required": ["isSwitch", "switchGroup", "switches"],
+                        "description": "Conditional switch container routing playback to a selected child sound. When `busId` is omitted, playback follows the selected child sound's effective bus. When `busId` is supplied, it acts as an explicit routing override that the child does not override."
                     },
                     {
                         "type": "object",
                         "properties": {
-                            "busId": {
-                                "type": "string"
-                            },
                             "variation": {
                                 "type": "object",
                                 "properties": {
@@ -10440,7 +10442,8 @@
                                 "required": ["quantize", "referenceTrackId"]
                             }
                         },
-                        "required": ["isScatterer", "sources", "spawnRate"]
+                        "required": ["isScatterer", "sources", "spawnRate"],
+                        "description": "Periodic spatial emitter container. Scatterers do not support scatterer-level `busId` routing overrides; spawned voices inherit routing from their child sound configurations."
                     }
                 ]
             }
@@ -10938,16 +10941,14 @@
                             "type": "object",
                             "properties": {
                                 "priority": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "Game voice-stealing priority (higher values win limited voice slots). Separate from manifest/asset routing priority."
                                 },
                                 "virtualization": {
                                     "type": "string",
                                     "enum": ["kill", "virtualize"]
                                 }
                             }
-                        },
-                        "src": {
-                            "type": "string"
                         },
                         "spatial": {
                             "anyOf": [
@@ -10981,7 +10982,8 @@
                         "hasPanner": {
                             "type": "boolean"
                         }
-                    }
+                    },
+                    "required": ["busId"]
                 },
                 {
                     "type": "object",
@@ -12229,14 +12231,12 @@
                             "type": "number"
                         }
                     },
-                    "required": ["isSwitch", "switchGroup", "switches"]
+                    "required": ["isSwitch", "switchGroup", "switches"],
+                    "description": "Conditional switch container routing playback to a selected child sound. When `busId` is omitted, playback follows the selected child sound's effective bus. When `busId` is supplied, it acts as an explicit routing override that the child does not override."
                 },
                 {
                     "type": "object",
                     "properties": {
-                        "busId": {
-                            "type": "string"
-                        },
                         "variation": {
                             "type": "object",
                             "properties": {
@@ -12827,7 +12827,8 @@
                             "required": ["quantize", "referenceTrackId"]
                         }
                     },
-                    "required": ["isScatterer", "sources", "spawnRate"]
+                    "required": ["isScatterer", "sources", "spawnRate"],
+                    "description": "Periodic spatial emitter container. Scatterers do not support scatterer-level `busId` routing overrides; spawned voices inherit routing from their child sound configurations."
                 }
             ]
         },
@@ -13297,16 +13298,14 @@
                     "type": "object",
                     "properties": {
                         "priority": {
-                            "type": "number"
+                            "type": "number",
+                            "description": "Game voice-stealing priority (higher values win limited voice slots). Separate from manifest/asset routing priority."
                         },
                         "virtualization": {
                             "type": "string",
                             "enum": ["kill", "virtualize"]
                         }
                     }
-                },
-                "src": {
-                    "type": "string"
                 },
                 "spatial": {
                     "anyOf": [
@@ -13340,7 +13339,8 @@
                 "hasPanner": {
                     "type": "boolean"
                 }
-            }
+            },
+            "required": ["busId"]
         },
         "IVariationConfig": {
             "type": "object",
@@ -13384,7 +13384,8 @@
             "type": "object",
             "properties": {
                 "priority": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "Game voice-stealing priority (higher values win limited voice slots). Separate from manifest/asset routing priority."
                 },
                 "virtualization": {
                     "type": "string",
@@ -14823,14 +14824,12 @@
                     "type": "number"
                 }
             },
-            "required": ["isSwitch", "switchGroup", "switches"]
+            "required": ["isSwitch", "switchGroup", "switches"],
+            "description": "Conditional switch container routing playback to a selected child sound. When `busId` is omitted, playback follows the selected child sound's effective bus. When `busId` is supplied, it acts as an explicit routing override that the child does not override."
         },
         "IScattererSoundConfig": {
             "type": "object",
             "properties": {
-                "busId": {
-                    "type": "string"
-                },
                 "variation": {
                     "type": "object",
                     "properties": {
@@ -15396,7 +15395,8 @@
                     "required": ["quantize", "referenceTrackId"]
                 }
             },
-            "required": ["isScatterer", "sources", "spawnRate"]
+            "required": ["isScatterer", "sources", "spawnRate"],
+            "description": "Periodic spatial emitter container. Scatterers do not support scatterer-level `busId` routing overrides; spawned voices inherit routing from their child sound configurations."
         },
         "IScattererSyncConfig": {
             "type": "object",
@@ -19500,6 +19500,7 @@
                 "type": "object",
                 "properties": {
                     "id": {
+                        "description": "Optional informational/legacy bank identifier; runtime bank loading, events, and validation use the  {@link  IBankManifest }  map key.",
                         "type": "string"
                     },
                     "sounds": {
@@ -19509,13 +19510,16 @@
                         }
                     }
                 },
-                "required": ["id", "sounds"]
-            }
+                "required": ["sounds"],
+                "description": "Configuration for a single audio bank. Bank identity is defined authoritatively by the map key in  {@link  IBankManifest } ."
+            },
+            "description": "Map of authoritative  {@link  BankId }  keys to bank configurations."
         },
         "IBankConfig": {
             "type": "object",
             "properties": {
                 "id": {
+                    "description": "Optional informational/legacy bank identifier; runtime bank loading, events, and validation use the  {@link  IBankManifest }  map key.",
                     "type": "string"
                 },
                 "sounds": {
@@ -19525,7 +19529,8 @@
                     }
                 }
             },
-            "required": ["id", "sounds"]
+            "required": ["sounds"],
+            "description": "Configuration for a single audio bank. Bank identity is defined authoritatively by the map key in  {@link  IBankManifest } ."
         },
         "IAudioBufferLoaderOptions": {
             "type": "object",
@@ -19584,7 +19589,8 @@
                     },
                     "priority": {
                         "type": "string",
-                        "enum": ["high", "low"]
+                        "enum": ["high", "low"],
+                        "description": "Asset loading and RAM-quota routing priority (`'high' | 'low'`, runtime default `'low'`). Separate from game voice-stealing priority in `IVoiceConfig.priority`."
                     },
                     "isStream": {
                         "type": "boolean"
@@ -20105,6 +20111,7 @@
             }
         },
         "snapshots": {
+            "description": "Mixer snapshots keyed by snapshot ID. An empty object `{}` is valid for minimal projects; no default snapshot is assumed at runtime.",
             "type": "object",
             "additionalProperties": {
                 "type": "object",
@@ -21179,16 +21186,14 @@
                                 "type": "object",
                                 "properties": {
                                     "priority": {
-                                        "type": "number"
+                                        "type": "number",
+                                        "description": "Game voice-stealing priority (higher values win limited voice slots). Separate from manifest/asset routing priority."
                                     },
                                     "virtualization": {
                                         "type": "string",
                                         "enum": ["kill", "virtualize"]
                                     }
                                 }
-                            },
-                            "src": {
-                                "type": "string"
                             },
                             "spatial": {
                                 "anyOf": [
@@ -21222,7 +21227,8 @@
                             "hasPanner": {
                                 "type": "boolean"
                             }
-                        }
+                        },
+                        "required": ["busId"]
                     },
                     {
                         "type": "object",
@@ -22520,14 +22526,12 @@
                                 "type": "number"
                             }
                         },
-                        "required": ["isSwitch", "switchGroup", "switches"]
+                        "required": ["isSwitch", "switchGroup", "switches"],
+                        "description": "Conditional switch container routing playback to a selected child sound. When `busId` is omitted, playback follows the selected child sound's effective bus. When `busId` is supplied, it acts as an explicit routing override that the child does not override."
                     },
                     {
                         "type": "object",
                         "properties": {
-                            "busId": {
-                                "type": "string"
-                            },
                             "variation": {
                                 "type": "object",
                                 "properties": {
@@ -23143,7 +23147,8 @@
                                 "required": ["quantize", "referenceTrackId"]
                             }
                         },
-                        "required": ["isScatterer", "sources", "spawnRate"]
+                        "required": ["isScatterer", "sources", "spawnRate"],
+                        "description": "Periodic spatial emitter container. Scatterers do not support scatterer-level `busId` routing overrides; spawned voices inherit routing from their child sound configurations."
                     }
                 ]
             }
@@ -23166,6 +23171,7 @@
             }
         },
         "events": {
+            "description": "Event definitions keyed by event ID. An empty object `{}` is valid for minimal projects.",
             "type": "object",
             "additionalProperties": {
                 "type": "object",
@@ -24260,6 +24266,7 @@
                 "type": "object",
                 "properties": {
                     "id": {
+                        "description": "Optional informational/legacy bank identifier; runtime bank loading, events, and validation use the  {@link  IBankManifest }  map key.",
                         "type": "string"
                     },
                     "sounds": {
@@ -24269,8 +24276,10 @@
                         }
                     }
                 },
-                "required": ["id", "sounds"]
-            }
+                "required": ["sounds"],
+                "description": "Configuration for a single audio bank. Bank identity is defined authoritatively by the map key in  {@link  IBankManifest } ."
+            },
+            "description": "Map of authoritative  {@link  BankId }  keys to bank configurations."
         },
         "globalVoiceLimit": {
             "type": "number"
