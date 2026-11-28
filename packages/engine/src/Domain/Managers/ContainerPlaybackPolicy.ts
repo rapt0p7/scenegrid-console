@@ -3,8 +3,9 @@ import type {
     IContainerEvaluationResult,
     IContainerPlaybackState
 } from '@domain/Managers/Ports/IContainerPlaybackState.js';
-import { isDefined } from '@scene-grid/shared';
 import type { IPRNG } from '@scene-grid/shared';
+
+import { isDefined } from '@scene-grid/shared';
 
 export default class ContainerPlaybackPolicy {
     constructor(private readonly prng: IPRNG) {}
@@ -45,7 +46,7 @@ export default class ContainerPlaybackPolicy {
         };
     }
 
-    private calculateWeightedRandom(sources: ContainerSourceItem[]): number {
+    private calculateWeightedRandom(sources: readonly ContainerSourceItem[]): number {
         let totalWeight = 0;
         const weights = sources.map(s => {
             const w = typeof s === 'string' ? 1 : (s.weight ?? 1);
@@ -62,7 +63,7 @@ export default class ContainerPlaybackPolicy {
         return 0;
     }
 
-    private calculateNoRepeat(sources: ContainerSourceItem[], history: number[]): number {
+    private calculateNoRepeat(sources: readonly ContainerSourceItem[], history: number[]): number {
         if (sources.length <= 1) return 0;
         let index: number;
         do {

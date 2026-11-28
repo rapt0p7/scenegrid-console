@@ -4,7 +4,7 @@ import path from 'node:path';
 import { resolveConfig } from './config.js';
 import { processAssets, prepareAliases } from './pipeline.js';
 
-export { processAssets, prepareAliases } from './pipeline.js';
+export { processAssets, prepareAliases, type ManifestPriority, type AliasEntry, type AliasMap } from './pipeline.js';
 export { extractMetadata, calculatePCMSize } from './pcm.js';
 export { routeAsset } from './router.js';
 

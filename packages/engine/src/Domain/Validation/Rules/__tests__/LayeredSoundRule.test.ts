@@ -1,5 +1,6 @@
 import type { AnySoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload';
+import type { BusId } from '@scene-grid/shared';
 
 import { describe, expect, it, vi } from 'vitest';
 
@@ -14,7 +15,7 @@ describe('LayeredSoundRule', () => {
             const context = createStubContext({});
             context.assertArray = assertArraySpy;
 
-            const nonLayeredConfig: AnySoundConfig = { src: 'audio.ogg' };
+            const nonLayeredConfig: AnySoundConfig = { busId: 'master' as BusId };
 
             rule.validate('bgm', nonLayeredConfig, context);
 

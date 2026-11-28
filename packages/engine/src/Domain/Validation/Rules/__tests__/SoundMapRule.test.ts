@@ -26,8 +26,7 @@ describe('SoundMapRule', () => {
                 buses: { sfx_bus: {} },
                 soundMap: {
                     sfx_unassigned: {
-                        busId: undefined,
-                        src: 'laser.ogg'
+                        busId: undefined
                     } as any
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
@@ -43,8 +42,7 @@ describe('SoundMapRule', () => {
                 buses: { sfx_bus: {} },
                 soundMap: {
                     sfx_laser: {
-                        busId: 'sfx_bus',
-                        src: 'laser.ogg'
+                        busId: 'sfx_bus'
                     }
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
@@ -62,8 +60,7 @@ describe('SoundMapRule', () => {
                 buses: { master: {} },
                 soundMap: {
                     sfx_explosion: {
-                        busId: 'ghost_bus',
-                        src: 'boom.ogg'
+                        busId: 'ghost_bus'
                     }
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
@@ -78,9 +75,7 @@ describe('SoundMapRule', () => {
             const context = createStubContext({
                 buses: { master: {} },
                 soundMap: {
-                    leaf_no_bus: {
-                        src: 'ambient.ogg'
-                    }
+                    leaf_no_bus: {} as any
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
 
@@ -89,7 +84,7 @@ describe('SoundMapRule', () => {
             expect(context.getErrors()).toEqual(['Sound "leaf_no_bus" has no busId']);
         });
 
-        it('should exempt only isContainer from root busId requirement and require busId on smartLoop and isLayered', () => {
+        it('should exempt isContainer, isSwitch, and isScatterer from root busId requirement and require busId on smartLoop and isLayered', () => {
             const rule = new SoundMapRule();
             const context = createStubContext({
                 buses: { master: {} },
@@ -105,6 +100,16 @@ describe('SoundMapRule', () => {
                         isContainer: true,
                         mode: 'random',
                         sources: []
+                    } as any,
+                    switch_sound: {
+                        isSwitch: true,
+                        switchGroup: 'surface',
+                        switches: {}
+                    } as any,
+                    scatterer_sound: {
+                        isScatterer: true,
+                        sources: ['sfx_leaf'],
+                        spawnRate: [100, 200]
                     } as any
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
@@ -113,6 +118,64 @@ describe('SoundMapRule', () => {
 
             const noBusErrors = context.getErrors().filter(e => e.includes('has no busId'));
             expect(noBusErrors).toEqual(['Sound "smart_sound" has no busId', 'Sound "layered_sound" has no busId']);
+        });
+
+        it('should allow optional valid busId on switches and reject unknown switch busId', () => {
+            const rule = new SoundMapRule();
+            const context = createStubContext({
+                buses: { sfx: {} },
+                soundMap: {
+                    child: { busId: 'sfx' },
+                    switch_optional: {
+                        isSwitch: true,
+                        switchGroup: 'surface',
+                        switches: { 0: 'child' }
+                    } as any,
+                    switch_override_ok: {
+                        isSwitch: true,
+                        busId: 'sfx',
+                        switchGroup: 'surface',
+                        switches: { 0: 'child' }
+                    } as any,
+                    switch_override_bad: {
+                        isSwitch: true,
+                        busId: 'missing_bus',
+                        switchGroup: 'surface',
+                        switches: { 0: 'child' }
+                    } as any
+                }
+            } as unknown as Partial<IConsistencyCheckerPayload>);
+
+            rule.validate(context);
+
+            expect(context.getErrors()).toEqual(['Sound "switch_override_bad" references unknown bus "missing_bus"']);
+        });
+
+        it('should pass scatterers without busId and reject scatterers that specify busId', () => {
+            const rule = new SoundMapRule();
+            const context = createStubContext({
+                buses: { sfx: {} },
+                soundMap: {
+                    child: { busId: 'sfx' },
+                    valid_scatterer: {
+                        isScatterer: true,
+                        sources: ['child'],
+                        spawnRate: [100, 200]
+                    } as any,
+                    invalid_scatterer: {
+                        isScatterer: true,
+                        busId: 'sfx',
+                        sources: ['child'],
+                        spawnRate: [100, 200]
+                    } as any
+                }
+            } as unknown as Partial<IConsistencyCheckerPayload>);
+
+            rule.validate(context);
+
+            expect(context.getErrors()).toEqual([
+                'Scatterer "invalid_scatterer" does not support "busId"; scatterer voices inherit routing from child sounds.'
+            ]);
         });
     });
 });

@@ -12,7 +12,8 @@
                     "$ref": "#/definitions/IBuses"
                 },
                 "snapshots": {
-                    "$ref": "#/definitions/ISnapshots"
+                    "$ref": "#/definitions/ISnapshots",
+                    "description": "Mixer snapshots keyed by snapshot ID. An empty object `{}` is valid for minimal projects; no default snapshot is assumed at runtime."
                 },
                 "soundMap": {
                     "$ref": "#/definitions/ISoundMap"
@@ -21,7 +22,8 @@
                     "$ref": "#/definitions/IRTPCManifest"
                 },
                 "events": {
-                    "$ref": "#/definitions/IEventMap"
+                    "$ref": "#/definitions/IEventMap",
+                    "description": "Event definitions keyed by event ID. An empty object `{}` is valid for minimal projects."
                 },
                 "musicFSM": {
                     "$ref": "#/definitions/IMusicFSMConfig"
@@ -82,7 +84,8 @@
                     },
                     "priority": {
                         "type": "string",
-                        "enum": ["high", "low"]
+                        "enum": ["high", "low"],
+                        "description": "Asset loading and RAM-quota routing priority (`'high' | 'low'`, runtime default `'low'`). Separate from game voice-stealing priority in `IVoiceConfig.priority`."
                     },
                     "isStream": {
                         "type": "boolean"
@@ -427,9 +430,6 @@
                 "voice": {
                     "$ref": "#/definitions/IVoiceConfig"
                 },
-                "src": {
-                    "type": "string"
-                },
                 "spatial": {
                     "anyOf": [
                         {
@@ -443,7 +443,8 @@
                 "hasPanner": {
                     "type": "boolean"
                 }
-            }
+            },
+            "required": ["busId"]
         },
         "IVariationConfig": {
             "type": "object",
@@ -487,7 +488,8 @@
             "type": "object",
             "properties": {
                 "priority": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "Game voice-stealing priority (higher values win limited voice slots). Separate from manifest/asset routing priority."
                 },
                 "virtualization": {
                     "type": "string",
@@ -886,14 +888,12 @@
                     "type": "number"
                 }
             },
-            "required": ["isSwitch", "switchGroup", "switches"]
+            "required": ["isSwitch", "switchGroup", "switches"],
+            "description": "Conditional switch container routing playback to a selected child sound. When `busId` is omitted, playback follows the selected child sound's effective bus. When `busId` is supplied, it acts as an explicit routing override that the child does not override."
         },
         "IScattererSoundConfig": {
             "type": "object",
             "properties": {
-                "busId": {
-                    "$ref": "#/definitions/BusId"
-                },
                 "variation": {
                     "$ref": "#/definitions/IVariationConfig"
                 },
@@ -970,7 +970,8 @@
                     "$ref": "#/definitions/IScattererSyncConfig"
                 }
             },
-            "required": ["isScatterer", "sources", "spawnRate"]
+            "required": ["isScatterer", "sources", "spawnRate"],
+            "description": "Periodic spatial emitter container. Scatterers do not support scatterer-level `busId` routing overrides; spawned voices inherit routing from their child sound configurations."
         },
         "IScattererSyncConfig": {
             "type": "object",
@@ -1706,13 +1707,15 @@
             "type": "object",
             "additionalProperties": {
                 "$ref": "#/definitions/IBankConfig"
-            }
+            },
+            "description": "Map of authoritative  {@link  BankId }  keys to bank configurations."
         },
         "IBankConfig": {
             "type": "object",
             "properties": {
                 "id": {
-                    "$ref": "#/definitions/BankId"
+                    "$ref": "#/definitions/BankId",
+                    "description": "Optional informational/legacy bank identifier; runtime bank loading, events, and validation use the  {@link  IBankManifest }  map key."
                 },
                 "sounds": {
                     "type": "array",
@@ -1721,7 +1724,8 @@
                     }
                 }
             },
-            "required": ["id", "sounds"]
+            "required": ["sounds"],
+            "description": "Configuration for a single audio bank. Bank identity is defined authoritatively by the map key in  {@link  IBankManifest } ."
         },
         "IAudioBufferLoaderOptions": {
             "type": "object",

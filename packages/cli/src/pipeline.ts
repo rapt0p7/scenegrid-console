@@ -10,6 +10,50 @@ import { extractMetadata, calculatePCMSize } from './pcm.js';
 import { routeAsset } from './router.js';
 import { generateChunkedStream } from './stream.js';
 
+export type ManifestPriority = 'high' | 'low';
+
+export type AliasEntry =
+    | string
+    | {
+          readonly file: string;
+          readonly priority?: ManifestPriority;
+      };
+
+export type AliasMap = Record<string, AliasEntry>;
+
+interface ResolvedAlias {
+    readonly logicalId: string;
+    readonly priority?: ManifestPriority;
+}
+
+function parseAliasEntry(logicalId: string, entry: unknown): { file: string; alias: ResolvedAlias } {
+    if (typeof entry === 'string') {
+        if (!entry.trim()) {
+            throw new Error(`Invalid alias entry for "${logicalId}": physical filename must be a non-empty string.`);
+        }
+        return { file: entry, alias: { logicalId } };
+    }
+
+    if (typeof entry === 'object' && entry !== null && !Array.isArray(entry)) {
+        const obj = entry as Record<string, unknown>;
+        if (typeof obj.file !== 'string' || !obj.file.trim()) {
+            throw new Error(`Invalid alias entry for "${logicalId}": expected non-empty string "file".`);
+        }
+        if (obj.priority !== undefined && obj.priority !== 'high' && obj.priority !== 'low') {
+            throw new Error(`Invalid alias priority for "${logicalId}": expected "high" or "low".`);
+        }
+        return {
+            file: obj.file,
+            alias: {
+                logicalId,
+                ...(obj.priority === undefined ? {} : { priority: obj.priority })
+            }
+        };
+    }
+
+    throw new Error(`Invalid alias entry for "${logicalId}": expected string or { file, priority? }.`);
+}
+
 export interface ProcessOptions {
     inputDir: string;
     outputDir: string;
@@ -62,17 +106,17 @@ export async function processAssets(options: ProcessOptions) {
     const audioExtensions = new Set(['.wav', '.mp3', '.ogg', '.flac', '.aiff', '.m4a']);
     const files = fs.readdirSync(inputDir).filter(f => audioExtensions.has(path.extname(f).toLowerCase()));
 
-    let invertedAliases: Record<string, string[]> = {};
+    let invertedAliases: Record<string, ResolvedAlias[]> = {};
     if (aliases) {
         console.log(`Loading aliases from: ${path.resolve(aliases)}`);
         if (fs.existsSync(aliases)) {
-            const rawMap = JSON.parse(fs.readFileSync(aliases, 'utf-8'));
-            for (const [logicalId, physicalName] of Object.entries(rawMap)) {
-                const basename = physicalName as string;
+            const rawMap = JSON.parse(fs.readFileSync(aliases, 'utf-8')) as Record<string, unknown>;
+            for (const [logicalId, rawEntry] of Object.entries(rawMap)) {
+                const { file: basename, alias } = parseAliasEntry(logicalId, rawEntry);
                 if (!invertedAliases[basename]) {
                     invertedAliases[basename] = [];
                 }
-                invertedAliases[basename].push(logicalId);
+                invertedAliases[basename].push(alias);
             }
             console.log(`Loaded aliases: ${Object.keys(invertedAliases).length} physical files mapped`);
         } else {
@@ -94,8 +138,7 @@ export async function processAssets(options: ProcessOptions) {
 
         const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 
-        // oxlint-disable-next-line no-shadow
-        const aliases = invertedAliases[basename] ? invertedAliases[basename] : [basename];
+        const resolvedAliases: readonly ResolvedAlias[] = invertedAliases[basename] ?? [{ logicalId: basename }];
 
         if (route === 'chunk') {
             const streamOut = await generateChunkedStream(
@@ -110,19 +153,20 @@ export async function processAssets(options: ProcessOptions) {
             const streamManifestPath = path.join(outputDir, `${basename}${hashSuffix}.json`);
             fs.writeFileSync(streamManifestPath, JSON.stringify(streamOut, null, 4) + '\n');
 
-            for (const alias of aliases) {
-                soundMap[alias] = {
+            for (const alias of resolvedAliases) {
+                soundMap[alias.logicalId] = {
                     url: `${cleanBaseUrl}/${basename}${hashSuffix}.json`,
-                    priority: streamPriority,
+                    priority: alias.priority ?? streamPriority,
                     isStream: true
                 };
             }
         } else {
             const ladderOut = await generateCodecLadder(inputPath, outputDir, baseUrl, 2, hashSuffix);
 
-            for (const alias of aliases) {
-                soundMap[alias] = {
-                    url: Object.values(ladderOut.url)
+            for (const alias of resolvedAliases) {
+                soundMap[alias.logicalId] = {
+                    url: Object.values(ladderOut.url),
+                    ...(alias.priority === undefined ? {} : { priority: alias.priority })
                 };
             }
 
@@ -165,7 +209,7 @@ export async function processAssets(options: ProcessOptions) {
     for (const [key, value] of Object.entries(sortedSoundMap)) {
         payload.manifest[key] = {
             url: value.url,
-            priority: value.priority || 'high',
+            priority: value.priority ?? 'low',
             ...(value.isStream ? { isStream: true } : {})
         };
         payload.soundMap[key] = {

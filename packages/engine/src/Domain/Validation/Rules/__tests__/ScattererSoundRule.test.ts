@@ -1,4 +1,5 @@
 import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload';
+import type { BusId } from '@scene-grid/shared';
 
 import { describe, expect, it, vi } from 'vitest';
 
@@ -12,7 +13,7 @@ describe('ScattererSoundRule', () => {
             const context = createStubContext({});
             const validateTupleSpy = vi.spyOn(context, 'validateTuple');
 
-            rule.validate('bgm', { src: 'audio.ogg' }, context);
+            rule.validate('bgm', { busId: 'master' as BusId }, context);
 
             expect(validateTupleSpy).not.toHaveBeenCalled();
             expect(context.getErrors()).toHaveLength(0);
@@ -232,7 +233,7 @@ describe('ScattererSoundRule', () => {
             const rule = new ScattererSoundRule();
             const context = createStubContext({
                 soundMap: {
-                    sfx_standard: { src: 'audio.ogg' } as any
+                    sfx_standard: { busId: 'master' } as any
                 }
             } as unknown as Partial<IConsistencyCheckerPayload>);
 

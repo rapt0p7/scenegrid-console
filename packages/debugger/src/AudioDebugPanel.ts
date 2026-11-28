@@ -72,6 +72,38 @@ const applyIcon = (component: any, iconId: string, text: string) => {
     return component;
 };
 
+const isSfxBusId = (busId: unknown): boolean => typeof busId === 'string' && busId.toLowerCase().includes('sfx');
+
+export function isSfxSound(
+    soundMap: Record<string, any> | undefined,
+    id: string,
+    visited: Set<string> = new Set()
+): boolean {
+    if (!soundMap || visited.has(id)) {
+        return false;
+    }
+
+    visited.add(id);
+
+    const cfg = soundMap[id];
+    if (!cfg) {
+        return false;
+    }
+
+    if (isSfxBusId(cfg.busId)) {
+        return true;
+    }
+
+    if (cfg.isScatterer === true && Array.isArray(cfg.sources)) {
+        return cfg.sources.some((source: unknown) => {
+            const sourceId = typeof source === 'string' ? source : (source as { id?: unknown } | null)?.id;
+            return typeof sourceId === 'string' && isSfxSound(soundMap, sourceId, visited);
+        });
+    }
+
+    return false;
+}
+
 export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
     const audio: IDebuggableEngine = engineInstance ?? (window as any).AudioEngine;
 
@@ -85,7 +117,7 @@ export function initAudioDebugPanel(engineInstance?: IDebuggableEngine): void {
     const BUS_IDS = config?.buses ? Object.keys(config.buses) : [];
     const SNAPSHOT_IDS = config?.snapshots ? Object.keys(config.snapshots) : [];
     const SOUND_KEYS = config?.soundMap ? Object.keys(config.soundMap) : [];
-    const SFX_SOUNDS = SOUND_KEYS.filter(id => config.soundMap[id].busId.toLowerCase().includes('sfx'));
+    const SFX_SOUNDS = SOUND_KEYS.filter(id => isSfxSound(config?.soundMap, id));
     const TEST_SOUND_EVENTS = SFX_SOUNDS.length > 0 ? SFX_SOUNDS : ['none'];
 
     const PARAMS: IDebugParams = {

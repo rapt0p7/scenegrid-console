@@ -1,3 +1,5 @@
+import type { BusId } from '@scene-grid/shared';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import SpatialSettingsRule from '../SpatialSettingsRule.js';
@@ -10,7 +12,7 @@ describe('SpatialSettingsRule', () => {
             const context = createStubContext({});
             const assertOptionalTypeSpy = vi.spyOn(context, 'assertOptionalType');
 
-            rule.validate('sfx_plain', { src: 'audio.ogg' }, context);
+            rule.validate('sfx_plain', { busId: 'master' as BusId }, context);
 
             expect(assertOptionalTypeSpy).not.toHaveBeenCalled();
             expect(context.getErrors()).toHaveLength(0);
@@ -21,7 +23,7 @@ describe('SpatialSettingsRule', () => {
             const context = createStubContext({});
             const assertOptionalTypeSpy = vi.spyOn(context, 'assertOptionalType');
 
-            rule.validate('sfx_ui', { spatial: undefined }, context);
+            rule.validate('sfx_ui', { busId: 'master' as BusId, spatial: undefined }, context);
 
             expect(assertOptionalTypeSpy).not.toHaveBeenCalled();
             expect(context.getErrors()).toHaveLength(0);
@@ -33,7 +35,7 @@ describe('SpatialSettingsRule', () => {
 
             for (const model of validModels) {
                 const context = createStubContext({});
-                rule.validate('sfx_emitter', { spatial: { distanceModel: model } }, context);
+                rule.validate('sfx_emitter', { busId: 'master' as BusId, spatial: { distanceModel: model } }, context);
                 expect(context.getErrors()).toHaveLength(0);
             }
         });
@@ -42,7 +44,11 @@ describe('SpatialSettingsRule', () => {
             const rule = new SpatialSettingsRule();
             const context = createStubContext({});
 
-            rule.validate('sfx_emitter', { spatial: { distanceModel: 'logarithmic' as any } }, context);
+            rule.validate(
+                'sfx_emitter',
+                { busId: 'master' as BusId, spatial: { distanceModel: 'logarithmic' as any } },
+                context
+            );
 
             expect(context.getErrors()).toEqual(['Sound "sfx_emitter" has invalid distanceModel: "logarithmic"']);
         });
@@ -53,6 +59,7 @@ describe('SpatialSettingsRule', () => {
             const assertOptionalTypeSpy = vi.spyOn(context, 'assertOptionalType');
 
             const soundConfig = {
+                busId: 'master' as BusId,
                 spatial: {
                     refDistance: 2.0,
                     maxDistance: 50.0,
@@ -76,8 +83,8 @@ describe('SpatialSettingsRule', () => {
             const rule = new SpatialSettingsRule();
             const context = createStubContext({});
 
-            rule.validate('sfx_spatial_on', { spatial: true }, context);
-            rule.validate('sfx_spatial_off', { spatial: false }, context);
+            rule.validate('sfx_spatial_on', { busId: 'master' as BusId, spatial: true }, context);
+            rule.validate('sfx_spatial_off', { busId: 'master' as BusId, spatial: false }, context);
 
             expect(context.getErrors()).toHaveLength(0);
         });
@@ -86,9 +93,9 @@ describe('SpatialSettingsRule', () => {
             const rule = new SpatialSettingsRule();
             const context = createStubContext({});
 
-            rule.validate('s_str', { spatial: 'invalid' as any }, context);
-            rule.validate('s_num', { spatial: 123 as any }, context);
-            rule.validate('s_arr', { spatial: [1, 2, 3] as any }, context);
+            rule.validate('s_str', { busId: 'master' as BusId, spatial: 'invalid' as any }, context);
+            rule.validate('s_num', { busId: 'master' as BusId, spatial: 123 as any }, context);
+            rule.validate('s_arr', { busId: 'master' as BusId, spatial: [1, 2, 3] as any }, context);
 
             expect(context.getErrors()).toEqual([
                 'Type Error at "soundMap.s_str.spatial": expected boolean or object, got string',
@@ -101,12 +108,16 @@ describe('SpatialSettingsRule', () => {
             const rule = new SpatialSettingsRule();
             const validContext = createStubContext({});
 
-            rule.validate('s_hrtf', { spatial: { panningModel: 'HRTF' } }, validContext);
-            rule.validate('s_eq', { spatial: { panningModel: 'equalpower' } }, validContext);
+            rule.validate('s_hrtf', { busId: 'master' as BusId, spatial: { panningModel: 'HRTF' } }, validContext);
+            rule.validate('s_eq', { busId: 'master' as BusId, spatial: { panningModel: 'equalpower' } }, validContext);
             expect(validContext.getErrors()).toHaveLength(0);
 
             const badContext = createStubContext({});
-            rule.validate('s_bad_pan', { spatial: { panningModel: 'binaural' as any } }, badContext);
+            rule.validate(
+                's_bad_pan',
+                { busId: 'master' as BusId, spatial: { panningModel: 'binaural' as any } },
+                badContext
+            );
             expect(badContext.getErrors()).toEqual(['Sound "s_bad_pan" has invalid panningModel: "binaural"']);
         });
     });

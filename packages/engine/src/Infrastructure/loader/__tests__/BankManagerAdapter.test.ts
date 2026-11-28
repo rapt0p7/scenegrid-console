@@ -715,4 +715,62 @@ describe('BankManagerAdapter', () => {
             expect(adapter.getBankState('b_fail_no_events' as BankId)).toBe('ERROR');
         });
     });
+
+    describe('Authoritative bank map key identity', () => {
+        it('loads, tracks state, and unloads cleanly when IBankConfig.id is omitted', async () => {
+            const omittedIdManifest: IBankManifest = {
+                ['bank_no_id' as BankId]: { sounds: ['s1' as SoundId] }
+            };
+            const adapter = new BankManagerAdapter(
+                omittedIdManifest,
+                soundManifest,
+                mockLoader,
+                mockPool,
+                mockRouter,
+                mockPrecalculatedSizes,
+                mockEvents
+            );
+
+            const loadResult = await adapter.loadBank('bank_no_id' as BankId);
+
+            expect(loadResult.ok).toBe(true);
+            expect(adapter.getBankState('bank_no_id' as BankId)).toBe('LOADED');
+            expect(mockLoader.loadBatch).toHaveBeenCalledTimes(1);
+
+            adapter.unloadBank('bank_no_id' as BankId);
+
+            expect(adapter.getBankState('bank_no_id' as BankId)).toBe('UNLOADED');
+            expect(mockEvents.onUnload).toHaveBeenCalledWith('bank_no_id');
+        });
+
+        it('uses the manifest map key rather than IBankConfig.id when they differ', async () => {
+            const mismatchedManifest: IBankManifest = {
+                ['map_key' as BankId]: { id: 'different_id' as BankId, sounds: ['s1' as SoundId] }
+            };
+            const adapter = new BankManagerAdapter(
+                mismatchedManifest,
+                soundManifest,
+                mockLoader,
+                mockPool,
+                mockRouter,
+                mockPrecalculatedSizes,
+                mockEvents
+            );
+
+            const byIdResult = await adapter.loadBank('different_id' as BankId);
+            expect(byIdResult.ok).toBe(false);
+            if (!byIdResult.ok) {
+                expect(byIdResult.error.message).toBe('Bank "different_id" not found in manifest.');
+            }
+
+            const byKeyResult = await adapter.loadBank('map_key' as BankId);
+            expect(byKeyResult.ok).toBe(true);
+            expect(adapter.getBankState('map_key' as BankId)).toBe('LOADED');
+            expect(adapter.getBankState('different_id' as BankId)).toBe('UNLOADED');
+
+            adapter.unloadBank('map_key' as BankId);
+            expect(adapter.getBankState('map_key' as BankId)).toBe('UNLOADED');
+            expect(mockEvents.onUnload).toHaveBeenCalledWith('map_key');
+        });
+    });
 });

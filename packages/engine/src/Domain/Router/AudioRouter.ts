@@ -84,7 +84,7 @@ export default class AudioRouter implements IAudioRouter {
     }
 
     public applyConfigToPlayback(playbackId: PlaybackId, config: AnySoundConfig): void {
-        if (config.busId) {
+        if ('busId' in config && config.busId) {
             this.soundController.routeToBus(playbackId, config.busId);
         }
 

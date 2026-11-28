@@ -52,7 +52,9 @@ describe('CLI Configuration Merging', () => {
         expect(helpOutput).toContain('Regex patterns to exclude from stream routing');
         expect(helpOutput).toContain('Priority for streams ("high" or "low")');
         expect(helpOutput).toContain('Append MD5 hash to generated file names');
-        expect(helpOutput).toContain('Path to JSON file mapping physical basenames to logical SoundIds');
+        expect(helpOutput).toContain(
+            'Path to JSON file mapping logical SoundIds to physical basenames or { file, priority } entries'
+        );
 
         exitSpy.mockRestore();
         stdoutSpy.mockRestore();

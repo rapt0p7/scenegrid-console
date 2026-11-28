@@ -41,7 +41,6 @@ export default {
 
     'scatterer': {
         isScatterer: true,
-        busId: 'sfx',
         sources: ['tick'],
         spawnRate: [1000, 2000],
         maxPolyphony: 5

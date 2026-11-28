@@ -5,7 +5,7 @@ import type {
 } from '@domain/Configuration/Ports/ISoundConfig.js';
 import type { IConsistencyCheckerPayload } from '@domain/Validation/Ports/IConsistencyCheckerPayload.js';
 import type { IConsistencyReporter } from '@domain/Validation/Ports/IConsistencyReporter.js';
-import type { GameParamId, IConsistencyReportData, Milliseconds, SoundId } from '@scene-grid/shared';
+import type { BusId, GameParamId, IConsistencyReportData, Milliseconds, SoundId } from '@scene-grid/shared';
 
 import { fc, it as itProp } from '@fast-check/vitest';
 import { describe, expect, it } from 'vitest';
@@ -189,7 +189,7 @@ describe('ValidationContext', () => {
             };
 
             const baseConfig: ISoundConfig = {
-                src: 'ambient_forest.ogg'
+                busId: 'master' as BusId
             };
 
             expect(context.isScatterer(scattererConfig)).toBe(true);

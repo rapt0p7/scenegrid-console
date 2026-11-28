@@ -45,7 +45,7 @@ describe('ConsoleReporter', () => {
         it('should format and log errors inside a styled collapsed console group', () => {
             const reporter = new ConsoleReporter();
             const errors = [
-                'Missing required field at "soundMap.sfx_jump.src"',
+                'Missing required field at "soundMap.sfx_jump.busId"',
                 'Bus "ambience" not found in bus hierarchy'
             ];
             const data: IConsistencyReportData = {

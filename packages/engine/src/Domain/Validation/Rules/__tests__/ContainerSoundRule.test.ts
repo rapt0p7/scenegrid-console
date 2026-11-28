@@ -1,6 +1,6 @@
 import type { AnySoundConfig, IContainerSoundConfig } from '@domain/Configuration/Ports/ISoundConfig.js';
 
-import { SoundId } from '@scene-grid/shared';
+import { BusId, SoundId } from '@scene-grid/shared';
 import { describe, expect, it, vi } from 'vitest';
 
 import ContainerSoundRule from '../ContainerSoundRule.js';
@@ -18,7 +18,7 @@ describe('ContainerSoundRule', () => {
             context.validateTuple = validateTupleSpy;
 
             const nonContainerSound: AnySoundConfig = {
-                src: 'audio/bgm.ogg'
+                busId: 'master' as BusId
             };
 
             rule.validate('bgm_main', nonContainerSound, context);
